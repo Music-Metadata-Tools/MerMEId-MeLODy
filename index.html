@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>MerMEId</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.cdnfonts.com/css/palatino-linotype" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.4.0/dist/themes/light.css" />
+    <link href="css/index.css" rel="stylesheet" />
+</head>
+
+<body>
+    <header>
+        <h1>MerMEId</h1>
+    </header>
+    <main>
+        <section id="searches-container">
+            <section id="simple-search-container">
+                <div id="simple-search-input">
+                    <select id="index-select"></select>
+                    <input id="search-string" />
+                </div>
+                <div id="simple-search-result">
+                    <div>
+                        <output id="headings-list-metadata"></output>
+                        <div id="headings-list"></div>
+                    </div>
+                    <div>
+                        <output id="locators-list-metadata"></output>
+                        <div id="locators-list"></div>
+                    </div>
+                </div>
+            </section>
+            <section id="advanced-search-container">
+                <header class="section-title">
+                    <h3></h3>
+                </header>
+            </section>
+        </section>
+    </main>
+    <footer>
+        <section>
+            <div>Footer</div>
+        </section>
+    </footer>
+    <script type="module" src="js/index.js"></script>
+</body>
+
+</html>
