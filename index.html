@@ -20,7 +20,10 @@
             <sl-tab slot="nav" panel="edit">Edit</sl-tab>
 
             <sl-tab-panel name="file-list">
-                <h5>This is an example of data cloned locally, in the browser, from a Git Repository (the current repository is located at <a href="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data">https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data</a>).</h5>
+                <h5>This is an example of data cloned locally, in the browser, from a Git Repository (the current
+                    repository is located at <a
+                        href="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data">https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data</a>).
+                </h5>
                 <sl-tree>
                     <sl-tree-item expanded>MerMEId Sample Data</sl-tree-item>
                 </sl-tree>
@@ -35,9 +38,20 @@
     </footer>
     <script type="module"
         src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/shoelace-autoloader.js"></script>
+    <script type="module">
+        await Promise.allSettled([
+            customElements.whenDefined("sl-tab-group"),
+            customElements.whenDefined("sl-tab"),
+            customElements.whenDefined("sl-tab-panel"),
+            customElements.whenDefined("sl-tree"),
+            customElements.whenDefined("sl-tree-item"),
+        ]);
+        document.body.classList.add("ready");
+    </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>
     <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
     <script src="https://unpkg.com/isomorphic-git@beta"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>
     <script type="module" src="js/index.js"></script>
 </body>
 
