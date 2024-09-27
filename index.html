@@ -6,7 +6,7 @@
     <title>MerMEId</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.cdnfonts.com/css/palatino-linotype" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.4.0/dist/themes/light.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/themes/light.css" />
     <link href="css/index.css" rel="stylesheet" />
 </head>
 
@@ -15,35 +15,29 @@
         <h1>MerMEId</h1>
     </header>
     <main>
-        <section id="searches-container">
-            <section id="simple-search-container">
-                <div id="simple-search-input">
-                    <select id="index-select"></select>
-                    <input id="search-string" />
-                </div>
-                <div id="simple-search-result">
-                    <div>
-                        <output id="headings-list-metadata"></output>
-                        <div id="headings-list"></div>
-                    </div>
-                    <div>
-                        <output id="locators-list-metadata"></output>
-                        <div id="locators-list"></div>
-                    </div>
-                </div>
-            </section>
-            <section id="advanced-search-container">
-                <header class="section-title">
-                    <h3></h3>
-                </header>
-            </section>
-        </section>
+        <sl-tab-group>
+            <sl-tab slot="nav" panel="file-list">File list</sl-tab>
+            <sl-tab slot="nav" panel="edit">Edit</sl-tab>
+
+            <sl-tab-panel name="file-list">
+                <h5>This is an example of data cloned locally, in the browser, from a Git Repository (the current repository is located at <a href="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data">https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data</a>).</h5>
+                <sl-tree>
+                    <sl-tree-item expanded>MerMEId Sample Data</sl-tree-item>
+                </sl-tree>
+            </sl-tab-panel>
+            <sl-tab-panel name="edit">edit</sl-tab-panel>
+        </sl-tab-group>
     </main>
     <footer>
         <section>
-            <div>Footer</div>
+            <div>Center for Digital Music Documentation (CDMD)</div>
         </section>
     </footer>
+    <script type="module"
+        src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/shoelace-autoloader.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>
+    <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
+    <script src="https://unpkg.com/isomorphic-git@beta"></script>
     <script type="module" src="js/index.js"></script>
 </body>
 

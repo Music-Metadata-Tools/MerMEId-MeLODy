@@ -23,3 +23,15 @@ body {
     margin: 0;
     height: 100vh;
 }
+
+body>main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: var(--step-0);
+}
+
+/* What is below has to be removed after the header and footer components are added. */
+body>header>*, body>footer>* {
+    text-align: center;
+}
