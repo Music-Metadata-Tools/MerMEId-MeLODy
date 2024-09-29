@@ -37,8 +37,34 @@ body>main {
     font-size: var(--step-0);
 }
 
+section#editor-and-viewer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+section#editor,
+section#viewer {
+    width: 30vw;
+    background-color: #bee2f7;
+    height: 70vh;
+}
+
+fieldset#shacl-output {
+    height: 65vh;
+}
+
 /* What is below has to be removed after the header and footer components are added. */
-body>header>*, body>footer>* {
+body>header>*,
+body>footer>* {
+    background-color: #013657;
+    color: #ffffff;
+    padding: 0;
+}
+
+body>header>*,
+body>footer>* {
     text-align: center;
 }
 
@@ -46,4 +72,111 @@ h5 {
     text-align: justify;
     text-justify: inter-word;
     padding: 0 10px;
+}
+
+#shacl-output pre {
+    font-size: 1rem;
+    width: 25vw;
+    text-wrap: wrap;
+    scroll-behavior: auto;
+}
+
+#shacl-output.valid legend::after {
+    content: "[valid]";
+    padding-left: 5px;
+}
+
+#shacl-output.invalid legend::after {
+    content: "[not valid]";
+    padding-left: 5px;
+}
+
+#shacl-output.valid pre,
+#shacl-output.valid legend::after {
+    color: #272;
+}
+
+#shacl-output.invalid pre,
+#shacl-output.invalid legend::after {
+    color: #922;
+}
+
+button#save {
+    height: 50px;
+    width: 50px;
+}
+
+
+/* small screen sizes */
+@media only screen and (max-width: 664px) {
+    body {
+        font-size: 1.1rem;
+        padding: 2px;
+    }
+
+    header {
+        font-size: 10px;
+        padding: 0 1px;
+    }
+
+    h1.title {
+        text-align: justify;
+        padding: 10px;
+    }
+
+    section#editor-and-viewer {
+        flex-direction: column;
+    }
+
+    section#editor,
+    section#viewer {
+        width: 100%;
+        height: 70vh;
+    }
+
+    fieldset#shacl-output {
+        height: 65vh;
+    }
+
+    button#save {
+        height: 40px;
+        width: 95vw;
+    }
+}
+
+/* medium screen sizes */
+@media only screen and (max-width: 835px) {
+    body {
+        font-size: 1.1rem;
+        padding: 2px;
+    }
+
+    header {
+        font-size: 10px;
+        padding: 0 1px;
+    }
+
+    h1.title {
+        text-align: center;
+        padding: 10px;
+    }
+
+    section#editor-and-viewer {
+        flex-direction: column;
+    }
+
+    section#editor,
+    section#viewer {
+        width: 100%;
+        height: 70vh;
+    }
+
+    fieldset#shacl-output {
+        height: 65vh;
+    }
+
+    button#save {
+        height: 40px;
+        width: 95vw;
+    }
 }
