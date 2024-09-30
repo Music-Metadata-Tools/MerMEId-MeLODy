@@ -51,8 +51,9 @@ section#viewer {
     height: 70vh;
 }
 
-fieldset#shacl-output {
-    height: 65vh;
+fieldset#shacl-xml-output,
+fieldset#shacl-rdf-output {
+    height: 58vh;
 }
 
 /* What is below has to be removed after the header and footer components are added. */
@@ -74,30 +75,37 @@ h5 {
     padding: 0 10px;
 }
 
-#shacl-output pre {
+#shacl-xml-output pre,
+#shacl-rdf-output pre {
     font-size: 1rem;
     width: 25vw;
     text-wrap: wrap;
     scroll-behavior: auto;
 }
 
-#shacl-output.valid legend::after {
+#shacl-xml-output.valid legend::after,
+#shacl-rdf-output.valid legend::after {
     content: "[valid]";
     padding-left: 5px;
 }
 
-#shacl-output.invalid legend::after {
+#shacl-xml-output.invalid legend::after,
+#shacl-rdf-output.invalid legend::after {
     content: "[not valid]";
     padding-left: 5px;
 }
 
-#shacl-output.valid pre,
-#shacl-output.valid legend::after {
+#shacl-xml-output.valid pre,
+#shacl-rdf-output.valid pre,
+#shacl-xml-output.valid legend::after,
+#shacl-rdf-output.valid legend::after {
     color: #272;
 }
 
-#shacl-output.invalid pre,
-#shacl-output.invalid legend::after {
+#shacl-xml-output.invalid pre,
+#shacl-rdf-output.invalid pre,
+#shacl-xml-output.invalid legend::after,
+#shacl-rdf-output.invalid legend::after {
     color: #922;
 }
 
@@ -134,7 +142,8 @@ button#save {
         height: 70vh;
     }
 
-    fieldset#shacl-output {
+    fieldset#shacl-xml-output,
+    fieldset#shacl-rdf-output {
         height: 65vh;
     }
 
@@ -171,7 +180,8 @@ button#save {
         height: 70vh;
     }
 
-    fieldset#shacl-output {
+    fieldset#shacl-xml-output,
+    fieldset#shacl-rdf-output {
         height: 65vh;
     }
 

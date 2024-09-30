@@ -98,8 +98,9 @@ for (const file of files) {
     lazyItem.append(treeItem);
 }
 
-const form = document.getElementById("shacl-form");
-const output = document.getElementById("shacl-output");
+let form = document.getElementById("shacl-form");
+let xml_output = document.getElementById("shacl-xml-output");
+let rdf_output = document.getElementById("shacl-rdf-output");
 
 /*form.addEventListener("change", (event) => {
     output.classList.toggle('valid', event.detail?.valid);
@@ -113,13 +114,14 @@ document.addEventListener("click", (event) => {
     let target = event.target;
 
     if (target.matches("button#save")) {
-        let result = JSON.parse(form.serialize("application/ld+json"));
+        let result = form.serialize("application/ld+json");
+        let result_json = JSON.parse(result);
 
         let title = "";
         let classification = "";
         let repository = "";
         let persons = {};
-        result.forEach((item) => {
+        result_json.forEach((item) => {
             if (item.hasOwnProperty("https://mei-metadata.org/Title")) {
                 title = item["https://mei-metadata.org/Title"]["@value"];
             }
@@ -153,6 +155,7 @@ document.addEventListener("click", (event) => {
 
         let xml = source_template({ title, classification, repository, persons })
 
-        output.querySelector("pre").innerText = xml;
+        xml_output.querySelector("pre").innerText = xml;
+        rdf_output.querySelector("pre").innerText = result;
     }
 });
