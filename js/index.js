@@ -114,8 +114,8 @@ document.addEventListener("click", (event) => {
     let target = event.target;
 
     if (target.matches("button#save")) {
-        let result = form.serialize("application/ld+json");
-        let result_json = JSON.parse(result);
+        let rdf_result = form.serialize();
+        let result_json = JSON.parse(form.serialize("application/ld+json"));
 
         let title = "";
         let classification = "";
@@ -156,6 +156,6 @@ document.addEventListener("click", (event) => {
         let xml = source_template({ title, classification, repository, persons })
 
         xml_output.querySelector("pre").innerText = xml;
-        rdf_output.querySelector("pre").innerText = result;
+        rdf_output.querySelector("pre").innerText = rdf_result;
     }
 });
