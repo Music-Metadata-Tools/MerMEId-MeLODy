@@ -1,4 +1,4 @@
-import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js"
+import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 
 // ontologies
 const classifications = {
@@ -63,7 +63,7 @@ const person_template = (data) => `<${data.role}>${data.name}</${data.role}>`;
 
 // util functions
 const generate_person_records = (persons) => Object.values(persons).map(item => person_template(item)).join("");
-
+/*
 // Initialize isomorphic-git with a file system
 window.fs = new LightningFS("mermeid");
 window.pfs = window.fs.promises;
@@ -96,7 +96,7 @@ for (const file of files) {
     const treeItem = document.createElement("sl-tree-item");
     treeItem.innerText = file;
     lazyItem.append(treeItem);
-}
+}*/
 
 let form = document.getElementById("shacl-form");
 let xml_output = document.getElementById("shacl-xml-output");

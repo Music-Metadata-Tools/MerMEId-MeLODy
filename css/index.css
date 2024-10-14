@@ -69,12 +69,6 @@ body>footer>* {
     text-align: center;
 }
 
-h5 {
-    text-align: justify;
-    text-justify: inter-word;
-    padding: 0 10px;
-}
-
 #shacl-xml-output pre,
 #shacl-rdf-output pre {
     font-size: 1rem;
