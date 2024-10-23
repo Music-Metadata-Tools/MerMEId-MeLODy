@@ -1,11 +1,12 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
+import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 //import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/components/tree/tree.js";
 
 const styles =
     css`
-        
+
 `;
 
 export default class CDMDGitClient extends LitElement {
@@ -13,18 +14,23 @@ export default class CDMDGitClient extends LitElement {
         datalist: {
             type: Array
         },
+        file_system_name: {
+            type: String
+        },
     };
 
     static styles = styles;
 
     constructor() {
         super();
+
+        this.file_system_name = "mermeid";
     }
 
     render() {
         return html`
             <div id="container">
-                ${this._load_repository_names.render({
+                ${this._get_repository_folder_names.render({
             pending: () => html`Loading repositories...`,
             complete: (data) => html`<sl-tree>${data}</sl-tree>`,
         })}
@@ -32,18 +38,82 @@ export default class CDMDGitClient extends LitElement {
         `;
     }
 
+    createRenderRoot() {
+        const render_root = super.createRenderRoot();
+
+        render_root.addEventListener("sl-lazy-load", async (event) => {
+            const target = event.target;
+
+            if (target.matches("sl-tree-item[lazy]")) {
+                let repository_folder_name = target.dataset.repositoryFolderName;
+
+                //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: `/${repository_folder_name}`, trees: '/' });
+
+                let file_relative_paths = await git.listFiles({ fs: this.fs, dir: `/${repository_folder_name}`, ref: 'HEAD' });
+
+                for (const file_relative_path of file_relative_paths) {
+                    if (!file_relative_path.startsWith("data/")) {
+                        const tree_item = document.createElement("sl-tree-item");
+                        tree_item.innerText = file_relative_path;
+                        target.append(tree_item);
+                    }
+                }
+
+                target.lazy = false;
+            }
+        });
+
+        return render_root;
+    }
+
+    async _set_username() {
+        await git.setConfig({
+            fs: this.fs,
+            dir: `/${repository_folder_name}`,
+            path: "user.name",
+            value: "Claudius Teodorescu"
+        }); s
+    }
+
+    _list_files() {
+        //let file_relative_paths = await git.listFiles({ fs: this.fs, dir: `/${repository_folder_name}`, ref: 'HEAD' });
+
+        //this._process_file_relative_paths(file_relative_paths);
+    }
+
+    _git_pull() {
+        let start = performance.now();
+        /*try {
+            await git.pull({
+                fs: this.fs,
+                http,
+                dir: `/${repository_folder_name}`,
+                ref: "main",
+                singleBranch: true
+            });
+        } catch (error) {
+            console.error(error);
+        }*/
+        let end = performance.now();
+        console.log("elapsed_time for git.pull() = " + (end - start) + "ms");
+    }
+
+    _process_file_relative_paths(file_relative_paths) {
+        console.log(file_relative_paths);
+    }
+
     // list repositories
-    _load_repository_names = new Task(
+    _get_repository_folder_names = new Task(
         this,
         async ([]) => {
-            window.fs = new LightningFS("mermeid");
-            window.pfs = window.fs.promises;
+            this.fs = new LightningFS(this.file_system_name);
+            this.pfs = this.fs.promises;
 
-            let repository_names = await pfs.readdir("/");
-            repository_names.sort();
+            let repository_folder_names = await this.pfs.readdir("/");
+            repository_folder_names.sort();
             // let tree_form_control = this.renderRoot.querySelector("input#search-input");
             // the tree item for the last use repo has to have @expanded
-            let repository_tree_items = repository_names.map(repository_name => html`<sl-tree-item lazy>${repository_name}</sl-tree-item>`);
+            let repository_tree_items = repository_folder_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
 
             return repository_tree_items;
         },

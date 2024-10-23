@@ -1,0 +1,31 @@
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+
+@prefix melod: <https://mei-metadata.org/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+
+melod:PlaceShape
+  a sh:NodeShape, rdfs:Class ;
+  #sh:node melod:cidoc_place ;
+  owl:imports <https://claudius-teodorescu.gitlab.io/liszt-ontology/ontology.ttl> ;
+  sh:property   [
+                  sh:minCount 1 ;
+                  sh:maxCount 1 ;
+                  sh:name "GND Type" ;
+                  sh:class gnd:PlaceOrGeographicName ;
+                  sh:path rdf:type ;
+                ] .
+
+
+
+#melod:cidoc_place
+#  a sh:NodeShape, rdfs:Class ;
+#  sh:targetClass cidoc:E53_Place .
