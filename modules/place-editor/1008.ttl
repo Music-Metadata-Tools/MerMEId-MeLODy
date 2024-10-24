@@ -1,50 +1,28 @@
-@prefix lipla: <http://www.liszt-qwv.com/places#> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
-@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
-@prefix gndo: <https://d-nb.info/standards/elementset/gnd#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <http://schema.org/> .
-@prefix sf: <http://www.opengis.net/ont/sf#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
-# https://lobid.org/gnd/<id>
-# https://lobid.org/gnd/search?q=paris&format=json:<fieldName>
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
 
-#LisztID, CIDOC Place, Schema Place and Entitätentyp from GND
-<https://liszt-portal.de/places/1008> a cidoc:E53_Place, schema:Place, gndo:TerritorialCorporateBodyOrAdministrativeUnit ;
-    # GND ID (optional), Wikidata ID (optional), VIAF ID (optional), Geoname ID (optional)
-    owl:sameAs <https://d-nb.info/gnd/4044660-8>, <http://www.wikidata.org/entity/Q90>, <http://viaf.org/viaf/240792131>, <https://sws.geonames.org/2988507> ;
-    # Ortsname from GND or free text
-    schema:name "Paris" ;
-    # abweichender Name (optional), no free text, from GND, if available
-    schema:alternateName "Lutetia", "Lutecia", "Lutetia Parisiorum",
-    "Parisia", "Pa-li", "Ville de Paris", "P'ariz", "Paryžius", "Paříž", "Bārīs",
-    "Bali (Paris)", "Pariž", "Parigi", "Parijs", "Lutitia", "Parisius", "Lutèce", "Commune de Paris",
-    "Parisii", "Parrhisius", "Loticia Parisiorum", "Ville de Paris", "Lutetia";
-    # übergeordneter Ort (optional),schema or CIDOC? new entity 
-    cidoc:P89_falls_within lipla:1234568 ;
-    #schema:containedInPlace lipla:France ;
-    # Datum/Zeitspanne (optional), no free text?, from GND
-    gndo:dateOfEstablishment "486";
-    # Quelle (optional), aus GND
-    # Biografische, historische und andere Angaben (optional), from GND, the same as local commentary field?, editable in free text field
-    gndo:biographicalOrHistoricalInformation "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
-    # Kommentar (lokal), free text, the same as 'Biografische, historische, andere Angaben'?
-    schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
-    # Kategorie (obligatory), new entity
-    cidoc:P2_has_type lipla:Place_Category ;
-    # Koordinaten (optional), no free text, from GND?, if available
-    # other possible vocabularies = schema:latitude/longitude, cidoc place is defined by E59 Space Primitive
-    geo:hasGeometry _:node1i4lp4n3ux237812905 .
-
-_:node1i4lp4n3ux237812905 geo:asWKT "Point ( +002.348800 +048.853409 )"^^geo:wktLiteral;
-  a sf:Point .
-
-#from GND, Geographic Area Code
-lipla:1234568 a cidoc:E53_Place, schema:Place, gndo:Country ;
-    schema:name "Frankreich"@de ;
-    schema:name "France"@en .
-
-# controlled vocabulary, which categories?, the same es gnd entity type?
-lipla:Place_Category a cidoc:E55_Type ;
-    rdfs:label "Category_Name"@de .
+<https://liszt-portal.de/places/1008>
+  a melod:Place, cidoc:E53_Place, schema:Place, gnd:TerritorialCorporateBodyOrAdministrativeUnit ;
+  owl:sameAs <https://d-nb.info/gnd/4044660-8>, <http://www.wikidata.org/entity/Q90>, <http://viaf.org/viaf/240792131>, <https://sws.geonames.org/2988507> ;
+  schema:name "Paris" ;
+  schema:alternateName "Lutetia", "Lutecia", "Lutetia Parisiorum",
+      "Parisia", "Pa-li", "Ville de Paris", "P'ariz", "Paryžius", "Paříž", "Bārīs",
+      "Bali (Paris)", "Pariž", "Parigi", "Parijs", "Lutitia", "Parisius", "Lutèce", "Commune de Paris",
+      "Parisii", "Parrhisius", "Loticia Parisiorum", "Ville de Paris", "Lutetia";
+      cidoc:P89_falls_within <https://liszt-portal.de/places/17> ;
+      gnd:dateOfEstablishment "486" ;
+      gnd:biographicalOrHistoricalInformation "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
+      schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
+  .

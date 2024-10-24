@@ -51,6 +51,11 @@ section#viewer {
     height: 70vh;
 }
 
+section#editor {
+    overflow: scroll;
+    height: 70vh;
+}
+
 fieldset#shacl-xml-output,
 fieldset#shacl-rdf-output {
     height: 58vh;

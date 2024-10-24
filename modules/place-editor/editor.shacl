@@ -1,31 +1,84 @@
-@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
-@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
-@prefix schema: <http://schema.org/> .
-@prefix sh:      <http://www.w3.org/ns/shacl#> .
-@prefix owl:     <http://www.w3.org/2002/07/owl#> .
-
-@prefix melod: <https://mei-metadata.org/> .
+@prefix dbpedia: <http://dbpedia.org/ontology/> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix geo:     <http://www.opengis.net/ont/geosparql#> .
 @prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov:    <http://www.w3.org/ns/prov#> .
 
-melod:PlaceShape
-  a sh:NodeShape, rdfs:Class ;
-  #sh:node melod:cidoc_place ;
-  owl:imports <https://claudius-teodorescu.gitlab.io/liszt-ontology/ontology.ttl> ;
-  sh:property   [
-                  sh:minCount 1 ;
-                  sh:maxCount 1 ;
-                  sh:name "GND Type" ;
-                  sh:class gnd:PlaceOrGeographicName ;
-                  sh:path rdf:type ;
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+
+melod:Place
+  a sh:NodeShape ;
+  sh:node melod:cidoc_place ;
+  sh:node melod:schema_place ;
+  sh:node melod:gnd_place ;
+  sh:property   [ sh:description "Same as" ;
+                  sh:name "Same as" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:group melod:SameAsGroup ;
+                  sh:maxCount 4;
+                  sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:description "Alternate name" ;
+                  sh:name "Alternate name" ;
+                  sh:group melod:AlternateNamesGroup ;
+                  sh:path schema:alternateName
                 ] .
 
+melod:cidoc_place
+  a sh:NodeShape ;
+  sh:property   [ sh:description "Place name" ;
+                  sh:name "Name" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:name
+                ] ;
+  sh:property   [ sh:description "Date of establishment" ;
+                  sh:name "Date" ;
+                  sh:maxCount 1;
+                  sh:path gnd:dateOfEstablishment
+                ] ;
+  sh:property   [ sh:description "Biographical or historical information about the place" ;
+                  sh:name "Information" ;
+                  dash:singleLine false ;
+                  sh:maxCount 1;
+                  sh:path gnd:biographicalOrHistoricalInformation
+                ] ;
+  sh:property   [ sh:description "Description of the place" ;
+                  sh:name "Description" ;
+                  dash:singleLine false ;
+                  sh:maxCount 1;
+                  sh:path schema:description
+                ] ;
+  sh:property   [ sh:description "Falls within" ;
+                  sh:name "Falls within" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:maxCount 1;
+                  sh:path cidoc:P89_falls_within
+                ] ;
+  sh:targetClass cidoc:E53_Place .
 
+melod:schema_place
+  a sh:NodeShape ;
+  sh:targetClass schema:Place .
 
-#melod:cidoc_place
-#  a sh:NodeShape, rdfs:Class ;
-#  sh:targetClass cidoc:E53_Place .
+melod:gnd_place
+  a sh:NodeShape ;
+  sh:targetClass gnd:PlaceOrGeographicName .
+
+melod:SameAsGroup
+  a               sh:PropertyGroup ;
+  rdfs:label      "Same as" .
+
+melod:AlternateNamesGroup
+  a               sh:PropertyGroup ;
+  rdfs:label      "Alternate name" .
