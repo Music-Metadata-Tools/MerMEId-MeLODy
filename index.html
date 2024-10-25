@@ -15,9 +15,9 @@
         <h1 class="title">MerMEId</h1>
     </header>
     <main>
-        <sl-tab-group>
+        <sl-tab-group id="main">
             <sl-tab slot="nav" panel="file-list">Repository list</sl-tab>
-            <sl-tab slot="nav" panel="edit" active>Edit</sl-tab>
+            <sl-tab slot="nav" panel="edit">Edit</sl-tab>
 
             <sl-tab-panel name="file-list">
                 <cdmd-git-client></cdmd-git-client>
@@ -25,8 +25,7 @@
             <sl-tab-panel name="edit">
                 <section id="editor-and-viewer">
                     <section id="editor">
-                        <shacl-form id="shacl-form" data-shapes-url="modules/place-editor/editor.shacl" data-values-url="modules/place-editor/1008.ttl"
-                        data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form><!-- data-values-subject="https://liszt-portal.de/places/1008" -->
+                        <shacl-form id="shacl-form" data-shapes-url="modules/place-editor/editor.shacl" data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form>
                     </section>
                     <button id="save">Save</button>
                     <section id="viewer">

@@ -159,3 +159,14 @@ document.addEventListener("click", (event) => {
         rdf_output.querySelector("pre").innerText = rdf_result;
     }
 });
+
+document.addEventListener("cdmd-git-client:selected-file-contents", (event) => {
+    let file_contents = event.detail;
+
+    // detect document type, in order to load the proper SHACL file
+    // detect the data values subject, in order to set the corresponding attribute of the shacl-form
+
+    document.querySelector("shacl-form#shacl-form").dataset.values = file_contents;
+
+    document.querySelector("sl-tab-group#main").show("edit");
+});

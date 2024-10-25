@@ -82,3 +82,7 @@ melod:SameAsGroup
 melod:AlternateNamesGroup
   a               sh:PropertyGroup ;
   rdfs:label      "Alternate name" .
+
+<https://liszt-portal.de/places/17> a cidoc:E53_Place, schema:Place, gnd:Country ;
+    rdfs:label "Frankreich"@de ;
+    rdfs:label "France"@en .

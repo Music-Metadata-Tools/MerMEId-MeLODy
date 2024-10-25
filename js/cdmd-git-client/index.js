@@ -17,6 +17,9 @@ export default class CDMDGitClient extends LitElement {
         file_system_name: {
             type: String
         },
+        repository_folder_name: {
+            type: String
+        },
     };
 
     static styles = styles;
@@ -45,15 +48,19 @@ export default class CDMDGitClient extends LitElement {
             const target = event.target;
 
             if (target.matches("sl-tree-item[lazy]")) {
-                let repository_folder_name = target.dataset.repositoryFolderName;
+                this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
 
-                //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: `/${repository_folder_name}`, trees: '/' });
 
-                let file_relative_paths = await git.listFiles({ fs: this.fs, dir: `/${repository_folder_name}`, ref: 'HEAD' });
+                //await this._git_pull(this.repository_folder_name);
+
+                //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: this.repository_folder_name, trees: '/' });
+
+                let file_relative_paths = await git.listFiles({ fs: this.fs, dir: this.repository_folder_name, ref: 'HEAD' });
 
                 for (const file_relative_path of file_relative_paths) {
                     if (!file_relative_path.startsWith("data/")) {
                         const tree_item = document.createElement("sl-tree-item");
+                        tree_item.dataset.relativePath = file_relative_path;
                         tree_item.innerText = file_relative_path;
                         target.append(tree_item);
                     }
@@ -63,37 +70,64 @@ export default class CDMDGitClient extends LitElement {
             }
         });
 
+        render_root.addEventListener("click", async (event) => {
+            const target = event.target;
+
+            // open the file in editor
+            if (target.matches("sl-tree-item:not([lazy])")) {
+                let file_relative_path = target.dataset.relativePath;
+
+                // get the file contents
+                console.log(this.repository_folder_name);
+                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
+
+                let { blob } = await git.readBlob({
+                    fs: this.fs,
+                    dir: this.repository_folder_name,
+                    oid: commitOid,
+                    filepath: file_relative_path
+                });
+                let file_contents = new TextDecoder().decode(blob);
+
+                this.dispatchEvent(new CustomEvent("cdmd-git-client:selected-file-contents", {
+                    "detail": file_contents,
+                    "bubbles": true,
+                    "composed": true,
+                }));
+            }
+        });
+
         return render_root;
     }
 
     async _set_username() {
         await git.setConfig({
             fs: this.fs,
-            dir: `/${repository_folder_name}`,
+            dir: this.repository_folder_name,
             path: "user.name",
             value: "Claudius Teodorescu"
         }); s
     }
 
     _list_files() {
-        //let file_relative_paths = await git.listFiles({ fs: this.fs, dir: `/${repository_folder_name}`, ref: 'HEAD' });
+        //let file_relative_paths = await git.listFiles({ fs: this.fs, dir: this.repository_folder_name, ref: 'HEAD' });
 
         //this._process_file_relative_paths(file_relative_paths);
     }
 
-    _git_pull() {
+    async _git_pull() {
         let start = performance.now();
-        /*try {
+        try {
             await git.pull({
                 fs: this.fs,
                 http,
-                dir: `/${repository_folder_name}`,
+                dir: this.repository_folder_name,
                 ref: "main",
                 singleBranch: true
             });
         } catch (error) {
             console.error(error);
-        }*/
+        }
         let end = performance.now();
         console.log("elapsed_time for git.pull() = " + (end - start) + "ms");
     }
