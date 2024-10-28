@@ -66,6 +66,10 @@ export default class CDMDGitClient extends LitElement {
                 });
                 console.log(refs);
 
+                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
+                console.log(commitOid);
+
+
                 // 
 
                 //await this._git_pull(this.repository_folder_name);
