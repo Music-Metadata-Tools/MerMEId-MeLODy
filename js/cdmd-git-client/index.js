@@ -50,6 +50,23 @@ export default class CDMDGitClient extends LitElement {
             if (target.matches("sl-tree-item[lazy]")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
 
+                // get remote.origin.url
+                let remote_origin_url = await git.getConfig({
+                    fs: this.fs,
+                    dir: this.repository_folder_name,
+                    path: 'remote.origin.url'
+                });
+
+                // get refs/HEAD
+                let refs = await git.listServerRefs({
+                    http,
+                    corsProxy: "https://cors.isomorphic-git.org",
+                    url: remote_origin_url,
+                    prefix: "HEAD",
+                });
+                console.log(refs);
+
+                // 
 
                 //await this._git_pull(this.repository_folder_name);
 
