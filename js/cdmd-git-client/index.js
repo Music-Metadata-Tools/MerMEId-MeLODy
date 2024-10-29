@@ -36,9 +36,29 @@ export default class CDMDGitClient extends LitElement {
     render() {
         return html`
             <div id="container">
+                <div id="toolbar">
+                    <sl-button size="small" title="Add repository">
+                        <sl-icon name="shield-plus"></sl-icon>
+                    </sl-button>
+                    <sl-button id="delete-repository" size="small" title="Delete repository">
+                        <sl-icon name="shield-minus"></sl-icon>
+                    </sl-button>
+                    <sl-button size="small" title="Add folder">
+                        <sl-icon name="folder-plus"></sl-icon>
+                    </sl-button>
+                    <sl-button size="small" title="Delete folder">
+                        <sl-icon name="folder-minus"></sl-icon>
+                    </sl-button>
+                    <sl-button size="small" title="Add file">
+                        <sl-icon name="file-earmark-plus"></sl-icon>
+                    </sl-button>
+                    <sl-button size="small" title="Delete file">
+                        <sl-icon name="file-earmark-minus"></sl-icon>
+                    </sl-button>
+                </div>
                 ${this._get_repository_folder_names.render({
             pending: () => html`Loading repositories...`,
-            complete: (data) => html`<sl-tree>${data}</sl-tree>`,
+            complete: (data) => html`<sl-tree>${data}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
         })}
             </div>
         `;
@@ -50,32 +70,34 @@ export default class CDMDGitClient extends LitElement {
         render_root.addEventListener("sl-lazy-load", async (event) => {
             const target = event.target;
 
-            if (target.matches("sl-tree-item[lazy]")) {
+            if (target.matches("sl-tree-item[lazy], sl-tree-item[lazy] *")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
 
-                // get remote.origin.url
-                let remote_origin_url = await git.getConfig({
-                    fs: this.fs,
-                    dir: this.repository_folder_name,
-                    path: 'remote.origin.url'
-                });
-
-                // get refs/HEAD
-                let refs = await git.listServerRefs({
-                    http,
-                    corsProxy: "https://cors.isomorphic-git.org",
-                    url: remote_origin_url,
-                    prefix: "HEAD",
-                });
-                let head_commit = refs[0].oid;
-                console.log(head_commit);
-
-                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
-                console.log(commitOid);
-
-                if (commitOid !== head_commit) {
-                    await this._git_pull();
-                }
+                /*
+                                // get remote.origin.url
+                                let remote_origin_url = await git.getConfig({
+                                    fs: this.fs,
+                                    dir: this.repository_folder_name,
+                                    path: "remote.origin.url"
+                                });
+                                remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
+                
+                                // get refs/HEAD
+                                let refs = await git.listServerRefs({
+                                    http,
+                                    corsProxy: "https://cors.isomorphic-git.org",
+                                    url: remote_origin_url,
+                                    prefix: "HEAD",
+                                });
+                                let head_commit = refs[0].oid;
+                                console.log(head_commit);
+                
+                                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
+                                console.log(commitOid);
+                
+                                if (commitOid !== head_commit) {
+                                    await this._git_pull();
+                                }*/
 
                 //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: this.repository_folder_name, trees: '/' });
 
@@ -100,9 +122,20 @@ export default class CDMDGitClient extends LitElement {
             // open the file in editor
             if (target.matches("sl-tree-item:not([lazy])")) {
                 let file_relative_path = target.dataset.relativePath;
+                console.log(target);
+                // TODO: remove this
+                if (file_relative_path === "1008.ttl") {
+
+                    this.dispatchEvent(new CustomEvent("cdmd-git-client:selected-file-contents", {
+                        "detail": file_1008_ttl,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+                    return;
+                }
+                // END
 
                 // get the file contents
-                console.log(this.repository_folder_name);
                 let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
 
                 let { blob } = await git.readBlob({
@@ -118,6 +151,18 @@ export default class CDMDGitClient extends LitElement {
                     "bubbles": true,
                     "composed": true,
                 }));
+            }
+
+            if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
+                target.loading = true;
+                /*try {
+                    await git.deleteRemote({ fs: this.fs, dir: this.repository_folder_name, remote: "upstream" });
+                } catch (error) {
+                    console.error(error);
+                }*/
+                console.log(this.repository_folder_name);
+                this.fs.rmdir(this.repository_folder_name);
+                target.loading = false;
             }
         });
 
@@ -171,7 +216,7 @@ export default class CDMDGitClient extends LitElement {
             let repository_folder_names = await this.pfs.readdir("/");
 
             // TO BE REMOVED: automatic cloning, for demonstration
-            if (repository_folder_names.length === 0) {
+            if (repository_folder_names.length === 0 || !repository_folder_names.includes("mermeid_sample_data")) {
                 this._load_repository();
                 repository_folder_names = await this.pfs.readdir("/");
             }
@@ -191,7 +236,7 @@ export default class CDMDGitClient extends LitElement {
     async _load_repository() {
         // the repository_folder_name and url has to be set by user, through a dialog window
         this.repository_folder_name = "/mermeid_sample_data";
-        let repository_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
+        let remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
 
         try {
             await this.pfs.mkdir(this.repository_folder_name);
@@ -209,7 +254,7 @@ export default class CDMDGitClient extends LitElement {
                 http,
                 dir: this.repository_folder_name,
                 corsProxy: "https://cors.isomorphic-git.org",
-                url: repository_url,
+                url: remote_origin_url,
                 ref,
                 singleBranch: true,
                 depth: 1
@@ -253,3 +298,35 @@ export default class CDMDGitClient extends LitElement {
 }
 
 window.customElements.define("cdmd-git-client", CDMDGitClient);
+
+let file_1008_ttl =
+    `
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+
+<https://liszt-portal.de/places/1008>
+  a melod:Place, cidoc:E53_Place, schema:Place, gnd:TerritorialCorporateBodyOrAdministrativeUnit ;
+  owl:sameAs <https://d-nb.info/gnd/4044660-8>, <http://www.wikidata.org/entity/Q90>, <http://viaf.org/viaf/240792131>, <https://sws.geonames.org/2988507> ;
+  schema:name "Paris" ;
+  schema:alternateName "Lutetia", "Lutecia", "Lutetia Parisiorum",
+      "Parisia", "Pa-li", "Ville de Paris", "P'ariz", "Paryžius", "Paříž", "Bārīs",
+      "Bali (Paris)", "Pariž", "Parigi", "Parijs", "Lutitia", "Parisius", "Lutèce", "Commune de Paris",
+      "Parisii", "Parrhisius", "Loticia Parisiorum", "Ville de Paris", "Lutetia";
+      cidoc:P89_falls_within <https://liszt-portal.de/places/17> ;
+      gnd:dateOfEstablishment "486" ;
+      gnd:biographicalOrHistoricalInformation "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
+      schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
+  .
+`;
