@@ -1,5 +1,6 @@
 class GitDataSourceInterface {
-    // Loads the repository
+    // Clones the repository in the browser
+    // Loads the remote repository
     load_repository() {}
 
     list_files(parent_dir) {}

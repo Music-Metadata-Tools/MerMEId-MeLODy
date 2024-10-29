@@ -17,7 +17,7 @@ export default class CDMDGitClient extends LitElement {
         datalist: {
             type: Array
         },
-        file_system_name: {
+        filesystem_name: {
             type: String
         },
         repository_folder_name: {
@@ -30,7 +30,7 @@ export default class CDMDGitClient extends LitElement {
     constructor() {
         super();
 
-        this.file_system_name = "mermeid";
+        this.filesystem_name = "mermeid";
     }
 
     render() {
@@ -165,11 +165,20 @@ export default class CDMDGitClient extends LitElement {
     _get_repository_folder_names = new Task(
         this,
         async ([]) => {
-            this.fs = new LightningFS(this.file_system_name);
+            this.fs = new LightningFS(this.filesystem_name);
             this.pfs = this.fs.promises;
 
             let repository_folder_names = await this.pfs.readdir("/");
+
+            // TO BE REMOVED: automatic cloning, for demonstration
+            if (repository_folder_names.length === 0) {
+                this._load_repository();
+                repository_folder_names = await this.pfs.readdir("/");
+            }
+            // END
+
             repository_folder_names.sort();
+
             // let tree_form_control = this.renderRoot.querySelector("input#search-input");
             // the tree item for the last use repo has to have @expanded
             let repository_tree_items = repository_folder_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
@@ -179,6 +188,40 @@ export default class CDMDGitClient extends LitElement {
         () => []
     );
 
+    async _load_repository() {
+        // the repository_folder_name and url has to be set by user, through a dialog window
+        this.repository_folder_name = "/mermeid_sample_data";
+        let repository_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
+
+        try {
+            await this.pfs.mkdir(this.repository_folder_name);
+        } catch (error) {
+            console.error(error);
+        }
+
+        // the branch name has to be get somehow automatically
+        let ref = "main";
+
+        let start = performance.now();
+        try {
+            await git.clone({
+                fs: this.fs,
+                http,
+                dir: this.repository_folder_name,
+                corsProxy: "https://cors.isomorphic-git.org",
+                url: repository_url,
+                ref,
+                singleBranch: true,
+                depth: 1
+            });
+        } catch (error) {
+            console.error(error);
+        }
+        let end = performance.now();
+        console.log("elapsed_time = " + (end - start) + "ms");
+        // elapsed_time = 115799ms
+    }
+
     /*_load_repository = new Task(
         this,
         async ([]) => {
@@ -186,8 +229,6 @@ export default class CDMDGitClient extends LitElement {
 
             window.pfs = window.fs.promises;
             window.dir = "/";
-            let repositories = await pfs.readdir(window.dir);
-            //console.log(repositories);
 
             let dirs = "/gretil_text_corpus";
             let start = performance.now();
@@ -196,33 +237,11 @@ export default class CDMDGitClient extends LitElement {
             let elapsed_time = end - start;
             console.log("elapsed_time for listFiles() = " + elapsed_time + "ms");
 
-            console.log(await pfs.readdir("/"));
             try {
                 await pfs.stat(dirs);
             } catch (error) {
                 console.log("clone the repo");
                 await pfs.mkdir(dirs);
-                let start = performance.now();
-                try {
-                    await git.clone({
-                        fs,
-                        http,
-                        dir: dirs,
-                        corsProxy: 'https://cors.isomorphic-git.org',
-                        url: 'https://github.com/sanskrit-texts/gretil-corpus.git',
-                        ref: 'main',
-                        singleBranch: true,
-                        depth: 1
-                    });
-                } catch (error) {
-                    console.error(error);
-                    // Expected output: ReferenceError: nonExistentFunction is not defined
-                    // (Note: the exact output may be browser-dependent)
-                }
-                let end = performance.now();
-                let elapsed_time = end - start;
-                console.log("elapsed_time = " + elapsed_time + "ms");
-                // elapsed_time = 115799ms
             }
 
             return repositories;
