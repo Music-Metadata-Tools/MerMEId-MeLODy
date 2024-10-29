@@ -4,6 +4,9 @@ import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 //import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/components/tree/tree.js";
 
+// RDF repository
+// https://github.com/rdfjs/N3.js
+
 const styles =
     css`
 
@@ -68,6 +71,10 @@ export default class CDMDGitClient extends LitElement {
 
                 let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
                 console.log(commitOid);
+
+                if (commitOid !== refs) {
+                    await this._git_pull(this.repository_folder_name);
+                }
 
 
                 // 
