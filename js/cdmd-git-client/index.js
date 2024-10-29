@@ -67,19 +67,15 @@ export default class CDMDGitClient extends LitElement {
                     url: remote_origin_url,
                     prefix: "HEAD",
                 });
-                console.log(refs);
+                let head_commit = refs[0].oid;
+                console.log(head_commit);
 
                 let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
                 console.log(commitOid);
 
-                if (commitOid !== refs) {
-                    await this._git_pull(this.repository_folder_name);
+                if (commitOid !== head_commit) {
+                    await this._git_pull();
                 }
-
-
-                // 
-
-                //await this._git_pull(this.repository_folder_name);
 
                 //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: this.repository_folder_name, trees: '/' });
 
@@ -144,7 +140,7 @@ export default class CDMDGitClient extends LitElement {
     }
 
     async _git_pull() {
-        this._set_username();        
+        this._set_username();
         let start = performance.now();
         try {
             await git.pull({
