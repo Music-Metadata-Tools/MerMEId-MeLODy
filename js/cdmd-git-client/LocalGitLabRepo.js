@@ -4,6 +4,7 @@
 class LocalGitLabRepo {
     // loads the repository when 
     load_repository() {
+        // set username
 
     }
 

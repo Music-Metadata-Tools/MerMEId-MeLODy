@@ -134,7 +134,7 @@ export default class CDMDGitClient extends LitElement {
             dir: this.repository_folder_name,
             path: "user.name",
             value: "Claudius Teodorescu"
-        }); s
+        });
     }
 
     _list_files() {
@@ -144,6 +144,7 @@ export default class CDMDGitClient extends LitElement {
     }
 
     async _git_pull() {
+        this._set_username();        
         let start = performance.now();
         try {
             await git.pull({
