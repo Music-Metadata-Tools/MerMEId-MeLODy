@@ -4,6 +4,9 @@ import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 //import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/components/tree/tree.js";
 
+// conditionally import of the datatype for the repository data
+import LocalGitLabRepo from "./LocalGitLabRepo.js";
+
 // RDF repository
 // https://github.com/rdfjs/N3.js
 
@@ -15,15 +18,38 @@ const styles =
 export default class CDMDGitClient extends LitElement {
     static properties = {
         datalist: {
-            type: Array
+            type: Array,
         },
         filesystem_name: {
-            type: String
+            type: String,
         },
         repository_folder_name: {
-            type: String
+            type: String,
         },
+        _repository_names: {
+            state: true,
+        },
+        _repository_name_items: {
+            type: Array,
+        },
+        fs: {
+            type: Object,
+            attribute: false,
+        },
+        pfs: {
+            type: Object,
+            attribute: false,
+        }
     };
+
+    updated(changedProperties) {
+        if (changedProperties.has("_repository_names")) {
+            // let tree_form_control = this.renderRoot.querySelector("input#search-input");
+            // the tree item for the last use repo has to have @expanded
+            this._repository_name_items = this._repository_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
+        }
+        super.updated(changedProperties);
+    }
 
     static styles = styles;
 
@@ -31,6 +57,7 @@ export default class CDMDGitClient extends LitElement {
         super();
 
         this.filesystem_name = "mermeid";
+        this._repository_names = [];
     }
 
     render() {
@@ -56,9 +83,9 @@ export default class CDMDGitClient extends LitElement {
                         <sl-icon name="file-earmark-minus"></sl-icon>
                     </sl-button>
                 </div>
-                ${this._get_repository_folder_names.render({
+                ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
-            complete: (data) => html`<sl-tree>${data}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
+            complete: (data) => html`<sl-tree>${data}${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
         })}
             </div>
         `;
@@ -81,7 +108,7 @@ export default class CDMDGitClient extends LitElement {
                                     path: "remote.origin.url"
                                 });
                                 remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
-                
+
                                 // get refs/HEAD
                                 let refs = await git.listServerRefs({
                                     http,
@@ -91,10 +118,10 @@ export default class CDMDGitClient extends LitElement {
                                 });
                                 let head_commit = refs[0].oid;
                                 console.log(head_commit);
-                
+
                                 let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
                                 console.log(commitOid);
-                
+
                                 if (commitOid !== head_commit) {
                                     await this._git_pull();
                                 }*/
@@ -119,10 +146,14 @@ export default class CDMDGitClient extends LitElement {
         render_root.addEventListener("click", async (event) => {
             const target = event.target;
 
+            if (target.matches("sl-tree-item[lazy], sl-tree-item[lazy] *")) {
+                this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
+            }
+
             // open the file in editor
             if (target.matches("sl-tree-item:not([lazy])")) {
                 let file_relative_path = target.dataset.relativePath;
-                console.log(target);
+
                 // TODO: remove this
                 if (file_relative_path === "1008.ttl") {
 
@@ -155,13 +186,7 @@ export default class CDMDGitClient extends LitElement {
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
                 target.loading = true;
-                /*try {
-                    await git.deleteRemote({ fs: this.fs, dir: this.repository_folder_name, remote: "upstream" });
-                } catch (error) {
-                    console.error(error);
-                }*/
-                console.log(this.repository_folder_name);
-                this.fs.rmdir(this.repository_folder_name);
+                (new LocalGitLabRepo).delete_repository(this);
                 target.loading = false;
             }
         });
@@ -206,32 +231,31 @@ export default class CDMDGitClient extends LitElement {
         console.log(file_relative_paths);
     }
 
-    // list repositories
-    _get_repository_folder_names = new Task(
+    // initialize the filesystem
+    _initialize_filesystem = new Task(
         this,
         async ([]) => {
             this.fs = new LightningFS(this.filesystem_name);
             this.pfs = this.fs.promises;
 
-            let repository_folder_names = await this.pfs.readdir("/");
-
+            console.log(this._repository_names);
             // TO BE REMOVED: automatic cloning, for demonstration
-            if (repository_folder_names.length === 0 || !repository_folder_names.includes("mermeid_sample_data")) {
-                this._load_repository();
-                repository_folder_names = await this.pfs.readdir("/");
+            if (this._repository_names.length === 0) {
+                //this._load_repository();
             }
             // END
 
-            repository_folder_names.sort();
-
-            // let tree_form_control = this.renderRoot.querySelector("input#search-input");
-            // the tree item for the last use repo has to have @expanded
-            let repository_tree_items = repository_folder_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
-
-            return repository_tree_items;
+            return await this._get_repository_names();
         },
         () => []
     );
+
+    // list repositories
+    async _get_repository_names() {
+        let _repository_names = await this.pfs.readdir("/");
+        _repository_names.sort();
+        this._repository_names = _repository_names;
+    }
 
     async _load_repository() {
         // the repository_folder_name and url has to be set by user, through a dialog window
@@ -243,6 +267,7 @@ export default class CDMDGitClient extends LitElement {
         } catch (error) {
             console.error(error);
         }
+        console.log(this.repository_folder_name);
 
         // the branch name has to be get somehow automatically
         let ref = "main";
@@ -330,3 +355,31 @@ let file_1008_ttl =
       schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
   .
 `;
+
+/*
+var fs = new LightningFS("mermeid");
+var pfs = this.fs.promises;
+
+var dir = "/mermeid_sample_data";
+
+//var files = await pfs.readdir(dir);
+
+async function clearDirectory(dir) {
+    for (let item of await window.pfs.readdir(dir)) {
+        const item_path = `${dir}/` + item;
+        if ((await window.pfs.stat(item_path)).type === 'file') {
+            await window.pfs.unlink(item_path);
+        } else {
+            await clearDirectory(item_path);
+            await window.pfs.rmdir(item_path);
+        }
+    }
+}
+
+await clearDirectory(dir);
+await pfs.rmdir(dir);
+
+var repository_folder_names = await pfs.readdir("/");
+
+console.log(repository_folder_names);
+*/
