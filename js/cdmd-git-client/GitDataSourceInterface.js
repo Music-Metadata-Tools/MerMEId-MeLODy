@@ -1,4 +1,12 @@
-class GitDataSourceInterface {
+export default class GitDataSourceInterface {
+    constructor() {
+        this._filesystem_name = "mermeid";
+    }
+
+    get filesystem_name() {
+        return this._filesystem_name;
+    }
+
     // Clones the repository in the browser,
     // or the data to be stored in browser for remote repos
     create_repository() { }

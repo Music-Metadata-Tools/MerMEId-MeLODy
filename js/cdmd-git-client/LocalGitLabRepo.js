@@ -1,27 +1,29 @@
+import GitDataSourceInterface from "./GitDataSourceInterface.js";
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 
 /**
  * @implements  GitDataSourceInterface
  */
-export default class LocalGitLabRepo {
+export default class LocalGitLabRepo extends GitDataSourceInterface {
+    constructor() {
+        super();
+
+        this.fs = new LightningFS(this.filesystem_name);
+        this.pfs = this.fs.promises;
+    }
     create_repository(custom_element) { }
 
-    async delete_repository(custom_element) {
+    async delete_repository(repository_folder_name) {
+        super.delete_repository();
+
         try {
-            await git.deleteRemote({ fs: custom_element.fs, dir: custom_element.repository_folder_name, remote: "upstream" });
+            await git.deleteRemote({ fs: this.fs, dir: repository_folder_name, remote: "upstream" });
         } catch (error) {
             console.error(error);
         }
 
-        let clearDirectory = async (dir) => {
-
-        };
-        console.log(custom_element.repository_folder_name);
-
-        await this._clear_directory(custom_element, custom_element.repository_folder_name);
-        await custom_element.pfs.rmdir(custom_element.repository_folder_name);
-
-        await custom_element._get_repository_names();
+        await this._clear_directory(repository_folder_name);
+        await this.pfs.rmdir(repository_folder_name);
     }
 
     // loads the repository when
@@ -40,14 +42,14 @@ export default class LocalGitLabRepo {
 
     }
 
-    async _clear_directory(custom_element, dir) {
-        for (let item of await custom_element.pfs.readdir(dir)) {
+    async _clear_directory(dir) {
+        for (let item of await this.pfs.readdir(dir)) {
             const item_path = `${dir}/` + item;
-            if ((await custom_element.pfs.stat(item_path)).type === 'file') {
-                await custom_element.pfs.unlink(item_path);
+            if ((await this.pfs.stat(item_path)).type === 'file') {
+                await this.pfs.unlink(item_path);
             } else {
-                await this._clear_directory(custom_element, item_path);
-                await custom_element.pfs.rmdir(item_path);
+                await this._clear_directory(item_path);
+                await this.pfs.rmdir(item_path);
             }
         }
     }

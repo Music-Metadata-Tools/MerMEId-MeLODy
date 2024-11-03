@@ -6,14 +6,13 @@ import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 
 // conditionally import of the datatype for the repository data
 import LocalGitLabRepo from "./LocalGitLabRepo.js";
+let gitlab_client = new LocalGitLabRepo();
 
 // RDF repository
 // https://github.com/rdfjs/N3.js
 
 const styles =
-    css`
-
-`;
+    css``;
 
 export default class CDMDGitClient extends LitElement {
     static properties = {
@@ -64,7 +63,7 @@ export default class CDMDGitClient extends LitElement {
         return html`
             <div id="container">
                 <div id="toolbar">
-                    <sl-button size="small" title="Add repository">
+                    <sl-button id="create-repository-toolbar-button" size="small" title="Add repository">
                         <sl-icon name="shield-plus"></sl-icon>
                     </sl-button>
                     <sl-button id="delete-repository" size="small" title="Delete repository">
@@ -83,9 +82,14 @@ export default class CDMDGitClient extends LitElement {
                         <sl-icon name="file-earmark-minus"></sl-icon>
                     </sl-button>
                 </div>
+                <sl-dialog id="create-repository-dialog" label="Create repository">
+                    <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"></sl-input>
+                    <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data" required="true" autofocus="true"></sl-input>
+                    <sl-button id="create-repository-dialog-button" slot="footer" variant="primary">Clone</sl-button>
+                </sl-dialog>
                 ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
-            complete: (data) => html`<sl-tree>${data}${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
+            complete: () => html`<sl-tree>${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
         })}
             </div>
         `;
@@ -103,7 +107,7 @@ export default class CDMDGitClient extends LitElement {
                 /*
                                 // get remote.origin.url
                                 let remote_origin_url = await git.getConfig({
-                                    fs: this.fs,
+                                    fs: gitlab_client.fs,
                                     dir: this.repository_folder_name,
                                     path: "remote.origin.url"
                                 });
@@ -119,16 +123,16 @@ export default class CDMDGitClient extends LitElement {
                                 let head_commit = refs[0].oid;
                                 console.log(head_commit);
 
-                                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
+                                let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
                                 console.log(commitOid);
 
                                 if (commitOid !== head_commit) {
                                     await this._git_pull();
                                 }*/
 
-                //let file_relative_paths = await git.walk({ fs: this.fs, gitdir: this.repository_folder_name, trees: '/' });
+                //let file_relative_paths = await git.walk({ fs: gitlab_client.fs, gitdir: this.repository_folder_name, trees: '/' });
 
-                let file_relative_paths = await git.listFiles({ fs: this.fs, dir: this.repository_folder_name, ref: 'HEAD' });
+                let file_relative_paths = await git.listFiles({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: 'HEAD' });
 
                 for (const file_relative_path of file_relative_paths) {
                     if (!file_relative_path.startsWith("data/")) {
@@ -167,10 +171,10 @@ export default class CDMDGitClient extends LitElement {
                 // END
 
                 // get the file contents
-                let commitOid = await git.resolveRef({ fs: this.fs, dir: this.repository_folder_name, ref: "HEAD" });
+                let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
 
                 let { blob } = await git.readBlob({
-                    fs: this.fs,
+                    fs: gitlab_client.fs,
                     dir: this.repository_folder_name,
                     oid: commitOid,
                     filepath: file_relative_path
@@ -184,9 +188,45 @@ export default class CDMDGitClient extends LitElement {
                 }));
             }
 
+            if (target.matches("sl-button#create-repository-toolbar-button, sl-button#create-repository-toolbar-button *")) {
+                let create_repository_dialog = render_root.querySelector("sl-dialog#create-repository-dialog");
+                create_repository_dialog.show();
+            }
+
+            if (target.matches("sl-button#create-repository-dialog-button")) {
+                let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
+                let repository_folder_name = repository_folder_name_input.value;
+
+                // check if the repository folder name is valid
+                var repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
+                if (!repository_folder_name_regex.test(repository_folder_name)) {
+                    repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contains only ASCII letters or digits, and optionally, `-`, or `-`. Example: `folder_name5`.");
+                    repository_folder_name_input.reportValidity();
+                }
+
+                // check if repository_folder_name already exists
+                let repository_names = await this._get_repository_names();
+                if (repository_names.includes(repository_folder_name)) {
+                    repository_folder_name_input.setCustomValidity("The repository folder name already exists!");
+                    repository_folder_name_input.reportValidity();
+                }
+
+                // check if repository_url is valid
+
+                // check if the repository is public; if not, display the personal access token input
+
+                // display the btranches, for user to selecte one
+
+                // clone the repo
+
+                console.log(repository_folder_name);
+            }
+
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
                 target.loading = true;
-                (new LocalGitLabRepo).delete_repository(this);
+                gitlab_client.delete_repository(this.repository_folder_name);
+                let repository_names = await this._get_repository_names();
+                this._repository_names = repository_names;
                 target.loading = false;
             }
         });
@@ -196,7 +236,7 @@ export default class CDMDGitClient extends LitElement {
 
     async _set_username() {
         await git.setConfig({
-            fs: this.fs,
+            fs: gitlab_client.fs,
             dir: this.repository_folder_name,
             path: "user.name",
             value: "Claudius Teodorescu"
@@ -204,7 +244,7 @@ export default class CDMDGitClient extends LitElement {
     }
 
     _list_files() {
-        //let file_relative_paths = await git.listFiles({ fs: this.fs, dir: this.repository_folder_name, ref: 'HEAD' });
+        //let file_relative_paths = await git.listFiles({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: 'HEAD' });
 
         //this._process_file_relative_paths(file_relative_paths);
     }
@@ -214,7 +254,7 @@ export default class CDMDGitClient extends LitElement {
         let start = performance.now();
         try {
             await git.pull({
-                fs: this.fs,
+                fs: gitlab_client.fs,
                 http,
                 dir: this.repository_folder_name,
                 ref: "main",
@@ -235,26 +275,25 @@ export default class CDMDGitClient extends LitElement {
     _initialize_filesystem = new Task(
         this,
         async ([]) => {
-            this.fs = new LightningFS(this.filesystem_name);
-            this.pfs = this.fs.promises;
-
-            console.log(this._repository_names);
             // TO BE REMOVED: automatic cloning, for demonstration
             if (this._repository_names.length === 0) {
                 //this._load_repository();
             }
             // END
 
-            return await this._get_repository_names();
+            let repository_names = await this._get_repository_names();
+
+            this._repository_names = repository_names;
         },
         () => []
     );
 
     // list repositories
     async _get_repository_names() {
-        let _repository_names = await this.pfs.readdir("/");
-        _repository_names.sort();
-        this._repository_names = _repository_names;
+        let repository_names = await gitlab_client.pfs.readdir("/");
+        repository_names.sort();
+
+        return repository_names;
     }
 
     async _load_repository() {
@@ -263,7 +302,7 @@ export default class CDMDGitClient extends LitElement {
         let remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
 
         try {
-            await this.pfs.mkdir(this.repository_folder_name);
+            await gitlab_client.pfs.mkdir(this.repository_folder_name);
         } catch (error) {
             console.error(error);
         }
@@ -275,13 +314,14 @@ export default class CDMDGitClient extends LitElement {
         let start = performance.now();
         try {
             await git.clone({
-                fs: this.fs,
+                fs: gitlab_client.fs,
                 http,
                 dir: this.repository_folder_name,
                 corsProxy: "https://cors.isomorphic-git.org",
                 url: remote_origin_url,
                 ref,
                 singleBranch: true,
+                noTags: true,
                 depth: 1
             });
         } catch (error) {
@@ -355,31 +395,3 @@ let file_1008_ttl =
       schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
   .
 `;
-
-/*
-var fs = new LightningFS("mermeid");
-var pfs = this.fs.promises;
-
-var dir = "/mermeid_sample_data";
-
-//var files = await pfs.readdir(dir);
-
-async function clearDirectory(dir) {
-    for (let item of await window.pfs.readdir(dir)) {
-        const item_path = `${dir}/` + item;
-        if ((await window.pfs.stat(item_path)).type === 'file') {
-            await window.pfs.unlink(item_path);
-        } else {
-            await clearDirectory(item_path);
-            await window.pfs.rmdir(item_path);
-        }
-    }
-}
-
-await clearDirectory(dir);
-await pfs.rmdir(dir);
-
-var repository_folder_names = await pfs.readdir("/");
-
-console.log(repository_folder_names);
-*/
