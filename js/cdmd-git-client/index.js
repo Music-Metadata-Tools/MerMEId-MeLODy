@@ -12,7 +12,10 @@ let gitlab_client = new LocalGitLabRepo();
 // https://github.com/rdfjs/N3.js
 
 const styles =
-    css``;
+    css`
+    sl-input#personal-access-token, sl-button#save-personal-access-token-button, sl-select#repository-branches {
+        display: none;
+    }`;
 
 export default class CDMDGitClient extends LitElement {
     static properties = {
@@ -83,10 +86,14 @@ export default class CDMDGitClient extends LitElement {
                     </sl-button>
                 </div>
                 <sl-dialog id="create-repository-dialog" label="Create repository">
-                    <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"></sl-input>
-                    <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data" required="true" autofocus="true"></sl-input>
+                    <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
+                    <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git" required="true"></sl-input>
+                    <sl-input id="personal-access-token" label="Personal access token" value=""></sl-input>
+                    <sl-select id="repository-branches" label="Repository branches" value=""></sl-select>
+                    <sl-button id="save-personal-access-token-button" slot="footer" variant="primary">Save token</sl-button>
                     <sl-button id="create-repository-dialog-button" slot="footer" variant="primary">Clone</sl-button>
                 </sl-dialog>
+                https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/Telemann-MEI.git
                 ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
             complete: () => html`<sl-tree>${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
@@ -195,6 +202,10 @@ export default class CDMDGitClient extends LitElement {
 
             if (target.matches("sl-button#create-repository-dialog-button")) {
                 let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
+                let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token")
+                let personal_access_token_button = render_root.querySelector("sl-button#save-personal-access-token-button");
+                let repository_branches_select = render_root.querySelector("sl-select#repository-branches");
+
                 let repository_folder_name = repository_folder_name_input.value;
 
                 // check if the repository folder name is valid
@@ -211,15 +222,46 @@ export default class CDMDGitClient extends LitElement {
                     repository_folder_name_input.reportValidity();
                 }
 
+                let repository_url_string = render_root.querySelector("sl-input#repository-url").value;
+
                 // check if repository_url is valid
+                try {
+                    new URL(repository_url_string);
+                } catch (err) {
+                    repository_folder_name_input.setCustomValidity("The repository URL is not valid.");
+                    repository_folder_name_input.reportValidity();
+                }
 
                 // check if the repository is public; if not, display the personal access token input
+                let is_public_repository = await gitlab_client.is_public_repository(repository_url_string);
+                if (!is_public_repository) {
+                    // display the input form control for entering the personal access token
+                    personal_access_token_input.style.display = "inline";
+                    personal_access_token_button.style.display = "inline-block";
+                    target.style.display = "none";
+                    repository_branches_select.style.display = "inline-block";
 
-                // display the btranches, for user to selecte one
+                    personal_access_token_input.setCustomValidity("The repository is not public, so you need a personal access token to clone it. After entering the token, please save it by pressing the button `Save token`.");
+                    personal_access_token_input.reportValidity();
+
+                    return;
+                } else {
+                    // display the branches, for user to select one of them
+                    repository_branches_select.style.display = "inline-block";
+                    let branches = await gitlab_client.list_branches(repository_url_string);
+                    console.log(branches);
+                    /*for (const file of files) {
+                        const treeItem = document.createElement("sl-tree-item");
+                        treeItem.innerText = file;
+                        lazyItem.append(treeItem);
+                    }*/
+
+
+                }
+
 
                 // clone the repo
 
-                console.log(repository_folder_name);
             }
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
@@ -228,6 +270,10 @@ export default class CDMDGitClient extends LitElement {
                 let repository_names = await this._get_repository_names();
                 this._repository_names = repository_names;
                 target.loading = false;
+            }
+
+            if (target.matches("sl-button#save-personal-access-token-button")) {
+
             }
         });
 
