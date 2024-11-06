@@ -103,7 +103,6 @@ export default class CDMDGitClient extends LitElement {
                     <sl-button id="save-personal-access-token-button" slot="footer" variant="primary">Save token</sl-button>
                     <sl-button id="create-repository-dialog-button" slot="footer" variant="primary">Clone</sl-button>
                 </sl-dialog>
-                https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/Telemann-MEI.git
                 ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
             complete: () => html`<sl-tree>${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
@@ -111,7 +110,7 @@ export default class CDMDGitClient extends LitElement {
             </div>
         `;
     }
-
+    // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/Telemann-MEI.git
     createRenderRoot() {
         const render_root = super.createRenderRoot();
 
@@ -164,6 +163,24 @@ export default class CDMDGitClient extends LitElement {
             }
         });
 
+        render_root.addEventListener("sl-change", async (event) => {
+            const target = event.target;
+
+            if (target.matches("sl-select#repository-branches")) {
+                this._repository_to_clone.branch = target.value;
+
+                let clone_button = render_root.querySelector("sl-button#create-repository-toolbar-button");
+                console.log(clone_button);
+                clone_button.loading = true;
+
+                gitlab_client.create_repository(this._repository_to_clone);
+
+                let repository_names = await this._get_repository_names();
+                this._repository_names = repository_names;
+
+                clone_button.loading = false;
+            }
+        });
         render_root.addEventListener("click", async (event) => {
             const target = event.target;
 
@@ -211,7 +228,7 @@ export default class CDMDGitClient extends LitElement {
             }
 
             if (target.matches("sl-button#create-repository-dialog-button")) {
-                this._repository_to_clone = new RepositoryToClone();
+                this._repository_to_clone = new RepositoryToClone(gitlab_client);
                 let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
                 let repository_url_input = render_root.querySelector("sl-input#repository-url");
                 let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
@@ -253,27 +270,38 @@ export default class CDMDGitClient extends LitElement {
                     return;
                 }
 
-                console.log(this._repository_to_clone);
-
                 // check if the repository is public
                 if (this._repository_to_clone.is_public === null) {
                     this._repository_to_clone.is_public = await gitlab_client.is_public_repository(repository_url);
 
                     // the repository is public, so display the branches
                     if (this._repository_to_clone.is_public) {
-                        repository_branches_select.innerHTML = "";
-                        repository_branches_select.style.display = "inline-block";
-                        let branches = await gitlab_client.list_branches(repository_url);
-                        for (const branch of branches) {
-                            const option_item = document.createElement("sl-option");
-                            option_item.setAttribute("value", branch);
-                            option_item.innerText = branch;
-                            repository_branches_select.append(option_item);
+
+                        // a branch was selected
+                        console.log(this._repository_to_clone);
+                        if (this._repository_to_clone.branch !== null) {
+                            target.loading = true;
+
+                            gitlab_client.create_repository(this._repository_to_clone);
+
+                            let repository_names = await this._get_repository_names();
+                            this._repository_names = repository_names;
+
+                            target.loading = false;
+                        } else {
+                            repository_branches_select.innerHTML = "";
+                            repository_branches_select.style.display = "inline-block";
+                            let branches = await gitlab_client.list_branches(repository_url);
+                            for (const branch of branches) {
+                                const option_item = document.createElement("sl-option");
+                                option_item.setAttribute("value", branch);
+                                option_item.innerText = branch;
+                                repository_branches_select.append(option_item);
+                            }
+
+                            repository_branches_select.setCustomValidity("Select a branch to clone, and press the button `Clone`.");
+                            repository_branches_select.reportValidity();
                         }
-
-                        //repository_branches_select.setCustomValidity("Select a branch to clone, and press the button `Clone`.");
-                        repository_branches_select.reportValidity();
-
                     } else {// the repository is not public, so display the personal access token input
 
                     }
@@ -303,12 +331,12 @@ export default class CDMDGitClient extends LitElement {
                     // display the input form control for entering the personal access token
                 } else {
                     // display the branches, for user to select one of them
-                    
+
                     if (repository_branches_select.value === "") {
 
                     } else {
                         // a branch is selected, so clone the repo
-                        
+
                     }
 
                 }
@@ -375,12 +403,6 @@ export default class CDMDGitClient extends LitElement {
     _initialize_filesystem = new Task(
         this,
         async ([]) => {
-            // TO BE REMOVED: automatic cloning, for demonstration
-            if (this._repository_names.length === 0) {
-                //this._load_repository();
-            }
-            // END
-
             let repository_names = await this._get_repository_names();
 
             this._repository_names = repository_names;
@@ -394,42 +416,6 @@ export default class CDMDGitClient extends LitElement {
         repository_names.sort();
 
         return repository_names;
-    }
-
-    async _load_repository() {
-        // the repository_folder_name and url has to be set by user, through a dialog window
-        this.repository_folder_name = "/mermeid_sample_data";
-        let remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
-
-        try {
-            await gitlab_client.pfs.mkdir(this.repository_folder_name);
-        } catch (error) {
-            console.error(error);
-        }
-        console.log(this.repository_folder_name);
-
-        // the branch name has to be get somehow automatically
-        let ref = "main";
-
-        let start = performance.now();
-        try {
-            await git.clone({
-                fs: gitlab_client.fs,
-                http,
-                dir: this.repository_folder_name,
-                corsProxy: "https://cors.isomorphic-git.org",
-                url: remote_origin_url,
-                ref,
-                singleBranch: true,
-                noTags: true,
-                depth: 1
-            });
-        } catch (error) {
-            console.error(error);
-        }
-        let end = performance.now();
-        console.log("elapsed_time = " + (end - start) + "ms");
-        // elapsed_time = 115799ms
     }
 
     /*_load_repository = new Task(
@@ -497,7 +483,8 @@ let file_1008_ttl =
 `;
 
 class RepositoryToClone {
-    constructor() {
+    constructor(git_client) {
+        this._git_client = git_client;
         this._folder = null;
         this._url = null;
         this._is_public = null;
@@ -506,7 +493,7 @@ class RepositoryToClone {
     }
 
     set folder(value) {
-        this._folder = value;
+        this._folder = `/${value}`;
     }
 
     get folder() {
@@ -545,3 +532,6 @@ class RepositoryToClone {
         return this._token;
     }
 }
+
+// add close button, deactivated from tiem to time
+// remove the X

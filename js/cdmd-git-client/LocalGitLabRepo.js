@@ -43,7 +43,36 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
         }
     }
 
-    create_repository(custom_element) { }
+    async create_repository(repository_to_clone) {
+        let repository_folder_name = repository_to_clone.folder;
+        let remote_origin_url = repository_to_clone.url;
+        let repository_branch = repository_to_clone.branch;
+
+        try {
+            await this.pfs.mkdir(repository_folder_name);
+        } catch (error) {
+            console.error(error);
+        }
+
+        let start = performance.now();
+        try {
+            await git.clone({
+                fs: this.fs,
+                http,
+                dir: repository_folder_name,
+                corsProxy: "https://cors.isomorphic-git.org",
+                url: remote_origin_url,
+                ref: repository_branch,
+                singleBranch: true,
+                noTags: true,
+                depth: 1
+            });
+        } catch (error) {
+            console.error(error);
+        }
+        let end = performance.now();
+        console.log("elapsed_time = " + (end - start) + "ms");
+    }
 
     async delete_repository(repository_folder_name) {
         super.delete_repository();
