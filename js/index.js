@@ -198,7 +198,7 @@ document.addEventListener("click", (event) => {
         });
 
         let xml = source_template({ title, classification, repository, persons })
-        let place_xml = place_template({ place_name, alternate_name, country, date, desc })
+        let place_xml = place_template({ place_name, alternate_name, country, date, description })
 
         //xml_output.querySelector("pre").innerText = xml;
         xml_output.querySelector("pre").innerText = place_xml;
