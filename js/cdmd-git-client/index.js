@@ -181,6 +181,7 @@ export default class CDMDGitClient extends LitElement {
                 clone_button.loading = false;
             }
         });
+
         render_root.addEventListener("click", async (event) => {
             const target = event.target;
 
@@ -353,6 +354,10 @@ export default class CDMDGitClient extends LitElement {
             if (target.matches("sl-button#save-personal-access-token-button")) {
                 this._repository_to_clone.token = render_root.querySelector("sl-input#personal-access-token").value;
             }
+        });
+
+        render_root.addEventListener("cdmd-git-client:repository-url", async (event) => {
+            console.log(event.detail);
         });
 
         return render_root;

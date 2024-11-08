@@ -67,7 +67,7 @@ const place_template = (data) =>
             <country xml:lang="de">${data.country}</country>
             <creation><date isodate="${data.date}">${data.date}</date></creation>
             <identifier auth="GND" auth.uri="http://d-nb.info/gnd/" codedval=""/>
-            <desc xml:lang="de">${data.desc}</desc>
+            <desc xml:lang="de">${data.description}</desc>
         </geogName>
 `;
 
