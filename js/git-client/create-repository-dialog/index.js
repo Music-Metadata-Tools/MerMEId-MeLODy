@@ -60,6 +60,9 @@ const styles =
         width: 30%;
         height: 0;
     }
+    sl-tab-panel {
+        height: 40vh;
+    }
 `;
 
 export default class CreateRepositoryDialog extends LitElement {
@@ -138,6 +141,10 @@ export default class CreateRepositoryDialog extends LitElement {
 
                 clone_button.style.display = "inline-block";
                 next_button.style.display = "none";
+            } else {
+                clone_button.style.display = "inline-block";
+                clone_button.disabled = true;
+                next_button.style.display = "none";
             }
         }
     }
@@ -163,7 +170,7 @@ export default class CreateRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_3"></sl-tab>
                     <sl-tab-panel name="panel_1">
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git" required="true"></sl-input>
+                        <sl-input id="repository-url" label="Repository URL" value="https://github.com/Edirom/MerMEId.git" required="true"></sl-input>
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
                         <sl-input id="personal-access-token" label="Personal access token" value=""></sl-input>
@@ -177,7 +184,7 @@ export default class CreateRepositoryDialog extends LitElement {
             </sl-dialog>
         `;
     }
-
+    // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git
     createRenderRoot() {
         const render_root = super.createRenderRoot();
 
@@ -247,11 +254,24 @@ export default class CreateRepositoryDialog extends LitElement {
             }
 
             if (target.matches("sl-button#clone-repository")) {
+                target.loading = true;
+
                 this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-metadata", {
                     "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,
                 }));
+            }
+        });
+
+        render_root.addEventListener("sl-change", async (event) => {
+            const target = event.target;
+
+            if (target.matches("sl-select#repository-branches")) {
+                this._repository_to_clone.branch = target.value;
+
+                let clone_button = render_root.querySelector("sl-button#clone-repository");
+                clone_button.disabled = false;
             }
         });
 
@@ -263,8 +283,21 @@ export default class CreateRepositoryDialog extends LitElement {
     }
 
     hide() {
-        this._repository_to_clone = {};
         this.renderRoot.querySelector("sl-dialog").hide();
+        this.reset();
+    }
+
+    reset() {
+        this._repository_to_clone = {};
+        this.renderRoot.querySelector("sl-tab-group").show(this._tab_panel_1_name);
+        this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
+        this.renderRoot.querySelector("sl-input#repository-url").value = "";
+        this.renderRoot.querySelector("sl-input#personal-access-token").value = "";
+        let repository_branches_select = this.renderRoot.querySelector("sl-select#repository-branches");
+        repository_branches_select.value = "";
+        repository_branches_select.innerHTML = "";
+        this.renderRoot.querySelector("sl-button#clone-repository").style.display = "none";
+        this.renderRoot.querySelector("sl-button#next-button").style.display = "inline-block";
     }
 
     _get_repositiory_branches_label() {
@@ -280,4 +313,4 @@ export default class CreateRepositoryDialog extends LitElement {
     }
 }
 
-window.customElements.define("create-repository-dialog", CreateRepositoryDialog);
+window.customElements.define("cdmd-create-repository-dialog", CreateRepositoryDialog);

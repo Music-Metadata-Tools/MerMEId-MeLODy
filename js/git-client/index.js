@@ -2,7 +2,7 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
-//import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/components/tree/tree.js";
+import "./create-repository-dialog/index.js";
 
 // conditionally import of the datatype for the repository data
 import LocalGitLabRepo from "./LocalGitLabRepo.js";
@@ -12,10 +12,7 @@ let gitlab_client = new LocalGitLabRepo();
 // https://github.com/rdfjs/N3.js
 
 const styles =
-    css`
-    sl-input#personal-access-token, sl-button#save-personal-access-token-button, sl-select#repository-branches {
-        display: none;
-    }`;
+    css``;
 
 export default class CDMDGitClient extends LitElement {
     static properties = {
@@ -34,22 +31,6 @@ export default class CDMDGitClient extends LitElement {
         _repository_name_items: {
             type: Array,
         },
-        fs: {
-            type: Object,
-            attribute: false,
-        },
-        pfs: {
-            type: Object,
-            attribute: false,
-        },
-        _repository_to_clone: {
-            type: Object,
-            attribute: false,
-        },
-        _repository_folder_name_regex: {
-            type: Object,
-            attribute: false,
-        }
     };
 
     updated(changedProperties) {
@@ -68,8 +49,6 @@ export default class CDMDGitClient extends LitElement {
 
         this.filesystem_name = "mermeid";
         this._repository_names = [];
-        this._repository_to_clone = {};
-        this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
     }
 
     render() {
@@ -95,19 +74,12 @@ export default class CDMDGitClient extends LitElement {
                         <sl-icon name="file-earmark-minus"></sl-icon>
                     </sl-button>
                 </div>
-                <sl-dialog id="create-repository-dialog" label="Create repository">
-                    <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
-                    <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git" required="true"></sl-input>
-                    <sl-input id="personal-access-token" label="Personal access token" value=""></sl-input>
-                    <sl-select id="repository-branches" label="Repository branches"></sl-select>
-                    <sl-button id="save-personal-access-token-button" slot="footer" variant="primary">Save token</sl-button>
-                    <sl-button id="create-repository-dialog-button" slot="footer" variant="primary">Clone</sl-button>
-                </sl-dialog>
                 ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
             complete: () => html`<sl-tree>${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
         })}
             </div>
+            <cdmd-create-repository-dialog></cdmd-create-repository-dialog>
         `;
     }
     // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/Telemann-MEI.git
@@ -163,25 +135,6 @@ export default class CDMDGitClient extends LitElement {
             }
         });
 
-        render_root.addEventListener("sl-change", async (event) => {
-            const target = event.target;
-
-            if (target.matches("sl-select#repository-branches")) {
-                this._repository_to_clone.branch = target.value;
-
-                let clone_button = render_root.querySelector("sl-button#create-repository-toolbar-button");
-                console.log(clone_button);
-                clone_button.loading = true;
-
-                gitlab_client.create_repository(this._repository_to_clone);
-
-                let repository_names = await this._get_repository_names();
-                this._repository_names = repository_names;
-
-                clone_button.loading = false;
-            }
-        });
-
         render_root.addEventListener("click", async (event) => {
             const target = event.target;
 
@@ -224,123 +177,10 @@ export default class CDMDGitClient extends LitElement {
             }
 
             if (target.matches("sl-button#create-repository-toolbar-button, sl-button#create-repository-toolbar-button *")) {
-                let create_repository_dialog = render_root.querySelector("sl-dialog#create-repository-dialog");
+                let create_repository_dialog = render_root.querySelector("cdmd-create-repository-dialog");
+                create_repository_dialog.repository_names = await this._get_repository_names();
+                console.log(create_repository_dialog.repository_names);
                 create_repository_dialog.show();
-            }
-
-            if (target.matches("sl-button#create-repository-dialog-button")) {
-                this._repository_to_clone = new RepositoryToClone(gitlab_client);
-                let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
-                let repository_url_input = render_root.querySelector("sl-input#repository-url");
-                let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
-                let personal_access_token_button = render_root.querySelector("sl-button#save-personal-access-token-button");
-                let repository_branches_select = render_root.querySelector("sl-select#repository-branches");
-
-                let repository_folder_name = repository_folder_name_input.value;
-
-                // check if the repository folder name is valid
-                if (!this._repository_folder_name_regex.test(repository_folder_name)) {
-                    repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contains only ASCII letters or digits, and optionally, `-`, or `-`. Example: `folder_name5`.");
-                    repository_folder_name_input.reportValidity();
-
-                    return;
-                }
-
-                // check if repository_folder_name already exists
-                let repository_names = await this._get_repository_names();
-                if (repository_names.includes(repository_folder_name)) {
-                    repository_folder_name_input.setCustomValidity("The repository folder name already exists!");
-                    repository_folder_name_input.reportValidity();
-
-                    return;
-                } else {
-                    this._repository_to_clone.folder = repository_folder_name;
-                }
-
-                let repository_url = render_root.querySelector("sl-input#repository-url").value;
-
-                // check if repository_url is valid
-                try {
-                    new URL(repository_url);
-
-                    this._repository_to_clone.url = repository_url;
-                } catch (err) {
-                    repository_url_input.setCustomValidity("The repository URL is not valid.");
-                    repository_url_input.reportValidity();
-
-                    return;
-                }
-
-                // check if the repository is public
-                if (this._repository_to_clone.is_public === null) {
-                    this._repository_to_clone.is_public = await gitlab_client.is_public_repository(repository_url);
-
-                    // the repository is public, so display the branches
-                    if (this._repository_to_clone.is_public) {
-
-                        // a branch was selected
-                        console.log(this._repository_to_clone);
-                        if (this._repository_to_clone.branch !== null) {
-                            target.loading = true;
-
-                            gitlab_client.create_repository(this._repository_to_clone);
-
-                            let repository_names = await this._get_repository_names();
-                            this._repository_names = repository_names;
-
-                            target.loading = false;
-                        } else {
-                            repository_branches_select.innerHTML = "";
-                            repository_branches_select.style.display = "inline-block";
-                            let branches = await gitlab_client.list_branches(repository_url);
-                            for (const branch of branches) {
-                                const option_item = document.createElement("sl-option");
-                                option_item.setAttribute("value", branch);
-                                option_item.innerText = branch;
-                                repository_branches_select.append(option_item);
-                            }
-
-                            repository_branches_select.setCustomValidity("Select a branch to clone, and press the button `Clone`.");
-                            repository_branches_select.reportValidity();
-                        }
-                    } else {// the repository is not public, so display the personal access token input
-
-                    }
-                } else {// the repository was checked if it is public or not
-                    console.log("is_public");
-                    if (this._repository_to_clone.is_public) {
-                        console.log("clone");
-                    }
-                    // the repository is not public, so display the personal access token input
-                    if (!this._repository_to_clone.is_public) {
-                        personal_access_token_input.style.display = "inline";
-                        personal_access_token_button.style.display = "inline-block";
-                        target.style.display = "none";
-                        repository_branches_select.style.display = "inline-block";
-
-                        personal_access_token_input.setCustomValidity("The repository is not public, so you need a personal access token to clone it. After entering the token, please save it by pressing the button `Save token`.");
-                        personal_access_token_input.reportValidity();
-
-                        return;
-                    } else {
-                        console.log(repository_branches_select.value);
-                    }
-                }
-
-                return;
-                if (!is_public_repository) {
-                    // display the input form control for entering the personal access token
-                } else {
-                    // display the branches, for user to select one of them
-
-                    if (repository_branches_select.value === "") {
-
-                    } else {
-                        // a branch is selected, so clone the repo
-
-                    }
-
-                }
             }
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
@@ -350,21 +190,41 @@ export default class CDMDGitClient extends LitElement {
                 this._repository_names = repository_names;
                 target.loading = false;
             }
-
-            if (target.matches("sl-button#save-personal-access-token-button")) {
-                this._repository_to_clone.token = render_root.querySelector("sl-input#personal-access-token").value;
-            }
         });
 
-        render_root.addEventListener("cdmd-git-client:repository-url", async (event) => {
-            console.log(event.detail);
+        document.addEventListener("cdmd-git-client:repository-url", async (event) => {
+            let repository_url = event.detail;
+            let is_public = await gitlab_client.is_public_repository(repository_url);
+
+            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
+            dialog.repository_is_public = is_public;
+        });
+
+        render_root.addEventListener("cdmd-git-client:repository-branches", async (event) => {
+            let repository_url = event.detail;
+            let branches = await gitlab_client.list_branches(repository_url);
+
+            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
+            dialog.repository_branches = branches;
+        });
+
+        render_root.addEventListener("cdmd-git-client:repository-metadata", async (event) => {
+            let repository_metadata = event.detail;
+
+            // create the repository to clone data structure
+
+            await gitlab_client.create_repository(repository_metadata);
+
+            let repository_names = await this._get_repository_names();
+            this._repository_names = repository_names;
+
+            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
+
+            dialog.hide();
+            dialog.reset();
         });
 
         return render_root;
-    }
-
-    async _set_branches() {
-
     }
 
     async _set_username() {
@@ -486,57 +346,3 @@ let file_1008_ttl =
       schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
   .
 `;
-
-class RepositoryToClone {
-    constructor(git_client) {
-        this._git_client = git_client;
-        this._folder = null;
-        this._url = null;
-        this._is_public = null;
-        this._branch = null;
-        this._token = null;
-    }
-
-    set folder(value) {
-        this._folder = `/${value}`;
-    }
-
-    get folder() {
-        return this._folder;
-    }
-
-    set url(value) {
-        this._url = value;
-    }
-
-    get url() {
-        return this._url;
-    }
-
-    set is_public(value) {
-        this._is_public = value;
-    }
-
-    get is_public() {
-        return this._is_public;
-    }
-
-    set branch(value) {
-        this._branch = value;
-    }
-
-    get branch() {
-        return this._branch;
-    }
-
-    set token(value) {
-        this._token = value;
-    }
-
-    get token() {
-        return this._token;
-    }
-}
-
-// add close button, deactivated from tiem to time
-// remove the X
