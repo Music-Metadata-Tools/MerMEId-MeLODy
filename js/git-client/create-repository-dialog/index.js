@@ -5,7 +5,7 @@ class RepositoryToClone {
     constructor() {
         this._folder = null;
         this._url = null;
-        this._is_public = null;
+        this._is_public = true;
         this._branch = null;
         this._token = null;
     }
@@ -71,10 +71,6 @@ export default class CreateRepositoryDialog extends LitElement {
             type: Array,
             attribute: false,
         },
-        repository_is_public: {
-            type: Boolean,
-            attribute: false,
-        },
         repository_branches: {
             type: Array,
             attribute: false,
@@ -84,10 +80,6 @@ export default class CreateRepositoryDialog extends LitElement {
             attribute: false,
         },
         _tab_panel_2_name: {
-            type: String,
-            attribute: false,
-        },
-        _tab_panel_3_name: {
             type: String,
             attribute: false,
         },
@@ -104,27 +96,45 @@ export default class CreateRepositoryDialog extends LitElement {
     updated(changedProperties) {
         super.updated(changedProperties);
 
+        let render_root = this.renderRoot;
+        let tab_group = render_root.querySelector("sl-tab-group");
+        let next_button = render_root.querySelector("sl-button#next-button");
+        let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
+
         if (changedProperties.has("repository_is_public")) {
             this._repository_to_clone.is_public = this.repository_is_public;
 
             if (this._repository_to_clone.is_public) {
                 // get the branches
                 this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
-                    "detail": this._repository_to_clone.url,
+                    "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,
                 }));
+            } else {
+                tab_group.show(this._tab_panel_2_name);
+                next_button.loading = false;
+
+                if (personal_access_token_input.value === "") {
+                    personal_access_token_input.setCustomValidity("The personal access token is not set.");
+                    personal_access_token_input.reportValidity();
+
+                    return;
+                } else {
+                    this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
+                        "detail": this._repository_to_clone,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+                }
             }
         }
 
         if (changedProperties.has("repository_branches")) {
-            let render_root = this.renderRoot;
-            let next_button = render_root.querySelector("sl-button#next-button");
-            let tab_group = render_root.querySelector("sl-tab-group");
             let repository_branches_select = render_root.querySelector("sl-select#repository-branches");
             let clone_button = render_root.querySelector("sl-button#clone-repository");
 
-            tab_group.show(this._tab_panel_3_name);
+            tab_group.show(this._tab_panel_2_name);
             next_button.loading = false;
 
             for (const branch of this.repository_branches) {
@@ -156,7 +166,6 @@ export default class CreateRepositoryDialog extends LitElement {
 
         this._tab_panel_1_name = "panel_1";
         this._tab_panel_2_name = "panel_2";
-        this._tab_panel_3_name = "panel_3";
         this._repository_to_clone = new RepositoryToClone();
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
     }
@@ -167,15 +176,15 @@ export default class CreateRepositoryDialog extends LitElement {
                 <sl-tab-group>
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
-                    <sl-tab slot="nav" panel="panel_3"></sl-tab>
                     <sl-tab-panel name="panel_1">
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="https://github.com/Edirom/MerMEId.git" required="true"></sl-input>
+                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git" required="true"></sl-input>
+                        <sl-details summary="Personal access token">
+                            <p>If the repository is private, one has to enter below a personal access token.</p>
+                            <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y"></sl-input>
+                        </sl-details>
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
-                        <sl-input id="personal-access-token" label="Personal access token" value=""></sl-input>
-                    </sl-tab-panel>
-                    <sl-tab-panel name="panel_3">
                         <sl-select id="repository-branches" label="${this._get_repositiory_branches_label()}"></sl-select>
                     </sl-tab-panel>
                 </sl-tab-group>
@@ -207,8 +216,10 @@ export default class CreateRepositoryDialog extends LitElement {
                     case this._tab_panel_1_name:
                         let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
                         let repository_url_input = render_root.querySelector("sl-input#repository-url");
+                        let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
 
                         let repository_folder_name = repository_folder_name_input.value;
+                        let personal_access_token = personal_access_token_input.value;
 
                         // check if the repository folder name is valid
                         if (!this._repository_folder_name_regex.test(repository_folder_name)) {
@@ -236,10 +247,16 @@ export default class CreateRepositoryDialog extends LitElement {
 
                             this._repository_to_clone.url = repository_url;
 
+                            // check if any personal access token was set
+                            if (personal_access_token !== "") {
+                                this._repository_to_clone.token = personal_access_token;
+                                this._repository_to_clone.is_public = false;
+                            }
+
                             target.loading = true;
 
-                            this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-url", {
-                                "detail": repository_url,
+                            this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
+                                "detail": this._repository_to_clone,
                                 "bubbles": true,
                                 "composed": true,
                             }));

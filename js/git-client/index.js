@@ -58,7 +58,7 @@ export default class CDMDGitClient extends LitElement {
                     <sl-button id="create-repository-toolbar-button" size="small" title="Add repository">
                         <sl-icon name="shield-plus"></sl-icon>
                     </sl-button>
-                    <sl-button id="delete-repository" size="small" title="Delete repository">
+                    <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
                         <sl-icon name="shield-minus"></sl-icon>
                     </sl-button>
                     <sl-button size="small" title="Add folder">
@@ -82,7 +82,11 @@ export default class CDMDGitClient extends LitElement {
             <cdmd-create-repository-dialog></cdmd-create-repository-dialog>
         `;
     }
-    // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/Telemann-MEI.git
+
+    firstUpdated() {
+        console.log(this.shadowRoot.querySelector("sl-button"));
+    }
+
     createRenderRoot() {
         const render_root = super.createRenderRoot();
 
@@ -140,6 +144,7 @@ export default class CDMDGitClient extends LitElement {
 
             if (target.matches("sl-tree-item[lazy], sl-tree-item[lazy] *")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
+                render_root.querySelector("sl-button#delete-repository").disabled = false;
             }
 
             // open the file in editor
@@ -184,25 +189,29 @@ export default class CDMDGitClient extends LitElement {
             }
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
-                target.loading = true;
+                let button = target.closest("sl-button");
+                console.log(button);
+                button.loading = true;
+
                 gitlab_client.delete_repository(this.repository_folder_name);
                 let repository_names = await this._get_repository_names();
                 this._repository_names = repository_names;
-                target.loading = false;
+
+                button.loading = false;
+                button.disabled = true;
             }
         });
 
-        document.addEventListener("cdmd-git-client:repository-url", async (event) => {
-            let repository_url = event.detail;
-            let is_public = await gitlab_client.is_public_repository(repository_url);
-
-            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
-            dialog.repository_is_public = is_public;
-        });
-
         render_root.addEventListener("cdmd-git-client:repository-branches", async (event) => {
-            let repository_url = event.detail;
-            let branches = await gitlab_client.list_branches(repository_url);
+            let repository_metadata = event.detail;
+            let repository_is_public = repository_metadata.is_public;
+            let repository_url = repository_metadata.url;
+
+            let branches = [];
+            if (repository_is_public) {
+                branches = await gitlab_client.list_branches(repository_metadata);
+            }// else 
+            
 
             let dialog = render_root.querySelector("cdmd-create-repository-dialog");
             dialog.repository_branches = branches;
@@ -346,3 +355,4 @@ let file_1008_ttl =
       schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
   .
 `;
+// updated list of repo after deletion of a repo

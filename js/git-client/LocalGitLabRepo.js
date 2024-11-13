@@ -13,36 +13,6 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
         this.pfs = this.fs.promises;
     }
 
-    async is_public_repository(repository_url) {
-        let is_public = true;
-
-        try {
-            await git.getRemoteInfo2({
-                http,
-                corsProxy: "https://cors.isomorphic-git.org",
-                url: repository_url
-            });
-
-            return is_public;
-        } catch (error) {
-            let status_code = error.data.statusCode;
-
-            if (status_code === 401) {
-                is_public = false;
-
-                return is_public;
-            } else {
-                // Maybe deal with more error codes, or even return the error messages
-                // or even replace alert().
-                alert(`HTTP error: ${status_code}.`);
-
-                return is_public;
-            }
-
-
-        }
-    }
-
     async create_repository(repository_to_clone) {
         let repository_folder_name = repository_to_clone.folder;
         let remote_origin_url = repository_to_clone.url;
@@ -88,8 +58,8 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
     }
 
     // List the branches of a repository.
-    async list_branches(repository_url) {
-        let branch_metadata = await this._list_refs(repository_url, "heads");
+    async list_branches(repository_metadata) {
+        let branch_metadata = await this._list_refs(repository_metadata, "heads");
         let branches = branch_metadata.map(metadatum => {
             let ref = metadatum.ref;
 

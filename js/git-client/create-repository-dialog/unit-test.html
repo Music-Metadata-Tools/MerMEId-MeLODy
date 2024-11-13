@@ -27,13 +27,6 @@
         dialog.repository_names = ["a"];
         dialog.show();
 
-        document.addEventListener("cdmd-git-client:repository-url", async (event) => {
-            let repository_url = event.detail;
-            let is_public = await gitlab_client.is_public_repository(repository_url);
-
-            dialog.repository_is_public = is_public;
-        });
-
         document.addEventListener("cdmd-git-client:repository-branches", async (event) => {
             let repository_url = event.detail;
             let branches = await gitlab_client.list_branches(repository_url);

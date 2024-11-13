@@ -7,9 +7,6 @@ export default class GitDataSourceInterface {
         return this._filesystem_name;
     }
 
-    // Check if the repository is public
-    is_public_repository() {}
-
     // Clones the repository in the browser,
     // or the data to be stored in browser for remote repos
     create_repository() { }
