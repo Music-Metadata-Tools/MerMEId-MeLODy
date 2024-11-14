@@ -85,18 +85,18 @@ export default class CDMDGitClient extends LitElement {
     }
 
     firstUpdated() {
-        console.log(this.shadowRoot.querySelector("sl-button"));
+        //console.log(this.shadowRoot.querySelector("sl-button"));
     }
 
     createRenderRoot() {
-        const render_root = super.createRenderRoot();
+        let render_root = super.createRenderRoot();
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
-            const target = event.target;
+            let target = event.target;
 
+            // this is for clicking the expand icon
             if (target.matches("sl-tree-item[lazy], sl-tree-item[lazy] *")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
-
                 /*
                                 // get remote.origin.url
                                 let remote_origin_url = await git.getConfig({
@@ -139,15 +139,20 @@ export default class CDMDGitClient extends LitElement {
         });
 
         render_root.addEventListener("click", async (event) => {
-            const target = event.target;
+            let target = event.target;
+            let delete_repository_button = render_root.querySelector("sl-button#delete-repository");
 
-            if (target.matches("sl-tree-item[lazy], sl-tree-item[lazy] *")) {
+            // this is for clicking the name of a folder for a repository
+            if (target.matches("sl-tree-item[data-repository-folder-name]")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
-                render_root.querySelector("sl-button#delete-repository").disabled = false;
+                delete_repository_button.disabled = false;
+                console.log("data-repository-folder-name");
             }
 
             // open the file in editor
-            if (target.matches("sl-tree-item:not([lazy])")) {
+            if (target.matches("sl-tree-item:not([data-repository-folder-name])")) {
+                delete_repository_button.disabled = true;
+
                 let file_relative_path = target.dataset.relativePath;
 
                 // TODO: remove this
@@ -189,7 +194,6 @@ export default class CDMDGitClient extends LitElement {
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
                 let button = target.closest("sl-button");
-                console.log(button);
                 button.loading = true;
 
                 await gitlab_client.delete_repository(this.repository_folder_name);
@@ -224,6 +228,12 @@ export default class CDMDGitClient extends LitElement {
 
             dialog.hide();
             dialog.reset();
+        });
+
+        render_root.addEventListener("sl-selection-change", (event) => {
+            let target = event.target;
+
+            // console.log(target);
         });
 
         return render_root;
