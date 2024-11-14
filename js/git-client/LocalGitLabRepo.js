@@ -127,7 +127,7 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
             url: repository_metadata.url,
             prefix: `refs/${refs_type}/`,
             onAuth: () => ({
-                username: "oauth2",
+                username: "teoclaud",
                 password: "aGrcXmKzFAypt57zox-y"
             }),
         });

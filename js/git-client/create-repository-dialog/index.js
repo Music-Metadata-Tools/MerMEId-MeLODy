@@ -7,6 +7,7 @@ class RepositoryToClone {
         this._url = null;
         this._is_public = true;
         this._branch = null;
+        this._username = null;
         this._token = null;
     }
 
@@ -48,6 +49,14 @@ class RepositoryToClone {
 
     get token() {
         return this._token;
+    }
+
+    set username(value) {
+        this._username = value;
+    }
+
+    get username() {
+        return this._username;
     }
 }
 
@@ -150,7 +159,8 @@ export default class CreateRepositoryDialog extends LitElement {
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
                         <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git" required="true"></sl-input>
                         <sl-details summary="Personal access token">
-                            <p>If the repository is private, one has to enter below a personal access token.</p>
+                            <p>If the repository is private, one has to enter below the username and a personal access token for that user. The personal access token for GitHub has to have the scopes: <i>api</i>, <i>read_repository</i>, and <i>write_repository</i></p>
+                            <sl-input id="username" label="Username" value="teoclaud"></sl-input>
                             <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y"></sl-input>
                         </sl-details>
                     </sl-tab-panel>
@@ -182,61 +192,73 @@ export default class CreateRepositoryDialog extends LitElement {
                 let tab_group = this.renderRoot.querySelector("sl-tab-group");
                 let active_tab_panel = tab_group.activeTab.panel;
 
-                switch (active_tab_panel) {
-                    case this._tab_panel_1_name:
-                        let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
-                        let repository_url_input = render_root.querySelector("sl-input#repository-url");
-                        let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
+                let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
+                let repository_url_input = render_root.querySelector("sl-input#repository-url");
+                let username_input = render_root.querySelector("sl-input#username");
+                let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
 
-                        let repository_folder_name = repository_folder_name_input.value;
-                        let personal_access_token = personal_access_token_input.value;
+                let repository_folder_name = repository_folder_name_input.value;
+                let username = username_input.value;
+                let personal_access_token = personal_access_token_input.value;
 
-                        // check if the repository folder name is valid
-                        if (!this._repository_folder_name_regex.test(repository_folder_name)) {
-                            repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contains only ASCII letters or digits, and optionally, `-`, or `-`. Example: `folder_name5`.");
-                            repository_folder_name_input.reportValidity();
+                // check if the repository folder name is valid
+                if (!this._repository_folder_name_regex.test(repository_folder_name)) {
+                    repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contains only ASCII letters or digits, and optionally, `-`, or `-`. Example: `folder_name5`.");
+                    repository_folder_name_input.reportValidity();
+
+                    return;
+                }
+
+                // check if repository_folder_name already exists
+                if (this.repository_names.includes(repository_folder_name)) {
+                    repository_folder_name_input.setCustomValidity("The repository folder name already exists!");
+                    repository_folder_name_input.reportValidity();
+
+                    return;
+                } else {
+                    this._repository_to_clone.folder = repository_folder_name;
+                }
+
+                let repository_url = render_root.querySelector("sl-input#repository-url").value;
+
+                // check if repository_url is valid
+                try {
+                    new URL(repository_url);
+
+                    this._repository_to_clone.url = repository_url;
+
+                    // check if any username or personal access token was set
+                    if (username !== "" || personal_access_token !== "") {
+                        if (username === "") {
+                            username_input.setCustomValidity("The username is not set.");
+                            username_input.reportValidity();
+
+                            return;
+                        }
+
+                        if (personal_access_token === "") {
+                            personal_access_token_input.setCustomValidity("The personal access token is not set.");
+                            personal_access_token_input.reportValidity();
 
                             return;
                         }
 
-                        // check if repository_folder_name already exists
-                        if (this.repository_names.includes(repository_folder_name)) {
-                            repository_folder_name_input.setCustomValidity("The repository folder name already exists!");
-                            repository_folder_name_input.reportValidity();
+                        this._repository_to_clone.token = personal_access_token;
+                        this._repository_to_clone.is_public = false;
+                    }
 
-                            return;
-                        } else {
-                            this._repository_to_clone.folder = repository_folder_name;
-                        }
+                    target.loading = true;
 
-                        let repository_url = render_root.querySelector("sl-input#repository-url").value;
+                    this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
+                        "detail": this._repository_to_clone,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+                } catch (err) {
+                    repository_url_input.setCustomValidity("The repository URL is not valid.");
+                    repository_url_input.reportValidity();
 
-                        // check if repository_url is valid
-                        try {
-                            new URL(repository_url);
-
-                            this._repository_to_clone.url = repository_url;
-
-                            // check if any personal access token was set
-                            if (personal_access_token !== "") {
-                                this._repository_to_clone.token = personal_access_token;
-                                this._repository_to_clone.is_public = false;
-                            }
-
-                            target.loading = true;
-
-                            this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
-                                "detail": this._repository_to_clone,
-                                "bubbles": true,
-                                "composed": true,
-                            }));
-                        } catch (err) {
-                            repository_url_input.setCustomValidity("The repository URL is not valid.");
-                            repository_url_input.reportValidity();
-
-                            return;
-                        }
-                        break;
+                    return;
                 }
             }
 
