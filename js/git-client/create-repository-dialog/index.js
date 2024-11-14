@@ -99,36 +99,6 @@ export default class CreateRepositoryDialog extends LitElement {
         let render_root = this.renderRoot;
         let tab_group = render_root.querySelector("sl-tab-group");
         let next_button = render_root.querySelector("sl-button#next-button");
-        let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
-
-        if (changedProperties.has("repository_is_public")) {
-            this._repository_to_clone.is_public = this.repository_is_public;
-
-            if (this._repository_to_clone.is_public) {
-                // get the branches
-                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
-                    "detail": this._repository_to_clone,
-                    "bubbles": true,
-                    "composed": true,
-                }));
-            } else {
-                tab_group.show(this._tab_panel_2_name);
-                next_button.loading = false;
-
-                if (personal_access_token_input.value === "") {
-                    personal_access_token_input.setCustomValidity("The personal access token is not set.");
-                    personal_access_token_input.reportValidity();
-
-                    return;
-                } else {
-                    this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
-                        "detail": this._repository_to_clone,
-                        "bubbles": true,
-                        "composed": true,
-                    }));
-                }
-            }
-        }
 
         if (changedProperties.has("repository_branches")) {
             let repository_branches_select = render_root.querySelector("sl-select#repository-branches");
@@ -273,7 +243,7 @@ export default class CreateRepositoryDialog extends LitElement {
             if (target.matches("sl-button#clone-repository")) {
                 target.loading = true;
 
-                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-metadata", {
+                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-to-create", {
                     "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,

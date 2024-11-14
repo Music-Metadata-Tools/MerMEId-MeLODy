@@ -13,6 +13,37 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
         this.pfs = this.fs.promises;
     }
 
+    async is_public_repository(repository_metadata) {
+        let is_public = true;
+        let repository_url = repository_metadata.url;
+
+        try {
+            await git.getRemoteInfo2({
+                http,
+                corsProxy: "https://cors.isomorphic-git.org",
+                url: repository_url
+            });
+
+            return is_public;
+        } catch (error) {
+            let status_code = error.data.statusCode;
+
+            if (status_code === 401) {
+                is_public = false;
+
+                return is_public;
+            } else {
+                // Maybe deal with more error codes, or even return the error messages
+                // or even replace alert().
+                alert(`HTTP error: ${status_code}.`);
+
+                return is_public;
+            }
+
+
+        }
+    }
+
     async create_repository(repository_to_clone) {
         let repository_folder_name = repository_to_clone.folder;
         let remote_origin_url = repository_to_clone.url;
@@ -35,7 +66,11 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
                 ref: repository_branch,
                 singleBranch: true,
                 noTags: true,
-                depth: 1
+                depth: 1,
+                onAuth: () => ({
+                    username: "oauth2",
+                    password: "aGrcXmKzFAypt57zox-y"
+                }),
             });
         } catch (error) {
             console.error(error);
@@ -85,12 +120,16 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
 
     }
 
-    async _list_refs(repository_url, refs_type) {
+    async _list_refs(repository_metadata, refs_type) {
         let refs = await git.listServerRefs({
             http,
             corsProxy: "https://cors.isomorphic-git.org",
-            url: repository_url,
+            url: repository_metadata.url,
             prefix: `refs/${refs_type}/`,
+            onAuth: () => ({
+                username: "oauth2",
+                password: "aGrcXmKzFAypt57zox-y"
+            }),
         });
 
         return refs;

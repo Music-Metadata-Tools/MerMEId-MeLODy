@@ -34,7 +34,7 @@
             dialog.repository_branches = branches;
         });
 
-        document.addEventListener("cdmd-git-client:repository-metadata", async (event) => {
+        document.addEventListener("cdmd-git-client:repository-to-create", async (event) => {
             let repository_metadata = event.detail;
             console.log(repository_metadata);
         });

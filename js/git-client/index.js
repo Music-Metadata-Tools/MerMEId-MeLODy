@@ -34,12 +34,13 @@ export default class CDMDGitClient extends LitElement {
     };
 
     updated(changedProperties) {
+        super.updated(changedProperties);
+
         if (changedProperties.has("_repository_names")) {
             // let tree_form_control = this.renderRoot.querySelector("input#search-input");
             // the tree item for the last use repo has to have @expanded
             this._repository_name_items = this._repository_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
         }
-        super.updated(changedProperties);
     }
 
     static styles = styles;
@@ -134,8 +135,6 @@ export default class CDMDGitClient extends LitElement {
                         target.append(tree_item);
                     }
                 }
-
-                target.lazy = false;
             }
         });
 
@@ -193,7 +192,7 @@ export default class CDMDGitClient extends LitElement {
                 console.log(button);
                 button.loading = true;
 
-                gitlab_client.delete_repository(this.repository_folder_name);
+                await gitlab_client.delete_repository(this.repository_folder_name);
                 let repository_names = await this._get_repository_names();
                 this._repository_names = repository_names;
 
@@ -204,20 +203,14 @@ export default class CDMDGitClient extends LitElement {
 
         render_root.addEventListener("cdmd-git-client:repository-branches", async (event) => {
             let repository_metadata = event.detail;
-            let repository_is_public = repository_metadata.is_public;
-            let repository_url = repository_metadata.url;
 
-            let branches = [];
-            if (repository_is_public) {
-                branches = await gitlab_client.list_branches(repository_metadata);
-            }// else 
-            
+            let branches = await gitlab_client.list_branches(repository_metadata);
 
             let dialog = render_root.querySelector("cdmd-create-repository-dialog");
             dialog.repository_branches = branches;
         });
 
-        render_root.addEventListener("cdmd-git-client:repository-metadata", async (event) => {
+        render_root.addEventListener("cdmd-git-client:repository-to-create", async (event) => {
             let repository_metadata = event.detail;
 
             // create the repository to clone data structure
