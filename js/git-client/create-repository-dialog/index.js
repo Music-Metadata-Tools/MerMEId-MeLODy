@@ -99,6 +99,10 @@ export default class CreateRepositoryDialog extends LitElement {
         _repository_folder_name_regex: {
             type: Object,
             attribute: false,
+        },
+        _credentials_alert: {
+            type: Object,
+            attribute: false,
         }
     };
 
@@ -147,6 +151,7 @@ export default class CreateRepositoryDialog extends LitElement {
         this._tab_panel_2_name = "panel_2";
         this._repository_to_clone = new RepositoryToClone();
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
+        this._credentials_alert = null;
     }
 
     render() {
@@ -156,13 +161,11 @@ export default class CreateRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
-                        <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true"autofocus="true"></sl-input>
+                        <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true" autofocus="true"></sl-input>
                         <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git" required="true"></sl-input>
-                        <sl-details summary="Personal access token">
-                            <p>If the repository is private, one has to enter below the username and a personal access token for that user. The personal access token for GitHub has to have the scopes: <i>api</i>, <i>read_repository</i>, and <i>write_repository</i></p>
-                            <sl-input id="username" label="Username" value="teoclaud"></sl-input>
-                            <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y"></sl-input>
-                        </sl-details>
+                        <div>Credentials<sl-icon-button id="show-credentials" name="question-lg"></sl-icon-button></div>
+                        <sl-input id="username" label="Username" value="teoclaud" required="true"></sl-input>
+                        <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y" required="true"></sl-input>
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
                         <sl-select id="repository-branches" label="${this._get_repositiory_branches_label()}"></sl-select>
@@ -171,9 +174,16 @@ export default class CreateRepositoryDialog extends LitElement {
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
             </sl-dialog>
+            <sl-alert id="credentials" variant="primary" closable>
+                These credentials are needed even for public repositories, in order to push data to the upstream repository.
+            </sl-alert>
         `;
     }
-    // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git
+    
+    firstUpdated() {
+        this._credentials_alert = this.shadowRoot.querySelector("sl-alert#credentials");
+    }
+
     createRenderRoot() {
         const render_root = super.createRenderRoot();
 
@@ -270,6 +280,10 @@ export default class CreateRepositoryDialog extends LitElement {
                     "bubbles": true,
                     "composed": true,
                 }));
+            }
+
+            if (target.matches("sl-icon-button#show-credentials")) {
+                this._credentials_alert.toast();
             }
         });
 
