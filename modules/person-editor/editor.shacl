@@ -18,9 +18,9 @@
 
 melod:Place
   a sh:NodeShape ;
-  sh:node melod:cidoc_place ;
-  sh:node melod:schema_place ;
-  sh:node melod:gnd_place ;
+  sh:node melod:cidoc_person ;
+  sh:node melod:schema_person ;
+  sh:node melod:gnd_person ;
   sh:property   [ sh:description "Same as" ;
                   sh:name "Same as" ;
                   sh:nodeKind sh:IRI ;
@@ -34,35 +34,47 @@ melod:Place
                   sh:path schema:alternateName
                 ] .
 
-melod:cidoc_place
+melod:cidoc_person
   a sh:NodeShape ;
-  sh:property   [ sh:description "Place name" ;
+  sh:property   [ sh:description "Person name" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:name
                 ] ;
-  sh:property   [ sh:description "Description of the place" ;
-                  sh:name "Description" ;
-                  dash:singleLine false ;
+  sh:property   [ sh:description "Birth date" ;
+                  sh:datatype xsd:date ;
+                  sh:name "Birth Date" ;
                   sh:maxCount 1;
-                  sh:path schema:description
+                  sh:path schema:birthDate
                 ] ;
-  sh:property   [ sh:description "Falls within" ;
-                  sh:name "Falls within" ;
+  sh:property   [ sh:description "Death date" ;
+                  sh:datatype xsd:date ;
+                  sh:name "Death Date" ;
+                  sh:maxCount 1;
+                  sh:path schema:deathDate
+                ] ;
+  sh:property   [ sh:description "Birth Place" ;
+                  sh:name "Birth Place" ;
                   sh:nodeKind sh:IRI ;
                   sh:maxCount 1;
-                  sh:path cidoc:P89_falls_within
+                  sh:path schema:birthPlace
                 ] ;
-  sh:targetClass cidoc:E53_Place .
+  sh:property   [ sh:description "Death Place" ;
+                  sh:name "Death Place" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:maxCount 1;
+                  sh:path schema:deathPlace
+                ] ;
+  sh:targetClass cidoc:E21_Person .
 
-melod:schema_place
+melod:schema_person
   a sh:NodeShape ;
-  sh:targetClass schema:Place .
+  sh:targetClass schema:Person .
 
-melod:gnd_place
+melod:gnd_person
   a sh:NodeShape ;
-  sh:targetClass gnd:PlaceOrGeographicName .
+  sh:targetClass gnd:DifferentiatedPerson .
 
 melod:SameAsGroup
   a               sh:PropertyGroup ;
@@ -71,3 +83,6 @@ melod:SameAsGroup
 melod:AlternateNamesGroup
   a               sh:PropertyGroup ;
   rdfs:label      "Alternate name" .
+
+<https://liszt-portal.de/places/18> a cidoc:E53_Place, schema:Place, gnd:Country ;
+    rdfs:label "Hamburg"@de .
