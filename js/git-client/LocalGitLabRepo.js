@@ -44,10 +44,10 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
         }
     }
 
-    async create_repository(repository_to_clone) {
-        let repository_folder_name = repository_to_clone.folder;
-        let remote_origin_url = repository_to_clone.url;
-        let repository_branch = repository_to_clone.branch;
+    async create_repository(repository_metadata) {
+        let repository_folder_name = repository_metadata.folder;
+        let remote_origin_url = repository_metadata.url;
+        let repository_branch = repository_metadata.branch;
 
         try {
             await this.pfs.mkdir(repository_folder_name);
@@ -68,8 +68,8 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
                 noTags: true,
                 depth: 1,
                 onAuth: () => ({
-                    username: "oauth2",
-                    password: "aGrcXmKzFAypt57zox-y"
+                    username: repository_metadata.username, 
+                    password: repository_metadata.token,
                 }),
             });
         } catch (error) {
@@ -127,8 +127,8 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
             url: repository_metadata.url,
             prefix: `refs/${refs_type}/`,
             onAuth: () => ({
-                username: "teoclaud",
-                password: "aGrcXmKzFAypt57zox-y"
+                username: repository_metadata.username,
+                password: repository_metadata.token,
             }),
         });
 

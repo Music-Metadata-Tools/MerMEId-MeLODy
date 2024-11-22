@@ -43,20 +43,20 @@ class RepositoryToClone {
         return this._branch;
     }
 
-    set token(value) {
-        this._token = value;
-    }
-
-    get token() {
-        return this._token;
-    }
-
     set username(value) {
         this._username = value;
     }
 
     get username() {
         return this._username;
+    }
+
+    set token(value) {
+        this._token = value;
+    }
+
+    get token() {
+        return this._token;
     }
 }
 
@@ -66,7 +66,7 @@ const styles =
         display: none;
     }
     sl-tab {
-        width: 30%;
+        width: 50%;
         height: 0;
     }
     sl-tab-panel {
@@ -163,7 +163,6 @@ export default class CreateRepositoryDialog extends LitElement {
                     <sl-tab-panel name="panel_1">
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true" autofocus="true"></sl-input>
                         <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git" required="true"></sl-input>
-                        <div>Credentials<sl-icon-button id="show-credentials" name="question-lg"></sl-icon-button></div>
                         <sl-input id="username" label="Username" value="teoclaud" required="true"></sl-input>
                         <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y" required="true"></sl-input>
                     </sl-tab-panel>
@@ -174,9 +173,6 @@ export default class CreateRepositoryDialog extends LitElement {
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
             </sl-dialog>
-            <sl-alert id="credentials" variant="primary" closable>
-                These credentials are needed even for public repositories, in order to push data to the upstream repository.
-            </sl-alert>
         `;
     }
     
@@ -253,6 +249,7 @@ export default class CreateRepositoryDialog extends LitElement {
                             return;
                         }
 
+                        this._repository_to_clone.username = username;
                         this._repository_to_clone.token = personal_access_token;
                         this._repository_to_clone.is_public = false;
                     }
@@ -280,10 +277,6 @@ export default class CreateRepositoryDialog extends LitElement {
                     "bubbles": true,
                     "composed": true,
                 }));
-            }
-
-            if (target.matches("sl-icon-button#show-credentials")) {
-                this._credentials_alert.toast();
             }
         });
 
@@ -337,3 +330,14 @@ export default class CreateRepositoryDialog extends LitElement {
 }
 
 window.customElements.define("cdmd-create-repository-dialog", CreateRepositoryDialog);
+
+// https://github.com/isomorphic-git/isomorphic-git/blob/51f2ddb1c04e349bfa248a1fbbb9859605f433f2/__tests__/test-hosting-providers.js#L108
+
+// https://github.com/isomorphic-git/test.empty | isomorphic-git-test-push | c1cd7a39b4709db6794a75cee7b89c043b52fd8e
+// https://gitlab.com/isomorphic-git/test.empty | isomorphic-git-test-push | g6Q2bv6e6Sca7PKgzNjv
+// https://bitbucket.org/isomorphic-git/test.empty | isomorphic-git | nwTZtQKXEExLx3FhWSqT
+
+// MerMEId (granular pat): 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
+// GitLab mermeid-classic (classic pat): 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 | repo, user
+
+// https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git | teoclaud | aGrcXmKzFAypt57zox-y | read_user, read_repository, write_repository

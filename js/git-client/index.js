@@ -146,7 +146,6 @@ export default class CDMDGitClient extends LitElement {
             if (target.matches("sl-tree-item[data-repository-folder-name]")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
                 delete_repository_button.disabled = false;
-                console.log("data-repository-folder-name");
             }
 
             // open the file in editor
@@ -188,7 +187,6 @@ export default class CDMDGitClient extends LitElement {
             if (target.matches("sl-button#create-repository-toolbar-button, sl-button#create-repository-toolbar-button *")) {
                 let create_repository_dialog = render_root.querySelector("cdmd-create-repository-dialog");
                 create_repository_dialog.repository_names = await this._get_repository_names();
-                console.log(create_repository_dialog.repository_names);
                 create_repository_dialog.show();
             }
 
