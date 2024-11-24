@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>CDMD File manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.cdnfonts.com/css/palatino-linotype" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/themes/light.css" />
+</head>
+
+<body>
+    <header>
+        <h1 class="title">CDMD File manager</h1>
+    </header>
+    <main>
+        <cdmd-filesystem-manager></cdmd-filesystem-manager>
+    </main>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/shoelace.js"></script>
+    <script type="module" src="index.js"></script>
+    <script type="module">
+        let file_manager = document.querySelector("cdmd-filesystem-manager");
+        let integers = Array.from(Array(50000).keys());
+        let entries = integers.map(integer => `repofolder:/${integer}`);
+        file_manager.entries = entries;
+    </script>
+</body>
+
+</html>
