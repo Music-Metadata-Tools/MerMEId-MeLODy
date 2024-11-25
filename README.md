@@ -6,7 +6,11 @@ This is the new version of MerMEId.
 
 ## Description of the web components used for the frontend
 
+* [editor-ontology-loader](docs/web-components/editor-ontology-loader.md);
+
 * [filesystem-manager](docs/web-components/filesystem-manager.md);
+
+* [filesystem-navigator](docs/web-components/filesystem-manager.md);
 
 * [git-client](docs/web-components/git-client.md);
 
