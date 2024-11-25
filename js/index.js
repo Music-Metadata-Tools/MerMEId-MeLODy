@@ -114,10 +114,6 @@ treeItem.innerText = file;
 lazyItem.append(treeItem);
 }*/
 
-let form = document.getElementById("shacl-form");
-let xml_output = document.getElementById("shacl-xml-output");
-let rdf_output = document.getElementById("shacl-rdf-output");
-
 /*form.addEventListener("change", (event) => {
 output.classList.toggle('valid', event.detail?.valid);
 output.classList.toggle('invalid', !event.detail?.valid);
@@ -130,8 +126,14 @@ document.addEventListener("click", (event) => {
     let target = event.target;
 
     if (target.matches("button#save")) {
-        let rdf_result = form.serialize();
-        let result_json = JSON.parse(form.serialize("application/ld+json"));
+        // get the tab that was selected - TODO: delete this when the editor component is ready
+        console.log(document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre"));
+        let shacl_form = document.querySelector("sl-tab-group#main sl-tab-panel[active] shacl-form");
+        let xml_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+        let rdf_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+        // end delete
+        let rdf_result = shacl_form.serialize();
+        let result_json = JSON.parse(shacl_form.serialize("application/ld+json"));
 
         let title = "";
         let classification = "";
@@ -164,8 +166,8 @@ document.addEventListener("click", (event) => {
                 let person_id = item["@id"];
                 if (!persons.hasOwnProperty(person_id)) {
                     persons[person_id] = {};
-            }
-            persons[person_id].name = person_name;
+                }
+                persons[person_id].name = person_name;
             }
             if (item.hasOwnProperty("http://www.w3.org/ns/dcat#hadRole")) {
                 let role_iri = item["http://www.w3.org/ns/dcat#hadRole"]["@id"];
@@ -200,9 +202,8 @@ document.addEventListener("click", (event) => {
         let xml = source_template({ title, classification, repository, persons })
         let place_xml = place_template({ place_name, alternate_name, country, date, description })
 
-        //xml_output.querySelector("pre").innerText = xml;
-        xml_output.querySelector("pre").innerText = place_xml;
-        rdf_output.querySelector("pre").innerText = rdf_result;
+        xml_output.innerText = place_xml;
+        rdf_output.innerText = rdf_result;
     }
 });
 
