@@ -6,9 +6,9 @@ This is the new version of MerMEId.
 
 ## Description of the web components used for the frontend
 
-* [cdmd-git-client](docs/web-components/git-client.md);
+* [filesystem-manager](docs/web-components/filesystem-manager.md);
 
-* [cdmd-filesystem-manager](docs/web-components/filesystem-manager.md);
+* [git-client](docs/web-components/git-client.md);
 
 ## Description of the modules used for the frontend
 
