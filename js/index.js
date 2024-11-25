@@ -217,3 +217,9 @@ document.addEventListener("cdmd-git-client:selected-file-contents", (event) => {
 
     document.querySelector("sl-tab-group#main").show("edit");
 });
+
+document.addEventListener("cdmd-git-client:entries", (event) => {
+    let entries = event.detail;
+
+    console.log(entries);
+});

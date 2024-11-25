@@ -77,7 +77,7 @@ export default class CDMDGitClient extends LitElement {
                 </div>
                 ${this._initialize_filesystem.render({
             pending: () => html`Loading repositories...`,
-            complete: () => html`<sl-tree>${this._repository_name_items}<sl-tree-item data-relative-path="1008.ttl">1008.ttl</sl-tree-item></sl-tree>`,
+            complete: () => html`<sl-tree>${this._repository_name_items}</sl-tree>`,
         })}
             </div>
             <cdmd-create-repository-dialog></cdmd-create-repository-dialog>
@@ -153,18 +153,6 @@ export default class CDMDGitClient extends LitElement {
                 delete_repository_button.disabled = true;
 
                 let file_relative_path = target.dataset.relativePath;
-
-                // TODO: remove this
-                if (file_relative_path === "1008.ttl") {
-
-                    this.dispatchEvent(new CustomEvent("cdmd-git-client:selected-file-contents", {
-                        "detail": file_1008_ttl,
-                        "bubbles": true,
-                        "composed": true,
-                    }));
-                    return;
-                }
-                // END
 
                 // get the file contents
                 let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
@@ -278,6 +266,13 @@ export default class CDMDGitClient extends LitElement {
         this,
         async ([]) => {
             let repository_names = await this._get_repository_names();
+            let processed_repository_names = repository_names.map(name => `repofolder:/${name}`);
+            console.log(processed_repository_names);
+            this.dispatchEvent(new CustomEvent("cdmd-git-client:entries", {
+                "detail": processed_repository_names,
+                "bubbles": true,
+                "composed": true,
+            }));
 
             this._repository_names = repository_names;
         },
@@ -323,36 +318,3 @@ export default class CDMDGitClient extends LitElement {
 }
 
 window.customElements.define("cdmd-git-client", CDMDGitClient);
-
-let file_1008_ttl =
-    `
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix schema: <http://schema.org/> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix dcat: <http://www.w3.org/ns/dcat#> .
-@prefix geo: <http://www.opengis.net/ont/geosparql#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
-
-@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
-@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
-@prefix schema: <http://schema.org/> .
-
-<https://liszt-portal.de/places/1008>
-  a melod:Place, cidoc:E53_Place, schema:Place, gnd:TerritorialCorporateBodyOrAdministrativeUnit ;
-  owl:sameAs <https://d-nb.info/gnd/4044660-8>, <http://www.wikidata.org/entity/Q90>, <http://viaf.org/viaf/240792131>, <https://sws.geonames.org/2988507> ;
-  schema:name "Paris" ;
-  schema:alternateName "Lutetia", "Lutecia", "Lutetia Parisiorum",
-      "Parisia", "Pa-li", "Ville de Paris", "P'ariz", "Paryžius", "Paříž", "Bārīs",
-      "Bali (Paris)", "Pariž", "Parigi", "Parijs", "Lutitia", "Parisius", "Lutèce", "Commune de Paris",
-      "Parisii", "Parrhisius", "Loticia Parisiorum", "Ville de Paris", "Lutetia";
-      cidoc:P89_falls_within <https://liszt-portal.de/places/17> ;
-      gnd:dateOfEstablishment "486" ;
-      gnd:biographicalOrHistoricalInformation "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
-      schema:description "Hauptstadt von Frankreich, seit Neolithikum besiedelt, von Kelten gegründet, seit 486 Hauptstadt des Fränk. Reiches"@de;
-  .
-`;
-// updated list of repo after deletion of a repo
