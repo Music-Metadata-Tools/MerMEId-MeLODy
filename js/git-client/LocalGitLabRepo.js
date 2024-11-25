@@ -66,6 +66,7 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
                 ref: repository_branch,
                 singleBranch: true,
                 noTags: true,
+                cache: {},
                 depth: 1,
                 onAuth: () => ({
                     username: repository_metadata.username, 

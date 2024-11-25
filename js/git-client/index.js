@@ -223,7 +223,6 @@ export default class CDMDGitClient extends LitElement {
             this._repository_names = repository_names;
 
             let dialog = render_root.querySelector("cdmd-create-repository-dialog");
-
             dialog.hide();
             dialog.reset();
         });
