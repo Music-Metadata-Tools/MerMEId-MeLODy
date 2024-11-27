@@ -38,8 +38,15 @@ export default class CDMDGitClient extends LitElement {
 
         if (changedProperties.has("_repository_names")) {
             // let tree_form_control = this.renderRoot.querySelector("input#search-input");
-            // the tree item for the last use repo has to have @expanded
             this._repository_name_items = this._repository_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
+
+            let processed_repository_names = this._repository_names.map(name => `repofolder:/${name}`);
+            console.log(processed_repository_names);
+            document.dispatchEvent(new CustomEvent("cdmd-git-client:entries", {
+                "detail": processed_repository_names,
+                "bubbles": true,
+                "composed": true,
+            }));
         }
     }
 
@@ -266,13 +273,6 @@ export default class CDMDGitClient extends LitElement {
         this,
         async ([]) => {
             let repository_names = await this._get_repository_names();
-            let processed_repository_names = repository_names.map(name => `repofolder:/${name}`);
-            console.log(processed_repository_names);
-            this.dispatchEvent(new CustomEvent("cdmd-git-client:entries", {
-                "detail": processed_repository_names,
-                "bubbles": true,
-                "composed": true,
-            }));
 
             this._repository_names = repository_names;
         },

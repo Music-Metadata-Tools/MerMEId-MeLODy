@@ -25,6 +25,9 @@ export default class CDMDFileManager extends LitElement {
         _repo_folder_scheme_name: {
             type: String,
         },
+        _repo_folder_scheme_part: {
+            type: String,
+        },
         _repo_folder_scheme_length: {
             type: Number,
         },
@@ -35,7 +38,7 @@ export default class CDMDFileManager extends LitElement {
 
         if (changedProperties.has("entries")) {
             let entries = this.entries;
-
+            console.log(entries);
             // set the number of pages
             this._page_count = Math.ceil(entries.length / this._items_per_page);
 
@@ -74,16 +77,17 @@ export default class CDMDFileManager extends LitElement {
         this._page_count = 1;
         this.current_page = 1;
         this._items_per_page = 10;
-        this._repo_folder_scheme_name = "repofolder:/";
-        this._repo_folder_scheme_length = this._repo_folder_scheme_name.length;
+        this._repo_folder_scheme_name = "repofolder";
+        this._repo_folder_scheme_part = `${this._repo_folder_scheme_name}:/`;
+        this._repo_folder_scheme_length = this._repo_folder_scheme_part.length;
     }
 
-    _generate_entry(entry_path, entry_name, entry_type) {
+    _process_entry(entry_path, entry_name, entry_type) {
         let processed_entry = {};
 
         switch (entry_type) {
             case this._repo_folder_scheme_name:
-                processed_entry = html`<sl-tree-item lazy data-repository-folder-name="${entry_path}">${entry_name}</sl-tree-item>`;
+                processed_entry = html`<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
                 break;
         }
 
@@ -99,13 +103,15 @@ export default class CDMDFileManager extends LitElement {
         let start_index = (current_page - 1) * items_per_page;
         let end_index = current_page * items_per_page;
         let visible_entries = entries.slice(start_index, end_index);
+        console.log(entries);
 
         for (let visible_entry of visible_entries) {
             switch (true) {
-                case visible_entry.startsWith(this._repo_folder_scheme_name):
+                case visible_entry.startsWith(this._repo_folder_scheme_part):
+                    console.log(visible_entry);
                     let repo_folder_path = visible_entry.substring(this._repo_folder_scheme_length - 1);
                     let repo_folder_name = visible_entry.substring(this._repo_folder_scheme_length);
-                    let processed_entry = this._generate_entry(repo_folder_path, repo_folder_name, this._repo_folder_scheme_name);
+                    let processed_entry = this._process_entry(repo_folder_path, repo_folder_name, this._repo_folder_scheme_name);
 
                     processed_entries.push(processed_entry);
                     break;

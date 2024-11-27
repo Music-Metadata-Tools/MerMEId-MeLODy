@@ -122,6 +122,8 @@ output.querySelector("pre").innerText = form.serialize();
 console.log(form.serialize());
 });*/
 
+let filesystem_manager = document.querySelector("cdmd-filesystem-manager");
+
 document.addEventListener("click", (event) => {
     let target = event.target;
 
@@ -220,6 +222,7 @@ document.addEventListener("cdmd-git-client:selected-file-contents", (event) => {
 
 document.addEventListener("cdmd-git-client:entries", (event) => {
     let entries = event.detail;
-
     console.log(entries);
+
+    filesystem_manager.entries = entries;
 });
