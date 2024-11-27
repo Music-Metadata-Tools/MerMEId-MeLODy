@@ -162,7 +162,7 @@ export default class CreateRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true" autofocus="true"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-large-repo.git" required="true"></sl-input>
+                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-small-repo.git" required="true"></sl-input>
                         <sl-input id="username" label="Username" value="teoclaud" required="true"></sl-input>
                         <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y" required="true"></sl-input>
                     </sl-tab-panel>
