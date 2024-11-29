@@ -30,8 +30,27 @@
             </sl-tab-panel>
             <sl-tab-panel name="places">
                 <section id="editor-and-viewer">
+                    <section id="data-import">
+                        <sl-input id="input-gnd-id" label="GND identifier" placeholder="e. g. 4044660-8"></sl-input>
+                        <br/>
+                        <sl-dialog id="dialog">
+                            GND identifier not found!
+                            <sl-button id="dialog-close-button" slot="footer" variant="primary">Close</sl-button>
+                        </sl-dialog>
+                        <sl-button id="show-button" variant="primary">Show data</sl-button>
+                        <br/>
+                        <br/>
+                        <sl-input id="name-output" label="preferredName" readonly style="display: inline-block;"></sl-input>
+                        <sl-copy-button from="name-output.value"></sl-copy-button>
+                        <br/>
+                        <sl-input id="info-output" label="biographicalOrHistoricalInformation" readonly style="display: inline-block;"></sl-input>
+                        <sl-copy-button from="info-output.value"></sl-copy-button>
+                        <br/>
+                        <br/>
+                        <sl-button id="import-button" variant="primary">Import data</sl-button>
+                    </section>
                     <section id="editor">
-                        <shacl-form id="shacl-form" data-shapes-url="modules/place-editor/editor.shacl" data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form>
+                        <shacl-form id="shacl-form-places" data-shapes-url="modules/place-editor/editor.shacl" data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form>
                     </section>
                     <button id="save">Save</button>
                     <section id="viewer">
@@ -130,6 +149,7 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>
     <script type="module" src="modules/git-client/index.js"></script>
     <script type="module" src="modules/filesystem-manager/index.js"></script>
+    <script type="module" src="modules/external-data-importer/index.js"></script>
     <script type="module" src="js/index.js"></script>
 </body>
 
