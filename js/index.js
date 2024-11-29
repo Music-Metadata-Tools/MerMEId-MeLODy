@@ -122,8 +122,6 @@ output.querySelector("pre").innerText = form.serialize();
 console.log(form.serialize());
 });*/
 
-let filesystem_manager = document.querySelector("cdmd-filesystem-manager");
-
 document.addEventListener("click", (event) => {
     let target = event.target;
 
@@ -218,11 +216,4 @@ document.addEventListener("cdmd-git-client:selected-file-contents", (event) => {
     document.querySelector("shacl-form#shacl-form").dataset.values = file_contents;
 
     document.querySelector("sl-tab-group#main").show("edit");
-});
-
-document.addEventListener("cdmd-git-client:entries", (event) => {
-    let entries = event.detail;
-    console.log(entries);
-
-    filesystem_manager.entries = entries;
 });

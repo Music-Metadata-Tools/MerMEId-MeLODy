@@ -2,7 +2,6 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
-import "./create-repository-dialog/index.js";
 
 // conditionally import of the datatype for the repository data
 import LocalGitLabRepo from "./LocalGitLabRepo.js";
@@ -39,14 +38,6 @@ export default class CDMDGitClient extends LitElement {
         if (changedProperties.has("_repository_names")) {
             // let tree_form_control = this.renderRoot.querySelector("input#search-input");
             this._repository_name_items = this._repository_names.map(repository_folder_name => html`<sl-tree-item lazy data-repository-folder-name="${repository_folder_name}">${repository_folder_name}</sl-tree-item>`);
-
-            let processed_repository_names = this._repository_names.map(name => `repofolder:/${name}`);
-            console.log(processed_repository_names);
-            document.dispatchEvent(new CustomEvent("cdmd-git-client:entries", {
-                "detail": processed_repository_names,
-                "bubbles": true,
-                "composed": true,
-            }));
         }
     }
 
@@ -63,7 +54,7 @@ export default class CDMDGitClient extends LitElement {
         return html`
             <div id="container">
                 <div id="toolbar">
-                    <sl-button id="create-repository-toolbar-button" size="small" title="Add repository">
+                    <sl-button id="add-repository-toolbar-button" size="small" title="Add repository">
                         <sl-icon name="shield-plus"></sl-icon>
                     </sl-button>
                     <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
@@ -83,11 +74,11 @@ export default class CDMDGitClient extends LitElement {
                     </sl-button>
                 </div>
                 ${this._initialize_filesystem.render({
-            pending: () => html`Loading repositories...`,
+            pending: () => html`Loading repository names...`,
             complete: () => html`<sl-tree>${this._repository_name_items}</sl-tree>`,
         })}
             </div>
-            <cdmd-create-repository-dialog></cdmd-create-repository-dialog>
+            <cdmd-add-repository-dialog></cdmd-add-repository-dialog>
         `;
     }
 
@@ -179,8 +170,8 @@ export default class CDMDGitClient extends LitElement {
                 }));
             }
 
-            if (target.matches("sl-button#create-repository-toolbar-button, sl-button#create-repository-toolbar-button *")) {
-                let create_repository_dialog = render_root.querySelector("cdmd-create-repository-dialog");
+            if (target.matches("sl-button#add-repository-toolbar-button, sl-button#add-repository-toolbar-button *")) {
+                let create_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
                 create_repository_dialog.repository_names = await this._get_repository_names();
                 create_repository_dialog.show();
             }
@@ -203,7 +194,7 @@ export default class CDMDGitClient extends LitElement {
 
             let branches = await gitlab_client.list_branches(repository_metadata);
 
-            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
+            let dialog = render_root.querySelector("cdmd-add-repository-dialog");
             dialog.repository_branches = branches;
         });
 
@@ -217,7 +208,7 @@ export default class CDMDGitClient extends LitElement {
             let repository_names = await this._get_repository_names();
             this._repository_names = repository_names;
 
-            let dialog = render_root.querySelector("cdmd-create-repository-dialog");
+            let dialog = render_root.querySelector("cdmd-add-repository-dialog");
             dialog.hide();
             dialog.reset();
         });

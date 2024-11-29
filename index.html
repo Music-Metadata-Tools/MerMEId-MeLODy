@@ -16,7 +16,7 @@
     </header>
     <main>
         <sl-tab-group id="main">
-            <sl-tab slot="nav" panel="file-list">Repository list</sl-tab>
+            <sl-tab slot="nav" panel="filesystem">Filesystem</sl-tab>
             <sl-tab slot="nav" panel="places">Places</sl-tab>
             <sl-tab slot="nav" panel="persons">Persons</sl-tab>
             <sl-tab slot="nav" panel="events">Events</sl-tab>
@@ -24,8 +24,7 @@
             <sl-tab slot="nav" panel="sources">Sources</sl-tab>
             <sl-tab slot="nav" panel="expressions">Expressions</sl-tab>
 
-            <sl-tab-panel name="file-list">
-                <cdmd-git-client></cdmd-git-client>
+            <sl-tab-panel name="filesystem">
                 <cdmd-filesystem-manager></cdmd-filesystem-manager>
             </sl-tab-panel>
             <sl-tab-panel name="places">
@@ -129,8 +128,8 @@
     <script type="module" src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>
     <script type="module" src="modules/git-client/index.js"></script>
-    <script type="module" src="modules/filesystem-manager/index.js"></script>
     <script type="module" src="js/index.js"></script>
+    <script type="module" src="modules/filesystem-manager/index.js"></script>
 </body>
 
 </html>
