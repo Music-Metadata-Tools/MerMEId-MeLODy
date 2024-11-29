@@ -44,7 +44,7 @@ export default class LocalGitLabRepo extends GitDataSourceInterface {
         }
     }
 
-    async create_repository(repository_metadata) {
+    async add_repository(repository_metadata) {
         let repository_folder_name = repository_metadata.folder;
         let remote_origin_url = repository_metadata.url;
         let repository_branch = repository_metadata.branch;

@@ -74,7 +74,7 @@ const styles =
     }
 `;
 
-export default class CreateRepositoryDialog extends LitElement {
+export default class AddRepositoryDialog extends LitElement {
     static properties = {
         repository_names: {
             type: Array,
@@ -156,7 +156,7 @@ export default class CreateRepositoryDialog extends LitElement {
 
     render() {
         return html`
-            <sl-dialog id="add-repository-dialog" label="Create repository">
+            <sl-dialog id="add-repository-dialog" label="Add repository">
                 <sl-tab-group>
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
@@ -272,7 +272,7 @@ export default class CreateRepositoryDialog extends LitElement {
             if (target.matches("sl-button#clone-repository")) {
                 target.loading = true;
 
-                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-to-create", {
+                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-to-add", {
                     "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,
@@ -329,7 +329,7 @@ export default class CreateRepositoryDialog extends LitElement {
     }
 }
 
-window.customElements.define("cdmd-add-repository-dialog", CreateRepositoryDialog);
+window.customElements.define("cdmd-add-repository-dialog", AddRepositoryDialog);
 
 // https://github.com/isomorphic-git/isomorphic-git/blob/51f2ddb1c04e349bfa248a1fbbb9859605f433f2/__tests__/test-hosting-providers.js#L108
 

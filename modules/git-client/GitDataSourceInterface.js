@@ -9,7 +9,7 @@ export default class GitDataSourceInterface {
 
     // Clones the repository in the browser,
     // or the data to be stored in browser for remote repos
-    create_repository() { }
+    add_repository() { }
 
     delete_repository() { }
 

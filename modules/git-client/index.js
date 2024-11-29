@@ -171,9 +171,9 @@ export default class CDMDGitClient extends LitElement {
             }
 
             if (target.matches("sl-button#add-repository-toolbar-button, sl-button#add-repository-toolbar-button *")) {
-                let create_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
-                create_repository_dialog.repository_names = await this._get_repository_names();
-                create_repository_dialog.show();
+                let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
+                add_repository_dialog.repository_names = await this._get_repository_names();
+                add_repository_dialog.show();
             }
 
             if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
@@ -198,12 +198,12 @@ export default class CDMDGitClient extends LitElement {
             dialog.repository_branches = branches;
         });
 
-        render_root.addEventListener("cdmd-git-client:repository-to-create", async (event) => {
+        render_root.addEventListener("cdmd-git-client:repository-to-add", async (event) => {
             let repository_metadata = event.detail;
 
-            // create the repository to clone data structure
+            // add the repository to clone data structure
 
-            await gitlab_client.create_repository(repository_metadata);
+            await gitlab_client.add_repository(repository_metadata);
 
             let repository_names = await this._get_repository_names();
             this._repository_names = repository_names;
