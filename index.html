@@ -15,8 +15,10 @@
         <h1 class="title">MerMEId MeLOD</h1>
     </header>
     <main>
+        <nav id="filesystem-nav">
+            <cdmd-filesystem-manager></cdmd-filesystem-manager>
+        </nav>
         <sl-tab-group id="main">
-            <sl-tab slot="nav" panel="filesystem">Filesystem</sl-tab>
             <sl-tab slot="nav" panel="places">Places</sl-tab>
             <sl-tab slot="nav" panel="persons">Persons</sl-tab>
             <sl-tab slot="nav" panel="events">Events</sl-tab>
@@ -24,9 +26,6 @@
             <sl-tab slot="nav" panel="sources">Sources</sl-tab>
             <sl-tab slot="nav" panel="expressions">Expressions</sl-tab>
 
-            <sl-tab-panel name="filesystem">
-                <cdmd-filesystem-manager></cdmd-filesystem-manager>
-            </sl-tab-panel>
             <sl-tab-panel name="places">
                 <section id="editor-and-viewer">
                     <section id="editor">

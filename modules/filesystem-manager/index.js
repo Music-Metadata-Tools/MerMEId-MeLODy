@@ -10,18 +10,51 @@ let filesystem = new LocalGitLabRepo();
 const styles =
     css`
         :host {
-            width: 13vw;
+            width: 14vw;
             display: inline-block;
         }
         div#container {
             display: flex;
             flex-direction: column;
         }
-        sl-tab-group.filesystem sl-tab {
-            width: 50%;
-        }
         lion-pagination {
             margin-bottom: 0px;
+        }
+        sl-card#repositories-card::part(base) {
+            height: 30vh;
+        }
+        sl-card#files-card::part(base) {
+            height: 50vh;
+        }
+        sl-card.filesystem {
+            margin-bottom: 5px;
+            font-size: var(--sl-font-size-small);
+        }
+        sl-card.filesystem::part(base) {
+            border-color: var(--sl-color-primary-600);
+        }
+        sl-card.filesystem div[slot = "header"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        sl-card.filesystem::part(body) {
+            padding-top: 0;
+        }
+        sl-card.filesystem h3 {
+            margin: 0;
+        }
+        sl-tree-item::part(label) {
+            font-size: var(--sl-font-size-small);
+        }
+        div.filesystem-card-content {
+            overflow: scroll;
+        }
+        div#repositories-card-content {
+            height: 22vh;
+        }
+        div#files-card-content {
+            height: 42vh;
         }
     `;
 
@@ -79,49 +112,51 @@ export default class CDMDFilesystemManager extends LitElement {
     render() {
         return html`
             <div id="container">
-                ${this._initialize_filesystem.render({
-                    pending: () => html`Loading repository names...`,
-                    complete: () => html`<sl-select label="Repositories">${this._visible_entries}</sl-select>`,
-                })}
-                <sl-button-group>
-                    <sl-button id="add-repository-toolbar-button" size="small">
-                        <sl-icon name="shield-plus" label="Add repository"></sl-icon>
-                    </sl-button>
-                    <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
-                        <sl-icon name="shield-minus" label="Delete repository"></sl-icon>
-                    </sl-button>
-                    <sl-button id="rename-repository" size="small" title="Rename repository">
-                        <sl-icon name="shield-shaded" label="Rename repository"></sl-icon>
-                    </sl-button>
-                </sl-button-group>
-                <sl-tab-group class="filesystem">
-                    <sl-tab slot="nav" panel="repositories">Repositories</sl-tab>
-                    <sl-tab slot="nav" panel="files">Files</sl-tab>
-                    <sl-tab-panel name="repositories">
-
-                    </sl-tab-panel>
-                    <sl-tab-panel name="files">
+                <sl-card id="repositories-card" class="filesystem">
+                    <div slot="header">
+                        Repositories
                         <sl-button-group>
-                            <sl-button size="small" title="Add folder">
-                                <sl-icon name="folder-plus"></sl-icon>
+                            <sl-button class="add-repository" size="small" title="Add repository">
+                                <sl-icon name="shield-plus"></sl-icon>
                             </sl-button>
-                            <sl-button size="small" title="Delete folder">
-                                <sl-icon name="folder-minus"></sl-icon>
+                            <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
+                                <sl-icon name="shield-minus"></sl-icon>
                             </sl-button>
+                            <sl-button id="rename-repository" size="small" title="Rename repository">
+                                <sl-icon name="shield"></sl-icon>
+                            </sl-button>
+                        </sl-button-group>
+                    </div>
+                    <div id="repositories-card-content" class="filesystem-card-content">
+                        ${this._initialize_filesystem.render({
+                            pending: () => html`Loading repository names...`,
+                            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
+                        })}
+                    </div>
+                </sl-card>
+                <sl-card id="files-card" class="filesystem">
+                    <div slot="header">
+                        Files
+                        <sl-button-group>
                             <sl-button size="small" title="Add file">
                                 <sl-icon name="file-earmark-plus"></sl-icon>
                             </sl-button>
                             <sl-button size="small" title="Delete file">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
+                            <sl-button size="small" title="Rename file">
+                                <sl-icon name="file-earmark"></sl-icon>
+                            </sl-button>
                         </sl-button-group>
-                    </sl-tab-panel>
-                </sl-tab-group>
-                <lion-pagination count="${this._page_count}" current="${this.current_page}"></lion-pagination>
-                ${this._initialize_filesystem.render({
+                    </div>
+                    <div id="files-card-content" class="filesystem-card-content">
+                        <!--<lion-pagination count="${this._page_count}" current="${this.current_page}"></lion-pagination>-->
+                        ${this._initialize_filesystem.render({
             pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree><sl-tree-item open>Repositories${this._visible_entries}</sl-tree-item><sl-divider></sl-divider>${this._visible_entries}</sl-tree>`,
+            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
         })}
+                    </div>
+                </sl-card>
             </div>
             <cdmd-add-repository-dialog></cdmd-add-repository-dialog>
         `;
@@ -129,20 +164,40 @@ export default class CDMDFilesystemManager extends LitElement {
 
     firstUpdated() {
         let render_root = this.renderRoot;
+        let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
 
         render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
             this.current_page = event.target.current;
             this._display_page();
         });
 
-        this.addEventListener("click", async (event) => {
+        this.addEventListener("sl-focus", async (event) => {
             let target = event.composedPath()[0];
-            //let shadow_root = 
-            if (target.matches("sl-button#add-repository-toolbar-button, sl-button#add-repository-toolbar-button *")) {
-                let add_repository_dialog = this.querySelector("cdmd-add-repository-dialog");
-                add_repository_dialog.repository_names = await this._get_repository_names();
+
+            if (target.matches("sl-button.add-repository, sl-button.add-repository *")) {
+                add_repository_dialog.repository_names = await filesystem.list_repository_names();
                 add_repository_dialog.show();
             }
+        });
+
+        render_root.addEventListener("cdmd-git-client:repository-branches", async (event) => {
+            let repository_metadata = event.detail;
+
+            let branches = await filesystem.list_branches(repository_metadata);
+
+            add_repository_dialog.repository_branches = branches;
+        });
+
+        render_root.addEventListener("cdmd-git-client:repository-to-add", async (event) => {
+            let repository_metadata = event.detail;
+
+            // add the repository
+            await filesystem.add_repository(repository_metadata);
+
+            await this._list_repository_names();
+
+            add_repository_dialog.hide();
+            add_repository_dialog.reset();
         });
 
         render_root.querySelector("div#container").addEventListener("sl-show", event => {
@@ -173,8 +228,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
         switch (entry_type) {
             case this._repo_folder_scheme_name:
-                processed_entry = html`<sl-option value="${entry_path}">${entry_name}</sl-option>`;
-                //<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
+                processed_entry = html`<sl-tree-item data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
                 break;
         }
 
@@ -194,7 +248,6 @@ export default class CDMDFilesystemManager extends LitElement {
         for (let visible_entry of visible_entries) {
             switch (true) {
                 case visible_entry.startsWith(this._repo_folder_scheme_part):
-                    console.log(visible_entry);
                     let repo_folder_path = visible_entry.substring(this._repo_folder_scheme_length - 1);
                     let repo_folder_name = visible_entry.substring(this._repo_folder_scheme_length);
                     let processed_entry = this._process_entry(repo_folder_path, repo_folder_name, this._repo_folder_scheme_name);
@@ -210,13 +263,17 @@ export default class CDMDFilesystemManager extends LitElement {
     _initialize_filesystem = new Task(
         this,
         async ([]) => {
-            let repository_names = await filesystem.list_repository_names();
-            let processed_repository_names = repository_names.map(name => `repofolder:/${name}`);
-
-            this.entries = processed_repository_names;
+            await this._list_repository_names();
         },
         () => []
     );
+
+    async _list_repository_names() {
+        let repository_names = await filesystem.list_repository_names();
+        let processed_repository_names = repository_names.map(name => `${this._repo_folder_scheme_part}${name}`);
+
+        this.entries = processed_repository_names;
+    }
 
 }
 

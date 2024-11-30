@@ -33,8 +33,12 @@ body.ready {
 body>main {
     flex: 1;
     display: flex;
-    flex-direction: column;
     font-size: var(--step-0);
+}
+
+nav#filesystem-nav {
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 section#editor-and-viewer {

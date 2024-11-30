@@ -162,7 +162,7 @@ export default class AddRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
                         <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true" autofocus="true"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-small-repo.git" required="true"></sl-input>
+                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git" required="true"></sl-input>
                         <sl-input id="username" label="Username" value="teoclaud" required="true"></sl-input>
                         <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y" required="true"></sl-input>
                     </sl-tab-panel>
@@ -175,7 +175,7 @@ export default class AddRepositoryDialog extends LitElement {
             </sl-dialog>
         `;
     }
-    // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git
+
     firstUpdated() {
         this._credentials_alert = this.shadowRoot.querySelector("sl-alert#credentials");
     }
@@ -195,9 +195,6 @@ export default class AddRepositoryDialog extends LitElement {
             let target = event.target;
 
             if (target.matches("sl-button#next-button")) {
-                let tab_group = this.renderRoot.querySelector("sl-tab-group");
-                let active_tab_panel = tab_group.activeTab.panel;
-
                 let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");
                 let repository_url_input = render_root.querySelector("sl-input#repository-url");
                 let username_input = render_root.querySelector("sl-input#username");
