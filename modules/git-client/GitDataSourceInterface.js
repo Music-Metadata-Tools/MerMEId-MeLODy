@@ -11,7 +11,7 @@ export default class GitDataSourceInterface {
     // or the data to be stored in browser for remote repos
     add_repository() { }
 
-    delete_repository() { }
+    remove_repository() { }
 
     // List the branches of a repository.
     list_branches() { }

@@ -37,12 +37,10 @@ const styles =
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 5px;
         }
         sl-card.filesystem::part(body) {
             padding-top: 0;
-        }
-        sl-card.filesystem h3 {
-            margin: 0;
         }
         sl-tree-item::part(label) {
             font-size: var(--sl-font-size-small);
@@ -116,14 +114,17 @@ export default class CDMDFilesystemManager extends LitElement {
                     <div slot="header">
                         Repositories
                         <sl-button-group>
-                            <sl-button class="add-repository" size="small" title="Add repository">
+                            <sl-button id="add-repository" size="small" title="Add repository">
                                 <sl-icon name="shield-plus"></sl-icon>
                             </sl-button>
-                            <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
+                            <sl-button id="remove-repository" size="small" title="Remove repository">
                                 <sl-icon name="shield-minus"></sl-icon>
                             </sl-button>
                             <sl-button id="rename-repository" size="small" title="Rename repository">
                                 <sl-icon name="shield"></sl-icon>
+                            </sl-button>
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
+                                <sl-icon name="arrow-counterclockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                     </div>
@@ -141,7 +142,7 @@ export default class CDMDFilesystemManager extends LitElement {
                             <sl-button size="small" title="Add file">
                                 <sl-icon name="file-earmark-plus"></sl-icon>
                             </sl-button>
-                            <sl-button size="small" title="Delete file">
+                            <sl-button size="small" title="Remove file">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
                             <sl-button size="small" title="Rename file">
@@ -166,15 +167,20 @@ export default class CDMDFilesystemManager extends LitElement {
         let render_root = this.renderRoot;
         let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
 
-        render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
+        /*render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
             this.current_page = event.target.current;
             this._display_page();
-        });
+        });*/
 
-        this.addEventListener("sl-focus", async (event) => {
-            let target = event.composedPath()[0];
+        render_root.addEventListener("sl-focus", async (event) => {
+            let target = event.target;
 
-            if (target.matches("sl-button.add-repository, sl-button.add-repository *")) {
+            if (target.matches("sl-button#add-repository")) {
+                add_repository_dialog.repository_names = await filesystem.list_repository_names();
+                add_repository_dialog.show();
+            }
+
+            if (target.matches("sl-button#add-repository")) {
                 add_repository_dialog.repository_names = await filesystem.list_repository_names();
                 add_repository_dialog.show();
             }
@@ -198,17 +204,6 @@ export default class CDMDFilesystemManager extends LitElement {
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
-        });
-
-        render_root.querySelector("div#container").addEventListener("sl-show", event => {
-            let target = event.target;
-
-            if (target.matches("sl-details, sl-details > *")) {
-                let container = target.closest("div#container");
-                console.log(container);
-
-                [...container.querySelectorAll("sl-details")].map(details => (details.open = event.target === details));
-            }
         });
     }
 

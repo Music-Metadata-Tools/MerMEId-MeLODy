@@ -57,19 +57,19 @@ export default class CDMDGitClient extends LitElement {
                     <sl-button id="add-repository-toolbar-button" size="small" title="Add repository">
                         <sl-icon name="shield-plus"></sl-icon>
                     </sl-button>
-                    <sl-button id="delete-repository" size="small" title="Delete repository" disabled>
+                    <sl-button id="remove-repository" size="small" title="Remove repository" disabled>
                         <sl-icon name="shield-minus"></sl-icon>
                     </sl-button>
                     <sl-button size="small" title="Add folder">
                         <sl-icon name="folder-plus"></sl-icon>
                     </sl-button>
-                    <sl-button size="small" title="Delete folder">
+                    <sl-button size="small" title="Remove folder">
                         <sl-icon name="folder-minus"></sl-icon>
                     </sl-button>
                     <sl-button size="small" title="Add file">
                         <sl-icon name="file-earmark-plus"></sl-icon>
                     </sl-button>
-                    <sl-button size="small" title="Delete file">
+                    <sl-button size="small" title="Remove file">
                         <sl-icon name="file-earmark-minus"></sl-icon>
                     </sl-button>
                 </div>
@@ -138,17 +138,17 @@ export default class CDMDGitClient extends LitElement {
 
         render_root.addEventListener("click", async (event) => {
             let target = event.target;
-            let delete_repository_button = render_root.querySelector("sl-button#delete-repository");
+            let remove_repository_button = render_root.querySelector("sl-button#remove-repository");
 
             // this is for clicking the name of a folder for a repository
             if (target.matches("sl-tree-item[data-repository-folder-name]")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
-                delete_repository_button.disabled = false;
+                remove_repository_button.disabled = false;
             }
 
             // open the file in editor
             if (target.matches("sl-tree-item:not([data-repository-folder-name])")) {
-                delete_repository_button.disabled = true;
+                remove_repository_button.disabled = true;
 
                 let file_relative_path = target.dataset.relativePath;
 
@@ -176,11 +176,11 @@ export default class CDMDGitClient extends LitElement {
                 add_repository_dialog.show();
             }
 
-            if (target.matches("sl-button#delete-repository, sl-button#delete-repository *")) {
+            if (target.matches("sl-button#remove-repository, sl-button#remove-repository *")) {
                 let button = target.closest("sl-button");
                 button.loading = true;
 
-                await gitlab_client.delete_repository(this.repository_folder_name);
+                await gitlab_client.remove_repository(this.repository_folder_name);
                 let repository_names = await this._get_repository_names();
                 this._repository_names = repository_names;
 

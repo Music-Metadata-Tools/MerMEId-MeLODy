@@ -80,8 +80,8 @@ export default class VirtualFilesystem extends GitDataSourceInterface {
         console.log("elapsed_time = " + (end - start) + "ms");
     }
 
-    async delete_repository(repository_folder_name) {
-        super.delete_repository();
+    async remove_repository(repository_folder_name) {
+        super.remove_repository();
 
         try {
             await git.deleteRemote({ fs: this.fs, dir: repository_folder_name, remote: "upstream" });
