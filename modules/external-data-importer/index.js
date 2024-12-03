@@ -3,7 +3,11 @@ const inputField = document.querySelector("sl-input#input-gnd-id");
 
 // Output fields
 const nameOutputField = document.querySelector("sl-input#name-output");
-const infoOutputField = document.querySelector("sl-input#info-output");
+const descriptionOutputField = document.querySelector("sl-textarea#description-output");
+
+// Checkboxes
+const nameCheckbox = document.querySelector("sl-checkbox#checkbox-name");
+const descriptionCheckbox = document.querySelector("sl-checkbox#checkbox-description");
 
 // Buttons
 const showButton = document.querySelector("sl-button#show-button");
@@ -14,9 +18,7 @@ const dialog = document.querySelector('sl-dialog#dialog');
 const closeButton = dialog.querySelector('sl-button#dialog-close-button');
 
 // shacl input fields
-const shadowHost = document.getElementById('shacl-form-places');
-//const shadowElement = shadowHost.shadowRoot.querySelector('input[placeholder="Place name"]');
-const shadowElement = shadowHost.shadowRoot.querySelector('#e0');
+const shaclPlaces = document.getElementById('shacl-form-places');
 
 
 // Add an event listener for the 'click' event
@@ -40,9 +42,9 @@ showButton.addEventListener('click', () => {
                 nameOutputField.setAttribute('value', "no value");
             }
             if (data.biographicalOrHistoricalInformation) {
-                infoOutputField.setAttribute('value', data.biographicalOrHistoricalInformation);
+                descriptionOutputField.setAttribute('value', data.biographicalOrHistoricalInformation);
             } else {
-                infoOutputField.setAttribute('value', "no entry");
+                descriptionOutputField.setAttribute('value', "no entry");
             }
         })
         .catch(error => {
@@ -55,10 +57,29 @@ showButton.addEventListener('click', () => {
 closeButton.addEventListener('click', () => dialog.hide());
 
 
+const rdf_place_template = (data) =>
+    `
+    <https://liszt-portal.de/places/1008>
+        a <https://mei-metadata.org/Place> ;
+        <http://schema.org/name> "${data.placeName}" ;
+        <http://schema.org/description> "${data.placeDescription}" .
+`;
+
 // Add an event listener for the 'click' event
 importButton.addEventListener('click', () => {
-    shadowElement.value = nameOutputField.value;
-    console.log(shadowElement)
+    let placeName = "";
+    let placeDescription = "";
+
+    if (nameCheckbox.checked){
+        placeName = nameOutputField.value
+    }
+    if (descriptionCheckbox.checked){
+        placeDescription = descriptionOutputField.value
+    }
+
+    let rdfPlace = rdf_place_template({placeName, placeDescription});
+
+    shaclPlaces.setAttribute('data-values', rdfPlace);
 });
 
 
