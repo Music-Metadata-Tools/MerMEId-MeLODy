@@ -2,6 +2,7 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import "https://cdn.jsdelivr.net/npm/@lion/pagination@0.9.1/lion-pagination.js/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
+import "./rename-repository-dialog/index.js";
 
 // conditionally import of the datatype for the repository data
 import LocalGitLabRepo from "../virtual-filesystem/index.js";
@@ -64,6 +65,9 @@ export default class CDMDFilesystemManager extends LitElement {
         },
         _visible_entries: {
             type: Array,
+        },
+        _selected_repository_path: {
+            type: String,
         },
         _page_count: {
             type: Number,
@@ -130,9 +134,9 @@ export default class CDMDFilesystemManager extends LitElement {
                     </div>
                     <div id="repositories-card-content" class="filesystem-card-content">
                         ${this._initialize_filesystem.render({
-                            pending: () => html`Loading repository names...`,
-                            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
-                        })}
+            pending: () => html`Loading repository names...`,
+            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
+        })}
                     </div>
                 </sl-card>
                 <sl-card id="files-card" class="filesystem">
@@ -160,17 +164,28 @@ export default class CDMDFilesystemManager extends LitElement {
                 </sl-card>
             </div>
             <cdmd-add-repository-dialog></cdmd-add-repository-dialog>
+            <cdmd-rename-filesystem-entry-dialog></cdmd-rename-filesystem-entry-dialog>
         `;
     }
 
     firstUpdated() {
         let render_root = this.renderRoot;
         let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
+        let rename_filesystem_entry_dialog = render_root.querySelector("cdmd-rename-filesystem-entry-dialog");
 
         /*render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
             this.current_page = event.target.current;
             this._display_page();
         });*/
+
+        render_root.addEventListener("sl-selection-change", async (event) => {
+            let target = event.target;
+
+            if (target.matches("div#repositories-card-content sl-tree")) {
+                let selected_tree_item = event.detail.selection[0];
+                this._selected_repository_path = selected_tree_item.dataset.entryPath;
+            }
+        });
 
         render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;
@@ -180,9 +195,20 @@ export default class CDMDFilesystemManager extends LitElement {
                 add_repository_dialog.show();
             }
 
-            if (target.matches("sl-button#add-repository")) {
-                add_repository_dialog.repository_names = await filesystem.list_repository_names();
-                add_repository_dialog.show();
+            if (target.matches("sl-button#remove-repository")) {
+                target.loading = true;
+
+                await filesystem.remove_repository(this._selected_repository_path);
+                await this._list_repository_names();
+
+                target.loading = false;
+            }
+
+            if (target.matches("sl-button#rename-repository")) {
+                rename_filesystem_entry_dialog.entry_type = this._repo_folder_scheme_name;
+                rename_filesystem_entry_dialog.label_1 = "Rename repository";
+                rename_filesystem_entry_dialog.label_2 = "New repository name";
+                rename_filesystem_entry_dialog.show();
             }
         });
 
@@ -204,6 +230,22 @@ export default class CDMDFilesystemManager extends LitElement {
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
+        });
+
+        render_root.addEventListener("cdmd-rename-filesystem-entry-dialog:new-entry-name", async (event) => {
+            let new_entry_metadata = event.detail;
+            let processed_name = new_entry_metadata.name;
+            switch (new_entry_metadata.type) {
+                case this._repo_folder_scheme_name:
+                    processed_name = `/${processed_name}`;
+                break;
+            }
+
+            await filesystem.rename_entry(this._selected_repository_path, processed_name);
+
+            await this._list_repository_names();
+
+            rename_filesystem_entry_dialog.hide();
         });
     }
 
@@ -238,7 +280,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
         let start_index = (current_page - 1) * items_per_page;
         let end_index = current_page * items_per_page;
-        let visible_entries = entries.slice(start_index, end_index);
+        let visible_entries = entries;//.slice(start_index, end_index);
 
         for (let visible_entry of visible_entries) {
             switch (true) {

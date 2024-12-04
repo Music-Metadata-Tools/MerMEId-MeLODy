@@ -1,15 +1,10 @@
-import GitDataSourceInterface from "../git-client/GitDataSourceInterface.js";
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 
-/**
- * @implements  GitDataSourceInterface
- */
-export default class VirtualFilesystem extends GitDataSourceInterface {
+export default class VirtualFilesystem {
     constructor() {
-        super();
-
-        this.fs = new LightningFS(this.filesystem_name);
+        this._filesystem_name = "mermeid";
+        this.fs = new LightningFS(this._filesystem_name);
         this.pfs = this.fs.promises;
     }
 
@@ -81,8 +76,6 @@ export default class VirtualFilesystem extends GitDataSourceInterface {
     }
 
     async remove_repository(repository_folder_name) {
-        super.remove_repository();
-
         try {
             await git.deleteRemote({ fs: this.fs, dir: repository_folder_name, remote: "upstream" });
         } catch (error) {
@@ -117,6 +110,10 @@ export default class VirtualFilesystem extends GitDataSourceInterface {
     load_repository() {
         // set username
 
+    }
+
+    async rename_entry(old_path, new_path) {
+        await this.pfs.rename(old_path, new_path);
     }
 
     list_files(parent_dir) { }
