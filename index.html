@@ -31,6 +31,10 @@
             <sl-tab-panel name="places">
                 <section id="editor-and-viewer">
                     <section id="data-import">
+                        <sl-input id="search-gnd" label="Search GND place" placeholder="e. g. Paris"></sl-input>
+                        <sl-popup id="search-popup" anchor="search-gnd" placement="right-end">
+                            <sl-menu id="search-menu"></sl-menu>
+                        </sl-popup>
                         <sl-input id="input-gnd-id" label="GND identifier" placeholder="e. g. 4044660-8"></sl-input>
                         <br/>
                         <sl-dialog id="dialog">

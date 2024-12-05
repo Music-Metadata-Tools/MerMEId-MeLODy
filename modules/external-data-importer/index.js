@@ -1,5 +1,10 @@
 // Input fields
+const searchField = document.querySelector("sl-input#search-gnd");
 const inputField = document.querySelector("sl-input#input-gnd-id");
+
+// Popup search autofill
+const searchPopup = document.querySelector("sl-popup#search-popup");
+const searchMenu = document.querySelector("sl-menu#search-menu");
 
 // Output fields
 const nameOutputField = document.querySelector("sl-input#name-output");
@@ -19,6 +24,45 @@ const closeButton = dialog.querySelector('sl-button#dialog-close-button');
 
 // shacl input fields
 const shaclPlaces = document.getElementById('shacl-form-places');
+
+
+// Add an event listener for the 'input' event in the search field
+searchField.addEventListener('input', (event) => {
+    // Get the current value of the input field
+    const currentValue = event.target.value;
+
+    searchPopup.active = true;
+
+    let resultsMenu = "";
+
+    const maxItems = 5;
+    let counter = 0;
+    fetch(`https://lobid.org/gnd/search?q=${currentValue}&format=json:preferredName`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => {
+                if (counter < maxItems) {
+                    if (item.label) {
+                        resultsMenu += `<sl-menu-item value="${item.label}">${item.label}</sl-menu-item>\n`
+                    }
+                counter++;
+                }
+            });
+            searchMenu.innerHTML = resultsMenu;
+        });
+
+    if (currentValue == "") {
+        searchPopup.active = false;
+    }
+});
+
+
+searchMenu.addEventListener('sl-select', (event) => {   
+    const item = event.detail.item;
+    searchField.value = item.value 
+
+    searchPopup.active = false;
+});
 
 
 // Add an event listener for the 'click' event
@@ -65,6 +109,7 @@ const rdf_place_template = (data) =>
         <http://schema.org/description> "${data.placeDescription}" .
 `;
 
+
 // Add an event listener for the 'click' event
 importButton.addEventListener('click', () => {
     let placeName = "";
@@ -81,25 +126,3 @@ importButton.addEventListener('click', () => {
 
     shaclPlaces.setAttribute('data-values', rdfPlace);
 });
-
-
-// Add an event listener for the 'input' event
-//inputField.addEventListener('input', (event) => {
-    // Get the current value of the input field
-    //const currentValue = event.target.value;
-
-    //outputField.setAttribute('value', currentValue);
-
-    //fetch("https://lobid.org/gnd/search?q=Paris&format=json:preferredName")
-    //    .then(response => response.json())
-    //    .then(data => {
-    //        data.forEach(item => {
-    //            if (item.label) {
-    //                console.log(`${item.label}`);
-    //            }
-    //        });
-    //    });
-
-    // Log the current value to the console
-    //console.log(`Current value: ${currentValue}`);
-//});
