@@ -87,6 +87,9 @@ export default class CDMDFilesystemManager extends LitElement {
         _repo_folder_scheme_length: {
             type: Number,
         },
+        _repository_buttons_disabled: {
+            type: Boolean,
+        }
     };
 
     updated(changedProperties) {
@@ -119,15 +122,15 @@ export default class CDMDFilesystemManager extends LitElement {
                         Repositories
                         <sl-button-group>
                             <sl-button id="add-repository" size="small" title="Add repository">
-                                <sl-icon name="shield-plus"></sl-icon>
+                                <sl-icon name="folder-plus"></sl-icon>
                             </sl-button>
-                            <sl-button id="remove-repository" size="small" title="Remove repository">
-                                <sl-icon name="shield-minus"></sl-icon>
+                            <sl-button id="remove-repository" size="small" title="Remove repository" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="folder-minus"></sl-icon>
                             </sl-button>
-                            <sl-button id="rename-repository" size="small" title="Rename repository">
-                                <sl-icon name="shield"></sl-icon>
+                            <sl-button id="rename-repository" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="folder"></sl-icon>
                             </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="arrow-counterclockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -135,7 +138,7 @@ export default class CDMDFilesystemManager extends LitElement {
                     <div id="repositories-card-content" class="filesystem-card-content">
                         ${this._initialize_filesystem.render({
             pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
+            complete: () => html`<sl-tree id="repositories-tree">${this._visible_entries}</sl-tree>`,
         })}
                     </div>
                 </sl-card>
@@ -158,7 +161,7 @@ export default class CDMDFilesystemManager extends LitElement {
                         <!--<lion-pagination count="${this._page_count}" current="${this.current_page}"></lion-pagination>-->
                         ${this._initialize_filesystem.render({
             pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree>${this._visible_entries}</sl-tree>`,
+            complete: () => html`<sl-tree id="files-tree">${this._visible_entries}</sl-tree>`,
         })}
                     </div>
                 </sl-card>
@@ -170,6 +173,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
     firstUpdated() {
         let render_root = this.renderRoot;
+
         let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
         let rename_filesystem_entry_dialog = render_root.querySelector("cdmd-rename-filesystem-entry-dialog");
 
@@ -180,6 +184,10 @@ export default class CDMDFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
+
+            if (target.matches("sl-tree#repositories-tree")) {
+                this._repository_buttons_disabled = false;
+            }
 
             if (target.matches("div#repositories-card-content sl-tree")) {
                 let selected_tree_item = event.detail.selection[0];
@@ -198,8 +206,17 @@ export default class CDMDFilesystemManager extends LitElement {
             if (target.matches("sl-button#remove-repository")) {
                 target.loading = true;
 
+                let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                console.log(repositories_tree.querySelectorAll("sl-tree-item").length);
+
                 await filesystem.remove_repository(this._selected_repository_path);
                 await this._list_repository_names();
+
+                // disable the repositories-tree
+                // let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                console.log(repositories_tree.querySelectorAll("sl-tree-item").length);
+
+                this._repository_buttons_disabled = true;
 
                 target.loading = false;
             }
@@ -238,7 +255,7 @@ export default class CDMDFilesystemManager extends LitElement {
             switch (new_entry_metadata.type) {
                 case this._repo_folder_scheme_name:
                     processed_name = `/${processed_name}`;
-                break;
+                    break;
             }
 
             await filesystem.rename_entry(this._selected_repository_path, processed_name);
@@ -258,6 +275,7 @@ export default class CDMDFilesystemManager extends LitElement {
         this._repo_folder_scheme_name = "repofolder";
         this._repo_folder_scheme_part = `${this._repo_folder_scheme_name}:/`;
         this._repo_folder_scheme_length = this._repo_folder_scheme_part.length;
+        this._repository_buttons_disabled = true;
     }
 
     _process_entry(entry_path, entry_name, entry_type) {
@@ -265,7 +283,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
         switch (entry_type) {
             case this._repo_folder_scheme_name:
-                processed_entry = html`<sl-tree-item data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
+                processed_entry = html`<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
                 break;
         }
 
