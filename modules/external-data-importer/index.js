@@ -34,6 +34,7 @@ searchField.addEventListener('input', (event) => {
     searchPopup.active = true;
 
     let resultsMenu = "";
+    let gndID = "";
 
     const maxItems = 5;
     let counter = 0;
@@ -43,7 +44,8 @@ searchField.addEventListener('input', (event) => {
             data.forEach(item => {
                 if (counter < maxItems) {
                     if (item.label) {
-                        resultsMenu += `<sl-menu-item value="${item.label}">${item.label}</sl-menu-item>\n`
+                        gndID = item.id.split("https://d-nb.info/gnd/")[1];
+                        resultsMenu += `<sl-menu-item gnd-id="${gndID}" value="${item.label}">${item.label}, ${item.category}</sl-menu-item>\n`
                     }
                 counter++;
                 }
@@ -59,7 +61,10 @@ searchField.addEventListener('input', (event) => {
 
 searchMenu.addEventListener('sl-select', (event) => {   
     const item = event.detail.item;
-    searchField.value = item.value 
+    searchField.value = item.value;
+
+    const gndID = item.getAttribute('gnd-id');
+    inputField.value = gndID;
 
     searchPopup.active = false;
 });
