@@ -45,7 +45,7 @@ searchField.addEventListener('input', (event) => {
                 if (counter < maxItems) {
                     if (item.label) {
                         gndID = item.id.split("https://d-nb.info/gnd/")[1];
-                        resultsMenu += `<sl-menu-item gnd-id="${gndID}" value="${item.label}">${item.label}, ${item.category}</sl-menu-item>\n`
+                        resultsMenu += `<sl-menu-item gnd-id="${gndID}" value="${item.label}">${item.label}, <i>${item.category}</i></sl-menu-item>\n`
                     }
                 counter++;
                 }
