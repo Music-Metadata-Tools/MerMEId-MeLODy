@@ -122,18 +122,19 @@ output.querySelector("pre").innerText = form.serialize();
 console.log(form.serialize());
 });*/
 
+let filesystem_manager = document.querySelector("cdmd-filesystem-manager");
+
 document.addEventListener("click", (event) => {
     let target = event.target;
 
     if (target.matches("button#save")) {
         // get the tab that was selected - TODO: delete this when the editor component is ready
-        console.log(document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre"));
-        let shacl_form = document.querySelector("sl-tab-group#main sl-tab-panel[active] shacl-form");
+        let entity_editor = document.querySelector("sl-tab-group#main sl-tab-panel[active] shacl-form");
         let xml_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
         let rdf_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
         // end delete
-        let rdf_result = shacl_form.serialize();
-        let result_json = JSON.parse(shacl_form.serialize("application/ld+json"));
+        let rdf_result = entity_editor.serialize();
+        let result_json = JSON.parse(entity_editor.serialize("application/ld+json"));
 
         let title = "";
         let classification = "";
@@ -204,16 +205,33 @@ document.addEventListener("click", (event) => {
 
         xml_output.innerText = place_xml;
         rdf_output.innerText = rdf_result;
+
+        // save the file in the repository
+        document.dispatchEvent(new CustomEvent("cdmd-entity-editor:file-to-save-metadata", {
+            "detail": {
+                "contents": rdf_result,
+                relative_path: entity_editor.file_relative_path,
+            },
+            "bubbles": true,
+            "composed": true,
+        }));
     }
 });
 
-document.addEventListener("cdmd-git-client:selected-file-contents", (event) => {
-    let file_contents = event.detail;
+document.addEventListener("cdmd-entity-editor:file-to-save-metadata", (event) => {
+    let file_to_save_metadata = event.detail;
 
+    filesystem_manager.file_to_save_metadata = file_to_save_metadata;
+});
+
+document.addEventListener("cdmd-filesystem-manager:file-to-edit-metadata", (event) => {
+    let file_to_edit_metadata = event.detail;
+    let entity_editor = document.querySelector("shacl-form#places-shacl-form");
+
+    let file_to_edit_contents = file_to_edit_metadata.contents;
     // detect document type, in order to load the proper SHACL file
     // detect the data values subject, in order to set the corresponding attribute of the shacl-form
+    entity_editor.dataset.values = file_to_edit_contents;
 
-    document.querySelector("shacl-form#shacl-form").dataset.values = file_contents;
-
-    document.querySelector("sl-tab-group#main").show("edit");
+    entity_editor.file_relative_path = file_to_edit_metadata.relative_path;
 });

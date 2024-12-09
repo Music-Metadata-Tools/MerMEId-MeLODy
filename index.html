@@ -29,9 +29,14 @@
             <sl-tab-panel name="places">
                 <section id="editor-and-viewer">
                     <section id="editor">
-                        <shacl-form id="shacl-form" data-shapes-url="modules/place-editor/editor.shacl" data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form>
+                        <shacl-form id="places-shacl-form" data-shapes-url="modules/place-editor/editor.shacl"
+                            data-values-subject="https://liszt-portal.de/places/1008" data-collapse="true"></shacl-form>
                     </section>
-                    <button id="save">Save</button>
+                    <section id="editor-toolbar">
+                        <button id="save">Save</button>
+                        <button id="commit">Commit</button>
+                        <button id="push">Push</button>
+                    </section>
                     <section id="viewer">
                         <sl-tab-group>
                             <sl-tab slot="nav" panel="xml-output">XML</sl-tab>
@@ -56,7 +61,9 @@
             <sl-tab-panel name="persons">
                 <section id="editor-and-viewer">
                     <section id="editor">
-                        <shacl-form id="shacl-form" data-shapes-url="modules/person-editor/editor.shacl" data-values-subject="https://liszt-portal.de/persons/1008" data-collapse="true"></shacl-form>
+                        <shacl-form id="shacl-form" data-shapes-url="modules/person-editor/editor.shacl"
+                            data-values-subject="https://liszt-portal.de/persons/1008"
+                            data-collapse="true"></shacl-form>
                     </section>
                     <button id="save">Save</button>
                     <section id="viewer">
@@ -83,7 +90,9 @@
             <sl-tab-panel name="sources">
                 <section id="editor-and-viewer">
                     <section id="editor">
-                        <shacl-form id="shacl-form" data-shapes-url="modules/source-editor/editor.shacl" data-values-subject="https://liszt-portal.de/sources/1008" data-collapse="true"></shacl-form>
+                        <shacl-form id="shacl-form" data-shapes-url="modules/source-editor/editor.shacl"
+                            data-values-subject="https://liszt-portal.de/sources/1008"
+                            data-collapse="true"></shacl-form>
                     </section>
                     <button id="save">Save</button>
                     <section id="viewer">

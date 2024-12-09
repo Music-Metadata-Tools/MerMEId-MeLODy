@@ -120,19 +120,6 @@ export default class CDMDGitClient extends LitElement {
                                 if (commitOid !== head_commit) {
                                     await this._git_pull();
                                 }*/
-
-                //let file_relative_paths = await git.walk({ fs: gitlab_client.fs, gitdir: this.repository_folder_name, trees: '/' });
-
-                let file_relative_paths = await git.listFiles({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: 'HEAD' });
-
-                for (const file_relative_path of file_relative_paths) {
-                    if (!file_relative_path.startsWith("data/")) {
-                        const tree_item = document.createElement("sl-tree-item");
-                        tree_item.dataset.relativePath = file_relative_path;
-                        tree_item.innerText = file_relative_path;
-                        target.append(tree_item);
-                    }
-                }
             }
         });
 
@@ -144,48 +131,6 @@ export default class CDMDGitClient extends LitElement {
             if (target.matches("sl-tree-item[data-repository-folder-name]")) {
                 this.repository_folder_name = `/${target.dataset.repositoryFolderName}`;
                 remove_repository_button.disabled = false;
-            }
-
-            // open the file in editor
-            if (target.matches("sl-tree-item:not([data-repository-folder-name])")) {
-                remove_repository_button.disabled = true;
-
-                let file_relative_path = target.dataset.relativePath;
-
-                // get the file contents
-                let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
-
-                let { blob } = await git.readBlob({
-                    fs: gitlab_client.fs,
-                    dir: this.repository_folder_name,
-                    oid: commitOid,
-                    filepath: file_relative_path
-                });
-                let file_contents = new TextDecoder().decode(blob);
-
-                this.dispatchEvent(new CustomEvent("cdmd-git-client:selected-file-contents", {
-                    "detail": file_contents,
-                    "bubbles": true,
-                    "composed": true,
-                }));
-            }
-
-            if (target.matches("sl-button#add-repository-toolbar-button, sl-button#add-repository-toolbar-button *")) {
-                let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
-                add_repository_dialog.repository_names = await this._get_repository_names();
-                add_repository_dialog.show();
-            }
-
-            if (target.matches("sl-button#remove-repository, sl-button#remove-repository *")) {
-                let button = target.closest("sl-button");
-                button.loading = true;
-
-                await gitlab_client.remove_repository(this.repository_folder_name);
-                let repository_names = await this._get_repository_names();
-                this._repository_names = repository_names;
-
-                button.loading = false;
-                button.disabled = true;
             }
         });
 
@@ -213,12 +158,6 @@ export default class CDMDGitClient extends LitElement {
             dialog.reset();
         });
 
-        render_root.addEventListener("sl-selection-change", (event) => {
-            let target = event.target;
-
-            // console.log(target);
-        });
-
         return render_root;
     }
 
@@ -229,12 +168,6 @@ export default class CDMDGitClient extends LitElement {
             path: "user.name",
             value: "Claudius Teodorescu"
         });
-    }
-
-    _list_files() {
-        //let file_relative_paths = await git.listFiles({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: 'HEAD' });
-
-        //this._process_file_relative_paths(file_relative_paths);
     }
 
     async _git_pull() {
@@ -253,10 +186,6 @@ export default class CDMDGitClient extends LitElement {
         }
         let end = performance.now();
         console.log("elapsed_time for git.pull() = " + (end - start) + "ms");
-    }
-
-    _process_file_relative_paths(file_relative_paths) {
-        console.log(file_relative_paths);
     }
 
     // initialize the filesystem

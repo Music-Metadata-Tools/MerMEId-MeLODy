@@ -63,6 +63,9 @@ export default class CDMDFilesystemManager extends LitElement {
         entries: {
             type: Array,
         },
+        file_to_save_metadata: {
+            type: Object,
+        },
         _visible_entries: {
             type: Array,
         },
@@ -87,6 +90,24 @@ export default class CDMDFilesystemManager extends LitElement {
         _repo_folder_scheme_length: {
             type: Number,
         },
+        _folder_scheme_name: {
+            type: String,
+        },
+        _folder_scheme_part: {
+            type: String,
+        },
+        _folder_scheme_length: {
+            type: Number,
+        },
+        _file_scheme_name: {
+            type: String,
+        },
+        _file_scheme_part: {
+            type: String,
+        },
+        _file_scheme_length: {
+            type: Number,
+        },
         _repository_buttons_disabled: {
             type: Boolean,
         }
@@ -103,6 +124,14 @@ export default class CDMDFilesystemManager extends LitElement {
 
             // display the processed entries, according to the current page number
             this._display_page();
+        }
+
+        if (changedProperties.has("file_to_save_metadata")) {
+            let file_to_save_metadata = this.file_to_save_metadata;
+
+            this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:save-file", {
+                "detail": file_to_save_metadata,
+            }));
         }
     }
 
@@ -182,16 +211,88 @@ export default class CDMDFilesystemManager extends LitElement {
             this._display_page();
         });*/
 
+        render_root.addEventListener("sl-lazy-load", async (event) => {
+            let target = event.target;
+
+            if (target.matches("sl-tree-item[lazy]")) {
+                let entry_type = target.dataset.entryType;
+                let entry_path = target.dataset.entryPath;
+
+                switch (entry_type) {
+                    case this._repo_folder_scheme_name:
+                        this._selected_repository_path = entry_path;
+                        break;
+                }
+
+                //await filesystem.walk(entry_path);
+
+                // TODO: DELETE this and replace it with filesystem.walk(entry_path)
+                let entries = await filesystem.list_entries(entry_path);
+
+                let fragment = new DocumentFragment();
+                for (const entry of entries) {
+                    const tree_item = document.createElement("sl-tree-item");
+
+                    switch (true) {
+                        case entry.startsWith(this._folder_scheme_part):
+                            tree_item.dataset.entryType = this._folder_scheme_name;
+                            let folder_entry_path = entry.substring(this._folder_scheme_length);
+                            let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(entry.lastIndexOf("/")) : folder_entry_path;
+                            tree_item.dataset.entryPath = folder_entry_path;
+                            tree_item.dataset.entryName = folder_entry_name;
+                            tree_item.innerText = folder_entry_name;
+                            tree_item.lazy = true;
+                            break;
+                        case entry.startsWith(this._file_scheme_part):
+                            tree_item.dataset.entryType = this._file_scheme_name;
+                            let file_entry_path = entry.substring(this._file_scheme_length);
+                            let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(entry.lastIndexOf("/")) : file_entry_path;
+                            tree_item.dataset.entryPath = file_entry_path;
+                            tree_item.dataset.entryName = file_entry_name;
+                            tree_item.innerText = file_entry_name;
+                            break;
+                    }
+
+                    fragment.append(tree_item);
+                }
+
+                target.append(fragment);
+                // END DELETE
+            }
+        });
+
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
+            let selection = event.detail.selection[0];
 
             if (target.matches("sl-tree#repositories-tree")) {
                 this._repository_buttons_disabled = false;
+                let selected_tree_item = event.detail.selection[0];
+
+                let entry_type = selected_tree_item.dataset.entryType;
+
+                if (entry_type === this._repo_folder_scheme_name) {
+                    this._selected_repository_path = selected_tree_item.dataset.entryPath;
+                }
             }
 
-            if (target.matches("div#repositories-card-content sl-tree")) {
-                let selected_tree_item = event.detail.selection[0];
-                this._selected_repository_path = selected_tree_item.dataset.entryPath;
+            // TODO: use file_relative_path, which is to be added to the sl-tree-item template
+            if (selection.matches(`sl-tree-item[data-entry-type = '${this._file_scheme_name}']`)) {
+                let file_name = selection.dataset.entryName;
+
+                // get the file contents
+                let file_contents = await filesystem.get_file_contents(this._selected_repository_path, file_name);
+
+                //TODO: here its has to be file_relative_path, not file_name
+                let file_to_edit_metadata = {
+                    "contents": file_contents,
+                    "relative_path": file_name,
+                };
+                this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:file-to-edit-metadata", {
+                    "detail": file_to_edit_metadata,
+                    "bubbles": true,
+                    "composed": true,
+                }));
             }
         });
 
@@ -214,6 +315,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
                 // disable the repositories-tree
                 // let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+
                 console.log(repositories_tree.querySelectorAll("sl-tree-item").length);
 
                 this._repository_buttons_disabled = true;
@@ -226,6 +328,10 @@ export default class CDMDFilesystemManager extends LitElement {
                 rename_filesystem_entry_dialog.label_1 = "Rename repository";
                 rename_filesystem_entry_dialog.label_2 = "New repository name";
                 rename_filesystem_entry_dialog.show();
+            }
+
+            if (target.matches("sl-button#synchronize-repository")) {
+                console.log(target);
             }
         });
 
@@ -264,6 +370,12 @@ export default class CDMDFilesystemManager extends LitElement {
 
             rename_filesystem_entry_dialog.hide();
         });
+
+        this.addEventListener("cdmd-filesystem-manager:save-file", async (event) => {
+            let file_to_save_metadata = event.detail;
+
+            await filesystem.save_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
+        });
     }
 
     _init() {
@@ -275,6 +387,13 @@ export default class CDMDFilesystemManager extends LitElement {
         this._repo_folder_scheme_name = "repofolder";
         this._repo_folder_scheme_part = `${this._repo_folder_scheme_name}:/`;
         this._repo_folder_scheme_length = this._repo_folder_scheme_part.length;
+        this._folder_scheme_name = "folder";
+        this._folder_scheme_part = `${this._folder_scheme_name}:/`;
+        this._folder_scheme_length = this._folder_scheme_part.length;
+        this._file_scheme_name = "file";
+        this._file_scheme_part = `${this._file_scheme_name}:/`;
+        this._file_scheme_length = this._file_scheme_part.length;
+
         this._repository_buttons_disabled = true;
     }
 
@@ -283,7 +402,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
         switch (entry_type) {
             case this._repo_folder_scheme_name:
-                processed_entry = html`<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}">${entry_name}</sl-tree-item>`;
+                processed_entry = html`<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
                 break;
         }
 

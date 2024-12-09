@@ -112,11 +112,16 @@ body>footer>* {
     color: #922;
 }
 
-button#save {
-    height: 50px;
-    width: 50px;
+section#editor-toolbar {
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
+section#editor-toolbar button {
+    height: 40px;
+    width: 60px;
+}
 
 /* small screen sizes */
 @media only screen and (max-width: 664px) {

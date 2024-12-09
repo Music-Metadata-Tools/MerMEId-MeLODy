@@ -334,7 +334,7 @@ window.customElements.define("cdmd-add-repository-dialog", AddRepositoryDialog);
 // https://gitlab.com/isomorphic-git/test.empty | isomorphic-git-test-push | g6Q2bv6e6Sca7PKgzNjv
 // https://bitbucket.org/isomorphic-git/test.empty | isomorphic-git | nwTZtQKXEExLx3FhWSqT
 
-// MerMEId (granular pat): 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
+// MerMEId (granular pat): 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
 // GitLab mermeid-classic (classic pat): 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 | repo, user
 
 // https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid.git | teoclaud | aGrcXmKzFAypt57zox-y | read_user, read_repository, write_repository

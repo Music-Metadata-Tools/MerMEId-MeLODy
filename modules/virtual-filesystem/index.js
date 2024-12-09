@@ -112,14 +112,101 @@ export default class VirtualFilesystem {
 
     }
 
+    async walk(entry_path) {
+        //let file_relative_paths = await git.walk({ fs: gitlab_client.fs, gitdir: this.repository_folder_name, trees: '/' });
+
+        return await git.walk({
+            "fs": this.fs,
+            dir: entry_path,
+            trees: [git.STAGE()],
+            map: async (filePath, [A]) => console.log(A),
+        });
+    }
+
     async rename_entry(old_path, new_path) {
         await this.pfs.rename(old_path, new_path);
     }
 
-    list_files(parent_dir) { }
+    // TODO: DELETE
+    async list_entries(parent_folder_path) {
+        let file_relative_paths = await git.listFiles({ fs: this.fs, dir: parent_folder_path });
 
-    save_file() {
+        let repository_path = "/mermeid-01";
+        let entries = [];
+        await git.walk({
+            "fs": this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR()],
+            map: async (entry_path, [entry]) => {
+                let entry_type = await entry.type();
 
+                if (entry_type === "tree" && !entry_path.startsWith(".")) {
+                    entries.push(`folder:/${entry_path}`);
+
+                    return null;
+                }
+
+                if (entry_type === "blob" && !entry_path.startsWith(".")) {
+                    entries.push(`file:/${entry_path}`);
+                }
+            },
+        });
+
+        entries.sort();
+
+        return entries;
+    }
+    // END DELETE
+
+    async save_file(repository_path, file_contents, file_relative_path) {
+        let file_path = await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
+        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
+
+        let status = await git.status({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
+
+        await git.walk({
+            "fs": this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR()],
+            map: async (filePath, [A]) => {
+                if (filePath === "1008.ttl") {
+                    let file_contents = await A.content();
+                    console.log(new TextDecoder().decode(file_contents));
+                }
+            },
+        });
+
+        /*
+        let oid = await git.writeBlob({
+            fs: this.fs,
+            dir: repository_path,
+            blob: new TextEncoder().encode(file_contents)
+        });
+
+        // Write the object in the object database to the index.
+        let oid2 = await git.updateIndex({
+            fs: this.fs,
+            dir: repository_path,
+            add: true,
+            filepath: file_relative_path,
+            oid
+        });
+
+        console.log(oid2);*/
+    }
+
+    async get_file_contents(repository_path, file_relative_path) {
+        let commitOid = await git.resolveRef({ fs: this.fs, dir: repository_path, ref: "HEAD" });
+
+        let { blob } = await git.readBlob({
+            fs: this.fs,
+            dir: repository_path,
+            oid: commitOid,
+            filepath: file_relative_path
+        });
+        let file_contents = new TextDecoder().decode(blob);
+
+        return file_contents;
     }
 
     commit_file() {
