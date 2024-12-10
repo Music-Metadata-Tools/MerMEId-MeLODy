@@ -226,6 +226,7 @@ document.addEventListener("cdmd-entity-editor:file-to-save-metadata", (event) =>
 
 document.addEventListener("cdmd-filesystem-manager:file-to-edit-metadata", (event) => {
     let file_to_edit_metadata = event.detail;
+    console.log(file_to_edit_metadata.contents);
     let entity_editor = document.querySelector("shacl-form#places-shacl-form");
 
     let file_to_edit_contents = file_to_edit_metadata.contents;

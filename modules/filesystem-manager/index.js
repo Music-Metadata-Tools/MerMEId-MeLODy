@@ -224,10 +224,8 @@ export default class CDMDFilesystemManager extends LitElement {
                         break;
                 }
 
-                //await filesystem.walk(entry_path);
-
-                // TODO: DELETE this and replace it with filesystem.walk(entry_path)
-                let entries = await filesystem.list_entries(entry_path);
+                // TODO: Add function this.list_entries_from_workdir()
+                let entries = await filesystem.list_entries_from_workdir(entry_path);
 
                 let fragment = new DocumentFragment();
                 for (const entry of entries) {
@@ -257,7 +255,7 @@ export default class CDMDFilesystemManager extends LitElement {
                 }
 
                 target.append(fragment);
-                // END DELETE
+                // END TODO
             }
         });
 
@@ -281,7 +279,8 @@ export default class CDMDFilesystemManager extends LitElement {
                 let file_name = selection.dataset.entryName;
 
                 // get the file contents
-                let file_contents = await filesystem.get_file_contents(this._selected_repository_path, file_name);
+                //let file_contents = await filesystem.get_file_contents(this._selected_repository_path, file_name);
+                let file_contents = await filesystem.read_file(this._selected_repository_path, file_name);
 
                 //TODO: here its has to be file_relative_path, not file_name
                 let file_to_edit_metadata = {

@@ -127,10 +127,7 @@ export default class VirtualFilesystem {
         await this.pfs.rename(old_path, new_path);
     }
 
-    // TODO: DELETE
-    async list_entries(parent_folder_path) {
-        let file_relative_paths = await git.listFiles({ fs: this.fs, dir: parent_folder_path });
-
+    async list_entries_from_workdir(parent_folder_path) {
         let repository_path = "/mermeid-01";
         let entries = [];
         await git.walk({
@@ -156,25 +153,12 @@ export default class VirtualFilesystem {
 
         return entries;
     }
-    // END DELETE
 
     async save_file(repository_path, file_contents, file_relative_path) {
         let file_path = await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
         await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
 
         let status = await git.status({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
-
-        await git.walk({
-            "fs": this.fs,
-            dir: repository_path,
-            trees: [git.WORKDIR()],
-            map: async (filePath, [A]) => {
-                if (filePath === "1008.ttl") {
-                    let file_contents = await A.content();
-                    console.log(new TextDecoder().decode(file_contents));
-                }
-            },
-        });
 
         /*
         let oid = await git.writeBlob({
@@ -205,6 +189,24 @@ export default class VirtualFilesystem {
             filepath: file_relative_path
         });
         let file_contents = new TextDecoder().decode(blob);
+
+        return file_contents;
+    }
+
+    async read_file(repository_path, file_relative_path) {
+        let file_contents = "";
+
+        await git.walk({
+            "fs": this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR()],
+            map: async (file_path, [A]) => {
+                if (file_path === file_relative_path) {
+                    file_contents = await A.content();
+                }
+            },
+        });
+        file_contents = new TextDecoder().decode(file_contents);
 
         return file_contents;
     }
