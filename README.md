@@ -12,8 +12,6 @@ This is the new version of MerMEId.
 
 * [filesystem-navigator](docs/web-components/filesystem-manager.md);
 
-* [git-client](docs/web-components/git-client.md);
-
 ## Description of the modules used for the frontend
 
 * [state](docs/modules/state.md);

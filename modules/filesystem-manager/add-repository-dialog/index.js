@@ -253,7 +253,7 @@ export default class AddRepositoryDialog extends LitElement {
 
                     target.loading = true;
 
-                    this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-branches", {
+                    this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:repository-branches", {
                         "detail": this._repository_to_clone,
                         "bubbles": true,
                         "composed": true,
@@ -269,7 +269,7 @@ export default class AddRepositoryDialog extends LitElement {
             if (target.matches("sl-button#clone-repository")) {
                 target.loading = true;
 
-                this.dispatchEvent(new CustomEvent("cdmd-git-client:repository-to-add", {
+                this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:repository-to-add", {
                     "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,

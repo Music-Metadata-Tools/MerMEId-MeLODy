@@ -27,14 +27,14 @@
         dialog.repository_names = ["a"];
         dialog.show();
 
-        document.addEventListener("cdmd-git-client:repository-branches", async (event) => {
+        document.addEventListener("cdmd-filesystem-manager:repository-branches", async (event) => {
             let repository_url = event.detail;
             let branches = await gitlab_client.list_branches(repository_url);
 
             dialog.repository_branches = branches;
         });
 
-        document.addEventListener("cdmd-git-client:repository-to-add", async (event) => {
+        document.addEventListener("cdmd-filesystem-manager:repository-to-add", async (event) => {
             let repository_metadata = event.detail;
             console.log(repository_metadata);
         });

@@ -215,6 +215,7 @@ export default class VirtualFilesystem {
     }
 
     async commit_and_push_file(repository_path) {
+        // get some metadata
         let personal_access_token = await git.getConfigAll({
             "fs": this.fs,
             dir: repository_path,
@@ -226,8 +227,11 @@ export default class VirtualFilesystem {
             path: "user.name"
         });
 
-        let commit_message = `${(new Date()).toISOString()}, ${username}`;
+        // TODO: here, maybe a dialog window with all the staged files, for user to select which ones
+        // to commit and push?? drawback: displaying the files takes 13 seconds for a repo with 5550 files
 
+        // commit all the changed files
+        let commit_message = `${(new Date()).toISOString()}, ${username}`;
         let sha = await git.commit({
             "fs": this.fs,
             dir: repository_path,
@@ -239,6 +243,7 @@ export default class VirtualFilesystem {
         });
         console.log(sha);
 
+        // push all the committed files
         let pushResult = await git.push({
             "fs": this.fs,
             http,
@@ -308,15 +313,25 @@ export default class VirtualFilesystem {
         console.log(filenames);*/
     }
 
-    async pull() {
-        //this._set_username();
+    async pull(repository_path) {
+        // get some metadata
+        let current_branch = await git.currentBranch({
+            fs,
+            dir: repository_path,
+            fullname: false
+        })
+        console.log(current_branch);
+
+        return;
+
+        // pull the changes from the remote repository
         let start = performance.now();
         try {
             await git.pull({
-                fs: gitlab_client.fs,
+                fs: this.fs,
                 http,
-                dir: this.repository_folder_name,
-                ref: "main",
+                dir: repository_path,
+                ref: current_branch,
                 singleBranch: true
             });
         } catch (error) {
@@ -353,3 +368,29 @@ export default class VirtualFilesystem {
         }
     }
 }
+
+/*
+                                // get remote.origin.url
+                                let remote_origin_url = await git.getConfig({
+                                    fs: gitlab_client.fs,
+                                    dir: this.repository_folder_name,
+                                    path: "remote.origin.url"
+                                });
+                                remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
+
+                                // get refs/HEAD
+                                let refs = await git.listServerRefs({
+                                    http,
+                                    corsProxy: "https://cors.isomorphic-git.org",
+                                    url: remote_origin_url,
+                                    prefix: "HEAD",
+                                });
+                                let head_commit = refs[0].oid;
+                                console.log(head_commit);
+
+                                let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
+                                console.log(commitOid);
+
+                                if (commitOid !== head_commit) {
+                                    await this._git_pull();
+                                }*/

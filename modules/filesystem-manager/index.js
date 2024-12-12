@@ -333,7 +333,7 @@ export default class CDMDFilesystemManager extends LitElement {
             }
         });
 
-        render_root.addEventListener("cdmd-git-client:repository-branches", async (event) => {
+        render_root.addEventListener("cdmd-filesystem-manager:repository-branches", async (event) => {
             let repository_metadata = event.detail;
 
             let branches = await filesystem.list_branches(repository_metadata);
@@ -341,7 +341,7 @@ export default class CDMDFilesystemManager extends LitElement {
             add_repository_dialog.repository_branches = branches;
         });
 
-        render_root.addEventListener("cdmd-git-client:repository-to-add", async (event) => {
+        render_root.addEventListener("cdmd-filesystem-manager:repository-to-add", async (event) => {
             let repository_metadata = event.detail;
 
             // add the repository
@@ -376,7 +376,7 @@ export default class CDMDFilesystemManager extends LitElement {
         });
 
         // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager
-        document.addEventListener("adwlm-filesystem-namager:commit-and-push", async (event) => {
+        document.addEventListener("adwlm-filesystem-manager:commit-and-push", async (event) => {
             await filesystem.commit_and_push_file(this._selected_repository_path);
         });
         // END TODO
