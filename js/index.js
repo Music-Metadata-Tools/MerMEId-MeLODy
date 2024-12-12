@@ -124,10 +124,12 @@ console.log(form.serialize());
 
 let filesystem_manager = document.querySelector("cdmd-filesystem-manager");
 
-document.addEventListener("click", (event) => {
+document.addEventListener("sl-focus", async (event) => {
     let target = event.target;
 
-    if (target.matches("button#save")) {
+    if (target.matches("sl-button#save")) {
+        target.loading = true;
+
         // get the tab that was selected - TODO: delete this when the editor component is ready
         let entity_editor = document.querySelector("sl-tab-group#main sl-tab-panel[active] shacl-form");
         let xml_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
@@ -215,7 +217,15 @@ document.addEventListener("click", (event) => {
             "bubbles": true,
             "composed": true,
         }));
+
+        target.loading = false;
     }
+
+    // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager
+    if (target.matches("sl-button#commit-and-push")) {
+        document.dispatchEvent(new CustomEvent("adwlm-filesystem-namager:commit-and-push"));
+    }
+    // END TODO
 });
 
 document.addEventListener("cdmd-entity-editor:file-to-save-metadata", (event) => {
@@ -226,7 +236,7 @@ document.addEventListener("cdmd-entity-editor:file-to-save-metadata", (event) =>
 
 document.addEventListener("cdmd-filesystem-manager:file-to-edit-metadata", (event) => {
     let file_to_edit_metadata = event.detail;
-    console.log(file_to_edit_metadata.contents);
+
     let entity_editor = document.querySelector("shacl-form#places-shacl-form");
 
     let file_to_edit_contents = file_to_edit_metadata.contents;

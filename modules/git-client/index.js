@@ -185,7 +185,7 @@ export default class CDMDGitClient extends LitElement {
             console.error(error);
         }
         let end = performance.now();
-        console.log("elapsed_time for git.pull() = " + (end - start) + "ms");
+        console.log("elapsed time for git.pull() = " + (end - start) + "ms");
     }
 
     // initialize the filesystem

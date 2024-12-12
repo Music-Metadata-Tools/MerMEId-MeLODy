@@ -279,7 +279,6 @@ export default class CDMDFilesystemManager extends LitElement {
                 let file_name = selection.dataset.entryName;
 
                 // get the file contents
-                //let file_contents = await filesystem.get_file_contents(this._selected_repository_path, file_name);
                 let file_contents = await filesystem.read_file(this._selected_repository_path, file_name);
 
                 //TODO: here its has to be file_relative_path, not file_name
@@ -375,6 +374,12 @@ export default class CDMDFilesystemManager extends LitElement {
 
             await filesystem.save_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
         });
+
+        // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager
+        document.addEventListener("adwlm-filesystem-namager:commit-and-push", async (event) => {
+            await filesystem.commit_and_push_file(this._selected_repository_path);
+        });
+        // END TODO
     }
 
     _init() {

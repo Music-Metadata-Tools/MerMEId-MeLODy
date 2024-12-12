@@ -1,5 +1,6 @@
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
+import diff from "https://cdn.jsdelivr.net/npm/diff-lines@1.1.1/+esm";
 
 export default class VirtualFilesystem {
     constructor() {
@@ -155,10 +156,8 @@ export default class VirtualFilesystem {
     }
 
     async save_file(repository_path, file_contents, file_relative_path) {
-        let file_path = await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
-        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
-
-        let status = await git.status({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
+        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
+        //await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
 
         /*
         let oid = await git.writeBlob({
@@ -179,20 +178,6 @@ export default class VirtualFilesystem {
         console.log(oid2);*/
     }
 
-    async get_file_contents(repository_path, file_relative_path) {
-        let commitOid = await git.resolveRef({ fs: this.fs, dir: repository_path, ref: "HEAD" });
-
-        let { blob } = await git.readBlob({
-            fs: this.fs,
-            dir: repository_path,
-            oid: commitOid,
-            filepath: file_relative_path
-        });
-        let file_contents = new TextDecoder().decode(blob);
-
-        return file_contents;
-    }
-
     async read_file(repository_path, file_relative_path) {
         let file_contents = "";
 
@@ -200,9 +185,9 @@ export default class VirtualFilesystem {
             "fs": this.fs,
             dir: repository_path,
             trees: [git.WORKDIR()],
-            map: async (file_path, [A]) => {
-                if (file_path === file_relative_path) {
-                    file_contents = await A.content();
+            map: async (entry_path, [entry]) => {
+                if (entry_path === file_relative_path) {
+                    file_contents = await entry.content();
                 }
             },
         });
@@ -211,8 +196,111 @@ export default class VirtualFilesystem {
         return file_contents;
     }
 
-    commit_file() {
+    async commit_and_push_file(repository_path) {
+        /*let value = await git.getConfigAll({
+            "fs": this.fs,
+            dir: '/mermeid-01',
+            path: "user.email"
+        });
+        console.log(value);*/
 
+        //return;
+        let sha = await git.commit({
+            "fs": this.fs,
+            dir: repository_path,
+            author: {
+                name: 'Mr. Test',
+                email: 'mrtest@example.com',
+            },
+            message: 'Added the a.txt file'
+        });
+        console.log(sha);
+
+        let pushResult = await git.push({
+            "fs": this.fs,
+            http,
+            dir: repository_path,
+            remote: 'origin',
+            ref: 'main',
+            onAuth: () => ({
+                username: "teoclaud",
+                password: "aGrcXmKzFAypt57zox-y",
+            }),
+        });
+        console.log(pushResult);
+        /*
+        let start = performance.now();
+        await git.walk({
+            "fs": this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR(), git.STAGE()],
+            map: async (entry_path, [workdir_entry, stage_entry]) => {
+                let entry_type = await workdir_entry.type();
+
+                if (entry_type === "blob" && !entry_path.startsWith(".")) {
+                    let workdir_oid = await workdir_entry.oid();
+                    let stage_oid = await stage_entry.oid();
+                    //let status = await git.status({ "fs": this.fs, dir: repository_path, filepath: entry_path });
+                    if (workdir_oid !== stage_oid) {
+                        console.log(`${entry_path}`);
+                    }
+                }
+            },
+        });
+        let end = performance.now();
+        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
+*/
+        /*let start = performance.now();
+        let filenames = await git.walk({
+            "fs": this.fs,
+            dir: repository_path,
+            trees: [git.STAGE(), git.WORKDIR()],
+            map: async (filepath, [head, workdir]) => {
+                //console.log(workdir);
+                return {
+                    filepath,
+                    oid: await head?.oid(),
+                    diff: diff(
+                        (await head?.content())?.toString('utf8') || '',
+                        (await workdir?.content())?.toString('utf8') || ''
+                    )
+                }
+            },
+        });
+        let end = performance.now();
+        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
+*/
+        /*const FILE = 0, HEAD = 1, WORKDIR = 2, STAGE = 3;
+
+        let start = performance.now();
+        const filenames = (await git.statusMatrix({
+            "fs": this.fs,
+            dir: repository_path,
+        }))
+            .filter(row => row[WORKDIR] !== row[STAGE])
+            .map(row => [row[FILE], row[WORKDIR]]);
+        let end = performance.now();
+        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
+
+        console.log(filenames);*/
+    }
+
+    async pull() {
+        //this._set_username();
+        let start = performance.now();
+        try {
+            await git.pull({
+                fs: gitlab_client.fs,
+                http,
+                dir: this.repository_folder_name,
+                ref: "main",
+                singleBranch: true
+            });
+        } catch (error) {
+            console.error(error);
+        }
+        let end = performance.now();
+        console.log("elapsed time for git.pull() = " + (end - start) + "ms");
     }
 
     async _list_refs(repository_metadata, refs_type) {
