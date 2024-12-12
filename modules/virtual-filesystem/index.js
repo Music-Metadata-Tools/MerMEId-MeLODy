@@ -43,6 +43,7 @@ export default class VirtualFilesystem {
     async add_repository(repository_metadata) {
         let repository_folder_name = repository_metadata.folder;
         let personal_acces_token = repository_metadata.token;
+        let username = repository_metadata.username;
         let remote_origin_url = repository_metadata.url;
         let repository_branch = repository_metadata.branch;
 
@@ -66,7 +67,7 @@ export default class VirtualFilesystem {
                 cache: {},
                 depth: 1,
                 onAuth: () => ({
-                    username: repository_metadata.username,
+                    username: username,
                     password: personal_acces_token,
                 }),
             });
@@ -76,12 +77,20 @@ export default class VirtualFilesystem {
         let end = performance.now();
         console.log("elapsed_time = " + (end - start) + "ms");
 
-        // store the personal acces token
+        // store the user's personal acces token
         await git.setConfig({
             "fs": this.fs,
             dir: repository_folder_name,
             path: "user.pat",
             value: personal_acces_token
+        });
+
+        // store the username
+        await git.setConfig({
+            "fs": this.fs,
+            dir: repository_folder_name,
+            path: "user.name",
+            value: username
         });
     }
 
@@ -166,7 +175,7 @@ export default class VirtualFilesystem {
 
     async save_file(repository_path, file_contents, file_relative_path) {
         await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
-        //await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
+        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
 
         /*
         let oid = await git.writeBlob({
@@ -211,16 +220,22 @@ export default class VirtualFilesystem {
             dir: repository_path,
             path: "user.pat"
         });
-        console.log(personal_access_token);
+        let username = await git.getConfigAll({
+            "fs": this.fs,
+            dir: repository_path,
+            path: "user.name"
+        });
+
+        let commit_message = `${(new Date()).toISOString()}, ${username}`;
 
         let sha = await git.commit({
             "fs": this.fs,
             dir: repository_path,
             author: {
-                name: 'Mr. Test',
-                email: 'mrtest@example.com',
+                name: username,
+                email: username,
             },
-            message: 'Added the a.txt file'
+            message: commit_message
         });
         console.log(sha);
 
@@ -231,7 +246,7 @@ export default class VirtualFilesystem {
             remote: 'origin',
             ref: 'main',
             onAuth: () => ({
-                username: "teoclaud",
+                username: username,
                 password: personal_access_token,
             }),
         });
