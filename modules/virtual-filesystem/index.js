@@ -42,6 +42,7 @@ export default class VirtualFilesystem {
 
     async add_repository(repository_metadata) {
         let repository_folder_name = repository_metadata.folder;
+        let personal_acces_token = repository_metadata.token;
         let remote_origin_url = repository_metadata.url;
         let repository_branch = repository_metadata.branch;
 
@@ -66,7 +67,7 @@ export default class VirtualFilesystem {
                 depth: 1,
                 onAuth: () => ({
                     username: repository_metadata.username,
-                    password: repository_metadata.token,
+                    password: personal_acces_token,
                 }),
             });
         } catch (error) {
@@ -74,6 +75,14 @@ export default class VirtualFilesystem {
         }
         let end = performance.now();
         console.log("elapsed_time = " + (end - start) + "ms");
+
+        // store the personal acces token
+        await git.setConfig({
+            "fs": this.fs,
+            dir: repository_folder_name,
+            path: "user.pat",
+            value: personal_acces_token
+        });
     }
 
     async remove_repository(repository_folder_name) {
@@ -197,14 +206,13 @@ export default class VirtualFilesystem {
     }
 
     async commit_and_push_file(repository_path) {
-        /*let value = await git.getConfigAll({
+        let personal_access_token = await git.getConfigAll({
             "fs": this.fs,
-            dir: '/mermeid-01',
-            path: "user.email"
+            dir: repository_path,
+            path: "user.pat"
         });
-        console.log(value);*/
+        console.log(personal_access_token);
 
-        //return;
         let sha = await git.commit({
             "fs": this.fs,
             dir: repository_path,
@@ -224,7 +232,7 @@ export default class VirtualFilesystem {
             ref: 'main',
             onAuth: () => ({
                 username: "teoclaud",
-                password: "aGrcXmKzFAypt57zox-y",
+                password: personal_access_token,
             }),
         });
         console.log(pushResult);
