@@ -217,6 +217,7 @@ export default class CDMDFilesystemManager extends LitElement {
             if (target.matches("sl-tree-item[lazy]")) {
                 let entry_type = target.dataset.entryType;
                 let entry_path = target.dataset.entryPath;
+                console.log(entry_path);
 
                 switch (entry_type) {
                     case this._repo_folder_scheme_name:
@@ -224,38 +225,40 @@ export default class CDMDFilesystemManager extends LitElement {
                         break;
                 }
 
-                // TODO: Add function this.list_entries_from_workdir()
-                let entries = await filesystem.list_entries_from_workdir(entry_path);
+                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, entry_path);
 
                 let fragment = new DocumentFragment();
-                for (const entry of entries) {
+
+                // process the folders
+                for (const folder of entries.folders) {
                     const tree_item = document.createElement("sl-tree-item");
 
-                    switch (true) {
-                        case entry.startsWith(this._folder_scheme_part):
-                            tree_item.dataset.entryType = this._folder_scheme_name;
-                            let folder_entry_path = entry.substring(this._folder_scheme_length);
-                            let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(entry.lastIndexOf("/")) : folder_entry_path;
-                            tree_item.dataset.entryPath = folder_entry_path;
-                            tree_item.dataset.entryName = folder_entry_name;
-                            tree_item.innerText = folder_entry_name;
-                            tree_item.lazy = true;
-                            break;
-                        case entry.startsWith(this._file_scheme_part):
-                            tree_item.dataset.entryType = this._file_scheme_name;
-                            let file_entry_path = entry.substring(this._file_scheme_length);
-                            let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(entry.lastIndexOf("/")) : file_entry_path;
-                            tree_item.dataset.entryPath = file_entry_path;
-                            tree_item.dataset.entryName = file_entry_name;
-                            tree_item.innerText = file_entry_name;
-                            break;
-                    }
+                    tree_item.dataset.entryType = this._folder_scheme_name;
+                    let folder_entry_path = folder.substring(this._folder_scheme_length);
+                    let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder.lastIndexOf("/")) : folder_entry_path;
+                    tree_item.dataset.entryPath = folder_entry_path;
+                    tree_item.dataset.entryName = folder_entry_name;
+                    tree_item.innerText = folder_entry_name;
+                    tree_item.lazy = true;
+
+                    fragment.append(tree_item);
+                }
+
+                // process the files
+                for (const file of entries.files) {
+                    const tree_item = document.createElement("sl-tree-item");
+
+                    tree_item.dataset.entryType = this._file_scheme_name;
+                    let file_entry_path = file.substring(this._file_scheme_length);
+                    let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file.lastIndexOf("/")) : file_entry_path;
+                    tree_item.dataset.entryPath = file_entry_path;
+                    tree_item.dataset.entryName = file_entry_name;
+                    tree_item.innerText = file_entry_name;
 
                     fragment.append(tree_item);
                 }
 
                 target.append(fragment);
-                // END TODO
             }
         });
 
@@ -329,7 +332,7 @@ export default class CDMDFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#synchronize-repository")) {
-                console.log(target);
+                await filesystem.pull(this._selected_repository_path);
             }
         });
 

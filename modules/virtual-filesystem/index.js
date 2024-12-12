@@ -146,9 +146,9 @@ export default class VirtualFilesystem {
         await this.pfs.rename(old_path, new_path);
     }
 
-    async list_entries_from_workdir(parent_folder_path) {
-        let repository_path = "/mermeid-01";
-        let entries = [];
+    async list_entries_from_workdir(repository_path, parent_folder_path) {
+        let folders = [];
+        let files = [];
         await git.walk({
             "fs": this.fs,
             dir: repository_path,
@@ -157,20 +157,24 @@ export default class VirtualFilesystem {
                 let entry_type = await entry.type();
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
-                    entries.push(`folder:/${entry_path}`);
+                    folders.push(`folder:/${entry_path}`);
 
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    entries.push(`file:/${entry_path}`);
+                    files.push(`file:/${entry_path}`);
                 }
             },
         });
 
-        entries.sort();
+        folders.sort();
+        files.sort();
 
-        return entries;
+        return {
+            folders,
+            files
+        };
     }
 
     async save_file(repository_path, file_contents, file_relative_path) {
@@ -316,13 +320,11 @@ export default class VirtualFilesystem {
     async pull(repository_path) {
         // get some metadata
         let current_branch = await git.currentBranch({
-            fs,
+            "fs": this.fs,
             dir: repository_path,
             fullname: false
         })
         console.log(current_branch);
-
-        return;
 
         // pull the changes from the remote repository
         let start = performance.now();
