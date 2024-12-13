@@ -217,7 +217,6 @@ export default class CDMDFilesystemManager extends LitElement {
             if (target.matches("sl-tree-item[lazy]")) {
                 let entry_type = target.dataset.entryType;
                 let entry_path = target.dataset.entryPath;
-                console.log(entry_path);
 
                 switch (entry_type) {
                     case this._repo_folder_scheme_name:
@@ -235,7 +234,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
                     tree_item.dataset.entryType = this._folder_scheme_name;
                     let folder_entry_path = folder.substring(this._folder_scheme_length);
-                    let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder.lastIndexOf("/")) : folder_entry_path;
+                    let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder_entry_path.lastIndexOf("/") + 1) : folder_entry_path;
                     tree_item.dataset.entryPath = folder_entry_path;
                     tree_item.dataset.entryName = folder_entry_name;
                     tree_item.innerText = folder_entry_name;
@@ -250,7 +249,7 @@ export default class CDMDFilesystemManager extends LitElement {
 
                     tree_item.dataset.entryType = this._file_scheme_name;
                     let file_entry_path = file.substring(this._file_scheme_length);
-                    let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file.lastIndexOf("/")) : file_entry_path;
+                    let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file_entry_path.lastIndexOf("/") + 1) : file_entry_path;
                     tree_item.dataset.entryPath = file_entry_path;
                     tree_item.dataset.entryName = file_entry_name;
                     tree_item.innerText = file_entry_name;

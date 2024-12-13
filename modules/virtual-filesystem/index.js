@@ -35,8 +35,6 @@ export default class VirtualFilesystem {
 
                 return is_public;
             }
-
-
         }
     }
 
@@ -75,7 +73,7 @@ export default class VirtualFilesystem {
             console.error(error);
         }
         let end = performance.now();
-        console.log("elapsed_time = " + (end - start) + "ms");
+        console.log("elapsed time for cloning = " + (end - start) + "ms");
 
         // store the user's personal acces token
         await git.setConfig({
@@ -131,17 +129,6 @@ export default class VirtualFilesystem {
 
     }
 
-    async walk(entry_path) {
-        //let file_relative_paths = await git.walk({ fs: gitlab_client.fs, gitdir: this.repository_folder_name, trees: '/' });
-
-        return await git.walk({
-            "fs": this.fs,
-            dir: entry_path,
-            trees: [git.STAGE()],
-            map: async (filePath, [A]) => console.log(A),
-        });
-    }
-
     async rename_entry(old_path, new_path) {
         await this.pfs.rename(old_path, new_path);
     }
@@ -149,21 +136,31 @@ export default class VirtualFilesystem {
     async list_entries_from_workdir(repository_path, parent_folder_path) {
         let folders = [];
         let files = [];
+
+        if (repository_path === parent_folder_path) {
+            parent_folder_path = "";
+        } else {
+            parent_folder_path = `${parent_folder_path}/`;
+        }
         await git.walk({
             "fs": this.fs,
             dir: repository_path,
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
+                if (!entry_path.startsWith(parent_folder_path)) {
+                    return;
+                }
                 let entry_type = await entry.type();
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
                     folders.push(`folder:/${entry_path}`);
-
+                    //console.log(`folder:/${parent_folder_path}${entry_path}`);
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
                     files.push(`file:/${entry_path}`);
+                    //console.log(`file:/${parent_folder_path}${entry_path}`);
                 }
             },
         });
