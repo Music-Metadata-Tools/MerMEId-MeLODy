@@ -122,7 +122,7 @@ output.querySelector("pre").innerText = form.serialize();
 console.log(form.serialize());
 });*/
 
-let filesystem_manager = document.querySelector("cdmd-filesystem-manager");
+let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 
 document.addEventListener("sl-focus", async (event) => {
     let target = event.target;
@@ -209,7 +209,7 @@ document.addEventListener("sl-focus", async (event) => {
         rdf_output.innerText = rdf_result;
 
         // save the file in the repository
-        document.dispatchEvent(new CustomEvent("cdmd-entity-editor:file-to-save-metadata", {
+        document.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save-metadata", {
             "detail": {
                 "contents": rdf_result,
                 relative_path: entity_editor.file_relative_path,
@@ -228,13 +228,13 @@ document.addEventListener("sl-focus", async (event) => {
     // END TODO
 });
 
-document.addEventListener("cdmd-entity-editor:file-to-save-metadata", (event) => {
+document.addEventListener("adwlm-entity-editor:file-to-save-metadata", (event) => {
     let file_to_save_metadata = event.detail;
 
     filesystem_manager.file_to_save_metadata = file_to_save_metadata;
 });
 
-document.addEventListener("cdmd-filesystem-manager:file-to-edit-metadata", (event) => {
+document.addEventListener("adwlm-filesystem-manager:file-to-edit-metadata", (event) => {
     let file_to_edit_metadata = event.detail;
 
     let entity_editor = document.querySelector("shacl-form#places-shacl-form");

@@ -4,7 +4,7 @@ const styles =
     css`
     `;
 
-export default class RenameFilesystemEntryDialog extends LitElement {
+export default class ADWLMRenameFilesystemEntryDialog extends LitElement {
     static properties = {
         label_1: {
             type: String,
@@ -41,7 +41,7 @@ export default class RenameFilesystemEntryDialog extends LitElement {
             let target = event.target;
 
             if (target.matches("sl-button#rename-entry-button")) {
-                this.dispatchEvent(new CustomEvent("cdmd-rename-filesystem-entry-dialog:new-entry-name", {
+                this.dispatchEvent(new CustomEvent("adwlm-rename-filesystem-entry-dialog:new-entry-name", {
                     "detail": {
                         "name": shadow_root.querySelector("sl-input#new-entry-name").value,
                         "type": this.entry_type,
@@ -74,4 +74,4 @@ export default class RenameFilesystemEntryDialog extends LitElement {
     }
 }
 
-window.customElements.define("cdmd-rename-filesystem-entry-dialog", RenameFilesystemEntryDialog);
+window.customElements.define("adwlm-rename-filesystem-entry-dialog", ADWLMRenameFilesystemEntryDialog);

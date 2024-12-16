@@ -1,3 +1,0 @@
-
-
-//cdmd-editor-ontology-loader

@@ -57,7 +57,7 @@ const styles =
         }
     `;
 
-export default class CDMDFilesystemManager extends LitElement {
+export default class ADWLMFilesystemManager extends LitElement {
 
     static properties = {
         entries: {
@@ -129,7 +129,7 @@ export default class CDMDFilesystemManager extends LitElement {
         if (changedProperties.has("file_to_save_metadata")) {
             let file_to_save_metadata = this.file_to_save_metadata;
 
-            this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:save-file", {
+            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:save-file", {
                 "detail": file_to_save_metadata,
             }));
         }
@@ -195,16 +195,16 @@ export default class CDMDFilesystemManager extends LitElement {
                     </div>
                 </sl-card>
             </div>
-            <cdmd-add-repository-dialog></cdmd-add-repository-dialog>
-            <cdmd-rename-filesystem-entry-dialog></cdmd-rename-filesystem-entry-dialog>
+            <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
+            <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
         `;
     }
 
     firstUpdated() {
         let render_root = this.renderRoot;
 
-        let add_repository_dialog = render_root.querySelector("cdmd-add-repository-dialog");
-        let rename_filesystem_entry_dialog = render_root.querySelector("cdmd-rename-filesystem-entry-dialog");
+        let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
+        let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
 
         /*render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
             this.current_page = event.target.current;
@@ -288,7 +288,7 @@ export default class CDMDFilesystemManager extends LitElement {
                     "contents": file_contents,
                     "relative_path": file_name,
                 };
-                this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:file-to-edit-metadata", {
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit-metadata", {
                     "detail": file_to_edit_metadata,
                     "bubbles": true,
                     "composed": true,
@@ -335,7 +335,7 @@ export default class CDMDFilesystemManager extends LitElement {
             }
         });
 
-        render_root.addEventListener("cdmd-filesystem-manager:repository-branches", async (event) => {
+        render_root.addEventListener("adwlm-filesystem-manager:repository-branches", async (event) => {
             let repository_metadata = event.detail;
 
             let branches = await filesystem.list_branches(repository_metadata);
@@ -343,7 +343,7 @@ export default class CDMDFilesystemManager extends LitElement {
             add_repository_dialog.repository_branches = branches;
         });
 
-        render_root.addEventListener("cdmd-filesystem-manager:repository-to-add", async (event) => {
+        render_root.addEventListener("adwlm-filesystem-manager:repository-to-add", async (event) => {
             let repository_metadata = event.detail;
 
             // add the repository
@@ -355,7 +355,7 @@ export default class CDMDFilesystemManager extends LitElement {
             add_repository_dialog.reset();
         });
 
-        render_root.addEventListener("cdmd-rename-filesystem-entry-dialog:new-entry-name", async (event) => {
+        render_root.addEventListener("adwlm-rename-filesystem-entry-dialog:new-entry-name", async (event) => {
             let new_entry_metadata = event.detail;
             let processed_name = new_entry_metadata.name;
             switch (new_entry_metadata.type) {
@@ -371,7 +371,7 @@ export default class CDMDFilesystemManager extends LitElement {
             rename_filesystem_entry_dialog.hide();
         });
 
-        this.addEventListener("cdmd-filesystem-manager:save-file", async (event) => {
+        this.addEventListener("adwlm-filesystem-manager:save-file", async (event) => {
             let file_to_save_metadata = event.detail;
 
             await filesystem.save_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
@@ -457,4 +457,4 @@ export default class CDMDFilesystemManager extends LitElement {
 
 }
 
-window.customElements.define("cdmd-filesystem-manager", CDMDFilesystemManager);
+window.customElements.define("adwlm-filesystem-manager", ADWLMFilesystemManager);

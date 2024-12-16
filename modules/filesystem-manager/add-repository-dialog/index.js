@@ -74,7 +74,7 @@ const styles =
     }
 `;
 
-export default class AddRepositoryDialog extends LitElement {
+export default class ADWLMAddRepositoryDialog extends LitElement {
     static properties = {
         repository_names: {
             type: Array,
@@ -253,7 +253,7 @@ export default class AddRepositoryDialog extends LitElement {
 
                     target.loading = true;
 
-                    this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:repository-branches", {
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:repository-branches", {
                         "detail": this._repository_to_clone,
                         "bubbles": true,
                         "composed": true,
@@ -269,7 +269,7 @@ export default class AddRepositoryDialog extends LitElement {
             if (target.matches("sl-button#clone-repository")) {
                 target.loading = true;
 
-                this.dispatchEvent(new CustomEvent("cdmd-filesystem-manager:repository-to-add", {
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:repository-to-add", {
                     "detail": this._repository_to_clone,
                     "bubbles": true,
                     "composed": true,
@@ -326,7 +326,7 @@ export default class AddRepositoryDialog extends LitElement {
     }
 }
 
-window.customElements.define("cdmd-add-repository-dialog", AddRepositoryDialog);
+window.customElements.define("adwlm-add-repository-dialog", ADWLMAddRepositoryDialog);
 
 // https://github.com/isomorphic-git/isomorphic-git/blob/51f2ddb1c04e349bfa248a1fbbb9859605f433f2/__tests__/test-hosting-providers.js#L108
 
