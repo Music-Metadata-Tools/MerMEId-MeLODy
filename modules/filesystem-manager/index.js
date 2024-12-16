@@ -3,6 +3,7 @@ import "https://cdn.jsdelivr.net/npm/@lion/pagination@0.9.1/lion-pagination.js/+
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-repository-dialog/index.js";
+import * as CONSTANTS from "./constants.js";
 
 // conditionally import of the datatype for the repository data
 import LocalGitLabRepo from "../virtual-filesystem/index.js";
@@ -79,33 +80,6 @@ export default class ADWLMFilesystemManager extends LitElement {
             type: Number,
         },
         _items_per_page: {
-            type: Number,
-        },
-        _repo_folder_scheme_name: {
-            type: String,
-        },
-        _repo_folder_scheme_part: {
-            type: String,
-        },
-        _repo_folder_scheme_length: {
-            type: Number,
-        },
-        _folder_scheme_name: {
-            type: String,
-        },
-        _folder_scheme_part: {
-            type: String,
-        },
-        _folder_scheme_length: {
-            type: Number,
-        },
-        _file_scheme_name: {
-            type: String,
-        },
-        _file_scheme_part: {
-            type: String,
-        },
-        _file_scheme_length: {
             type: Number,
         },
         _repository_buttons_disabled: {
@@ -219,7 +193,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let entry_path = target.dataset.entryPath;
 
                 switch (entry_type) {
-                    case this._repo_folder_scheme_name:
+                    case CONSTANTS.REPO_FOLDER_SCHEME_NAME:
                         this._selected_repository_path = entry_path;
                         break;
                 }
@@ -232,8 +206,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 for (const folder of entries.folders) {
                     const tree_item = document.createElement("sl-tree-item");
 
-                    tree_item.dataset.entryType = this._folder_scheme_name;
-                    let folder_entry_path = folder.substring(this._folder_scheme_length);
+                    tree_item.dataset.entryType = CONSTANTS.FOLDER_SCHEME_NAME;
+                    let folder_entry_path = folder.substring(CONSTANTS.FOLDER_SCHEME_LENGTH);
                     let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder_entry_path.lastIndexOf("/") + 1) : folder_entry_path;
                     tree_item.dataset.entryPath = folder_entry_path;
                     tree_item.dataset.entryName = folder_entry_name;
@@ -247,8 +221,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 for (const file of entries.files) {
                     const tree_item = document.createElement("sl-tree-item");
 
-                    tree_item.dataset.entryType = this._file_scheme_name;
-                    let file_entry_path = file.substring(this._file_scheme_length);
+                    tree_item.dataset.entryType = CONSTANTS.FILE_SCHEME_NAME;
+                    let file_entry_path = file.substring(CONSTANTS.FILE_SCHEME_LENGTH);
                     let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file_entry_path.lastIndexOf("/") + 1) : file_entry_path;
                     tree_item.dataset.entryPath = file_entry_path;
                     tree_item.dataset.entryName = file_entry_name;
@@ -271,13 +245,13 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 let entry_type = selected_tree_item.dataset.entryType;
 
-                if (entry_type === this._repo_folder_scheme_name) {
+                if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
                     this._selected_repository_path = selected_tree_item.dataset.entryPath;
                 }
             }
 
             // TODO: use file_relative_path, which is to be added to the sl-tree-item template
-            if (selection.matches(`sl-tree-item[data-entry-type = '${this._file_scheme_name}']`)) {
+            if (selection.matches(`sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
                 let file_name = selection.dataset.entryName;
 
                 // get the file contents
@@ -324,7 +298,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#rename-repository")) {
-                rename_filesystem_entry_dialog.entry_type = this._repo_folder_scheme_name;
+                rename_filesystem_entry_dialog.entry_type = CONSTANTS.REPO_FOLDER_SCHEME_NAME;
                 rename_filesystem_entry_dialog.label_1 = "Rename repository";
                 rename_filesystem_entry_dialog.label_2 = "New repository name";
                 rename_filesystem_entry_dialog.show();
@@ -359,7 +333,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             let new_entry_metadata = event.detail;
             let processed_name = new_entry_metadata.name;
             switch (new_entry_metadata.type) {
-                case this._repo_folder_scheme_name:
+                case CONSTANTS.REPO_FOLDER_SCHEME_NAME:
                     processed_name = `/${processed_name}`;
                     break;
             }
@@ -390,16 +364,6 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._page_count = 1;
         this.current_page = 1;
         this._items_per_page = 10;
-        this._repo_folder_scheme_name = "repofolder";
-        this._repo_folder_scheme_part = `${this._repo_folder_scheme_name}:/`;
-        this._repo_folder_scheme_length = this._repo_folder_scheme_part.length;
-        this._folder_scheme_name = "folder";
-        this._folder_scheme_part = `${this._folder_scheme_name}:/`;
-        this._folder_scheme_length = this._folder_scheme_part.length;
-        this._file_scheme_name = "file";
-        this._file_scheme_part = `${this._file_scheme_name}:/`;
-        this._file_scheme_length = this._file_scheme_part.length;
-
         this._repository_buttons_disabled = true;
     }
 
@@ -407,7 +371,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         let processed_entry = {};
 
         switch (entry_type) {
-            case this._repo_folder_scheme_name:
+            case CONSTANTS.REPO_FOLDER_SCHEME_NAME:
                 processed_entry = html`<sl-tree-item lazy data-entry-type="${entry_type}" data-entry-path="${entry_path}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
                 break;
         }
@@ -427,10 +391,10 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         for (let visible_entry of visible_entries) {
             switch (true) {
-                case visible_entry.startsWith(this._repo_folder_scheme_part):
-                    let repo_folder_path = visible_entry.substring(this._repo_folder_scheme_length - 1);
-                    let repo_folder_name = visible_entry.substring(this._repo_folder_scheme_length);
-                    let processed_entry = this._process_entry(repo_folder_path, repo_folder_name, this._repo_folder_scheme_name);
+                case visible_entry.startsWith(CONSTANTS.REPO_FOLDER_SCHEME_PART):
+                    let repo_folder_path = visible_entry.substring(CONSTANTS.REPO_FOLDER_SCHEME_LENGTH - 1);
+                    let repo_folder_name = visible_entry.substring(CONSTANTS.REPO_FOLDER_SCHEME_LENGTH);
+                    let processed_entry = this._process_entry(repo_folder_path, repo_folder_name, CONSTANTS.REPO_FOLDER_SCHEME_NAME);
 
                     processed_entries.push(processed_entry);
                     break;
@@ -450,7 +414,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     async _list_repository_names() {
         let repository_names = await filesystem.list_repository_names();
-        let processed_repository_names = repository_names.map(name => `${this._repo_folder_scheme_part}${name}`);
+        let processed_repository_names = repository_names.map(name => `${CONSTANTS.REPO_FOLDER_SCHEME_PART}${name}`);
 
         this.entries = processed_repository_names;
     }

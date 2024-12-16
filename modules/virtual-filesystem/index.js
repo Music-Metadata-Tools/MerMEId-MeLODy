@@ -1,6 +1,6 @@
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
-import diff from "https://cdn.jsdelivr.net/npm/diff-lines@1.1.1/+esm";
+import * as CONSTANTS from "../filesystem-manager/constants.js";
 
 export default class VirtualFilesystem {
     constructor() {
@@ -77,7 +77,7 @@ export default class VirtualFilesystem {
 
         // store the user's personal acces token
         await git.setConfig({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_folder_name,
             path: "user.pat",
             value: personal_acces_token
@@ -85,7 +85,7 @@ export default class VirtualFilesystem {
 
         // store the username
         await git.setConfig({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_folder_name,
             path: "user.name",
             value: username
@@ -143,7 +143,7 @@ export default class VirtualFilesystem {
             parent_folder_path = `${parent_folder_path}/`;
         }
         await git.walk({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
@@ -153,13 +153,13 @@ export default class VirtualFilesystem {
                 let entry_type = await entry.type();
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
-                    folders.push(`folder:/${entry_path}`);
+                    folders.push(`${CONSTANTS.FOLDER_SCHEME_PART}${entry_path}`);
                     //console.log(`folder:/${parent_folder_path}${entry_path}`);
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    files.push(`file:/${entry_path}`);
+                    files.push(`${CONSTANTS.FILE_SCHEME_PART}${entry_path}`);
                     //console.log(`file:/${parent_folder_path}${entry_path}`);
                 }
             },
@@ -176,7 +176,7 @@ export default class VirtualFilesystem {
 
     async save_file(repository_path, file_contents, file_relative_path) {
         await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
-        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path })
+        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
 
         /*
         let oid = await git.writeBlob({
@@ -201,7 +201,7 @@ export default class VirtualFilesystem {
         let file_contents = "";
 
         await git.walk({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
@@ -217,13 +217,18 @@ export default class VirtualFilesystem {
 
     async commit_and_push_file(repository_path) {
         // get some metadata
+        let current_branch = await git.currentBranch({
+            fs: this.fs,
+            dir: repository_path,
+            fullname: false
+        });
         let personal_access_token = await git.getConfigAll({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             path: "user.pat"
         });
         let username = await git.getConfigAll({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             path: "user.name"
         });
@@ -234,7 +239,7 @@ export default class VirtualFilesystem {
         // commit all the changed files
         let commit_message = `${(new Date()).toISOString()}, ${username}`;
         let sha = await git.commit({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             author: {
                 name: username,
@@ -242,15 +247,14 @@ export default class VirtualFilesystem {
             },
             message: commit_message
         });
-        console.log(sha);
 
         // push all the committed files
         let pushResult = await git.push({
-            "fs": this.fs,
+            fs: this.fs,
             http,
             dir: repository_path,
-            remote: 'origin',
-            ref: 'main',
+            remote: "origin",
+            ref: current_branch,
             onAuth: () => ({
                 username: username,
                 password: personal_access_token,
@@ -260,7 +264,7 @@ export default class VirtualFilesystem {
         /*
         let start = performance.now();
         await git.walk({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             trees: [git.WORKDIR(), git.STAGE()],
             map: async (entry_path, [workdir_entry, stage_entry]) => {
@@ -269,7 +273,7 @@ export default class VirtualFilesystem {
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
                     let workdir_oid = await workdir_entry.oid();
                     let stage_oid = await stage_entry.oid();
-                    //let status = await git.status({ "fs": this.fs, dir: repository_path, filepath: entry_path });
+                    //let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
                     if (workdir_oid !== stage_oid) {
                         console.log(`${entry_path}`);
                     }
@@ -281,7 +285,7 @@ export default class VirtualFilesystem {
 */
         /*let start = performance.now();
         let filenames = await git.walk({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             trees: [git.STAGE(), git.WORKDIR()],
             map: async (filepath, [head, workdir]) => {
@@ -303,7 +307,7 @@ export default class VirtualFilesystem {
 
         let start = performance.now();
         const filenames = (await git.statusMatrix({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
         }))
             .filter(row => row[WORKDIR] !== row[STAGE])
@@ -317,10 +321,10 @@ export default class VirtualFilesystem {
     async pull(repository_path) {
         // get some metadata
         let current_branch = await git.currentBranch({
-            "fs": this.fs,
+            fs: this.fs,
             dir: repository_path,
             fullname: false
-        })
+        });
         console.log(current_branch);
 
         // pull the changes from the remote repository
