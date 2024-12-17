@@ -1,8 +1,8 @@
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
-import * as CONSTANTS from "../filesystem-manager/constants.js";
+import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
 
-export default class VirtualFilesystem {
+export default class ADWLMVirtualFilesystem {
     constructor() {
         this._filesystem_name = "mermeid";
         this.fs = new LightningFS(this._filesystem_name);
@@ -153,13 +153,13 @@ export default class VirtualFilesystem {
                 let entry_type = await entry.type();
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
-                    folders.push(`${CONSTANTS.FOLDER_SCHEME_PART}${entry_path}`);
+                    folders.push(`${FILESYSTEM_MANAGER_CONSTANTS.FOLDER_SCHEME_PART}${entry_path}`);
                     //console.log(`folder:/${parent_folder_path}${entry_path}`);
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    files.push(`${CONSTANTS.FILE_SCHEME_PART}${entry_path}`);
+                    files.push(`${FILESYSTEM_MANAGER_CONSTANTS.FILE_SCHEME_PART}${entry_path}`);
                     //console.log(`file:/${parent_folder_path}${entry_path}`);
                 }
             },

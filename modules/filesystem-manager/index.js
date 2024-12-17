@@ -5,9 +5,10 @@ import "./add-repository-dialog/index.js";
 import "./rename-repository-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 
-// conditionally import of the datatype for the repository data
-import LocalGitLabRepo from "../virtual-filesystem/index.js";
-let filesystem = new LocalGitLabRepo();
+// TODO: conditionally import of the datatype for the repository data
+import VirtualFilesystem from "./virtual-filesystem/index.js";
+let filesystem = new VirtualFilesystem();
+// END TODO
 
 const styles =
     css`
@@ -18,9 +19,6 @@ const styles =
         div#container {
             display: flex;
             flex-direction: column;
-        }
-        lion-pagination {
-            margin-bottom: 0px;
         }
         sl-card#repositories-card::part(base) {
             height: 30vh;
@@ -37,8 +35,7 @@ const styles =
         }
         sl-card.filesystem div[slot = "header"] {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
             gap: 5px;
         }
         sl-card.filesystem::part(body) {
@@ -51,10 +48,7 @@ const styles =
             overflow: scroll;
         }
         div#repositories-card-content {
-            height: 22vh;
-        }
-        div#files-card-content {
-            height: 42vh;
+            height: 70vh;
         }
     `;
 
@@ -122,7 +116,6 @@ export default class ADWLMFilesystemManager extends LitElement {
             <div id="container">
                 <sl-card id="repositories-card" class="filesystem">
                     <div slot="header">
-                        Repositories
                         <sl-button-group>
                             <sl-button id="add-repository" size="small" title="Add repository">
                                 <sl-icon name="folder-plus"></sl-icon>
@@ -137,17 +130,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                                 <sl-icon name="arrow-counterclockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
-                    </div>
-                    <div id="repositories-card-content" class="filesystem-card-content">
-                        ${this._initialize_filesystem.render({
-            pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree id="repositories-tree">${this._visible_entries}</sl-tree>`,
-        })}
-                    </div>
-                </sl-card>
-                <sl-card id="files-card" class="filesystem">
-                    <div slot="header">
-                        Files
                         <sl-button-group>
                             <sl-button size="small" title="Add file">
                                 <sl-icon name="file-earmark-plus"></sl-icon>
@@ -160,11 +142,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                             </sl-button>
                         </sl-button-group>
                     </div>
-                    <div id="files-card-content" class="filesystem-card-content">
-                        <!--<lion-pagination count="${this._page_count}" current="${this.current_page}"></lion-pagination>-->
+                    <div id="repositories-card-content" class="filesystem-card-content">
                         ${this._initialize_filesystem.render({
             pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree id="files-tree">${this._visible_entries}</sl-tree>`,
+            complete: () => html`<sl-tree id="repositories-tree">${this._visible_entries}</sl-tree>`,
         })}
                     </div>
                 </sl-card>

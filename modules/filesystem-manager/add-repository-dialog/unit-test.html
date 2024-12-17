@@ -20,8 +20,8 @@
     <script type="module" src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
     <script type="module" src="index.js"></script>
     <script type="module">
-        import LocalGitLabRepo from "../LocalGitLabRepo.js";
-        let gitlab_client = new LocalGitLabRepo();
+        import VirtualFilesystem from "../virtual-filesystem/index.js";
+        let gitlab_client = new VirtualFilesystem();
 
         let dialog = document.querySelector("adwlm-add-repository-dialog");
         dialog.repository_names = ["a"];
