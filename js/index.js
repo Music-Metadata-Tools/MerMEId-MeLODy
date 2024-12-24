@@ -212,7 +212,7 @@ document.addEventListener("sl-focus", async (event) => {
         document.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save-metadata", {
             "detail": {
                 "contents": rdf_result,
-                relative_path: entity_editor.file_relative_path,
+                relative_path: entity_editor.file_path,
             },
             "bubbles": true,
             "composed": true,
@@ -244,5 +244,5 @@ document.addEventListener("adwlm-filesystem-manager:file-to-edit-metadata", (eve
     // detect the data values subject, in order to set the corresponding attribute of the shacl-form
     entity_editor.dataset.values = file_to_edit_contents;
 
-    entity_editor.file_relative_path = file_to_edit_metadata.relative_path;
+    entity_editor.file_path = file_to_edit_metadata.relative_path;
 });

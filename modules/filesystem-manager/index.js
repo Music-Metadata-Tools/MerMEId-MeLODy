@@ -15,6 +15,7 @@ const styles =
         :host {
             width: 14vw;
             display: inline-block;
+            font-size: var(--sl-font-size-small);
         }
         div#container {
             display: flex;
@@ -28,7 +29,6 @@ const styles =
         }
         sl-card.filesystem {
             margin-bottom: 5px;
-            font-size: var(--sl-font-size-small);
         }
         sl-card.filesystem::part(base) {
             border-color: var(--sl-color-primary-600);
@@ -114,41 +114,48 @@ export default class ADWLMFilesystemManager extends LitElement {
     render() {
         return html`
             <div id="container">
-                <sl-card id="repositories-card" class="filesystem">
-                    <div slot="header">
-                        <sl-button-group>
-                            <sl-button id="add-repository" size="small" title="Add repository">
-                                <sl-icon name="folder-plus"></sl-icon>
-                            </sl-button>
-                            <sl-button id="remove-repository" size="small" title="Remove repository" ?disabled="${this._repository_buttons_disabled}">
-                                <sl-icon name="folder-minus"></sl-icon>
-                            </sl-button>
-                            <sl-button id="rename-repository" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
-                                <sl-icon name="folder"></sl-icon>
-                            </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
-                                <sl-icon name="arrow-counterclockwise"></sl-icon>
-                            </sl-button>
-                        </sl-button-group>
-                        <sl-button-group>
-                            <sl-button size="small" title="Add file">
-                                <sl-icon name="file-earmark-plus"></sl-icon>
-                            </sl-button>
-                            <sl-button size="small" title="Remove file">
-                                <sl-icon name="file-earmark-minus"></sl-icon>
-                            </sl-button>
-                            <sl-button size="small" title="Rename file">
-                                <sl-icon name="file-earmark"></sl-icon>
-                            </sl-button>
-                        </sl-button-group>
-                    </div>
-                    <div id="repositories-card-content" class="filesystem-card-content">
-                        ${this._initialize_filesystem.render({
-            pending: () => html`Loading repository names...`,
-            complete: () => html`<sl-tree id="repositories-tree">${this._visible_entries}</sl-tree>`,
-        })}
-                    </div>
-                </sl-card>
+                <div class="details-group-example">
+                    <sl-details summary="Repositories" open>
+                        <div>
+                            <sl-button-group>
+                                <sl-button id="add-repository" size="small" title="Add repository">
+                                    <sl-icon name="folder-plus"></sl-icon>
+                                </sl-button>
+                                <sl-button id="remove-repository" size="small" title="Remove repository" ?disabled="${this._repository_buttons_disabled}">
+                                    <sl-icon name="folder-minus"></sl-icon>
+                                </sl-button>
+                                <sl-button id="rename-repository" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
+                                    <sl-icon name="folder"></sl-icon>
+                                </sl-button>
+                                <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
+                                    <sl-icon name="arrow-counterclockwise"></sl-icon>
+                                </sl-button>
+                            </sl-button-group>
+                            <sl-button-group>
+                                <sl-button size="small" title="Add file">
+                                    <sl-icon name="file-earmark-plus"></sl-icon>
+                                </sl-button>
+                                <sl-button size="small" title="Remove file">
+                                    <sl-icon name="file-earmark-minus"></sl-icon>
+                                </sl-button>
+                                <sl-button size="small" title="Rename file">
+                                    <sl-icon name="file-earmark"></sl-icon>
+                                </sl-button>
+                            </sl-button-group>
+                        </div>
+                        <div id="repositories-card-content" class="filesystem-card-content">
+                            ${this._initialize_filesystem.render({
+                pending: () => html`Loading repository names...`,
+                complete: () => html`<sl-tree id="repositories-tree">${this._visible_entries}</sl-tree>`,
+            })}
+                        </div>
+                    </sl-details>
+
+                    <sl-details summary="Second">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+                        aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </sl-details>
+                </div>
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
@@ -160,11 +167,6 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
-
-        /*render_root.querySelector("lion-pagination").addEventListener("current-changed", event => {
-            this.current_page = event.target.current;
-            this._display_page();
-        });*/
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
@@ -231,17 +233,16 @@ export default class ADWLMFilesystemManager extends LitElement {
                 }
             }
 
-            // TODO: use file_relative_path, which is to be added to the sl-tree-item template
             if (selection.matches(`sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                let file_name = selection.dataset.entryName;
+                console.log(selection);
+                let file_path = selection.dataset.entryPath;
 
                 // get the file contents
-                let file_contents = await filesystem.read_file(this._selected_repository_path, file_name);
+                let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
 
-                //TODO: here its has to be file_relative_path, not file_name
                 let file_to_edit_metadata = {
                     "contents": file_contents,
-                    "relative_path": file_name,
+                    "relative_path": file_path,
                 };
                 this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit-metadata", {
                     "detail": file_to_edit_metadata,
@@ -329,7 +330,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         this.addEventListener("adwlm-filesystem-manager:save-file", async (event) => {
             let file_to_save_metadata = event.detail;
 
-            await filesystem.save_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
+            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
         });
 
         // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager

@@ -16,7 +16,7 @@ export default class ADWLMVirtualFilesystem {
         try {
             await git.getRemoteInfo2({
                 http,
-                corsProxy: "https://cors.isomorphic-git.org",
+                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
                 url: repository_url
             });
 
@@ -57,7 +57,7 @@ export default class ADWLMVirtualFilesystem {
                 fs: this.fs,
                 http,
                 dir: repository_folder_name,
-                corsProxy: "https://cors.isomorphic-git.org",
+                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
                 url: remote_origin_url,
                 ref: repository_branch,
                 singleBranch: true,
@@ -123,12 +123,6 @@ export default class ADWLMVirtualFilesystem {
         return repository_names;
     }
 
-    // loads the repository when
-    load_repository() {
-        // set username
-
-    }
-
     async rename_entry(old_path, new_path) {
         await this.pfs.rename(old_path, new_path);
     }
@@ -154,13 +148,12 @@ export default class ADWLMVirtualFilesystem {
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
                     folders.push(`${FILESYSTEM_MANAGER_CONSTANTS.FOLDER_SCHEME_PART}${entry_path}`);
-                    //console.log(`folder:/${parent_folder_path}${entry_path}`);
+
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
                     files.push(`${FILESYSTEM_MANAGER_CONSTANTS.FILE_SCHEME_PART}${entry_path}`);
-                    //console.log(`file:/${parent_folder_path}${entry_path}`);
                 }
             },
         });
@@ -174,9 +167,9 @@ export default class ADWLMVirtualFilesystem {
         };
     }
 
-    async save_file(repository_path, file_contents, file_relative_path) {
-        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
-        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
+    async save_and_stage_file(repository_path, file_contents, file_path) {
+        await this.pfs.writeFile(`${repository_path}/${file_path}`, file_contents);
+        await git.add({ fs: this.fs, dir: repository_path, filepath: file_path });
 
         /*
         let oid = await git.writeBlob({
@@ -190,14 +183,14 @@ export default class ADWLMVirtualFilesystem {
             fs: this.fs,
             dir: repository_path,
             add: true,
-            filepath: file_relative_path,
+            filepath: file_path,
             oid
         });
 
         console.log(oid2);*/
     }
 
-    async read_file(repository_path, file_relative_path) {
+    async read_file(repository_path, file_path) {
         let file_contents = "";
 
         await git.walk({
@@ -205,7 +198,7 @@ export default class ADWLMVirtualFilesystem {
             dir: repository_path,
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
-                if (entry_path === file_relative_path) {
+                if (entry_path === file_path) {
                     file_contents = await entry.content();
                 }
             },
@@ -216,6 +209,43 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async commit_and_push_file(repository_path) {
+        /*await git.walk({
+            fs: this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR()],
+            map: async (filePath, [A]) => console.log(filePath),
+        });*/
+
+        let start = performance.now();
+        let changed_files = await git.walk({
+            fs: this.fs,
+            dir: repository_path,
+            trees: [git.TREE(), git.STAGE()],
+            map: async (entry_path, [workdir_entry, stage_entry]) => {
+                let entry_type = await workdir_entry.type();
+
+                if (entry_type === "blob" && !entry_path.startsWith(".")) {
+                    let workdir_oid = await workdir_entry.oid();
+                    let stage_oid = await stage_entry.oid();
+                    //let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
+                    if (workdir_oid !== stage_oid) {
+                        return stage_entry;
+                    }
+                }
+            },
+        });
+        let end = performance.now();
+        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
+
+        console.log(changed_files);
+        return;
+        // Get all files which have been modified or staged - does not include new untracked files or deleted files
+        const modifiedFiles = allFiles
+            .filter((row) => row[WORKDIR] > UNCHANGED && row[STAGE] > UNCHANGED)
+            .map((row) => row[FILEPATH]);
+        console.log(modifiedFiles);
+
+        return;
         // get some metadata
         let current_branch = await git.currentBranch({
             fs: this.fs,
@@ -253,7 +283,7 @@ export default class ADWLMVirtualFilesystem {
             fs: this.fs,
             http,
             dir: repository_path,
-            remote: "origin",
+            remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
             ref: current_branch,
             onAuth: () => ({
                 username: username,
@@ -283,7 +313,9 @@ export default class ADWLMVirtualFilesystem {
         let end = performance.now();
         console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
 */
-        /*let start = performance.now();
+        /*
+        // this is slow
+        let start = performance.now();
         let filenames = await git.walk({
             fs: this.fs,
             dir: repository_path,
@@ -347,7 +379,7 @@ export default class ADWLMVirtualFilesystem {
     async _list_refs(repository_metadata, refs_type) {
         let refs = await git.listServerRefs({
             http,
-            corsProxy: "https://cors.isomorphic-git.org",
+            corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
             url: repository_metadata.url,
             prefix: `refs/${refs_type}/`,
             onAuth: () => ({
@@ -384,7 +416,7 @@ export default class ADWLMVirtualFilesystem {
                                 // get refs/HEAD
                                 let refs = await git.listServerRefs({
                                     http,
-                                    corsProxy: "https://cors.isomorphic-git.org",
+                                    corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
                                     url: remote_origin_url,
                                     prefix: "HEAD",
                                 });
