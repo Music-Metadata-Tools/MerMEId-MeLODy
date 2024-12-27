@@ -147,13 +147,13 @@ export default class ADWLMVirtualFilesystem {
                 let entry_type = await entry.type();
 
                 if (entry_type === "tree" && !entry_path.startsWith(".")) {
-                    folders.push(`${FILESYSTEM_MANAGER_CONSTANTS.FOLDER_SCHEME_PART}${entry_path}`);
+                    folders.push(entry_path);
 
                     return null;
                 }
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    files.push(`${FILESYSTEM_MANAGER_CONSTANTS.FILE_SCHEME_PART}${entry_path}`);
+                    files.push(entry_path);
                 }
             },
         });
@@ -208,14 +208,7 @@ export default class ADWLMVirtualFilesystem {
         return file_contents;
     }
 
-    async commit_and_push_file(repository_path) {
-        /*await git.walk({
-            fs: this.fs,
-            dir: repository_path,
-            trees: [git.WORKDIR()],
-            map: async (filePath, [A]) => console.log(filePath),
-        });*/
-
+    async list_staged_files(repository_path) {
         let start = performance.now();
         let changed_files = await git.walk({
             fs: this.fs,
@@ -227,25 +220,19 @@ export default class ADWLMVirtualFilesystem {
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
                     let workdir_oid = await workdir_entry.oid();
                     let stage_oid = await stage_entry.oid();
-                    //let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
                     if (workdir_oid !== stage_oid) {
-                        return stage_entry;
+                        return entry_path;
                     }
                 }
             },
         });
         let end = performance.now();
-        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
+        console.log("elapsed time for listing the staged files = " + (end - start) + "ms");
 
-        console.log(changed_files);
-        return;
-        // Get all files which have been modified or staged - does not include new untracked files or deleted files
-        const modifiedFiles = allFiles
-            .filter((row) => row[WORKDIR] > UNCHANGED && row[STAGE] > UNCHANGED)
-            .map((row) => row[FILEPATH]);
-        console.log(modifiedFiles);
+        return changed_files;
+    }
 
-        return;
+    async commit_and_push_file(repository_path) {
         // get some metadata
         let current_branch = await git.currentBranch({
             fs: this.fs,
@@ -262,9 +249,6 @@ export default class ADWLMVirtualFilesystem {
             dir: repository_path,
             path: "user.name"
         });
-
-        // TODO: here, maybe a dialog window with all the staged files, for user to select which ones
-        // to commit and push?? drawback: displaying the files takes 13 seconds for a repo with 5550 files
 
         // commit all the changed files
         let commit_message = `${(new Date()).toISOString()}, ${username}`;
@@ -291,63 +275,6 @@ export default class ADWLMVirtualFilesystem {
             }),
         });
         console.log(pushResult);
-        /*
-        let start = performance.now();
-        await git.walk({
-            fs: this.fs,
-            dir: repository_path,
-            trees: [git.WORKDIR(), git.STAGE()],
-            map: async (entry_path, [workdir_entry, stage_entry]) => {
-                let entry_type = await workdir_entry.type();
-
-                if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    let workdir_oid = await workdir_entry.oid();
-                    let stage_oid = await stage_entry.oid();
-                    //let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
-                    if (workdir_oid !== stage_oid) {
-                        console.log(`${entry_path}`);
-                    }
-                }
-            },
-        });
-        let end = performance.now();
-        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
-*/
-        /*
-        // this is slow
-        let start = performance.now();
-        let filenames = await git.walk({
-            fs: this.fs,
-            dir: repository_path,
-            trees: [git.STAGE(), git.WORKDIR()],
-            map: async (filepath, [head, workdir]) => {
-                //console.log(workdir);
-                return {
-                    filepath,
-                    oid: await head?.oid(),
-                    diff: diff(
-                        (await head?.content())?.toString('utf8') || '',
-                        (await workdir?.content())?.toString('utf8') || ''
-                    )
-                }
-            },
-        });
-        let end = performance.now();
-        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
-*/
-        /*const FILE = 0, HEAD = 1, WORKDIR = 2, STAGE = 3;
-
-        let start = performance.now();
-        const filenames = (await git.statusMatrix({
-            fs: this.fs,
-            dir: repository_path,
-        }))
-            .filter(row => row[WORKDIR] !== row[STAGE])
-            .map(row => [row[FILE], row[WORKDIR]]);
-        let end = performance.now();
-        console.log("elapsed time for detecting files that have unstaged changes = " + (end - start) + "ms");
-
-        console.log(filenames);*/
     }
 
     async pull(repository_path) {
@@ -391,9 +318,9 @@ export default class ADWLMVirtualFilesystem {
         return refs;
     }
 
-    async _clear_directory(dir) {
-        for (let item of await this.pfs.readdir(dir)) {
-            const item_path = `${dir}/` + item;
+    async _clear_directory(directory) {
+        for (let item of await this.pfs.readdir(directory)) {
+            const item_path = `${directory}/` + item;
             if ((await this.pfs.stat(item_path)).type === 'file') {
                 await this.pfs.unlink(item_path);
             } else {
