@@ -220,12 +220,6 @@ document.addEventListener("sl-focus", async (event) => {
 
         target.loading = false;
     }
-
-    // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager
-    if (target.matches("sl-button#commit-and-push")) {
-        document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:commit-and-push"));
-    }
-    // END TODO
 });
 
 document.addEventListener("adwlm-entity-editor:file-to-save-metadata", (event) => {

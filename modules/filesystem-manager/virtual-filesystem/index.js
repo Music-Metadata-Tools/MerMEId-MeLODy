@@ -232,7 +232,7 @@ export default class ADWLMVirtualFilesystem {
         return changed_files;
     }
 
-    async commit_and_push_file(repository_path) {
+    async commit_and_push_file(repository_path, staged_file_paths, selected_staged_file_paths) {
         // get some metadata
         let current_branch = await git.currentBranch({
             fs: this.fs,
@@ -250,8 +250,22 @@ export default class ADWLMVirtualFilesystem {
             path: "user.name"
         });
 
-        // commit all the changed files
         let commit_message = `${(new Date()).toISOString()}, ${username}`;
+
+        // in case when not all files were selected,
+        // unstage the files that were not selected
+        if (selected_staged_file_paths.length > 0) {
+            let to_unstage_file_paths = staged_file_paths.filter(path => !selected_staged_file_paths.includes(path));
+            for (const to_unstage_file_path of to_unstage_file_paths) {
+                await git.resetIndex({
+                    fs: this.fs,
+                    dir: repository_path,
+                    filepath: to_unstage_file_path
+                });
+            }
+        }
+
+        // commit the staged files
         let sha = await git.commit({
             fs: this.fs,
             dir: repository_path,
@@ -263,18 +277,33 @@ export default class ADWLMVirtualFilesystem {
         });
 
         // push all the committed files
-        let pushResult = await git.push({
+        let push_result = await git.push({
             fs: this.fs,
             http,
             dir: repository_path,
             remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
             ref: current_branch,
+            force: true,
             onAuth: () => ({
                 username: username,
                 password: personal_access_token,
             }),
         });
-        console.log(pushResult);
+
+        // in case when not all files were selected,
+        // stage back the files that were not selected
+        if (selected_staged_file_paths.length > 0) {
+            let to_stage_back_file_paths = staged_file_paths.filter(path => !selected_staged_file_paths.includes(path));
+            for (const to_stage_back_file_path of to_stage_back_file_paths) {
+                await git.add({
+                    fs: this.fs,
+                    dir: repository_path,
+                    filepath: to_stage_back_file_path
+                });
+            }
+        }
+
+        return push_result.ok;
     }
 
     async pull(repository_path) {

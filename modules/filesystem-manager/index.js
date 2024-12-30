@@ -111,13 +111,25 @@ export default class ADWLMFilesystemManager extends LitElement {
         })}
                     </div>
                 </sl-details>
-
-                <sl-details id="staged-files-details" summary="Files to push" disabled>
-                    <sl-tree id="staged-files-tree">${this._displayed_staged_files}</sl-tree>
+                <sl-details id="staged-files-details" summary="Commit and push files" disabled>
+                <div>
+                    <sl-button id="commit-and-push-staged-files" size="small" title="Commit and push files">
+                        <sl-icon name="cloud-upload"></sl-icon>
+                    </sl-button>
+                </div>
+                    <sl-tree id="staged-files-tree" selection="multiple">${this._displayed_staged_files}</sl-tree>
                 </sl-details>
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
+            <sl-alert id="commit-and-push-done" variant="primary" duration="3000" closable>
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                The files were committed and pushed to the remote repository.
+            </sl-alert>
+            <sl-alert id="commit-and-push-error" variant="warning" duration="3000" closable>
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                An error occured while committing and pushing the files to the remote repository.
+            </sl-alert>
         `;
     }
 
@@ -128,40 +140,42 @@ export default class ADWLMFilesystemManager extends LitElement {
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
         let container = render_root.querySelector("div#container");
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
+        let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
+        let commit_and_push_done_toast = render_root.querySelector("sl-alert#commit-and-push-done");
+        let commit_and_push_error_toast = render_root.querySelector("sl-alert#commit-and-push-error");
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
 
-            if (target.matches("sl-tree-item[lazy]")) {
+            if (target.matches("sl-tree#repositories-tree sl-tree-item[lazy]")) {
                 target.innerHTML = target.dataset.entryName;
                 let entry_type = target.dataset.entryType;
                 let entry_path = target.dataset.entryPath;
 
-                switch (entry_type) {
-                    case CONSTANTS.REPO_FOLDER_SCHEME_NAME:
-                        this._selected_repository_path = entry_path;
-                        break;
+                if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
+                    this._selected_repository_path = entry_path;
+                    staged_files_details.disabled = false;
                 }
 
                 let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, entry_path);
 
-                let fragment_dom_string = "";
+                let tree_items = "";
 
                 // process the folders
                 for (const folder_entry_path of entries.folders) {
                     let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder_entry_path.lastIndexOf("/") + 1) : folder_entry_path;
 
-                    fragment_dom_string += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-path="${folder_entry_path}" data-entry-name="${folder_entry_name}">${folder_entry_name}</sl-tree-item>`;
+                    tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-path="${folder_entry_path}" data-entry-name="${folder_entry_name}">${folder_entry_name}</sl-tree-item>`;
                 }
 
                 // process the files
                 for (const file_entry_path of entries.files) {
                     let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file_entry_path.lastIndexOf("/") + 1) : file_entry_path;
 
-                    fragment_dom_string += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-path="${file_entry_path}" data-entry-name="${file_entry_name}">${file_entry_name}</sl-tree-item>`;
+                    tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-path="${file_entry_path}" data-entry-name="${file_entry_name}">${file_entry_name}</sl-tree-item>`;
                 }
 
-                target.insertAdjacentHTML("beforeend", fragment_dom_string);
+                target.insertAdjacentHTML("beforeend", tree_items);
             }
         });
 
@@ -181,7 +195,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 }
             }
 
-            if (selection.matches(`sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
+            if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
                 let file_path = selection.dataset.entryPath;
 
                 // get the file contents
@@ -201,6 +215,8 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;
+            // the blur is needed, as the action is repeated every time the browser tab regains focus
+            target.blur();
 
             if (target.matches("sl-button#add-repository")) {
                 add_repository_dialog.repository_names = await filesystem.list_repository_names();
@@ -209,9 +225,6 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#remove-repository")) {
                 target.loading = true;
-
-                let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
-                console.log(repositories_tree.querySelectorAll("sl-tree-item").length);
 
                 await filesystem.remove_repository(this._selected_repository_path);
                 await this._list_repository_names();
@@ -234,6 +247,26 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 await filesystem.pull(this._selected_repository_path);
+            }
+
+            if (target.matches("sl-button#commit-and-push-staged-files")) {
+                target.loading = true;
+
+                let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
+                let staged_file_paths = staged_file_nodes
+                    .map(item => item.dataset.entryPath);
+                let selected_staged_file_paths = staged_file_nodes
+                    .filter(item => item.selected)
+                    .map(item => item.dataset.entryPath);
+                let push_result = await filesystem.commit_and_push_file(this._selected_repository_path, staged_file_paths, selected_staged_file_paths);
+                if (push_result) {
+                    await this._list_staged_files();
+                    commit_and_push_done_toast.toast();
+                } else {
+                    commit_and_push_error_toast.toast();
+                }
+
+                target.loading = false;
             }
         });
 
@@ -287,17 +320,9 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-details#staged-files-details")) {
-                let staged_files = await filesystem.list_staged_files(this._selected_repository_path);
-                console.log(staged_files);
+                await this._list_staged_files();
             }
         });
-
-
-        // TODO: delete this, as the button for commit and push has to be inside the filesystem-manager
-        document.addEventListener("adwlm-filesystem-manager:commit-and-push", async (event) => {
-            await filesystem.commit_and_push_file(this._selected_repository_path);
-        });
-        // END TODO
     }
 
     _init() {
@@ -325,6 +350,29 @@ export default class ADWLMFilesystemManager extends LitElement {
             return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-path="${entry_path}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
         });
         this._displayed_repository_names = displayed_repository_names;
+    }
+
+    async _list_staged_files() {
+        // Maybe load the files asynchronously, as they are discovered?
+        // The current approach implies 0.5-1.5 seconds for listing the files, for
+        // a repo with 4K+ files, so async loading is not needed.
+        let tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
+        tree.innerHTML = "";
+        tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
+
+        let staged_files = await filesystem.list_staged_files(this._selected_repository_path);
+
+        tree.innerHTML = "";
+
+        let tree_items = "";
+        // process the files
+        for (const staged_file of staged_files) {
+            let file_name = staged_file.includes("/") ? staged_file.substring(staged_file.lastIndexOf("/") + 1) : staged_file;
+
+            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-path="${staged_file}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+        }
+
+        tree.insertAdjacentHTML("beforeend", tree_items);
     }
 
 }
