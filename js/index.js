@@ -126,6 +126,10 @@ let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 
 document.addEventListener("sl-focus", async (event) => {
     let target = event.target;
+    // the blur is needed, as the action is repeated every time the browser tab regains focus
+    if (target.matches("sl-button")) {
+        target.blur();
+    }
 
     if (target.matches("sl-button#save")) {
         target.loading = true;

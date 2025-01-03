@@ -2,7 +2,7 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import "https://cdn.jsdelivr.net/npm/@lion/pagination@0.9.1/lion-pagination.js/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
-import "./rename-repository-dialog/index.js";
+import "./rename-filesystem-entry-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 
 // TODO: conditionally import of the datatype for the repository data
@@ -85,7 +85,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button id="remove-repository" size="small" title="Remove repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder-minus"></sl-icon>
                             </sl-button>
-                            <sl-button id="rename-repository" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
+                            <sl-button class="rename-entry" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
                             <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
@@ -99,7 +99,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button size="small" title="Remove file">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
-                            <sl-button size="small" title="Rename file">
+                            <sl-button class="rename-entry" size="small" title="Rename file">
                                 <sl-icon name="file-earmark"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -150,29 +150,34 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (target.matches("sl-tree#repositories-tree sl-tree-item[lazy]")) {
                 target.innerHTML = target.dataset.entryName;
                 let entry_type = target.dataset.entryType;
-                let entry_path = target.dataset.entryPath;
+                let entry_absolute_path = target.dataset.entryAbsolutePath;
+                let entry_relative_path = target.dataset.entryRelativePath;
 
+                // case of a repo folder
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
-                    this._selected_repository_path = entry_path;
+                    this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
                 }
 
-                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, entry_path);
+                // case of a plain folder
+                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, entry_relative_path);
 
                 let tree_items = "";
 
-                // process the folders
-                for (const folder_entry_path of entries.folders) {
-                    let folder_entry_name = folder_entry_path.includes("/") ? folder_entry_path.substring(folder_entry_path.lastIndexOf("/") + 1) : folder_entry_path;
+                // process the subfolders
+                for (const folder_relative_path of entries.folders) {
+                    let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
+                    let folder_absolute_path = `${this._selected_repository_path}/${folder_relative_path}`;
 
-                    tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-path="${folder_entry_path}" data-entry-name="${folder_entry_name}">${folder_entry_name}</sl-tree-item>`;
+                    tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
                 }
 
                 // process the files
-                for (const file_entry_path of entries.files) {
-                    let file_entry_name = file_entry_path.includes("/") ? file_entry_path.substring(file_entry_path.lastIndexOf("/") + 1) : file_entry_path;
+                for (const file_relative_path of entries.files) {
+                    let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
+                    let file_absolute_path = `${this._selected_repository_path}/${file_relative_path}`;
 
-                    tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-path="${file_entry_path}" data-entry-name="${file_entry_name}">${file_entry_name}</sl-tree-item>`;
+                    tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
                 }
 
                 target.insertAdjacentHTML("beforeend", tree_items);
@@ -190,13 +195,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let entry_type = selected_tree_item.dataset.entryType;
 
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
-                    this._selected_repository_path = selected_tree_item.dataset.entryPath;
+                    this._selected_repository_path = selected_tree_item.dataset.entryAbsolutePath;
                     staged_files_details.disabled = false;
                 }
             }
 
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                let file_path = selection.dataset.entryPath;
+                let file_path = selection.dataset.entryRelativePath;
 
                 // get the file contents
                 let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
@@ -216,7 +221,9 @@ export default class ADWLMFilesystemManager extends LitElement {
         render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;
             // the blur is needed, as the action is repeated every time the browser tab regains focus
-            target.blur();
+            if (target.matches("sl-button")) {
+                target.blur();
+            }
 
             if (target.matches("sl-button#add-repository")) {
                 add_repository_dialog.repository_names = await filesystem.list_repository_names();
@@ -238,10 +245,19 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = false;
             }
 
-            if (target.matches("sl-button#rename-repository")) {
-                rename_filesystem_entry_dialog.entry_type = CONSTANTS.REPO_FOLDER_SCHEME_NAME;
-                rename_filesystem_entry_dialog.label_1 = "Rename repository";
-                rename_filesystem_entry_dialog.label_2 = "New repository name";
+            if (target.matches("sl-button.rename-entry")) {
+                let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                let selected_entry = repositories_tree.querySelector("sl-tree-item[selected]");
+                let selected_entry_type = selected_entry.dataset.entryType;
+                let selected_entry_name = selected_entry.dataset.entryName;
+                let selected_entry_absolute_path = selected_entry.dataset.entryAbsolutePath;
+                let selected_entry_relative_path = selected_entry.dataset.entryRelativePath;
+
+                rename_filesystem_entry_dialog.entry = selected_entry;
+                rename_filesystem_entry_dialog.old_entry_name = selected_entry_name;
+                rename_filesystem_entry_dialog.old_entry_absolute_path = selected_entry_absolute_path;
+                rename_filesystem_entry_dialog.old_entry_relative_path = selected_entry_relative_path;
+                rename_filesystem_entry_dialog.entry_type = selected_entry_type;
                 rename_filesystem_entry_dialog.show();
             }
 
@@ -254,19 +270,19 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
                 let staged_file_paths = staged_file_nodes
-                    .map(item => item.dataset.entryPath);
+                    .map(item => item.dataset.entryRelativePath);
                 let selected_staged_file_paths = staged_file_nodes
                     .filter(item => item.selected)
-                    .map(item => item.dataset.entryPath);
+                    .map(item => item.dataset.entryRelativePath);
                 let push_result = await filesystem.commit_and_push_file(this._selected_repository_path, staged_file_paths, selected_staged_file_paths);
                 if (push_result) {
                     await this._list_staged_files();
                     commit_and_push_done_toast.toast();
+                    target.loading = false;
                 } else {
                     commit_and_push_error_toast.toast();
+                    target.loading = false;
                 }
-
-                target.loading = false;
             }
         });
 
@@ -292,18 +308,27 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("adwlm-rename-filesystem-entry-dialog:new-entry-name", async (event) => {
             let new_entry_metadata = event.detail;
-            let processed_name = new_entry_metadata.name;
-            switch (new_entry_metadata.type) {
-                case CONSTANTS.REPO_FOLDER_SCHEME_NAME:
-                    processed_name = `/${processed_name}`;
-                    break;
+            let entry = new_entry_metadata.entry;
+            let new_entry_name = new_entry_metadata.name;
+            let new_entry_absolute_path = new_entry_metadata.absolute_path;
+            let new_entry_relative_path = new_entry_metadata.relative_path;
+            let old_entry_absolute_path = new_entry_metadata.old_absolute_path;
+
+            try {
+                await filesystem.rename_entry(this._selected_repository_path, old_entry_absolute_path, new_entry_absolute_path, "1008.ttl", new_entry_relative_path);
+                entry.dataset.entryName = new_entry_name;
+                entry.textContent = new_entry_name;
+                entry.dataset.entryAbsolutePath = new_entry_absolute_path;
+                entry.dataset.entryRelativePath = new_entry_relative_path;
+
+                if (new_entry_metadata.type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
+                    this._selected_repository_path = new_entry_absolute_path;
+                }
+
+                rename_filesystem_entry_dialog.hide();
+            } catch (error) {
+                console.error(error);
             }
-
-            await filesystem.rename_entry(this._selected_repository_path, processed_name);
-
-            await this._list_repository_names();
-
-            rename_filesystem_entry_dialog.hide();
         });
 
         this.addEventListener("adwlm-filesystem-manager:save-file", async (event) => {
@@ -347,7 +372,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         let displayed_repository_names = repository_names.map(entry_name => {
             let entry_path = `/${entry_name}`;
 
-            return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-path="${entry_path}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
+            return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-absolute-path="${entry_path}" data-entry-relative-path="${entry_name}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
         });
         this._displayed_repository_names = displayed_repository_names;
     }
@@ -360,16 +385,17 @@ export default class ADWLMFilesystemManager extends LitElement {
         tree.innerHTML = "";
         tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
 
-        let staged_files = await filesystem.list_staged_files(this._selected_repository_path);
+        let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
         tree.innerHTML = "";
 
         let tree_items = "";
         // process the files
-        for (const staged_file of staged_files) {
-            let file_name = staged_file.includes("/") ? staged_file.substring(staged_file.lastIndexOf("/") + 1) : staged_file;
+        for (const staged_file_relative_path of staged_file_relative_paths) {
+            let file_name = staged_file_relative_path.includes("/") ? staged_file_relative_path.substring(staged_file_relative_path.lastIndexOf("/") + 1) : staged_file_relative_path;
+            let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file_relative_path}`;
 
-            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-path="${staged_file}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${staged_file_absolute_path}" data-entry-relative-path="${staged_file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);

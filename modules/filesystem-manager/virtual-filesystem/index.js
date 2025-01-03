@@ -123,25 +123,47 @@ export default class ADWLMVirtualFilesystem {
         return repository_names;
     }
 
-    async rename_entry(old_path, new_path) {
-        await this.pfs.rename(old_path, new_path);
+    async rename_entry(repository_path, old_entry_absolute_path, new_entry_absolute_path, old_entry_relative_path, new_entry_relative_path) {
+        /*
+        TODO: this is for renaming a file, but it is not working, due to a limitation of ismorphic-git
+        // remove from the Git index the old path to file
+        await git.resetIndex({
+            fs: this.fs,
+            dir: repository_path,
+            filepath: old_entry_relative_path
+        });
+        */
+
+        // rename the entry
+        await this.pfs.rename(old_entry_absolute_path, new_entry_absolute_path);
+
+        /*
+        // add to the Git index the new path to file
+        await git.add({
+            fs: this.fs,
+            dir: repository_path,
+            filepath: new_entry_relative_path
+        });
+        // END TODO
+        */
     }
 
-    async list_entries_from_workdir(repository_path, parent_folder_path) {
+    async list_entries_from_workdir(repository_path, parent_folder_relative_path) {
         let folders = [];
         let files = [];
+        console.log(repository_path);
 
-        if (repository_path === parent_folder_path) {
-            parent_folder_path = "";
+        if (repository_path === `/${parent_folder_relative_path}`) {
+            parent_folder_relative_path = "";
         } else {
-            parent_folder_path = `${parent_folder_path}/`;
+            parent_folder_relative_path = `${parent_folder_relative_path}/`;
         }
         await git.walk({
             fs: this.fs,
             dir: repository_path,
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
-                if (!entry_path.startsWith(parent_folder_path)) {
+                if (!entry_path.startsWith(parent_folder_relative_path)) {
                     return;
                 }
                 let entry_type = await entry.type();
@@ -170,24 +192,6 @@ export default class ADWLMVirtualFilesystem {
     async save_and_stage_file(repository_path, file_contents, file_path) {
         await this.pfs.writeFile(`${repository_path}/${file_path}`, file_contents);
         await git.add({ fs: this.fs, dir: repository_path, filepath: file_path });
-
-        /*
-        let oid = await git.writeBlob({
-            fs: this.fs,
-            dir: repository_path,
-            blob: new TextEncoder().encode(file_contents)
-        });
-
-        // Write the object in the object database to the index.
-        let oid2 = await git.updateIndex({
-            fs: this.fs,
-            dir: repository_path,
-            add: true,
-            filepath: file_path,
-            oid
-        });
-
-        console.log(oid2);*/
     }
 
     async read_file(repository_path, file_path) {
@@ -214,11 +218,17 @@ export default class ADWLMVirtualFilesystem {
             fs: this.fs,
             dir: repository_path,
             trees: [git.TREE(), git.STAGE()],
-            map: async (entry_path, [workdir_entry, stage_entry]) => {
-                let entry_type = await workdir_entry.type();
+            map: async (entry_path, [tree_entry, stage_entry]) => {
+                if (tree_entry === null) {
+                    console.log(`${JSON.stringify(tree_entry)} ${JSON.stringify(stage_entry)}`);
+                    let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
+                    console.log(status);
+                    return entry_path;
+                }
+                let entry_type = await tree_entry.type();
 
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
-                    let workdir_oid = await workdir_entry.oid();
+                    let workdir_oid = await tree_entry.oid();
                     let stage_oid = await stage_entry.oid();
                     if (workdir_oid !== stage_oid) {
                         return entry_path;
