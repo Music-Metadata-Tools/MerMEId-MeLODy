@@ -1,5 +1,4 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
-import "https://cdn.jsdelivr.net/npm/@lion/pagination@0.9.1/lion-pagination.js/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
@@ -45,7 +44,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         _displayed_staged_files: {
             type: Array,
         },
-        file_to_save_metadata: {
+        file_to_save: {
             type: Object,
         },
         _repository_buttons_disabled: {
@@ -56,12 +55,14 @@ export default class ADWLMFilesystemManager extends LitElement {
     updated(changedProperties) {
         super.updated(changedProperties);
 
-        if (changedProperties.has("file_to_save_metadata")) {
-            let file_to_save_metadata = this.file_to_save_metadata;
-
-            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:save-file", {
-                "detail": file_to_save_metadata,
-            }));
+        if (changedProperties.has("file_to_save")) {
+            let file_to_save = this.file_to_save;
+            if (file_to_save !== null) {
+                // dispatch internal event, as the actions to take are asynchronous
+                this.dispatchEvent(new CustomEvent("_save-file", {
+                    "detail": this.file_to_save,
+                }));
+            }
         }
     }
 
@@ -112,11 +113,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     </div>
                 </sl-details>
                 <sl-details id="staged-files-details" summary="Commit and push files" disabled>
-                <div>
-                    <sl-button id="commit-and-push-staged-files" size="small" title="Commit and push files">
-                        <sl-icon name="cloud-upload"></sl-icon>
-                    </sl-button>
-                </div>
+                    <sl-button-group>
+                        <sl-button id="commit-and-push-staged-files" size="small" title="Commit and push files">
+                            <sl-icon name="cloud-upload"></sl-icon>
+                        </sl-button>
+                    </sl-button-group>
                     <sl-tree id="staged-files-tree" selection="multiple">${this._displayed_staged_files}</sl-tree>
                 </sl-details>
             </div>
@@ -206,12 +207,12 @@ export default class ADWLMFilesystemManager extends LitElement {
                 // get the file contents
                 let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
 
-                let file_to_edit_metadata = {
+                let file_to_edit = {
                     "contents": file_contents,
                     "relative_path": file_path,
                 };
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit-metadata", {
-                    "detail": file_to_edit_metadata,
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit", {
+                    "detail": file_to_edit,
                     "bubbles": true,
                     "composed": true,
                 }));
@@ -331,10 +332,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
 
-        this.addEventListener("adwlm-filesystem-manager:save-file", async (event) => {
-            let file_to_save_metadata = event.detail;
+        this.addEventListener("_save-file", async (event) => {
+            let file_to_save = event.detail;
 
-            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save_metadata.contents, file_to_save_metadata.relative_path);
+            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save.rdf_contents, file_to_save.relative_path);
         });
 
         render_root.addEventListener("sl-show", async (event) => {

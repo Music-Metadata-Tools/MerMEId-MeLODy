@@ -1,4 +1,5 @@
-import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
+import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
+await init_oxigraph();
 
 // ontologies
 const classifications = {
@@ -123,6 +124,7 @@ console.log(form.serialize());
 });*/
 
 let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
+let entity_editor = document.querySelector("adwlm-entity-editor");
 
 document.addEventListener("sl-focus", async (event) => {
     let target = event.target;
@@ -213,7 +215,7 @@ document.addEventListener("sl-focus", async (event) => {
         rdf_output.innerText = rdf_result;
 
         // save the file in the repository
-        document.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save-metadata", {
+        document.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save", {
             "detail": {
                 "contents": rdf_result,
                 relative_path: entity_editor.file_path,
@@ -226,21 +228,67 @@ document.addEventListener("sl-focus", async (event) => {
     }
 });
 
-document.addEventListener("adwlm-entity-editor:file-to-save-metadata", (event) => {
-    let file_to_save_metadata = event.detail;
+document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
+    let file_to_save = event.detail;
 
-    filesystem_manager.file_to_save_metadata = file_to_save_metadata;
+    filesystem_manager.file_to_save = file_to_save;
 });
 
-document.addEventListener("adwlm-filesystem-manager:file-to-edit-metadata", (event) => {
-    let file_to_edit_metadata = event.detail;
+// TODO: move separately
+const SparqlQueries = {
+    "entity_type_definitions":
+        `
+    prefix melod: <https://mei-metadata.org/>
+    prefix schema: <http://schema.org/>
 
-    let entity_editor = document.querySelector("shacl-form#places-shacl-form");
+    select ?entity_type ?entity_type_definition_url
+    where {
+        ?entity_type a melod:Entity .
+        ?entity_type schema:url ?entity_type_definition_url .
+    }
+`};
 
-    let file_to_edit_contents = file_to_edit_metadata.contents;
+class EditorOntology {
+    constructor(entity_type_definitions) {
+        this.entity_type_definitions = entity_type_definitions;
+    }
+}
+
+let graph_store = new oxigraph.Store();
+
+let ontology_file = await fetch("ontologies/editor-default.ttl").then(response => response.text());
+
+graph_store.load(ontology_file, "text/turtle", null, oxigraph.Default);
+
+//extract the entity type definitions
+let entity_type_definition_bindings = graph_store.query(SparqlQueries.entity_type_definitions);
+let entity_type_definitions = {};
+
+for (const binding of entity_type_definition_bindings) {
+    let entity_type_definition_url = `${binding.get("entity_type_definition_url").value}`;
+    if (!entity_type_definition_url.startsWith("https://")) {
+        entity_type_definitions[`${binding.get("entity_type").value}`] = {
+            url: entity_type_definition_url.substring(entity_type_definition_url.indexOf(":") + 1),
+            contents: "",
+        };
+    }
+}
+
+const editor_ontology = new EditorOntology(entity_type_definitions);
+console.log(editor_ontology);
+
+
+// END TODO
+
+document.addEventListener("adwlm-filesystem-manager:file-to-edit", (event) => {
+    let file_to_edit = event.detail;
+
     // detect document type, in order to load the proper SHACL file
     // detect the data values subject, in order to set the corresponding attribute of the shacl-form
-    entity_editor.dataset.values = file_to_edit_contents;
 
-    entity_editor.file_path = file_to_edit_metadata.relative_path;
+    // set data-shape-subject
+    // set data-values-subject
+    // FILTER(STRSTARTS(STR(?var), "http://example.org/ns#"))
+
+    entity_editor.file_to_edit = file_to_edit;
 });

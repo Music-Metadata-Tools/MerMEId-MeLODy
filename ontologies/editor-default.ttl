@@ -1,0 +1,11 @@
+@prefix melod: <https://mei-metadata.org/> .
+@prefix schema: <http://schema.org/> .
+
+# The entity shapes definition. If set, it will replace the editor's
+# default definition.
+# melod:EntityShapesDefinition schema:url <url-of-custom-schema> .
+
+# List of entity types
+melod:Place a melod:Entity .
+melod:Person a melod:Entity .
+melod:Manifestation a melod:Entity .

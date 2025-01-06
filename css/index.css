@@ -34,30 +34,9 @@ body>main {
     flex: 1;
     display: flex;
     font-size: var(--step-0);
-}
-
-nav#filesystem-nav {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-section#editor-and-viewer {
-    display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     gap: 20px;
-}
-
-section#editor,
-section#viewer {
-    width: 30vw;
-    background-color: #bee2f7;
-    height: 70vh;
-}
-
-section#editor {
-    overflow: scroll;
-    height: 70vh;
 }
 
 fieldset#shacl-xml-output,
@@ -113,7 +92,7 @@ body>footer>* {
 }
 
 section#editor-toolbar {
-    display:flex;
+    display: flex;
     flex-direction: column;
     gap: 10px;
 }
