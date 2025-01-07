@@ -1,16 +1,16 @@
-@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix melod: <https://mei-metadata.org/> .
 @prefix owl: <https://www.w3.org/TR/owl-ref/> .
 @prefix schema: <http://schema.org/> .
-@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
 @prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
-@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov:    <http://www.w3.org/ns/prov#> .
-@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
-@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 melod:Person

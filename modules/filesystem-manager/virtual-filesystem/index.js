@@ -151,7 +151,6 @@ export default class ADWLMVirtualFilesystem {
     async list_entries_from_workdir(repository_path, parent_folder_relative_path) {
         let folders = [];
         let files = [];
-        console.log(repository_path);
 
         if (repository_path === `/${parent_folder_relative_path}`) {
             parent_folder_relative_path = "";

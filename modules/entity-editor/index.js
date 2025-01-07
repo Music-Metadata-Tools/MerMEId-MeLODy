@@ -66,8 +66,8 @@ export default class ADWLMEntityEditor extends LitElement {
                     </sl-button>
                 </sl-button-group>
                     <shacl-form id="places-shacl-form" data-shapes-url="ontologies/entity-shapes.shacl"
-                        data-values-subject="https://liszt-portal.de/places/1008"
-                        data-shape-subject="https://mei-metadata.org/Person"></shacl-form>
+                        data-values-subject="${this.file_to_edit.entity_iri}"
+                        data-shape-subject="${this.file_to_edit.entity_type}"></shacl-form>
             </div>
         `;
     }
@@ -75,7 +75,6 @@ export default class ADWLMEntityEditor extends LitElement {
     firstUpdated() {
         let render_root = this.renderRoot;
         let editor = render_root.querySelector("shacl-form");
-        console.log(editor);
 
         render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;

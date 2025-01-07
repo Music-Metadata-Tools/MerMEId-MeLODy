@@ -1,11 +1,13 @@
 @prefix melod: <https://mei-metadata.org/> .
 @prefix schema: <http://schema.org/> .
 
-# The entity shapes definition. If set, it will replace the editor's
-# default definition.
-# melod:EntityShapesDefinition schema:url <url-of-custom-schema> .
+# The URl for entity shapes definition. It can be customized.
+melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 
-# List of entity types
+# List of entity types. It can be customized (types can be added or removed).
 melod:Place a melod:Entity .
 melod:Person a melod:Entity .
 melod:Manifestation a melod:Entity .
+
+# add default url for EntityShapesDefinition
+# 

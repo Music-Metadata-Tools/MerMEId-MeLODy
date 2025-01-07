@@ -238,15 +238,27 @@ document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
 const SparqlQueries = {
     "entity_type_definitions":
         `
-    prefix melod: <https://mei-metadata.org/>
-    prefix schema: <http://schema.org/>
+        prefix melod: <https://mei-metadata.org/>
+        prefix schema: <http://schema.org/>
 
-    select ?entity_type ?entity_type_definition_url
-    where {
-        ?entity_type a melod:Entity .
-        ?entity_type schema:url ?entity_type_definition_url .
-    }
-`};
+        select ?entity_type ?entity_type_definition_url
+        where {
+            ?entity_type a melod:Entity .
+            ?entity_type schema:url ?entity_type_definition_url .
+        }
+    `,
+    "entity_type_detection":
+        `
+        prefix melod: <https://mei-metadata.org/>
+        prefix schema: <http://schema.org/>
+
+        select ?entity_iri ?entity_type
+        where {
+            ?entity_iri a ?entity_type .
+            filter(strstarts(str(?entity_type), "https://mei-metadata.org/"))
+        }
+    `,
+};
 
 class EditorOntology {
     constructor(entity_type_definitions) {
@@ -258,14 +270,20 @@ let graph_store = new oxigraph.Store();
 
 let ontology_file = await fetch("ontologies/editor-default.ttl").then(response => response.text());
 
-graph_store.load(ontology_file, "text/turtle", null, oxigraph.Default);
+graph_store.load(ontology_file,
+    {
+        format: "text/turtle",
+        base_iri: null,
+        to_graph_name: oxigraph.Default
+    }
+);
 
 //extract the entity type definitions
 let entity_type_definition_bindings = graph_store.query(SparqlQueries.entity_type_definitions);
 let entity_type_definitions = {};
 
 for (const binding of entity_type_definition_bindings) {
-    let entity_type_definition_url = `${binding.get("entity_type_definition_url").value}`;
+    let entity_type_definition_url = binding.get("entity_type_definition_url").value;
     if (!entity_type_definition_url.startsWith("https://")) {
         entity_type_definitions[`${binding.get("entity_type").value}`] = {
             url: entity_type_definition_url.substring(entity_type_definition_url.indexOf(":") + 1),
@@ -274,21 +292,62 @@ for (const binding of entity_type_definition_bindings) {
     }
 }
 
-const editor_ontology = new EditorOntology(entity_type_definitions);
-console.log(editor_ontology);
+let entity_types = graph_store.match(null, oxigraph.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), oxigraph.namedNode("https://mei-metadata.org/Entity"), oxigraph.defaultGraph());
+for (let entity_type of entity_types) {
+    console.log(entity_type.subject.value);
+}
 
+const editor_ontology = new EditorOntology(entity_type_definitions);
+//console.log(editor_ontology);
+
+// free the store
+graph_store.free();
 
 // END TODO
 
 document.addEventListener("adwlm-filesystem-manager:file-to-edit", (event) => {
     let file_to_edit = event.detail;
+    let file_contents = file_to_edit.contents;
 
-    // detect document type, in order to load the proper SHACL file
-    // detect the data values subject, in order to set the corresponding attribute of the shacl-form
+    let start = performance.now();
 
-    // set data-shape-subject
-    // set data-values-subject
-    // FILTER(STRSTARTS(STR(?var), "http://example.org/ns#"))
+    let graph_store = new oxigraph.Store();
+    graph_store.load(file_contents,
+        {
+            format: "text/turtle",
+            base_iri: null,
+            to_graph_name: oxigraph.Default
+        }
+    );
+    let entity_type_bindings = graph_store.query(SparqlQueries.entity_type_detection);
+    let entity_type_statements = [];
+
+    for (const binding of entity_type_bindings) {
+        let entity_iri = binding.get("entity_iri").value;
+        let entity_type = binding.get("entity_type").value;
+        let entity_type_statement = {
+            iri: entity_iri,
+            type: entity_type,
+        };
+
+        entity_type_statements.push(entity_type_statement);
+    }
+
+    graph_store.free();
+
+    if (entity_type_statements.length !== 1) {
+        alert("The selected document needs one statement with entity IRI and entity type!");
+
+        return;
+    }
+
+    let end = performance.now();
+    console.log("elapsed time for extracting entity type statement = " + (end - start) + "ms");
+
+    // set the entity_iri and entity_type
+    let entity_type_statement = entity_type_statements[0];
+    file_to_edit.entity_iri = entity_type_statement.iri;
+    file_to_edit.entity_type = entity_type_statement.type;
 
     entity_editor.file_to_edit = file_to_edit;
 });
