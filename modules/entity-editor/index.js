@@ -58,6 +58,15 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     render() {
+        let file_to_edit = this.file_to_edit;
+        let entity_iri = "";
+        let entity_type = "";
+
+        if (this.file_to_edit) {
+            entity_iri = file_to_edit.entity_iri;
+            entity_type = file_to_edit.entity_type;
+        }
+
         return html`
             <div id="container">
                 <sl-button-group>
@@ -66,8 +75,8 @@ export default class ADWLMEntityEditor extends LitElement {
                     </sl-button>
                 </sl-button-group>
                     <shacl-form id="places-shacl-form" data-shapes-url="ontologies/entity-shapes.shacl"
-                        data-values-subject="${this.file_to_edit.entity_iri}"
-                        data-shape-subject="${this.file_to_edit.entity_type}"></shacl-form>
+                        data-values-subject="${entity_iri}"
+                        data-shape-subject="${entity_type}"></shacl-form>
             </div>
         `;
     }
@@ -75,6 +84,7 @@ export default class ADWLMEntityEditor extends LitElement {
     firstUpdated() {
         let render_root = this.renderRoot;
         let editor = render_root.querySelector("shacl-form");
+        this.editor = editor;
 
         render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;
@@ -87,12 +97,11 @@ export default class ADWLMEntityEditor extends LitElement {
                 let rdf_output = editor.serialize();
                 let json_ld_output = editor.serialize("application/ld+json");
                 let file_to_save = {
-                    "rdf_contents": rdf_output,
-                    "json_ld_contents": json_ld_output,
-                    "relative_path": this.file_relative_path,
+                    rdf_contents: rdf_output,
+                    json_ld_contents: json_ld_output,
+                    path: this._file_path,
                 };
-                console.log(rdf_output);
-                return;
+
                 this.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save", {
                     "detail": file_to_save,
                     "bubbles": true,
@@ -106,14 +115,14 @@ export default class ADWLMEntityEditor extends LitElement {
             let file_to_edit = event.detail;
 
             editor.dataset.values = file_to_edit.contents;
-            editor.file_path = file_to_edit.relative_path;
+            this._file_path = file_to_edit.path;
         });
     }
 
     _init() {
         this.file_to_edit = null;
         this._file_contents = null;
-        this._file_relative_path = null;
+        this._file_path = null;
     }
 }
 

@@ -120,117 +120,93 @@ output.classList.toggle('valid', event.detail?.valid);
 output.classList.toggle('invalid', !event.detail?.valid);
 output.querySelector("pre").innerText = form.serialize();
 
-console.log(form.serialize());
 });*/
 
 let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
-document.addEventListener("sl-focus", async (event) => {
-    let target = event.target;
-    // the blur is needed, as the action is repeated every time the browser tab regains focus
-    if (target.matches("sl-button")) {
-        target.blur();
-    }
-
-    if (target.matches("sl-button#save")) {
-        target.loading = true;
-
-        // get the tab that was selected - TODO: delete this when the editor component is ready
-        let entity_editor = document.querySelector("sl-tab-group#main sl-tab-panel[active] shacl-form");
-        let xml_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
-        let rdf_output = document.querySelector("sl-tab-group#main sl-tab-panel[active] sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
-        // end delete
-        let rdf_result = entity_editor.serialize();
-        let result_json = JSON.parse(entity_editor.serialize("application/ld+json"));
-
-        let title = "";
-        let classification = "";
-        let repository = "";
-        let persons = {};
-
-        let place_name = "";
-        let alternate_name = "";
-        let description = "";
-        let country = "";
-        let date = "";
-        let identifiers = {};
-        let type = "";
-
-        result_json.forEach((item) => {
-            if (item.hasOwnProperty("https://mei-metadata.org/Title")) {
-                title = item["https://mei-metadata.org/Title"]["@value"];
-            }
-            if (item.hasOwnProperty("https://mei-metadata.org/classification")) {
-                let classification_iri = item["https://mei-metadata.org/classification"]["@id"];
-                classification = classifications[classification_iri];
-            }
-            if (item.hasOwnProperty("https://mei-metadata.org/repository")) {
-                let repository_iri = item["https://mei-metadata.org/repository"]["@id"];
-                repository = repositories[repository_iri];
-            }
-            if (item.hasOwnProperty("http://xmlns.com/foaf/0.1/name")) {
-                let person_name_iri = item["http://xmlns.com/foaf/0.1/name"]["@id"];
-                let person_name = person_names[person_name_iri];
-                let person_id = item["@id"];
-                if (!persons.hasOwnProperty(person_id)) {
-                    persons[person_id] = {};
-                }
-                persons[person_id].name = person_name;
-            }
-            if (item.hasOwnProperty("http://www.w3.org/ns/dcat#hadRole")) {
-                let role_iri = item["http://www.w3.org/ns/dcat#hadRole"]["@id"];
-                let role = roles[role_iri];
-                let person_id = item["@id"];
-                if (!persons.hasOwnProperty(person_id)) {
-                    persons[person_id] = {};
-                }
-                persons[person_id].role = role;
-            }
-            if (item.hasOwnProperty("http://schema.org/name")) {
-                place_name = item["http://schema.org/name"]["@value"];
-            }
-            if (item.hasOwnProperty("https://d-nb.info/standards/elementset/gnd#PlaceOrGeographicName")) {
-                let type_iri = item["https://d-nb.info/standards/elementset/gnd#PlaceOrGeographicName"]["@value"];
-                type = types[type_iri];
-            }
-            if (item.hasOwnProperty("http://schema.org/alternateName")) {
-                alternate_name = item["http://schema.org/alternateName"]["@value"];
-            }
-            if (item.hasOwnProperty("http://schema.org/description")) {
-                description = item["http://schema.org/description"]["@value"];
-            }
-            if (item.hasOwnProperty("http://www.cidoc-crm.org/cidoc-crm/P89_falls_within")) {
-                country = item["http://www.cidoc-crm.org/cidoc-crm/P89_falls_within"]["@value"];
-            }
-            if (item.hasOwnProperty("https://d-nb.info/standards/elementset/gnd#dateOfEstablishment")) {
-                date = item["https://d-nb.info/standards/elementset/gnd#dateOfEstablishment"]["@value"];
-            }
-        });
-
-        let xml = source_template({ title, classification, repository, persons })
-        let place_xml = place_template({ place_name, alternate_name, country, date, description })
-
-        xml_output.innerText = place_xml;
-        rdf_output.innerText = rdf_result;
-
-        // save the file in the repository
-        document.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save", {
-            "detail": {
-                "contents": rdf_result,
-                relative_path: entity_editor.file_path,
-            },
-            "bubbles": true,
-            "composed": true,
-        }));
-
-        target.loading = false;
-    }
-});
-
 document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
     let file_to_save = event.detail;
 
+    // TODO: replace this with event for adwlm-entity-renderer
+    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    // END TODO
+
+    let rdf_contents = file_to_save.rdf_contents;
+    let json_ld_contents = JSON.parse(file_to_save.json_ld_contents);
+
+    let title = "";
+    let classification = "";
+    let repository = "";
+    let persons = {};
+
+    let place_name = "";
+    let alternate_name = "";
+    let description = "";
+    let country = "";
+    let date = "";
+    let identifiers = {};
+    let type = "";
+
+    json_ld_contents.forEach((item) => {
+        if (item.hasOwnProperty("https://mei-metadata.org/Title")) {
+            title = item["https://mei-metadata.org/Title"]["@value"];
+        }
+        if (item.hasOwnProperty("https://mei-metadata.org/classification")) {
+            let classification_iri = item["https://mei-metadata.org/classification"]["@id"];
+            classification = classifications[classification_iri];
+        }
+        if (item.hasOwnProperty("https://mei-metadata.org/repository")) {
+            let repository_iri = item["https://mei-metadata.org/repository"]["@id"];
+            repository = repositories[repository_iri];
+        }
+        if (item.hasOwnProperty("http://xmlns.com/foaf/0.1/name")) {
+            let person_name_iri = item["http://xmlns.com/foaf/0.1/name"]["@id"];
+            let person_name = person_names[person_name_iri];
+            let person_id = item["@id"];
+            if (!persons.hasOwnProperty(person_id)) {
+                persons[person_id] = {};
+            }
+            persons[person_id].name = person_name;
+        }
+        if (item.hasOwnProperty("http://www.w3.org/ns/dcat#hadRole")) {
+            let role_iri = item["http://www.w3.org/ns/dcat#hadRole"]["@id"];
+            let role = roles[role_iri];
+            let person_id = item["@id"];
+            if (!persons.hasOwnProperty(person_id)) {
+                persons[person_id] = {};
+            }
+            persons[person_id].role = role;
+        }
+        if (item.hasOwnProperty("http://schema.org/name")) {
+            place_name = item["http://schema.org/name"]["@value"];
+        }
+        if (item.hasOwnProperty("https://d-nb.info/standards/elementset/gnd#PlaceOrGeographicName")) {
+            let type_iri = item["https://d-nb.info/standards/elementset/gnd#PlaceOrGeographicName"]["@value"];
+            type = types[type_iri];
+        }
+        if (item.hasOwnProperty("http://schema.org/alternateName")) {
+            alternate_name = item["http://schema.org/alternateName"]["@value"];
+        }
+        if (item.hasOwnProperty("http://schema.org/description")) {
+            description = item["http://schema.org/description"]["@value"];
+        }
+        if (item.hasOwnProperty("http://www.cidoc-crm.org/cidoc-crm/P89_falls_within")) {
+            country = item["http://www.cidoc-crm.org/cidoc-crm/P89_falls_within"]["@value"];
+        }
+        if (item.hasOwnProperty("https://d-nb.info/standards/elementset/gnd#dateOfEstablishment")) {
+            date = item["https://d-nb.info/standards/elementset/gnd#dateOfEstablishment"]["@value"];
+        }
+    });
+
+    let xml = source_template({ title, classification, repository, persons })
+    let place_xml = place_template({ place_name, alternate_name, country, date, description })
+
+    xml_renderer.innerText = place_xml;
+    rdf_renderer.innerText = rdf_contents;
+
+    // save the file in the repository
     filesystem_manager.file_to_save = file_to_save;
 });
 

@@ -205,8 +205,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
 
                 let file_to_edit = {
-                    "contents": file_contents,
-                    "relative_path": file_path,
+                    contents: file_contents,
+                    path: file_path,
                 };
                 this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit", {
                     "detail": file_to_edit,
@@ -332,7 +332,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         this.addEventListener("_save-file", async (event) => {
             let file_to_save = event.detail;
 
-            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save.rdf_contents, file_to_save.relative_path);
+            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save.rdf_contents, file_to_save.path);
         });
 
         render_root.addEventListener("sl-show", async (event) => {

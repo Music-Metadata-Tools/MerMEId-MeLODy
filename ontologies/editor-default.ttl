@@ -9,5 +9,3 @@ melod:Place a melod:Entity .
 melod:Person a melod:Entity .
 melod:Manifestation a melod:Entity .
 
-# add default url for EntityShapesDefinition
-# 

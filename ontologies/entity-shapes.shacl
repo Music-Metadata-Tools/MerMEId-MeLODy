@@ -25,7 +25,8 @@ melod:Person
                   sh:name "Same as" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
-                ] .
+                ] ;
+   sh:targetClass melod:Person .
 
 melod:Place
   a sh:NodeShape, rdfs:Class ;
@@ -39,7 +40,8 @@ melod:Place
                   sh:name "Same as" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
-                ] .
+                ] ;
+   sh:targetClass melod:Place .
 
   melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
