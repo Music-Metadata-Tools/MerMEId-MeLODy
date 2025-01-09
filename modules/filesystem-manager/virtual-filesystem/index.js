@@ -322,7 +322,6 @@ export default class ADWLMVirtualFilesystem {
             dir: repository_path,
             fullname: false
         });
-        console.log(current_branch);
 
         // pull the changes from the remote repository
         let start = performance.now();
@@ -386,10 +385,8 @@ export default class ADWLMVirtualFilesystem {
                                     prefix: "HEAD",
                                 });
                                 let head_commit = refs[0].oid;
-                                console.log(head_commit);
 
                                 let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
-                                console.log(commitOid);
 
                                 if (commitOid !== head_commit) {
                                     await this._git_pull();

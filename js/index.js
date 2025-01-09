@@ -91,7 +91,6 @@ window.dir = "/mermeid_sample_data";
 try {
 await pfs.stat(dir);
 } catch (error) {
-console.log("clone the repo");
 await pfs.mkdir(dir);
 await git.clone({
 fs,
