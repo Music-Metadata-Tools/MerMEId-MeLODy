@@ -100,9 +100,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button size="small" title="Remove file">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
-                            <sl-button class="rename-entry" size="small" title="Rename file">
-                                <sl-icon name="file-earmark"></sl-icon>
-                            </sl-button>
                         </sl-button-group>
                     </div>
                     <div id="repositories-tree-container">
