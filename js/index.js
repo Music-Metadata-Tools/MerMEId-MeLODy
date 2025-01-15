@@ -125,15 +125,15 @@ let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
 document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
-    let file_to_save = event.detail;
+    let entity_to_save = event.detail;
 
-    // TODO: replace this with event for adwlm-entity-renderer
+    // TODO: replace this with event dispatched to adwlm-entity-renderer
     let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
     let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
     // END TODO
 
-    let rdf_contents = file_to_save.rdf_contents;
-    let json_ld_contents = JSON.parse(file_to_save.json_ld_contents);
+    let rdf_contents = entity_to_save.rdf_contents;
+    let json_ld_contents = JSON.parse(entity_to_save.json_ld_contents);
 
     let title = "";
     let classification = "";
@@ -206,20 +206,24 @@ document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
     rdf_renderer.innerText = rdf_contents;
 
     // save the file in the repository
-    filesystem_manager.file_to_save = file_to_save;
+    filesystem_manager.entity_to_save = entity_to_save;
 });
 
 // TODO: move separately
-const SparqlQueries = {
+let ui_language = "en";
+let SparqlQueries = {
     "entity_type_definitions":
         `
         prefix melod: <https://mei-metadata.org/>
         prefix schema: <http://schema.org/>
+        prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        select ?entity_type ?entity_type_definition_url
+        select ?entity_type ?entity_name ?entity_location
         where {
             ?entity_type a melod:Entity .
-            ?entity_type schema:url ?entity_type_definition_url .
+            ?entity_type rdfs:label ?entity_name .
+            filter (lang(?entity_name) = '${ui_language}')
+            ?entity_type schema:itemLocation ?entity_location .
         }
     `,
     "entity_type_detection":
@@ -235,7 +239,20 @@ const SparqlQueries = {
     `,
 };
 
-class EditorOntology {
+// the name argument has to be an array, for localisation of the user interface
+class EntityTypeDefinition {
+    constructor(type, name, location) {
+        this.type = type;
+        this.name = name;
+        this.location = location;
+    }
+
+    toString() {
+        return `${this.type}, '${this.name}', '${this.location}'`;
+    }
+}
+
+class EditorConfiguration {
     constructor(entity_type_definitions) {
         this.entity_type_definitions = entity_type_definitions;
     }
@@ -255,34 +272,35 @@ graph_store.load(ontology_file,
 
 //extract the entity type definitions
 let entity_type_definition_bindings = graph_store.query(SparqlQueries.entity_type_definitions);
-let entity_type_definitions = {};
+let entity_type_definitions = [];
 
 for (const binding of entity_type_definition_bindings) {
-    let entity_type_definition_url = binding.get("entity_type_definition_url").value;
-    if (!entity_type_definition_url.startsWith("https://")) {
-        entity_type_definitions[`${binding.get("entity_type").value}`] = {
-            url: entity_type_definition_url.substring(entity_type_definition_url.indexOf(":") + 1),
-            contents: "",
-        };
-    }
+    let entity_type = binding.get("entity_type").value;
+    let entity_name = binding.get("entity_name").value;
+    let entity_location = binding.get("entity_location").value;
+
+    let entity_type_definition = new EntityTypeDefinition(entity_type, entity_name, entity_location);
+
+    entity_type_definitions.push(entity_type_definition);
 }
 
+const editor_configuration = new EditorConfiguration(entity_type_definitions);
+entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
+
+/*
 let entity_types = graph_store.match(null, oxigraph.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), oxigraph.namedNode("https://mei-metadata.org/Entity"), oxigraph.defaultGraph());
 for (let entity_type of entity_types) {
-    console.log(entity_type.subject.value);
-}
-
-const editor_ontology = new EditorOntology(entity_type_definitions);
-//console.log(editor_ontology);
+    //console.log(`${entity_type.subject.value} ${entity_type.predicate.value} ${entity_type.object.value}`);
+}*/
 
 // free the store
 graph_store.free();
 
 // END TODO
 
-document.addEventListener("adwlm-filesystem-manager:file-to-edit", (event) => {
-    let file_to_edit = event.detail;
-    let file_contents = file_to_edit.contents;
+document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => {
+    let entity_to_edit = event.detail;
+    let file_contents = entity_to_edit.contents;
 
     let start = performance.now();
 
@@ -321,8 +339,8 @@ document.addEventListener("adwlm-filesystem-manager:file-to-edit", (event) => {
 
     // set the entity_iri and entity_type
     let entity_type_statement = entity_type_statements[0];
-    file_to_edit.entity_iri = entity_type_statement.iri;
-    file_to_edit.entity_type = entity_type_statement.type;
+    entity_to_edit.entity_iri = entity_type_statement.iri;
+    entity_to_edit.entity_type = entity_type_statement.type;
 
-    entity_editor.file_to_edit = file_to_edit;
+    entity_editor.entity_to_edit = entity_to_edit;
 });

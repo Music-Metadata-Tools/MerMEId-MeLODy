@@ -44,7 +44,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         _displayed_staged_files: {
             type: Array,
         },
-        file_to_save: {
+        entity_to_save: {
             type: Object,
         },
         _repository_buttons_disabled: {
@@ -55,12 +55,12 @@ export default class ADWLMFilesystemManager extends LitElement {
     updated(changedProperties) {
         super.updated(changedProperties);
 
-        if (changedProperties.has("file_to_save")) {
-            let file_to_save = this.file_to_save;
-            if (file_to_save !== null) {
+        if (changedProperties.has("entity_to_save")) {
+            let entity_to_save = this.entity_to_save;
+            if (entity_to_save !== null) {
                 // dispatch internal event, as the actions to take are asynchronous
-                this.dispatchEvent(new CustomEvent("_save-file", {
-                    "detail": this.file_to_save,
+                this.dispatchEvent(new CustomEvent("_save-entity", {
+                    "detail": this.entity_to_save,
                 }));
             }
         }
@@ -94,10 +94,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
-                            <sl-button size="small" title="Add file">
-                                <sl-icon name="file-earmark-plus"></sl-icon>
-                            </sl-button>
-                            <sl-button size="small" title="Remove file">
+                            <sl-button size="small" title="Remove entity">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -204,12 +201,12 @@ export default class ADWLMFilesystemManager extends LitElement {
                 // get the file contents
                 let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
 
-                let file_to_edit = {
+                let entity_to_edit = {
                     contents: file_contents,
                     path: file_path,
                 };
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-to-edit", {
-                    "detail": file_to_edit,
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
+                    "detail": entity_to_edit,
                     "bubbles": true,
                     "composed": true,
                 }));
@@ -261,6 +258,10 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 await filesystem.pull(this._selected_repository_path);
+            }
+
+            if (target.matches("sl-button#add-entity-button")) {
+                
             }
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
@@ -329,10 +330,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
 
-        this.addEventListener("_save-file", async (event) => {
-            let file_to_save = event.detail;
+        this.addEventListener("_save-entity", async (event) => {
+            let entity_to_save = event.detail;
 
-            await filesystem.save_and_stage_file(this._selected_repository_path, file_to_save.rdf_contents, file_to_save.path);
+            await filesystem.save_and_stage_file(this._selected_repository_path, entity_to_save.rdf_contents, entity_to_save.path);
         });
 
         render_root.addEventListener("sl-show", async (event) => {

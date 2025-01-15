@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 
-
 class RepositoryToClone {
     constructor() {
         this._folder = null;
@@ -191,8 +190,12 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             }
         });
 
-        render_root.addEventListener("click", async (event) => {
+        render_root.addEventListener("sl-focus", async (event) => {
             let target = event.target;
+            // the blur is needed, as the action is repeated every time the browser tab regains focus
+            if (target.matches("sl-button")) {
+                target.blur();
+            }
 
             if (target.matches("sl-button#next-button")) {
                 let repository_folder_name_input = render_root.querySelector("sl-input#repository-folder-name");

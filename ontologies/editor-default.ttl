@@ -7,12 +7,11 @@ melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 
 # List of entity types. It can be customized (types can be added or removed).
 melod:Place a melod:Entity ;
-    rdfs:label "place"@en ;
-    itemLocation "places" .
+    rdfs:label "Place"@en ;
+    schema:itemLocation "places" .
 melod:Person a melod:Entity ;
-    rdfs:label "person"@en ;
-    itemLocation "persons"  .
+    rdfs:label "Person"@en ;
+    schema:itemLocation "persons"  .
 melod:Manifestation a melod:Entity ;
-    rdfs:label "manifestation"@en ;
-    itemLocation "manifestations"  .
-
+    rdfs:label "Manifestation"@en ;
+    schema:itemLocation "manifestations"  .
