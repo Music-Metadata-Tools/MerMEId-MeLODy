@@ -43,7 +43,7 @@ melod:Place
                 ] ;
    sh:targetClass melod:Place .
 
-  melod:Manifestation
+melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
   sh:property   [
                   sh:minCount  1 ;

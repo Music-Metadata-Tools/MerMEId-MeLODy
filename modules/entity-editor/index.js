@@ -190,15 +190,13 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_location = entity_type_definition.location;
             let entity_id = this._generate_entity_id();
             let entity_path = `${entity_location}/${entity_id}.ttl`;
-            let entity_iri = `urn:mermeid:${entity_id}`;
+            let entity_iri = `urn:uuid:${entity_id}`;
 
             // configure the editor
             editor.dataset.shapeSubject = entity_type;
             editor.dataset.valuesSubject = entity_iri;
             this._entity_path = entity_path;
 
-            console.log(entity_type_definition);
-            console.log(entity_iri);
         });
     }
 

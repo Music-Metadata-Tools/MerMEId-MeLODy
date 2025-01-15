@@ -2,8 +2,10 @@
 @prefix schema: <http://schema.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-# The URl for entity shapes definition. It can be customized.
+# The URL for entity shapes definition. It can be customized.
 melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
+
+# TODO: The base IRI for values subject. It can be customized.
 
 # List of entity types. It can be customized (types can be added or removed).
 melod:Place a melod:Entity ;
