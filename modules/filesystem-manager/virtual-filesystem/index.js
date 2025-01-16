@@ -234,7 +234,7 @@ export default class ADWLMVirtualFilesystem {
 
                 // TODO: consider the case of deleted files
                 if (stage_entry === null) {
-                    return entry_path;
+                    return `${entry_path}-deleted`;
                 }
                 // END TODO:
 
