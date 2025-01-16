@@ -161,14 +161,14 @@ export default class ADWLMEntityEditor extends LitElement {
             if (target.matches("sl-button#save-entity")) {
                 let rdf_output = editor.serialize();
                 let json_ld_output = editor.serialize("application/ld+json");
-                let file_to_save = {
+                let entity_to_save = {
                     rdf_contents: rdf_output,
                     json_ld_contents: json_ld_output,
                     path: this._entity_path,
                 };
 
-                this.dispatchEvent(new CustomEvent("adwlm-entity-editor:file-to-save", {
-                    "detail": file_to_save,
+                this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
+                    "detail": entity_to_save,
                     "bubbles": true,
                     "composed": true,
                 }));
@@ -196,7 +196,6 @@ export default class ADWLMEntityEditor extends LitElement {
             editor.dataset.shapeSubject = entity_type;
             editor.dataset.valuesSubject = entity_iri;
             this._entity_path = entity_path;
-
         });
     }
 

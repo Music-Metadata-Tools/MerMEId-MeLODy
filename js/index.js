@@ -124,7 +124,7 @@ output.querySelector("pre").innerText = form.serialize();
 let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
-document.addEventListener("adwlm-entity-editor:file-to-save", (event) => {
+document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     let entity_to_save = event.detail;
 
     // TODO: replace this with event dispatched to adwlm-entity-renderer

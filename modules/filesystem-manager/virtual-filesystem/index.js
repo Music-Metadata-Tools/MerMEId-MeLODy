@@ -188,9 +188,15 @@ export default class ADWLMVirtualFilesystem {
         };
     }
 
-    async save_and_stage_file(repository_path, file_contents, file_path) {
-        await this.pfs.writeFile(`${repository_path}/${file_path}`, file_contents);
-        await git.add({ fs: this.fs, dir: repository_path, filepath: file_path });
+    async add_file(repository_path,  file_relative_path) {
+        // remove the file from the git index
+        await git.remove({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
+        await this.pfs.unlink(`${repository_path}/${file_relative_path}`);
+    }
+
+    async save_and_stage_file(repository_path, file_contents, file_relative_path) {
+        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
+        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
     }
 
     async read_file(repository_path, file_path) {
@@ -226,10 +232,17 @@ export default class ADWLMVirtualFilesystem {
                 }
                 let entry_type = await tree_entry.type();
 
+                // TODO: consider the case of deleted files
+                if (stage_entry === null) {
+                    return entry_path;
+                }
+                // END TODO:
+
                 if (entry_type === "blob" && !entry_path.startsWith(".")) {
                     let workdir_oid = await tree_entry.oid();
                     let stage_oid = await stage_entry.oid();
                     if (workdir_oid !== stage_oid) {
+                        // TODO: add Git status for each entry
                         return entry_path;
                     }
                 }

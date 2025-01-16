@@ -94,7 +94,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
-                            <sl-button size="small" title="Remove entity">
+                            <sl-button id="remove-entity" size="small" title="Remove entity">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -260,8 +260,33 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await filesystem.pull(this._selected_repository_path);
             }
 
-            if (target.matches("sl-button#add-entity-button")) {
+            if (target.matches("sl-button#remove-entity")) {
+                // TODO: this button should be active only when a file entry is selected
+                let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                let selected_entry = repositories_tree.querySelector("sl-tree-item[selected]");
 
+                if (selected_entry === null) {
+                    // TODO: Put a sl-alert?
+                    alert("Select a file to be deleted!");
+
+                    return;
+                }
+
+                let entry_type = selected_entry.dataset.entryType;
+
+                if (entry_type !== CONSTANTS.FILE_SCHEME_NAME) {
+                    // TODO: Put a sl-alert?
+                    alert("Select a file to be deleted!");
+
+                    return;
+                }
+
+                let file_relative_path = selected_entry.dataset.entryRelativePath;
+
+                await filesystem.add_file(this._selected_repository_path, file_relative_path);
+
+                // TODO: apply restore_state()
+                await this._list_repository_names();
             }
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
