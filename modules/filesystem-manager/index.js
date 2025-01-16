@@ -106,9 +106,9 @@ export default class ADWLMFilesystemManager extends LitElement {
         })}
                     </div>
                 </sl-details>
-                <sl-details id="staged-files-details" summary="Commit and push files" disabled>
+                <sl-details id="staged-files-details" summary="Share files" disabled>
                     <sl-button-group>
-                        <sl-button id="commit-and-push-staged-files" size="small" title="Commit and push files">
+                        <sl-button id="commit-and-push-staged-files" size="small" title="Share files">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
                     </sl-button-group>
@@ -119,11 +119,11 @@ export default class ADWLMFilesystemManager extends LitElement {
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
             <sl-alert id="commit-and-push-done" variant="primary" duration="3000" closable>
                 <sl-icon slot="icon" name="info-circle"></sl-icon>
-                The files were committed and pushed to the remote repository.
+                The files were shared with the remote repository.
             </sl-alert>
             <sl-alert id="commit-and-push-error" variant="warning" duration="3000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                An error occured while committing and pushing the files to the remote repository.
+                An error occured while sharing the files with the remote repository.
             </sl-alert>
         `;
     }
@@ -261,7 +261,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#add-entity-button")) {
-                
+
             }
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
@@ -334,6 +334,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             let entity_to_save = event.detail;
 
             await filesystem.save_and_stage_file(this._selected_repository_path, entity_to_save.rdf_contents, entity_to_save.path);
+
+            // reload the filesystem
+            // TODO: use restore_state() for this component
+            await this._list_repository_names();
         });
 
         render_root.addEventListener("sl-show", async (event) => {
