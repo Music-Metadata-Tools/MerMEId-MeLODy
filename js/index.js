@@ -1,7 +1,7 @@
 import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
 await init_oxigraph();
 
-// ontologies
+// configuration
 const classifications = {
     "https://mei-metadata.org/classification/1": "text",
     "https://mei-metadata.org/classification/2": "manuscript",
@@ -260,9 +260,9 @@ class EditorConfiguration {
 
 let graph_store = new oxigraph.Store();
 
-let ontology_file = await fetch("ontologies/editor-default.ttl").then(response => response.text());
+let configuration_file = await fetch("configuration/editor-default.ttl").then(response => response.text());
 
-graph_store.load(ontology_file,
+graph_store.load(configuration_file,
     {
         format: "text/turtle",
         base_iri: null,

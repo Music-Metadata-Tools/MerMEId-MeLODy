@@ -100,7 +100,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
-                    <shacl-form id="places-shacl-form" data-shapes-url="ontologies/entity-shapes.shacl"
+                    <shacl-form id="places-shacl-form" data-shapes-url="configuration/entity-shapes.shacl"
                         data-values-subject="${entity_iri}"
                         data-shape-subject="${entity_type}"></shacl-form>
             </div>
