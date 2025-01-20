@@ -1,4 +1,5 @@
 @prefix melod: <https://mei-metadata.org/> .
+@prefix melod_ui: <https://mei-metadata.org/ui/> .
 @prefix schema: <http://schema.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -10,7 +11,9 @@ melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 # List of entity types. It can be customized (types can be added or removed).
 melod:Place a melod:Entity ;
     rdfs:label "Place"@en ;
-    schema:itemLocation "places" .
+    schema:itemLocation "places" ;
+    # the path to the Javascript module for rendering this entity type
+    melod_ui:rendering_module "" .
 melod:Person a melod:Entity ;
     rdfs:label "Person"@en ;
     schema:itemLocation "persons"  .
