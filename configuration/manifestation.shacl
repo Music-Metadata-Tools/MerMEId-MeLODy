@@ -1,0 +1,122 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+melod:Manifestation
+  a               sh:NodeShape, rdfs:Class ;
+  sh:property   [
+                  sh:minCount  1 ;
+                  sh:name         "Title" ;
+                  sh:path         melod:Title ;
+                ] ;
+  sh:property   [
+                  sh:minCount  1 ;
+                  sh:name         "Attribution" ;
+                  sh:path         prov:agent ;
+                  sh:node melod:Attribution
+                ] ;
+  sh:property   [
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:name         "Classification" ;
+                  sh:path         melod:classification ;
+                  sh:class melod:Classification
+                ] ;
+  sh:property   [
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:name         "Repository" ;
+                  sh:path         melod:repository ;
+                  sh:class melod:Repository
+                ] .
+
+melod:Attribution
+  a               sh:NodeShape ;
+#  owl:imports     <https://mei-metadata.org/roles/ontology.ttl> ;
+  sh:property   [ sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path      foaf:name ;
+                  sh:class      melod:Person ;
+                ] ;
+  sh:property   [ sh:name      "Role" ;
+                  sh:minCount  1 ;
+                  sh:path      dcat:hadRole ;
+                  sh:class     prov:Role ;
+                ] ;
+  sh:targetClass  prov:Attribution .
+
+melod:Arranger rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "arranger"@en .
+
+melod:Author rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "author"@en .
+
+melod:Composer rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "composer"@en .
+
+melod:Contributor rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "contributor"@en .
+
+melod:Editor rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "editor"@en .
+
+melod:Funder rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "funder"@en .
+
+melod:Librettist rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "librettist"@en .
+
+melod:Lyricist rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "lyricist"@en .
+
+melod:Sponsor rdf:type owl:NamedIndividual ,
+        prov:Role ;
+        skos:prefLabel "sponsor"@en .
+
+<https://mei-metadata.org/persons/1> rdf:type melod:Person ;
+      skos:prefLabel "Erdmann Neumeister" .
+
+<https://mei-metadata.org/persons/2> rdf:type melod:Person ;
+      skos:prefLabel "Georg Michael Telemann" .
+
+<https://mei-metadata.org/persons/3> rdf:type melod:Person ;
+      skos:prefLabel "Georg Philipp Telemann" .
+
+<https://mei-metadata.org/classification/1> rdf:type melod:Classification ;
+      skos:prefLabel "text" .
+
+<https://mei-metadata.org/classification/2> rdf:type melod:Classification ;
+      skos:prefLabel "manuscript" .
+
+<https://mei-metadata.org/classification/3> rdf:type melod:Classification ;
+      skos:prefLabel "autograph" .
+
+<https://mei-metadata.org/classification/4> rdf:type melod:Classification ;
+      skos:prefLabel "sketch" .
+
+<https://mei-metadata.org/classification/5> rdf:type melod:Classification ;
+      skos:prefLabel "fragment" .
+
+<https://mei-metadata.org/repository/1> rdf:type melod:Repository ;
+      skos:prefLabel "D-B" .
+
+<https://mei-metadata.org/repository/2> rdf:type melod:Repository ;
+      skos:prefLabel "D-LEm" .
+
+<https://mei-metadata.org/repository/3> rdf:type melod:Repository ;
+      skos:prefLabel "D-Hs" .

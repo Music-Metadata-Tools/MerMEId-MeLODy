@@ -1,0 +1,21 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+melod:Person
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:description "Person name" ;
+                  sh:name "Name" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:name
+                ] ;
+  sh:property   [ sh:description "Same as" ;
+                  sh:name "Same as" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path owl:sameAs
+                ] ;
+  sh:targetClass melod:Person .

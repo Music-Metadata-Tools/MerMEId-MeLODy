@@ -9,13 +9,20 @@ melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 # TODO: The base IRI for values subject. It can be customized.
 # When it is not set, the editor uses an URN like this <urn:uuid:1081008>.
 
-# List of entity types. It can be customized (types can be added or removed).
+# List of entity types. It can be customized as follows:
+# 1. types can be added or removed;
+# 2. for an existing entity, rdfs:label can be changed;
+# 3. for an existing entity, melod_ui:entity_folder_name can be changed;
+# 4. for an existing entity, melod_ui:shacl_file_location can be changed (it can be a relative path, or an URL).
 melod:Place a melod:Entity ;
     rdfs:label "Place"@en ;
-    melod_ui:entity_folder_name "places" .
+    melod_ui:entity_folder_name "places" ;
+    melod_ui:shacl_file_location "configuration/place.shacl" .
 melod:Person a melod:Entity ;
     rdfs:label "Person"@en ;
-    melod_ui:entity_folder_name "persons" .
+    melod_ui:entity_folder_name "persons" ;
+    melod_ui:shacl_file_location "configuration/person.shacl" .
 melod:Manifestation a melod:Entity ;
     rdfs:label "Manifestation"@en ;
-    melod_ui:entity_folder_name "manifestations" .
+    melod_ui:entity_folder_name "manifestations" ;
+    melod_ui:shacl_file_location "configuration/manifestation.shacl" .
