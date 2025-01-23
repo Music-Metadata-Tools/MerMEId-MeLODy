@@ -219,12 +219,13 @@ let SparqlQueries = {
         prefix schema: <http://schema.org/>
         prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        select ?entity_type ?entity_name ?entity_folder_name
+        select ?entity_type ?entity_name ?entity_folder_name ?shacl_file_location
         where {
             ?entity_type a melod:Entity .
             ?entity_type rdfs:label ?entity_name .
             filter (lang(?entity_name) = '${ui_language}')
             ?entity_type melod_ui:entity_folder_name ?entity_folder_name .
+            ?entity_type melod_ui:shacl_file_location ?shacl_file_location .
         }
     `,
     "entity_type_detection":
@@ -242,14 +243,15 @@ let SparqlQueries = {
 
 // the name argument has to be an array, for localisation of the user interface
 class EntityTypeDefinition {
-    constructor(type, name, folder_name) {
+    constructor(type, name, folder_name, shacl_file_location) {
         this.type = type;
         this.name = name;
         this.folder_name = folder_name;
+        this.shacl_file_location = shacl_file_location;
     }
 
     toString() {
-        return `${this.type}, '${this.name}', '${this.folder_name}'`;
+        return `type: ${this.type}, name: '${this.name}', folder_name: '${this.folder_name}', shacl_file_location: '${shacl_file_location}'`;
     }
 }
 
@@ -279,8 +281,9 @@ for (const binding of entity_type_definition_bindings) {
     let entity_type = binding.get("entity_type").value;
     let entity_name = binding.get("entity_name").value;
     let entity_folder_name = binding.get("entity_folder_name").value;
+    let shacl_file_location = binding.get("shacl_file_location").value;
 
-    let entity_type_definition = new EntityTypeDefinition(entity_type, entity_name, entity_folder_name);
+    let entity_type_definition = new EntityTypeDefinition(entity_type, entity_name, entity_folder_name, shacl_file_location);
 
     entity_type_definitions.push(entity_type_definition);
 }

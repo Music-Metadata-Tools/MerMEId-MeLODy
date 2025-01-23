@@ -30,9 +30,6 @@ export default class ADWLMEntityEditor extends LitElement {
         entity_type_definitions: {
             type: Object,
         },
-        _file_contents: {
-            type: String,
-        },
         _entity_path: {
             type: String,
         },
@@ -45,10 +42,13 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_to_edit = this.entity_to_edit;
 
             if (entity_to_edit !== null) {
-                // dispatch internal event, as the actions to take are asynchronous
-                this.dispatchEvent(new CustomEvent("_edit-file", {
-                    "detail": this.entity_to_edit,
-                }));
+                let editor = this.renderRoot.querySelector("shacl-form");
+                let shacl_file_location = this._get_shacl_file_location();
+
+                editor.dataset.values = entity_to_edit.contents;
+                editor.dataset.valuesSubject = entity_to_edit.entity_iri;
+                editor.dataset.shapesUrl = shacl_file_location;
+                this._entity_path = entity_to_edit.path;
             }
         }
 
@@ -81,15 +81,6 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     render() {
-        let entity_to_edit = this.entity_to_edit;
-        let entity_iri = "";
-        let entity_type = "";
-
-        if (this.entity_to_edit) {
-            entity_iri = entity_to_edit.entity_iri;
-            entity_type = entity_to_edit.entity_type;
-        }
-
         return html`
             <div id="container">
                 <sl-button-group>
@@ -100,9 +91,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
-                    <shacl-form id="places-shacl-form" data-shapes-url="configuration/entity-shapes.shacl"
-                        data-values-subject="${entity_iri}"
-                        data-shape-subject="${entity_type}"></shacl-form>
+                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject=""></shacl-form>
             </div>
             <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
         `;
@@ -175,16 +164,7 @@ export default class ADWLMEntityEditor extends LitElement {
             }
         });
 
-        this.addEventListener("_edit-file", async (event) => {
-            let editor = render_root.querySelector("shacl-form");
-            let entity_to_edit = event.detail;
-
-            editor.dataset.values = entity_to_edit.contents;
-            this._entity_path = entity_to_edit.path;
-        });
-
         this.addEventListener("adwlm-entity-types-dialog:entity-to-add", (event) => {
-            let editor = render_root.querySelector("shacl-form");
             let entity_type = event.detail;
             let entity_type_definition = this.entity_type_definitions.filter(item => item.type === entity_type)[0];
             let entity_folder_name = entity_type_definition.folder_name;
@@ -192,19 +172,22 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_path = `${entity_folder_name}/${entity_id}.ttl`;
             let entity_iri = `urn:uuid:${entity_id}`;
 
+            let entity_to_edit = {
+                contents: "",
+                path: entity_path,
+                entity_iri,
+                entity_type,
+            };
+
             // configure the editor
-            editor.dataset.shapeSubject = entity_type;
-            editor.dataset.valuesSubject = entity_iri;
-            this._entity_path = entity_path;
+            this.entity_to_edit = entity_to_edit;
         });
     }
 
     _init() {
         this.entity_to_edit = null;
         this.entity_type_definitions = null;
-        this._file_contents = null;
         this._entity_path = null;
-        this._entity_name_tree_item = null;
     }
 
     _generate_entity_id() {
@@ -212,6 +195,14 @@ export default class ADWLMEntityEditor extends LitElement {
         self.crypto.getRandomValues(array);
 
         return array[0];
+    }
+
+    _get_shacl_file_location() {
+        let entity_type = this.entity_to_edit.entity_type;
+        let shacl_file_location = this.entity_type_definitions
+            .filter(definition => definition.type === entity_type)[0].shacl_file_location;
+
+        return shacl_file_location;
     }
 }
 

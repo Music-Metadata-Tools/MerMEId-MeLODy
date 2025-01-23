@@ -154,4 +154,3 @@ melod:Sponsor rdf:type owl:NamedIndividual ,
 
 <https://mei-metadata.org/repository/3> rdf:type melod:Repository ;
       skos:prefLabel "D-Hs" .
-
