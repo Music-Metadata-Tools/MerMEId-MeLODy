@@ -7,16 +7,15 @@
 melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 
 # TODO: The base IRI for values subject. It can be customized.
+# When it is not set, the editor uses an URN like this <urn:uuid:1081008>.
 
 # List of entity types. It can be customized (types can be added or removed).
 melod:Place a melod:Entity ;
     rdfs:label "Place"@en ;
-    schema:itemLocation "places" ;
-    # the path to the Javascript module for rendering this entity type
-    melod_ui:rendering_module "" .
+    melod_ui:entity_folder_name "places" .
 melod:Person a melod:Entity ;
     rdfs:label "Person"@en ;
-    schema:itemLocation "persons"  .
+    melod_ui:entity_folder_name "persons" .
 melod:Manifestation a melod:Entity ;
     rdfs:label "Manifestation"@en ;
-    schema:itemLocation "manifestations"  .
+    melod_ui:entity_folder_name "manifestations" .

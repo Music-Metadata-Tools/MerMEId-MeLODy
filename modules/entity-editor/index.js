@@ -187,9 +187,9 @@ export default class ADWLMEntityEditor extends LitElement {
             let editor = render_root.querySelector("shacl-form");
             let entity_type = event.detail;
             let entity_type_definition = this.entity_type_definitions.filter(item => item.type === entity_type)[0];
-            let entity_location = entity_type_definition.location;
+            let entity_folder_name = entity_type_definition.folder_name;
             let entity_id = this._generate_entity_id();
-            let entity_path = `${entity_location}/${entity_id}.ttl`;
+            let entity_path = `${entity_folder_name}/${entity_id}.ttl`;
             let entity_iri = `urn:uuid:${entity_id}`;
 
             // configure the editor
