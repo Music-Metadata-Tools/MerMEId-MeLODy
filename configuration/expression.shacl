@@ -1,0 +1,226 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mus: <http://data.doremus.org/ontology#> .
+
+melod:Expression
+  a               sh:NodeShape, rdfs:Class ;
+
+  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
+                  sh:name "Title" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:title
+                ] ;
+  sh:property   [ sh:description "Link to an external web resource" ;
+                  sh:name "Link" ;
+                  sh:minCount 0 ;
+                  sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:description "Contributor of the expression version (Arranger or text author)" ;
+                  sh:name "Contributor" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Contributor ;
+                  sh:path melod:hasContribution
+                ] ;
+  sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
+                  sh:name "Extent" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:extent
+                ] ;
+  sh:property   [ sh:description "Allegro" ;
+                  sh:name "Tempo" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:tempo
+                ] ;
+  sh:property   [ sh:description "d minor modulierend" ;
+                  sh:name "Key" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:key
+                ] ;
+  sh:property   [ sh:description "3/4 or c" ;
+                  sh:name "Meter" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:meter
+                ] ;
+  sh:property   [ sh:description "01:23:00 or 4'33 or approx. 10 minutes" ;
+                  sh:name "Duration" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:duration
+                ] ;
+  sh:property   [ sh:description  "Performance resource" ;
+                  sh:name         "Performance resources" ;
+                  sh:node         melod:Casting ;
+                  sh:path         mus:U12_has_casting
+                ] ;
+  sh:property   [ sh:description  "Incipit" ;
+                  sh:name         "Incipits" ;
+                  sh:node         melod:MusicIncipit ;
+                  sh:path         schema:includedComposition
+                ] ;
+  sh:property   [ sh:description "Individual Piece of a Expression. E.g. movements, sections, scenes, acts" ;
+                  sh:name "Components" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/expressions/" ;
+                  sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:includedComposition
+                ] ;
+  sh:property   [ sh:description "Additional information related to the expression" ;
+                  sh:name "Comment" ;
+                  dash:singleLine false ;
+                  sh:path schema:comment
+                ] ;
+  sh:targetClass  melod:Expression .
+
+melod:Contributor
+  a               sh:NodeShape ;
+  rdfs:label      "Contributors" ;
+  sh:property   [ sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path      melod:agent ;
+                  sh:or (
+                    [ sh:node melod:Person ; rdfs:label "Person" ]
+                    [ sh:node melod:Organisation ; rdfs:label "Organisation" ]
+                  )
+                ] ;
+  sh:property   [ sh:description  "Role of the contribution" ;
+                  sh:name         "Role" ;
+                  sh:path         melod:role ;
+                  sh:nodeKind     sh:IRI ;
+                  sh:in (
+                    # see below how labels are added to the list entries
+                    <https://mei-metadata.org/roles/Composer>
+                    <https://mei-metadata.org/roles/Arranger>
+                    <https://mei-metadata.org/roles/Lyricist>
+                  ) ;
+                  sh:maxCount     1 ;
+                  sh:minCount     1
+                ] ;              
+  sh:targetClass  melod:Contribution .
+
+melod:Person
+  a               sh:NodeShape ;
+  rdfs:label      "Person" ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "IRI" ;
+                  sh:path         melod:iri ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:targetClass  melod:Person .
+
+melod:Organisation
+  a               sh:NodeShape ;
+  rdfs:label      "Organisation" ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "IRI" ;
+                  sh:path         melod:iri ;
+                  sh:defaultValue "https://mei-metadata.org/organisations/" ;
+                  sh:pattern      "^https://mei-metadata.org/organisations/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:targetClass  melod:Organisation .
+
+melod:Casting
+  a               sh:NodeShape ;
+  rdfs:label      "Casting" ;
+  sh:property   [ sh:description  "Voice or Violin" ;
+                  sh:name         "Instrument" ;
+                  sh:path         cidoc:P3_has_note ;
+                  sh:maxCount     1
+                ] ;
+  sh:property   [ sh:description "https://www.loc.gov/standards/valuelist/marcmusperf.html#va" ;
+                  sh:name "Standard Marc Code" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path owl:sameAs ;
+                  sh:maxCount     1
+                ] ;
+  sh:property   [ sh:description  "More information about the performance resource (soloist, quantity)" ;
+                  sh:name         "Casting detail" ;
+                  sh:node         melod:Casting_Detail ;
+                  sh:path         mus:U23_has_casting_detail ;
+                  sh:maxCount     1 ;
+                  sh:minCount     1
+                ] ;              
+  sh:targetClass  mus:M6_Casting .
+
+melod:Casting_Detail
+  a               sh:NodeShape ;
+  rdfs:label      "Casting Detail" ;
+  sh:property   [ sh:datatype     xsd:integer ;
+                  sh:description  "Quantity of the medium of performance" ;
+                  sh:maxCount     1 ;
+                  sh:minInclusive 1 ;
+                  sh:name         "Quantity" ;
+                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance
+                ] ;
+  sh:property   [ sh:datatype     xsd:boolean ;
+                  sh:name         "Soloist" ;
+                  sh:path         melod:isSoloist ;
+                  sh:maxCount     1 ;
+                  sh:order        1
+                ] ;
+  sh:property   [ sh:description  "Use of medium of performance" ;
+                  sh:name         "Medium of performance" ;
+                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
+                  sh:maxCount     1
+                ] ;              
+  sh:targetClass  mus:M23_Casting_Detail .
+
+  melod:MusicIncipit
+  a               sh:NodeShape ;
+  rdfs:label      "Incipit" ;
+  # To add: Ontology with clefs
+  sh:property   [ sh:description  "Clef of the plaine and easy code of the incipit" ;
+                  sh:name         "PAE clef" ;
+                  sh:path         melod:clef ;
+                  sh:maxCount     1 ;
+                  sh:in           ("G-2" "g-2" "C-3" "C+3" "F-4")
+                ] ;
+  # To add: Ontology with key signatures
+  sh:property   [ sh:description  "Keysig of the plaine and easy code of the incipit" ;
+                  sh:name         "PAE keysig" ;
+                  sh:path         melod:keysig ;
+                  sh:maxCount     1 ;
+                  sh:in           ("xFC" "bBEA" "xF")
+                ] ;
+  sh:property   [ sh:description  "Timesig of the plaine and easy code of the incipit" ;
+                  sh:name         "PAE timesig" ;
+                  sh:path         melod:timesig ;
+                  sh:maxCount     1 ;
+                  sh:in           ("2/4" "3/4" "4/4" "3" "c" "c3" "c/")
+                ] ;
+  sh:property   [ sh:description  "Data of the plaine and easy code of the incipit" ;
+                  sh:name         "PAE data" ;
+                  sh:path         melod:incipitData ;
+                  sh:maxCount     1
+                ] ;
+  sh:property   [ sh:description  "Text of the Incipit" ;
+                  sh:name         "Incipit Text" ;
+                  sh:path         melod:incipitText ;
+                  dash:singleLine false ;
+                  sh:minCount     0 ;
+                  sh:maxCount     1
+                ] ;        
+  sh:targetClass  schema:MusicIncipit .
+
+
+  # add a label to the license IRIs
+<https://mei-metadata.org/roles/Composer> rdfs:label "Composer" .
+<https://mei-metadata.org/roles/Lyricist> rdfs:label "Lyricist" .
+<https://mei-metadata.org/roles/Arranger> rdfs:label "Arranger" .

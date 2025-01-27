@@ -26,3 +26,7 @@ melod:Manifestation a melod:Entity ;
     rdfs:label "Manifestation"@en ;
     melod_ui:entity_folder_name "manifestations" ;
     melod_ui:shacl_file_location "configuration/manifestation.shacl" .
+melod:Expression a melod:Entity ;
+    rdfs:label "Expression"@en ;
+    melod_ui:entity_folder_name "expressions" ;
+    melod_ui:shacl_file_location "configuration/expression.shacl" .
