@@ -91,7 +91,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
-                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject=""></shacl-form>
+                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="open"></shacl-form>
             </div>
             <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
         `;

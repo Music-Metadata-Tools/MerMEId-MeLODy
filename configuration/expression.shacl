@@ -21,13 +21,37 @@ melod:Expression
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name "Link" ;
                   sh:minCount 0 ;
-                  sh:path owl:sameAs
+                  sh:path owl:sameAs ;
+                  sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:description "Language usage" ;
+                  sh:datatype rdf:langString ;
+                  sh:name "Language" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:langUsage
                 ] ;
   sh:property   [ sh:description "Contributor of the expression version (Arranger or text author)" ;
                   sh:name "Contributor" ;
                   sh:minCount 0 ;
                   sh:node melod:Contributor ;
                   sh:path melod:hasContribution
+                ] ;
+  sh:property   [ sh:description "Date of the creation of the expression" ;
+                  sh:name "Creation date" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:creationDate ;
+                  sh:datatype xsd:date
+                ] ;
+  sh:property   [ sh:description "Place of the creation of the expression" ;
+                  sh:name "Creation place" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:creationPlace ;
+                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
                   sh:name "Extent" ;
@@ -54,10 +78,16 @@ melod:Expression
                   sh:path melod:meter
                 ] ;
   sh:property   [ sh:description "01:23:00 or 4'33 or approx. 10 minutes" ;
-                  sh:name "Duration" ;
+                  sh:name "Performance duration" ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:path melod:duration
+                ] ;
+  sh:property   [ sh:description "Information about mensuration" ;
+                  sh:name "Mensuration" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path melod:mensuration
                 ] ;
   sh:property   [ sh:description  "Performance resource" ;
                   sh:name         "Performance resources" ;
@@ -81,6 +111,14 @@ melod:Expression
                   sh:name "Comment" ;
                   dash:singleLine false ;
                   sh:path schema:comment
+                ] ;
+  sh:property   [ sh:description "Bibliography" ;
+                  sh:name "Bibliography" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:citation
                 ] ;
   sh:targetClass  melod:Expression .
 
