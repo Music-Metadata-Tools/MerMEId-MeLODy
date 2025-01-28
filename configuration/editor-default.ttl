@@ -30,3 +30,7 @@ melod:Expression a melod:Entity ;
     rdfs:label "Expression"@en ;
     melod_ui:entity_folder_name "expressions" ;
     melod_ui:shacl_file_location "configuration/expression.shacl" .
+melod:Work a melod:Entity ;
+    rdfs:label "Work"@en ;
+    melod_ui:entity_folder_name "works" ;
+    melod_ui:shacl_file_location "configuration/work.shacl" .

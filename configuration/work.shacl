@@ -1,0 +1,221 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
+
+melod:Work
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:name "Title" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Title ;
+                  sh:path melod:hasTitle
+                ] ;
+  #sh:property   [ sh:description "other title forms" ;
+  #                sh:name "Alternate title" ;
+  #                sh:languageIn   ( "en" "de" ) ;
+  #                sh:minCount 0 ;
+  #                sh:path schema:alternateName
+  #              ] ;
+  sh:property   [ sh:name "Identifier" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Identifier ;
+                  sh:path melod:hasIdentifier
+                ] ;
+  sh:property   [ sh:description "e.g. Wikidata IRI" ;
+                  sh:name "Same as" ;
+                  sh:minCount 0 ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:description "work status" ;
+                  sh:name "Category of work" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:creativeWorkStatus ;
+                  sh:in ( "authentic" "not authentic" "constructed" )
+                ] ;
+  sh:property   [ sh:name "Contributor" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Contributor ;
+                  sh:path melod:hasContributor ;
+                ] ;
+
+  sh:property   [ sh:name "Date of creation" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:node melod:Date ;
+                  sh:path melod:hasCreationDate
+                ] .
+
+#  sh:property   [ sh:description "IRI of printed edition" ;
+#                  sh:name "Publication" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path schema:publication ;
+#                ] ;
+#  sh:property   [ sh:description "IRI of performance event" ;
+#                  sh:name "First Performance" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path schema:firstPerformance ;
+#                ] ;
+#  sh:property   [ sh:description "Language" ;
+#                  sh:name "Language" ;
+#                  sh:path schema:inLanguage ;
+#                  sh:in ( "English" "German" "Latin" ) 
+#                ] ;
+#  sh:property   [ sh:description "Keywords" ;
+#                  sh:name "Keywords" ;
+#                  sh:languageIn   ( "en" "de" ) ;
+#                  sh:path schema:keywords ;
+#                ] ;
+#
+#  sh:property   [ sh:description "e. g. Easter" ;
+#                  sh:name "Liturgical Purpose" ;
+#                  sh:languageIn   ( "en" "de" ) ;
+#                  sh:path melod:liturgicalPurpose ;
+#                ] ;
+#  sh:property   [ sh:description "IRI of a work" ;
+#                  sh:name "Is part of" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path schema:isPartOf ;
+#                ] ;
+#  sh:property   [ sh:description "IRI of a bibliographic item" ;
+#                  sh:name "Citation" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path schema:citation ;
+#                ] ;
+#  sh:property   [ sh:description "IRI of an expression" ;
+#                  sh:name "Is realised in" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path efrbroo:R9_is_realised_in ;
+#                ] .
+
+melod:Title
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Title of the work" ;
+                  sh:name      "Title" ;
+                  sh:languageIn   ( "en" "de" ) ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:name
+                ] ;
+  sh:property   [ sh:name      "Type of title" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:titleType ;
+                  sh:in ( "original" "alternative" )
+                ] .
+
+melod:Contributor
+  a               sh:NodeShape ;
+  #owl:imports     "<https://mei-metadata.org/roles/ontology.ttl>" ;
+  sh:property   [ sh:name "IRI" ;
+                  sh:description "IRI of a contributiong person" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:name      "Role" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:hadRole ;
+                  sh:class     melod:Role
+                ] .
+
+melod:Identifier
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "e.g. abc" ;
+                  sh:name      "Value" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:string ;
+                  sh:path      owl:hasValue
+                ] ;
+  sh:property   [ sh:description "e.g. TVWV" ;
+                  sh:name      "Name of Identifier" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:name
+                ] .
+
+melod:Date
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Date type" ;
+                  sh:minCount  1 ;
+                  sh:path      melod:dateType ;
+                  sh:or (
+                    [ sh:node melod:singleDate ; rdfs:label "Single date" ]
+                    [ sh:node melod:dateSpan ; rdfs:label "Date span" ]
+                  )
+                ] .
+
+melod:singleDate
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Single date" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path      owl:hasValue
+                ] .
+
+melod:dateSpan
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Date span" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path      owl:hasValue
+                ] ;
+  sh:property   [ sh:name      "Date context" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:dateContext ;
+                  sh:in ( "Start" "End" "Not before" "Not after" )
+                ] .
+
+
+melod:Arranger rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "arranger"@en .
+
+melod:Author rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "author"@en .
+
+melod:Composer rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "composer"@en .
+
+melod:Contributor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "contributor"@en .
+
+melod:Editor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "editor"@en .
+
+melod:Funder rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "funder"@en .
+
+melod:Librettist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "librettist"@en .
+
+melod:Lyricist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "lyricist"@en .
+
+melod:Sponsor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "sponsor"@en .
