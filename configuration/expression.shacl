@@ -11,18 +11,33 @@
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-
-  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
-                  sh:name "Title" ;
+  sh:property   [ sh:name "Title" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1;
-                  sh:path melod:title
+                  sh:node melod:Title ;
+                  sh:path melod:hasTitle
+                ] ;
+#  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
+#                  sh:name "Title" ;
+#                  sh:minCount 0 ;
+#                  sh:maxCount 1;
+#                  sh:path schema:name
+#                ] ;
+  sh:property   [ sh:description "Type of the expression" ;
+                  sh:name "Type" ;
+                  sh:minCount 0 ;
+                  sh:path schema:about
                 ] ;
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name "Link" ;
                   sh:minCount 0 ;
                   sh:path owl:sameAs ;
                   sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:description "Index identifiers" ;
+                  sh:name "Index identifiers" ;
+                  sh:minCount 0 ;
+                  sh:path schema:identifier ;
+                  sh:node melod:Identifier
                 ] ;
   sh:property   [ sh:description "Language usage" ;
                   sh:datatype rdf:langString ;
@@ -35,22 +50,42 @@ melod:Expression
                   sh:name "Contributor" ;
                   sh:minCount 0 ;
                   sh:node melod:Contributor ;
-                  sh:path melod:hasContribution
+                  sh:path melod:hasContributor
                 ] ;
   sh:property   [ sh:description "Date of the creation of the expression" ;
                   sh:name "Creation date" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:creationDate ;
-                  sh:datatype xsd:date
+                  sh:path schema:dateCreated ;
+                  sh:or (
+                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Place of the creation of the expression" ;
                   sh:name "Creation place" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:creationPlace ;
+                  sh:path schema:locationCreated ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
                   sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:description "First performance of the expression" ;
+                  sh:name "First performance" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:firstPerformance ;
+                  sh:defaultValue "https://mei-metadata.org/performances/" ;
+                  sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:description "History of the creation of the expression" ;
+                  sh:name "Creation history" ;
+                  sh:minCount 0 ;
+                  sh:path melod:history ;
+                  sh:defaultValue "https://mei-metadata.org/events/" ;
+                  sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
@@ -68,14 +103,16 @@ melod:Expression
   sh:property   [ sh:description "d minor modulierend" ;
                   sh:name "Key" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1;
-                  sh:path melod:key
+                  sh:maxCount 1 ;
+                  sh:node melod:Key ;
+                  sh:path melod:hasKey
                 ] ;
   sh:property   [ sh:description "3/4 or c" ;
                   sh:name "Meter" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1;
-                  sh:path melod:meter
+                  sh:maxCount 1 ;
+                  sh:node melod:Meter ;
+                  sh:path melod:hasMeter
                 ] ;
   sh:property   [ sh:description "01:23:00 or 4'33 or approx. 10 minutes" ;
                   sh:name "Performance duration" ;
@@ -91,7 +128,9 @@ melod:Expression
                 ] ;
   sh:property   [ sh:description  "Performance resource" ;
                   sh:name         "Performance resources" ;
-                  sh:node         melod:Casting ;
+                  sh:nodeKind         sh:IRI ;
+                  sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
+                  sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
                   sh:path         mus:U12_has_casting
                 ] ;
   sh:property   [ sh:description  "Incipit" ;
@@ -122,6 +161,51 @@ melod:Expression
                 ] ;
   sh:targetClass  melod:Expression .
 
+melod:Title
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
+                  sh:name      "Title" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:name
+                ] ;
+  sh:property   [ sh:name      "Type" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:titleType
+                ] .
+
+melod:Identifier
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. TVWV" ;
+                  sh:name      "Name of Identifier" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:name
+                ] ;
+  sh:property   [ sh:description "e.g. abc" ;
+                  sh:name      "Value" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:string ;
+                  sh:path      owl:hasValue
+                ] .
+
+melod:Date
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Start date" ;
+                  sh:minCount  1 ;
+                  sh:path      schema:startDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "End date" ;
+                  sh:minCount  1 ;
+                  sh:path      schema:endDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:targetClass  schema:Date .
+
 melod:Contributor
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
@@ -130,7 +214,7 @@ melod:Contributor
                   sh:path      melod:agent ;
                   sh:or (
                     [ sh:node melod:Person ; rdfs:label "Person" ]
-                    [ sh:node melod:Organisation ; rdfs:label "Organisation" ]
+                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
@@ -168,57 +252,89 @@ melod:Organisation
                   sh:minCount     1 ;
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
-                  sh:defaultValue "https://mei-metadata.org/organisations/" ;
-                  sh:pattern      "^https://mei-metadata.org/organisations/\\d{8}" ;
+                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
+                  sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Organisation .
 
-melod:Casting
+melod:Key
   a               sh:NodeShape ;
-  rdfs:label      "Casting" ;
-  sh:property   [ sh:description  "Voice or Violin" ;
-                  sh:name         "Instrument" ;
-                  sh:path         cidoc:P3_has_note ;
-                  sh:maxCount     1
+  sh:property   [ sh:description "Pname" ;
+                  sh:name      "Pname" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:pname ;
+                  sh:in ( "c" "d" "e" "f" "g" "a" "b")
                 ] ;
-  sh:property   [ sh:description "https://www.loc.gov/standards/valuelist/marcmusperf.html#va" ;
-                  sh:name "Standard Marc Code" ;
-                  sh:nodeKind sh:IRI ;
-                  sh:path owl:sameAs ;
-                  sh:maxCount     1
-                ] ;
-  sh:property   [ sh:description  "More information about the performance resource (soloist, quantity)" ;
-                  sh:name         "Casting detail" ;
-                  sh:node         melod:Casting_Detail ;
-                  sh:path         mus:U23_has_casting_detail ;
-                  sh:maxCount     1 ;
-                  sh:minCount     1
-                ] ;              
-  sh:targetClass  mus:M6_Casting .
+  sh:property   [ sh:name      "Mode" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:mode ;
+                  sh:in ( "major" "minor" )
+                ] .
 
-melod:Casting_Detail
+melod:Meter
   a               sh:NodeShape ;
-  rdfs:label      "Casting Detail" ;
-  sh:property   [ sh:datatype     xsd:integer ;
-                  sh:description  "Quantity of the medium of performance" ;
-                  sh:maxCount     1 ;
-                  sh:minInclusive 1 ;
-                  sh:name         "Quantity" ;
-                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance
+  sh:property   [ sh:description "Count" ;
+                  sh:name      "Count" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:count ;
+                  sh:datatype  xsd:integer
                 ] ;
-  sh:property   [ sh:datatype     xsd:boolean ;
-                  sh:name         "Soloist" ;
-                  sh:path         melod:isSoloist ;
-                  sh:maxCount     1 ;
-                  sh:order        1
-                ] ;
-  sh:property   [ sh:description  "Use of medium of performance" ;
-                  sh:name         "Medium of performance" ;
-                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
-                  sh:maxCount     1
-                ] ;              
-  sh:targetClass  mus:M23_Casting_Detail .
+  sh:property   [ sh:name      "Unit" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:unit ;
+                  sh:datatype  xsd:integer
+                ] .
+
+#melod:Casting
+#  a               sh:NodeShape ;
+#  rdfs:label      "Casting" ;
+#  sh:property   [ sh:description  "Voice or Violin" ;
+#                  sh:name         "Instrument" ;
+#                  sh:path         cidoc:P3_has_note ;
+#                  sh:maxCount     1
+#                ] ;
+#  sh:property   [ sh:description "https://www.loc.gov/standards/valuelist/marcmusperf.html#va" ;
+#                  sh:name "Standard Marc Code" ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:path owl:sameAs ;
+#                  sh:maxCount     1
+#                ] ;
+#  sh:property   [ sh:description  "More information about the performance resource (soloist, quantity)" ;
+#                  sh:name         "Casting detail" ;
+#                  sh:node         melod:Casting_Detail ;
+#                  sh:path         mus:U23_has_casting_detail ;
+#                  sh:maxCount     1 ;
+#                  sh:minCount     1
+#                ] ;              
+#  sh:targetClass  mus:M6_Casting .
+
+#melod:Casting_Detail
+#  a               sh:NodeShape ;
+#  rdfs:label      "Casting Detail" ;
+#  sh:property   [ sh:datatype     xsd:integer ;
+#                  sh:description  "Quantity of the medium of performance" ;
+#                  sh:maxCount     1 ;
+#                  sh:minInclusive 1 ;
+#                  sh:name         "Quantity" ;
+#                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance
+#                ] ;
+#  sh:property   [ sh:datatype     xsd:boolean ;
+#                  sh:name         "Soloist" ;
+#                  sh:path         melod:isSoloist ;
+#                  sh:maxCount     1 ;
+#                  sh:order        1
+#                ] ;
+#  sh:property   [ sh:description  "Use of medium of performance" ;
+#                  sh:name         "Medium of performance" ;
+#                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
+#                  sh:maxCount     1
+#                ] ;              
+#  sh:targetClass  mus:M23_Casting_Detail .
 
   melod:MusicIncipit
   a               sh:NodeShape ;
