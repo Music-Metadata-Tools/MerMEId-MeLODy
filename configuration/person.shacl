@@ -7,14 +7,20 @@
 
 melod:Person
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Person name" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Surname of the person" ;
+                  sh:name "Surname" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
-                  sh:path schema:name
+                  sh:path schema:familyName
                 ] ;
-  sh:property   [ sh:description "Same as" ;
-                  sh:name "Same as" ;
+  sh:property   [ sh:description "First name of the person" ;
+                  sh:name "First name" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:givenName
+                ] ;
+  sh:property   [ sh:description "Identifier e.g. GND, VIAF" ;
+                  sh:name "Identifier" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
