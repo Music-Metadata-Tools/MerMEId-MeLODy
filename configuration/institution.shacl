@@ -1,0 +1,74 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+melod:Institution
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:description "Name of the Institution" ;
+                  sh:name "Name" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:name
+                ] ;
+  sh:property   [ sh:description "Abbreviation of the institution" ;
+                  sh:name "Abbreviation" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:abbr
+                ] ;
+  sh:property   [ sh:description "Identifier (external resource, e.g. RISM)" ;
+                  sh:name "Identifier" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:description "Place of the institution, e.g. Berlin" ;
+                  sh:name "Place" ;
+                  sh:maxCount 1;
+                  sh:nodeKind sh:IRI ;
+                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:path schema:location
+                ] ;
+  sh:property   [ sh:description "Address of the institution" ;
+                  sh:name "Address" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path schema:address
+                ] ;
+  sh:property   [ sh:description "Founding date of the institution" ;
+                  sh:name "Founding date" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:foundingDate ;
+                  sh:or (
+                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
+                ] ;
+  sh:property   [ sh:description "Additional information related to the institution" ;
+                  sh:name "Annotations" ;
+                  dash:singleLine false ;
+                  sh:maxCount 1 ;
+                  sh:path schema:description
+                ] ;
+  sh:targetClass melod:Institution .
+
+  melod:Date
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Start date" ;
+                  sh:minCount  1 ;
+                  sh:path      schema:startDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "End date" ;
+                  sh:minCount  1 ;
+                  sh:path      schema:endDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:targetClass  schema:Date .
