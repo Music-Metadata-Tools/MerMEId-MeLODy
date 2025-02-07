@@ -147,9 +147,9 @@ melod:Expression
                   sh:path schema:includedComposition
                 ] ;
   sh:property   [ sh:description "Additional information related to the expression" ;
-                  sh:name "Comment" ;
+                  sh:name "Annotations" ;
                   dash:singleLine false ;
-                  sh:path schema:comment
+                  sh:path schema:description
                 ] ;
   sh:property   [ sh:description "Bibliography" ;
                   sh:name "Bibliography" ;

@@ -4,119 +4,170 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix dcat: <http://www.w3.org/ns/dcat#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
-  sh:property   [
-                  sh:minCount  1 ;
-                  sh:name         "Title" ;
-                  sh:path         melod:Title ;
+  sh:property   [ sh:description "Title of the manifestation" ;
+                  sh:name "Title" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Title ;
+                  sh:path melod:hasTitle
+                ] ;
+  sh:property   [ sh:description "Category" ;
+                  sh:name "Category" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:about
                 ] ;
   sh:property   [
-                  sh:minCount  1 ;
-                  sh:name         "Attribution" ;
-                  sh:path         prov:agent ;
-                  sh:node melod:Attribution
-                ] ;
-  sh:property   [
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:name         "Classification" ;
-                  sh:path         melod:classification ;
-                  sh:class melod:Classification
+                  sh:description "Publication of the manifestation (publisher, date, pub place)" ;
+                  sh:name         "Publication Statement" ;
+                  sh:path         schema:publication ;
+                  sh:node melod:PublicationEvent
                 ] ;
   sh:property   [
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:name         "Repository" ;
-                  sh:path         melod:repository ;
-                  sh:class melod:Repository
-                ] .
+                  sh:description "Dimensions of the manifestation" ;
+                  sh:name         "Dimensions" ;
+                  sh:path         efrbroo:CLP_should_have_dimension ;
+                  sh:node melod:Dimension
+                ] ;
+  sh:property   [ sh:description "Extent of the manifestation" ;
+                  sh:name "Extent" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:materialExtent
+                ] ;
+  sh:property   [ sh:description "Title page of the manifestation" ;
+                  sh:name "Title page" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:headline
+                ] ;
+  sh:property   [ sh:description "Watermark of the manifestation" ;
+                  sh:name "Watermark" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:watermark
+                ] ;
+  sh:property   [ sh:description "Series Statement" ;
+                  sh:name "Series Statement" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:series
+                ] ;
+  sh:property   [ sh:description "Physical medium of the manifestation" ;
+                  sh:name "Physical medium" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:physMedium
+                ] ;
+  sh:property   [ sh:description "Plate number of the manifestation" ;
+                  sh:name "Plate number" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:plateNum
+                ] ;
+  sh:property   [ sh:description "Classification / Genre" ;
+                  sh:name "Classification" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:genre
+                ] ;
+  sh:property   [ sh:description "Manifestation components" ;
+                  sh:name "Manifestation" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/manifestations/" ;
+                  sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:hasPart
+                ] ;
+  sh:property   [ sh:description "Expression that the manifestation embodies" ;
+                  sh:name "Expression" ;
+                  sh:minCount 1 ;
+                  sh:defaultValue "https://mei-metadata.org/expressions/" ;
+                  sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path efrbroo:R4_embodies
+                ] ;
+  sh:property   [ sh:description "Additional information related to the expression" ;
+                  sh:name "Description" ;
+                  dash:singleLine false ;
+                  sh:path schema:description
+                ] ;
+  sh:targetClass  melod:Manifestation .
 
-melod:Attribution
+melod:Title
   a               sh:NodeShape ;
-#  owl:imports     <https://mei-metadata.org/roles/ontology.ttl> ;
-  sh:property   [ sh:maxCount  1 ;
+  sh:property   [ sh:description "Title of the manifestation" ;
+                  sh:name      "Title" ;
                   sh:minCount  1 ;
-                  sh:path      foaf:name ;
-                  sh:class      melod:Person ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:name      "Role" ;
+  sh:property   [ sh:name      "Type" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:type
+                ] ;
+  sh:targetClass  melod:Title .
+
+
+melod:PublicationEvent
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Label of the publication event" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:name      "Start date" ;
                   sh:minCount  1 ;
-                  sh:path      dcat:hadRole ;
-                  sh:class     prov:Role ;
+                  sh:path      schema:startDate ;
+                  sh:datatype  xsd:date
                 ] ;
-  sh:targetClass  prov:Attribution .
+  sh:property   [ sh:name      "End date" ;
+                  sh:minCount  1 ;
+                  sh:path      schema:endDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "IRI" ;
+                  sh:path         schema:publishedBy ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "IRI" ;
+                  sh:path         schema:location ;
+                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:targetClass  schema:PublicationEvent .
 
-melod:Arranger rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "arranger"@en .
-
-melod:Author rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "author"@en .
-
-melod:Composer rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "composer"@en .
-
-melod:Contributor rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "contributor"@en .
-
-melod:Editor rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "editor"@en .
-
-melod:Funder rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "funder"@en .
-
-melod:Librettist rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "librettist"@en .
-
-melod:Lyricist rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "lyricist"@en .
-
-melod:Sponsor rdf:type owl:NamedIndividual ,
-        prov:Role ;
-        skos:prefLabel "sponsor"@en .
-
-<https://mei-metadata.org/persons/1> rdf:type melod:Person ;
-      skos:prefLabel "Erdmann Neumeister" .
-
-<https://mei-metadata.org/persons/2> rdf:type melod:Person ;
-      skos:prefLabel "Georg Michael Telemann" .
-
-<https://mei-metadata.org/persons/3> rdf:type melod:Person ;
-      skos:prefLabel "Georg Philipp Telemann" .
-
-<https://mei-metadata.org/classification/1> rdf:type melod:Classification ;
-      skos:prefLabel "text" .
-
-<https://mei-metadata.org/classification/2> rdf:type melod:Classification ;
-      skos:prefLabel "manuscript" .
-
-<https://mei-metadata.org/classification/3> rdf:type melod:Classification ;
-      skos:prefLabel "autograph" .
-
-<https://mei-metadata.org/classification/4> rdf:type melod:Classification ;
-      skos:prefLabel "sketch" .
-
-<https://mei-metadata.org/classification/5> rdf:type melod:Classification ;
-      skos:prefLabel "fragment" .
-
-<https://mei-metadata.org/repository/1> rdf:type melod:Repository ;
-      skos:prefLabel "D-B" .
-
-<https://mei-metadata.org/repository/2> rdf:type melod:Repository ;
-      skos:prefLabel "D-LEm" .
-
-<https://mei-metadata.org/repository/3> rdf:type melod:Repository ;
-      skos:prefLabel "D-Hs" .
+melod:Dimension
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Label (e.g. height or width)" ;
+                  sh:name      "Label" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description      "Value of the dimension" ;
+                  sh:name      "Value" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:type
+                ] ;
+  sh:targetClass  cidoc:E54_Dimension .
