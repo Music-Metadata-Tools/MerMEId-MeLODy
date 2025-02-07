@@ -13,6 +13,7 @@
 @prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
+@prefix mus: <http://data.doremus.org/ontology#> .
 
 melod:Work
   a sh:NodeShape, rdfs:Class ;
@@ -21,12 +22,6 @@ melod:Work
                   sh:node melod:Title ;
                   sh:path melod:hasTitle
                 ] ;
-  #sh:property   [ sh:description "other title forms" ;
-  #                sh:name "Alternate title" ;
-  #                sh:languageIn   ( "en" "de" ) ;
-  #                sh:minCount 0 ;
-  #                sh:path schema:alternateName
-  #              ] ;
   sh:property   [ sh:name "Identifier" ;
                   sh:minCount 0 ;
                   sh:node melod:Identifier ;
@@ -54,8 +49,88 @@ melod:Work
   sh:property   [ sh:name "Date of creation" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:node melod:Date ;
-                  sh:path melod:hasCreationDate
+                  sh:path schema:dateCreated ;
+                  sh:or (
+                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
+                ] ;
+
+  sh:property   [ sh:name "Place of creation" ;
+                  sh:minCount 0 ;
+                  sh:path schema:locationCreated ;
+                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+
+  sh:property   [ sh:name "First performance" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:firstPerformance ;
+                  sh:defaultValue "https://mei-metadata.org/performances/" ;
+                  sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+
+  sh:property   [ sh:name "Language" ;
+                  sh:path schema:inLanguage ;
+                  sh:in ( "English" "German" "Latin" ) 
+                ] ;
+
+  sh:property   [ sh:name      "Instrumentation" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
+                  sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
+                  sh:path         mus:U12_has_casting
+                ] ;
+
+  sh:property   [ sh:name "Bibliography" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:citation
+                ] ;
+
+  sh:property   [ sh:description "Annotation" ;
+                  sh:name "Annotation" ;
+                  sh:minCount 0 ;
+                  sh:languageIn   ( "en" "de" ) ;
+                  sh:path schema:description
+                ] ;
+
+  sh:property   [ sh:description "Genre or classification" ;
+                  sh:name "Classification" ;
+                  sh:minCount 0 ;
+                  sh:languageIn   ( "en" "de" ) ;
+                  sh:path schema:keywords
+                ] ;
+
+  sh:property   [ sh:name "Expression" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/expression/" ;
+                  sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path efrbroo:R9_is_realised_in
+                ] ;
+
+  sh:property   [ sh:name "Is part of" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/work/" ;
+                  sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:isPartOf
+                ] ;
+
+  sh:property   [ sh:name "Has part" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/work/" ;
+                  sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path schema:hasPart
                 ] .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
@@ -63,42 +138,11 @@ melod:Work
 #                  sh:nodeKind sh:IRI ;
 #                  sh:path schema:publication ;
 #                ] ;
-#  sh:property   [ sh:description "IRI of performance event" ;
-#                  sh:name "First Performance" ;
-#                  sh:nodeKind sh:IRI ;
-#                  sh:path schema:firstPerformance ;
-#                ] ;
-#  sh:property   [ sh:description "Language" ;
-#                  sh:name "Language" ;
-#                  sh:path schema:inLanguage ;
-#                  sh:in ( "English" "German" "Latin" ) 
-#                ] ;
-#  sh:property   [ sh:description "Keywords" ;
-#                  sh:name "Keywords" ;
-#                  sh:languageIn   ( "en" "de" ) ;
-#                  sh:path schema:keywords ;
-#                ] ;
-#
 #  sh:property   [ sh:description "e. g. Easter" ;
 #                  sh:name "Liturgical Purpose" ;
 #                  sh:languageIn   ( "en" "de" ) ;
 #                  sh:path melod:liturgicalPurpose ;
 #                ] ;
-#  sh:property   [ sh:description "IRI of a work" ;
-#                  sh:name "Is part of" ;
-#                  sh:nodeKind sh:IRI ;
-#                  sh:path schema:isPartOf ;
-#                ] ;
-#  sh:property   [ sh:description "IRI of a bibliographic item" ;
-#                  sh:name "Citation" ;
-#                  sh:nodeKind sh:IRI ;
-#                  sh:path schema:citation ;
-#                ] ;
-#  sh:property   [ sh:description "IRI of an expression" ;
-#                  sh:name "Is realised in" ;
-#                  sh:nodeKind sh:IRI ;
-#                  sh:path efrbroo:R9_is_realised_in ;
-#                ] .
 
 melod:Title
   a               sh:NodeShape ;
@@ -110,7 +154,7 @@ melod:Title
                   sh:path      schema:name
                 ] ;
   sh:property   [ sh:name      "Type of title" ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:titleType ;
                   sh:in ( "original" "alternative" )
@@ -118,13 +162,13 @@ melod:Title
 
 melod:Contributor
   a               sh:NodeShape ;
-  #owl:imports     "<https://mei-metadata.org/roles/ontology.ttl>" ;
-  sh:property   [ sh:name "IRI" ;
-                  sh:description "IRI of a contributiong person" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:nodeKind  sh:IRI ;
-                  sh:path owl:sameAs
+  sh:property   [ sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path      melod:agent ;
+                  sh:or (
+                    [ sh:node melod:Person ; rdfs:label "Person" ]
+                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
+                  )
                 ] ;
   sh:property   [ sh:name      "Role" ;
                   sh:minCount  0 ;
@@ -132,57 +176,70 @@ melod:Contributor
                   sh:class     melod:Role
                 ] .
 
+melod:Person
+  a               sh:NodeShape ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Person" ;
+                  sh:path         melod:hasIri ; #owl:sameAs
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] .
+
+melod:Institution
+  a               sh:NodeShape ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Institution" ;
+                  sh:path         melod:hasIri ; #owl:sameAs
+                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
+                  sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] .
+
 melod:Identifier
   a               sh:NodeShape ;
+  sh:property   [ sh:description "e.g. TVWV" ;
+                  sh:name      "Name of Identifier" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:name
+                ] ;
   sh:property   [ sh:description "e.g. abc" ;
                   sh:name      "Value" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
                   sh:path      owl:hasValue
-                ] ;
-  sh:property   [ sh:description "e.g. TVWV" ;
-                  sh:name      "Name of Identifier" ;
-                  sh:minCount  1 ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:name
                 ] .
 
 melod:Date
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Date type" ;
-                  sh:minCount  1 ;
-                  sh:path      melod:dateType ;
-                  sh:or (
-                    [ sh:node melod:singleDate ; rdfs:label "Single date" ]
-                    [ sh:node melod:dateSpan ; rdfs:label "Date span" ]
-                  )
-                ] .
-
-melod:singleDate
-  a               sh:NodeShape ;
-  sh:property   [ sh:name      "Single date" ;
-                  sh:minCount  1 ;
+  sh:property   [ sh:name      "Start date" ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:datatype  xsd:date ;
-                  sh:path      owl:hasValue
-                ] .
-
-melod:dateSpan
-  a               sh:NodeShape ;
-  sh:property   [ sh:name      "Date span" ;
-                  sh:minCount  1 ;
-                  sh:maxCount  1 ;
-                  sh:datatype  xsd:date ;
-                  sh:path      owl:hasValue
+                  sh:path      schema:startDate ;
+                  sh:datatype  xsd:date
                 ] ;
-  sh:property   [ sh:name      "Date context" ;
-                  sh:minCount  1 ;
+  sh:property   [ sh:name      "End date" ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:dateContext ;
-                  sh:in ( "Start" "End" "Not before" "Not after" )
+                  sh:path      schema:endDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "Not before" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:notBefore ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "Not after" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:notAfter ;
+                  sh:datatype  xsd:date
                 ] .
-
 
 melod:Arranger rdf:type owl:NamedIndividual ,
         melod:Role ;
