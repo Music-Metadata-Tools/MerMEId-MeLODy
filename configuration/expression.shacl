@@ -167,12 +167,12 @@ melod:Title
                   sh:name      "Title" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      schema:name
+                  sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:name      "Type" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:titleType
+                  sh:path      melod:type
                 ] .
 
 melod:Identifier
@@ -182,7 +182,7 @@ melod:Identifier
                   sh:name      "Name of Identifier" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      schema:name
+                  sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:description "e.g. abc" ;
                   sh:name      "Value" ;
@@ -203,6 +203,14 @@ melod:Date
                   sh:minCount  1 ;
                   sh:path      schema:endDate ;
                   sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "Not before" ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:notBefore
+                ] ;
+  sh:property   [ sh:name      "Not after" ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:notAfter
                 ] ;
   sh:targetClass  schema:Date .
 
@@ -230,7 +238,7 @@ melod:Contributor
                   sh:maxCount     1 ;
                   sh:minCount     1
                 ] ;              
-  sh:targetClass  melod:Contribution .
+  sh:targetClass  melod:Contributor .
 
 melod:Person
   a               sh:NodeShape ;
@@ -245,9 +253,9 @@ melod:Person
                 ] ;
   sh:targetClass  melod:Person .
 
-melod:Organisation
+melod:Institution
   a               sh:NodeShape ;
-  rdfs:label      "Organisation" ;
+  rdfs:label      "Institution" ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "IRI" ;
@@ -256,7 +264,7 @@ melod:Organisation
                   sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
-  sh:targetClass  melod:Organisation .
+  sh:targetClass  melod:Institution .
 
 melod:Key
   a               sh:NodeShape ;

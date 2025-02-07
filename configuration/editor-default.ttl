@@ -30,6 +30,14 @@ melod:Institution a melod:Entity ;
     rdfs:label "Institution"@en ;
     melod_ui:entity_folder_name "institutions" ;
     melod_ui:shacl_file_location "configuration/institution.shacl" .
+melod:Event a melod:Entity ;
+    rdfs:label "Event"@en ;
+    melod_ui:entity_folder_name "events" ;
+    melod_ui:shacl_file_location "configuration/event.shacl" .
+melod:PerformanceEvent a melod:Entity ;
+    rdfs:label "Performance Event"@en ;
+    melod_ui:entity_folder_name "performanceEvents" ;
+    melod_ui:shacl_file_location "configuration/performanceEvent.shacl" .
 melod:Manifestation a melod:Entity ;
     rdfs:label "Manifestation"@en ;
     melod_ui:entity_folder_name "manifestations" ;
