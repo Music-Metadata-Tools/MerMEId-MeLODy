@@ -7,6 +7,7 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 melod:Event
   a sh:NodeShape, rdfs:Class ;
@@ -126,15 +127,7 @@ melod:Event
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
                   sh:path         melod:role ;
-                  sh:nodeKind     sh:IRI ;
-                  sh:in (
-                    # see below how labels are added to the list entries
-                    <https://mei-metadata.org/roles/Composer>
-                    <https://mei-metadata.org/roles/Arranger>
-                    <https://mei-metadata.org/roles/Lyricist>
-                  ) ;
-                  sh:maxCount     1 ;
-                  sh:minCount     1
+                  sh:class melod:Role
                 ] ;              
   sh:targetClass  melod:Contributor .
 
@@ -163,3 +156,47 @@ melod:Institution
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Institution .
+
+melod:Arranger rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "arranger"@en .
+
+melod:Author rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "author"@en .
+
+melod:Composer rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "composer"@en .
+
+melod:Contributor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "contributor"@en .
+
+melod:Editor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "editor"@en .
+
+melod:Funder rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "funder"@en .
+
+melod:Librettist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "librettist"@en .
+
+melod:Lyricist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "lyricist"@en .
+
+melod:Sponsor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "sponsor"@en .
+
+melod:Musician rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "musician"@en .
+
+melod:Violinist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "violinist"@en .

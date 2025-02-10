@@ -8,6 +8,7 @@
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
@@ -228,15 +229,7 @@ melod:Contributor
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
                   sh:path         melod:role ;
-                  sh:nodeKind     sh:IRI ;
-                  sh:in (
-                    # see below how labels are added to the list entries
-                    <https://mei-metadata.org/roles/Composer>
-                    <https://mei-metadata.org/roles/Arranger>
-                    <https://mei-metadata.org/roles/Lyricist>
-                  ) ;
-                  sh:maxCount     1 ;
-                  sh:minCount     1
+                  sh:class     melod:Role
                 ] ;              
   sh:targetClass  melod:Contributor .
 
@@ -382,7 +375,38 @@ melod:Meter
   sh:targetClass  schema:MusicIncipit .
 
 
-  # add a label to the license IRIs
-<https://mei-metadata.org/roles/Composer> rdfs:label "Composer" .
-<https://mei-metadata.org/roles/Lyricist> rdfs:label "Lyricist" .
-<https://mei-metadata.org/roles/Arranger> rdfs:label "Arranger" .
+melod:Arranger rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "arranger"@en .
+
+melod:Author rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "author"@en .
+
+melod:Composer rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "composer"@en .
+
+melod:Contributor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "contributor"@en .
+
+melod:Editor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "editor"@en .
+
+melod:Funder rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "funder"@en .
+
+melod:Librettist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "librettist"@en .
+
+melod:Lyricist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "lyricist"@en .
+
+melod:Sponsor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "sponsor"@en .
