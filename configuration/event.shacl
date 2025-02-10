@@ -31,7 +31,7 @@ melod:Event
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
-                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
   sh:property   [ sh:description "Date of the event" ;
@@ -60,7 +60,7 @@ melod:Event
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
                   sh:defaultValue "https://mei-metadata.org/bibliography/" ;
-                  sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
                 ] ;
@@ -102,15 +102,7 @@ melod:Event
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
                   sh:path         melod:role ;
-                  sh:nodeKind     sh:IRI ;
-                  sh:in (
-                    # see below how labels are added to the list entries
-                    <https://mei-metadata.org/roles/Composer>
-                    <https://mei-metadata.org/roles/Arranger>
-                    <https://mei-metadata.org/roles/Lyricist>
-                  ) ;
-                  sh:maxCount     1 ;
-                  sh:minCount     1
+                  sh:class melod:Role
                 ] ;              
   sh:targetClass  melod:Contributor .
 
@@ -122,7 +114,7 @@ melod:Event
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Person .
@@ -135,7 +127,43 @@ melod:Institution
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Institution .
+
+  melod:Arranger rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "arranger"@en .
+
+melod:Author rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "author"@en .
+
+melod:Composer rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "composer"@en .
+
+melod:Contributor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "contributor"@en .
+
+melod:Editor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "editor"@en .
+
+melod:Funder rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "funder"@en .
+
+melod:Librettist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "librettist"@en .
+
+melod:Lyricist rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "lyricist"@en .
+
+melod:Sponsor rdf:type owl:NamedIndividual ,
+        melod:Role ;
+        skos:prefLabel "sponsor"@en .

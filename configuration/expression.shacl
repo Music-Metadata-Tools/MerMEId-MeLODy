@@ -69,7 +69,7 @@ melod:Expression
                   sh:maxCount 1 ;
                   sh:path schema:locationCreated ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
-                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "First performance of the expression" ;
@@ -78,7 +78,7 @@ melod:Expression
                   sh:maxCount 1 ;
                   sh:path schema:firstPerformance ;
                   sh:defaultValue "https://mei-metadata.org/performances/" ;
-                  sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "History of the creation of the expression" ;
@@ -86,7 +86,7 @@ melod:Expression
                   sh:minCount 0 ;
                   sh:path melod:history ;
                   sh:defaultValue "https://mei-metadata.org/events/" ;
-                  sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
@@ -131,7 +131,7 @@ melod:Expression
                   sh:name         "Performance resources" ;
                   sh:nodeKind         sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
-                  sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
                   sh:path         mus:U12_has_casting
                 ] ;
   sh:property   [ sh:description  "Incipit" ;
@@ -143,7 +143,7 @@ melod:Expression
                   sh:name "Components" ;
                   sh:minCount 0 ;
                   sh:defaultValue "https://mei-metadata.org/expressions/" ;
-                  sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:includedComposition
                 ] ;
@@ -156,7 +156,7 @@ melod:Expression
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
                   sh:defaultValue "https://mei-metadata.org/bibliography/" ;
-                  sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
                 ] ;
@@ -241,7 +241,7 @@ melod:Person
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Person .
@@ -254,7 +254,7 @@ melod:Institution
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Institution .

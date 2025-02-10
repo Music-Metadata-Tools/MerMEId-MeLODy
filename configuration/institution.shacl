@@ -31,7 +31,7 @@ melod:Institution
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
-                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
   sh:property   [ sh:description "Address of the institution" ;

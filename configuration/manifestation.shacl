@@ -85,7 +85,7 @@ melod:Manifestation
                   sh:name "Manifestation" ;
                   sh:minCount 0 ;
                   sh:defaultValue "https://mei-metadata.org/manifestations/" ;
-                  sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:hasPart
                 ] ;
@@ -93,7 +93,7 @@ melod:Manifestation
                   sh:name "Expression" ;
                   sh:minCount 1 ;
                   sh:defaultValue "https://mei-metadata.org/expressions/" ;
-                  sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path efrbroo:R4_embodies
                 ] ;
@@ -143,7 +143,7 @@ melod:PublicationEvent
                   sh:name         "IRI" ;
                   sh:path         schema:publishedBy ;
                   sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
@@ -151,7 +151,7 @@ melod:PublicationEvent
                   sh:name         "IRI" ;
                   sh:path         schema:location ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
-                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  schema:PublicationEvent .

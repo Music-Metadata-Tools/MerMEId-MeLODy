@@ -33,7 +33,7 @@ melod:Event
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
-                  sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
   sh:property   [ sh:description "Venue of the Event" ;
@@ -41,7 +41,7 @@ melod:Event
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/venues/" ;
-                  sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
                   sh:path schema:location
                 ] ;
   sh:property   [ sh:description "Date of the event" ;
@@ -66,7 +66,7 @@ melod:Event
                   sh:maxCount 1 ;
                   sh:nodeKind sh:IRI ;
                   sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
-                  sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
                   sh:path mus:U12_has_casting
                 ] ;
   sh:property   [ sh:description "Duration of the performance" ;
@@ -85,7 +85,7 @@ melod:Event
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
                   sh:defaultValue "https://mei-metadata.org/bibliography/" ;
-                  sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
                 ] ;
@@ -139,7 +139,7 @@ melod:Event
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Person .
@@ -152,7 +152,7 @@ melod:Institution
                   sh:name         "IRI" ;
                   sh:path         melod:iri ;
                   sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
+                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Institution .
