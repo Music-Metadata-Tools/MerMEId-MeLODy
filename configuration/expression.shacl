@@ -12,9 +12,9 @@
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:name "Title" ;
+  sh:property   [ sh:name "Title Statement" ;
                   sh:minCount 0 ;
-                  sh:node melod:Title ;
+                  sh:node melod:TitleStmt ;
                   sh:path melod:hasTitle
                 ] ;
 #  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
@@ -26,6 +26,7 @@ melod:Expression
   sh:property   [ sh:description "Type of the expression" ;
                   sh:name "Type" ;
                   sh:minCount 0 ;
+                  sh:maxCount 1 ;
                   sh:path schema:about
                 ] ;
   sh:property   [ sh:description "Link to an external web resource" ;
@@ -72,21 +73,29 @@ melod:Expression
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
+  sh:property   [ sh:description "History of creation of the expression" ;
+                  sh:name "History of creation" ;
+                  sh:minCount 0 ;
+                  sh:path melod:history ;
+                  sh:defaultValue "https://mei-metadata.org/events/" ;
+                  #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
   sh:property   [ sh:description "First performance of the expression" ;
                   sh:name "First performance" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path schema:firstPerformance ;
-                  sh:defaultValue "https://mei-metadata.org/performances/" ;
-                  #sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
+                  sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
+                  #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:description "History of the creation of the expression" ;
-                  sh:name "Creation history" ;
+  sh:property   [ sh:description "Other performance of the expression" ;
+                  sh:name "Performance" ;
                   sh:minCount 0 ;
-                  sh:path melod:history ;
-                  sh:defaultValue "https://mei-metadata.org/events/" ;
-                  #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
+                  sh:path melod:hasPerformance ;
+                  sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
+                  #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
@@ -162,10 +171,12 @@ melod:Expression
                 ] ;
   sh:targetClass  melod:Expression .
 
-melod:Title
+melod:TitleStmt
   a               sh:NodeShape ;
+  rdfs:label               "Title Section" ;
   sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:name      "Title" ;
+                  sh:datatype rdf:langString ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
@@ -230,6 +241,12 @@ melod:Contributor
                   sh:name         "Role" ;
                   sh:path         melod:role ;
                   sh:class     melod:Role
+                ] ;
+  sh:property   [ sh:description  "Certainty of the contribution" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:certainty ;
+                  sh:in ( "low" "medium" "high")
                 ] ;              
   sh:targetClass  melod:Contributor .
 
@@ -261,25 +278,36 @@ melod:Institution
 
 melod:Key
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Pname" ;
-                  sh:name      "Pname" ;
+  sh:property   [ sh:description "Pitch" ;
+                  sh:name      "Pitch" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:pname ;
                   sh:in ( "c" "d" "e" "f" "g" "a" "b")
+                ] ;
+  sh:property   [ sh:description "Accidental of the pitch" ;
+                  sh:name      "Accidental" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:accid ;
+                  sh:in ("s" "f")
                 ] ;
   sh:property   [ sh:name      "Mode" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:mode ;
                   sh:in ( "major" "minor" )
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
                 ] .
 
 melod:Meter
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Count" ;
-                  sh:name      "Count" ;
-                  sh:minCount  1 ;
+  sh:property   [ sh:name      "Count" ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:count ;
                   sh:datatype  xsd:integer
@@ -289,7 +317,18 @@ melod:Meter
                   sh:maxCount  1 ;
                   sh:path      melod:unit ;
                   sh:datatype  xsd:integer
-                ] .
+                ]  ;
+  sh:property   [ sh:name      "Symbol" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:sym ;
+                  sh:in ( "c" "c|" )
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] . 
 
 #melod:Casting
 #  a               sh:NodeShape ;
