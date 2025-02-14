@@ -14,6 +14,7 @@ melod:Manifestation
   sh:property   [ sh:description "Title of the manifestation" ;
                   sh:name "Title" ;
                   sh:minCount 0 ;
+                  sh:maxCount 1 ;
                   sh:node melod:Title ;
                   sh:path melod:hasTitle
                 ] ;
@@ -31,31 +32,24 @@ melod:Manifestation
                   sh:path         schema:publication ;
                   sh:node melod:PublicationEvent
                 ] ;
-  sh:property   [
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:description "Dimensions of the manifestation" ;
-                  sh:name         "Dimensions" ;
-                  sh:path         efrbroo:CLP_should_have_dimension ;
-                  sh:node melod:Dimension
-                ] ;
-  sh:property   [ sh:description "Extent of the manifestation" ;
-                  sh:name "Extent" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:materialExtent
-                ] ;
   sh:property   [ sh:description "Title page of the manifestation" ;
                   sh:name "Title page" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:headline
+                  sh:path melod:hasTitlePage
                 ] ;
-  sh:property   [ sh:description "Watermark of the manifestation" ;
-                  sh:name "Watermark" ;
+  sh:property   [ sh:description "Physical Description" ;
+                  sh:name "Physical Description" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:watermark
+                  sh:path melod:hasPhysDesc ;
+                  sh:node melod:PhysDesc
+                ] ;
+  sh:property   [ sh:description "Paper Type" ;
+                  sh:name "Paper Type" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:hasPaperType ;
+                  sh:node melod:PaperType
                 ] ;
   sh:property   [ sh:description "Series Statement" ;
                   sh:name "Series Statement" ;
@@ -63,23 +57,12 @@ melod:Manifestation
                   sh:maxCount 1 ;
                   sh:path melod:series
                 ] ;
-  sh:property   [ sh:description "Physical medium of the manifestation" ;
-                  sh:name "Physical medium" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:physMedium
-                ] ;
-  sh:property   [ sh:description "Plate number of the manifestation" ;
-                  sh:name "Plate number" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:plateNum
-                ] ;
-  sh:property   [ sh:description "Classification / Genre" ;
+  
+  sh:property   [ sh:description "Keywords for searching, grouping and indexing" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path schema:genre
+                  sh:path schema:keywords
                 ] ;
   sh:property   [ sh:description "Manifestation components" ;
                   sh:name "Manifestation" ;
@@ -107,17 +90,195 @@ melod:Manifestation
 melod:Title
   a               sh:NodeShape ;
   sh:property   [ sh:description "Title of the manifestation" ;
-                  sh:name      "Title" ;
-                  sh:minCount  1 ;
+                  sh:name      "Source title" ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:name      "Type" ;
+  sh:property   [ sh:name      "Source label" ;
+                  sh:description "Label, such as a letter, number or short description" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:type
                 ] ;
   sh:targetClass  melod:Title .
+
+melod:PhysDesc
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Extent" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:hasExtent ;
+                  sh:node      melod:Extent
+                ] ;
+  sh:property   [ sh:name      "Dimension" ;
+                  sh:description "Height, width or depth of the source" ;
+                  sh:minCount  0 ;
+                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:node melod:Dimension
+                ] ;
+  sh:property   [ sh:name      "Watermark" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:hasWatermark ;
+                  sh:node melod:Watermark
+                ] ;
+  sh:property   [ sh:description "Physical medium of the manifestation" ;
+                  sh:name "Physical medium" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:physMedium
+                ] ;
+  sh:property   [ sh:description "Plate number of the manifestation" ;
+                  sh:name "Plate number" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:plateNum
+                ] ;
+  sh:property   [ sh:description "Additions autograph" ;
+                  sh:name "Additions autograph" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:addDescAutograph ;
+                  dash:singleLine false
+                ] ;
+  sh:property   [ sh:description "Additions foreign" ;
+                  sh:name "Additions foreign" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:addDescForeign
+                ] ;
+  sh:property   [ sh:description "Foliation autograph" ;
+                  sh:name "Foliation autograph" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:supportDescAutograph
+                ] ;
+  sh:property   [ sh:description "Foliation foreign" ;
+                  sh:name "Foliation foreign" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:supportDescForeign
+                ] ;
+  sh:property   [ sh:description "Binding definition" ;
+                  sh:name "Binding definition" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:bindingDef
+                ] ;
+  sh:property   [ sh:description "Binding description" ;
+                  sh:name "Binding description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:bindingDesc
+                ] ;
+  sh:property   [ sh:description "Condition" ;
+                  sh:name "Condition" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:condition
+                ] ;
+  sh:targetClass  melod:PhysDesc .
+
+melod:PaperType
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Name" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:name      "Range" ;
+                  sh:description "Page range of the given paper type" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:range
+                ] ;
+  sh:property   [ sh:name      "Orientation" ;
+                  sh:description "Page orientation, e.g. landscape or portrait" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:orientation
+                ] ;
+  sh:property   [ sh:name      "Extent" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:hasExtent ;
+                  sh:node      melod:Extent
+                ] ;
+  sh:property   [ sh:name      "Dimension" ;
+                  sh:description "Height or width of the source" ;
+                  sh:minCount  0 ;
+                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:node melod:Dimension
+                ] ;
+  sh:property   [ sh:name      "Watermark" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:hasWatermark ;
+                  sh:node melod:Watermark
+                ] ;
+  sh:property   [ sh:description "Paper quality" ;
+                  sh:name "Paper quality" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:paperQuality
+                ] ;
+  sh:property   [ sh:description "General description of binding" ;
+                  sh:name "Binding description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:bindingDesc
+                ] ;
+  sh:property   [ sh:description "Condition" ;
+                  sh:name "Condition" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:condition
+                ] ;
+  sh:targetClass  melod:PaperType .
+
+melod:Extent
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Number of pages or folios" ;
+                  sh:name      "Value" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      cidoc:P90_has_value
+                ] ;
+  sh:property   [ sh:name      "Unit" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      cidoc:P91_has_unit
+                ] ;
+  sh:targetClass  melod:Extent .
+
+melod:Watermark
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Type" ;
+                  sh:name      "Type" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:type
+                ] ;
+  sh:property   [ sh:name      "Component" ;
+                  sh:description "Heraldry" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:heraldry
+                ] ;
+  sh:property   [ sh:name      "Content" ;
+                  sh:description "Content" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  dash:singleLine false ;
+                  sh:path      melod:content
+                ] ;
+  sh:targetClass  melod:Watermark .
 
 
 melod:PublicationEvent
@@ -129,18 +290,18 @@ melod:PublicationEvent
                   sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:name      "Start date" ;
-                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
                   sh:path      schema:startDate ;
                   sh:datatype  xsd:date
                 ] ;
   sh:property   [ sh:name      "End date" ;
-                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
                   sh:path      schema:endDate ;
                   sh:datatype  xsd:date
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
-                  sh:name         "IRI" ;
+                  sh:name         "Publisher" ;
                   sh:path         schema:publishedBy ;
                   sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
@@ -148,7 +309,7 @@ melod:PublicationEvent
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
-                  sh:name         "IRI" ;
+                  sh:name         "Place" ;
                   sh:path         schema:location ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
@@ -158,16 +319,39 @@ melod:PublicationEvent
 
 melod:Dimension
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Label (e.g. height or width)" ;
-                  sh:name      "Label" ;
+  sh:property   [ sh:description "Type (e.g. height, width or depth)" ;
+                  sh:name      "Type" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      rdfs:label
+                  sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:description      "Value of the dimension" ;
+  sh:property   [ sh:description      "Value of the source (height, width or depth)" ;
                   sh:name      "Value" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:type
+                  sh:path      cidoc:P90_has_value
+                ] ;
+  sh:property   [ sh:description      "Unit of the value" ;
+                  sh:name      "Unit" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      cidoc:P91_has_unit
                 ] ;
   sh:targetClass  cidoc:E54_Dimension .
+
+  melod:TitlePage
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Type of the title page" ;
+                  sh:name      "Type" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:type
+                ] ;
+  sh:property   [ sh:name      "Transcription of the item's title page" ;
+                  sh:description "Title page" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  dash:singleLine false ;
+                  sh:path      schema:headline
+                ] ;
+  sh:targetClass  melod:TitlePage .

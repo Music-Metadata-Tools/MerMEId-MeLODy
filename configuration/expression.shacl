@@ -12,10 +12,11 @@
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:name "Title Statement" ;
+  sh:property   [ sh:name "Label" ;
+                  sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 0 ;
-                  sh:node melod:TitleStmt ;
-                  sh:path melod:hasTitle
+                  sh:maxCount 1 ;
+                  sh:path rdfs:label
                 ] ;
 #  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
 #                  sh:name "Title" ;
@@ -171,22 +172,6 @@ melod:Expression
                 ] ;
   sh:targetClass  melod:Expression .
 
-melod:TitleStmt
-  a               sh:NodeShape ;
-  rdfs:label               "Title Section" ;
-  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
-                  sh:name      "Title" ;
-                  sh:datatype rdf:langString ;
-                  sh:minCount  1 ;
-                  sh:maxCount  1 ;
-                  sh:path      rdfs:label
-                ] ;
-  sh:property   [ sh:name      "Type" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:type
-                ] .
-
 melod:Identifier
   a               sh:NodeShape ;
 
@@ -206,23 +191,23 @@ melod:Identifier
 
 melod:Date
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Start date" ;
-                  sh:minCount  1 ;
-                  sh:path      schema:startDate ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:name      "End date" ;
-                  sh:minCount  1 ;
-                  sh:path      schema:endDate ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:name      "Not before" ;
+  sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
-                  sh:path      melod:notBefore
+                  sh:or (
+                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
+                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "Not after" ;
+  sh:property   [ sh:name      "End" ;
                   sh:maxCount  1 ;
-                  sh:path      melod:notAfter
+                  sh:or (
+                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
+                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
+                  )
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:dateDesc
                 ] ;
   sh:targetClass  schema:Date .
 
