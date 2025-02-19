@@ -3,39 +3,85 @@
 @prefix owl: <https://www.w3.org/TR/owl-ref/> .
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
-@prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
-melod:Manifestation
+melod:Item
   a               sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Title of the manifestation" ;
-                  sh:name "Title" ;
+
+  sh:property   [ sh:description "Optional label for the item" ;
+                  sh:name "Label" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:node melod:Title ;
-                  sh:path melod:hasTitle
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+  sh:property   [ sh:description "External identifier of the item e.g. RISM or other catalogue numbers" ;
+                  sh:name "External identifier" ;
+                  sh:minCount 0 ;
+                  sh:path owl:sameAs ;
+                  sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Category" ;
                   sh:name "Category" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
+                  sh:maxCount 1;
                   sh:path schema:about
                 ] ;
-  sh:property   [
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:description "Publication of the manifestation (publisher, date, pub place)" ;
-                  sh:name         "Publication Statement" ;
-                  sh:path         schema:publication ;
-                  sh:node melod:PublicationEvent
+  sh:property   [ sh:description "Library, archive or other repository holding this item" ;
+                  sh:name "Owning institution" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
+                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path cidoc:P50_has_current_keeper
+                ] ;
+  sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository" ;
+                  sh:name "Shelfmark" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:shelfmark
+                ] ;
+  sh:property   [ sh:description "Former shelfmark or other signature identifying this item in the repository" ;
+                  sh:name "Former Shelfmark" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:formerShelfmark
+                ] ;
+  sh:property   [ sh:description "Acquisition date" ;
+                  sh:name "Acquisition date" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:acquisition ;
+                  sh:or (
+                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
+                ] ;
+  sh:property   [ sh:description "Provenance" ;
+                  sh:name "Provenance" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/events/" ;
+                  #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:provenance
+                ] ;
+  sh:property   [ sh:description "History" ;
+                  sh:name "History" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/events/" ;
+                  #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:history
                 ] ;
   sh:property   [ sh:description "Title page of the manifestation" ;
                   sh:name "Title page" ;
                   sh:minCount 0 ;
-                  sh:path melod:hasTitlePage
+                  sh:path melod:hasTitlePage ;
                   sh:node melod:TitlePage
                 ] ;
   sh:property   [ sh:description "Physical Description" ;
@@ -52,59 +98,69 @@ melod:Manifestation
                   sh:path melod:hasPaperDetail ;
                   sh:node melod:PaperDetail
                 ] ;
-  sh:property   [ sh:description "Series Statement" ;
-                  sh:name "Series Statement" ;
+  sh:property   [ sh:description "Additional item parts" ;
+                  sh:name "Components" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:series
-                ] ;
-  
-  sh:property   [ sh:description "Keywords for searching, grouping and indexing" ;
-                  sh:name "Classification" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:keywords
-                ] ;
-  sh:property   [ sh:description "Manifestation components" ;
-                  sh:name "Manifestation" ;
-                  sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/manifestations/" ;
-                  #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
+                  sh:defaultValue "https://mei-metadata.org/items/" ;
+                  #sh:pattern      "^https://mei-metadata.org/items/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:hasPart
                 ] ;
-  sh:property   [ sh:description "Expression that the manifestation embodies" ;
-                  sh:name "Expression" ;
-                  sh:minCount 1 ;
-                  sh:defaultValue "https://mei-metadata.org/expressions/" ;
-                  #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
+  sh:property   [ sh:description "Is Materialization of ..." ;
+                  sh:name "Manifestation" ;
+                  sh:minCount 0 ;
+                  sh:defaultValue "https://mei-metadata.org/manifestations/" ;
+                  #sh:pattern      "^https://mei-metadata.org/manifestation/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
-                  sh:path efrbroo:R4_embodies
+                  sh:path efrbroo:R7_is_materialization_of
                 ] ;
-  sh:property   [ sh:description "Additional information related to the expression" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Additional information related to the item" ;
+                  sh:name "Annotations" ;
                   dash:singleLine false ;
                   sh:path schema:description
                 ] ;
-  sh:targetClass  melod:Manifestation .
+  sh:targetClass  melod:Item .
 
-melod:Title
+  melod:Date
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Title of the manifestation" ;
-                  sh:name      "Source title" ;
-                  sh:minCount  0 ;
+  sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
-                  sh:path      rdfs:label
+                  sh:or (
+                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
+                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "Source label" ;
-                  sh:description "Label, such as a letter, number or short description" ;
-                  sh:minCount  0 ;
+  sh:property   [ sh:name      "End" ;
+                  sh:maxCount  1 ;
+                  sh:or (
+                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
+                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
+                  )
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:dateDesc
+                ] ;
+  sh:targetClass  schema:Date .
+
+  melod:TitlePage
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Type of the title page" ;
+                  sh:name      "Type" ;
+                  sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:type
                 ] ;
-  sh:targetClass  melod:Title .
+  sh:property   [ sh:name      "Transcription of the item's title page" ;
+                  sh:description "Title page" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  dash:singleLine false ;
+                  sh:path      schema:headline
+                ] ;
+  sh:targetClass  melod:TitlePage .
 
-melod:PhysDesc
+  melod:PhysDesc
   a               sh:NodeShape ;
   sh:property   [ sh:name      "Extent" ;
                   sh:minCount  0 ;
@@ -118,6 +174,18 @@ melod:PhysDesc
                   sh:path      efrbroo:CLP_should_have_dimension ;
                   sh:node melod:Dimension
                 ] ;
+  sh:property   [ sh:name      "Hand" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:hasHand ;
+                  sh:node melod:Hand
+                ] ;
+  sh:property   [ sh:name      "Inscription" ;
+                  sh:minCount  0 ;
+                  sh:path      melod:inscription ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
   sh:property   [ sh:name      "Watermark" ;
                   sh:minCount  0 ;
                   sh:path      melod:hasWatermark ;
@@ -128,6 +196,24 @@ melod:PhysDesc
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:physMedium
+                ] ;
+  sh:property   [ sh:description "Deco description" ;
+                  sh:name "Deco description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:decoDesc
+                ] ;
+  sh:property   [ sh:description "Script description" ;
+                  sh:name "Script description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:scriptDesc
+                ] ;
+  sh:property   [ sh:description "Stamp" ;
+                  sh:name "Stamp" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:stamp
                 ] ;
   sh:property   [ sh:description "Plate number of the manifestation" ;
                   sh:name "Plate number" ;
@@ -275,7 +361,7 @@ melod:Watermark
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name      "Link" ;
                   sh:minCount  0 ;
-                  sh:nodeKind sh:IRI
+                  sh:nodeKind sh:IRI ;
                   sh:path      owl:sameAs
                 ] ;
   sh:property   [ sh:name      "Component" ;
@@ -293,44 +379,7 @@ melod:Watermark
                 ] ;
   sh:targetClass  melod:Watermark .
 
-
-melod:PublicationEvent
-  a               sh:NodeShape ;
-  sh:property   [ sh:description "Label of the publication event" ;
-                  sh:name      "Label" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      rdfs:label
-                ] ;
-  sh:property   [ sh:name      "Start date" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:startDate ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:name      "End date" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:endDate ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "Publisher" ;
-                  sh:path         schema:publishedBy ;
-                  sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "Place" ;
-                  sh:path         schema:location ;
-                  sh:defaultValue "https://mei-metadata.org/places/" ;
-                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:targetClass  schema:PublicationEvent .
-
-melod:Dimension
+  melod:Dimension
   a               sh:NodeShape ;
   sh:property   [ sh:description "Type (e.g. height, width or depth)" ;
                   sh:name      "Type" ;
@@ -352,19 +401,82 @@ melod:Dimension
                 ] ;
   sh:targetClass  cidoc:E54_Dimension .
 
-melod:TitlePage
+  melod:Hand
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Type of the title page" ;
-                  sh:name      "Type" ;
+  rdfs:label      "Hand" ;
+  sh:property   [ sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:type
+                  sh:name "Link zur Person" ;
+                  sh:path      melod:agent ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page" ;
-                  sh:description "Title page" ;
-                  sh:minCount  0 ;
+  sh:property   [ sh:description  "Type of the hand" ;
+                  sh:name         "Type" ;
                   sh:maxCount  1 ;
-                  dash:singleLine false ;
-                  sh:path      schema:headline
+                  sh:path         melod:hasHandType ;
+                  sh:class melod:HandType
                 ] ;
-  sh:targetClass  melod:TitlePage .
+  sh:property   [ sh:description  "Medium of the hand" ;
+                  sh:name         "Medium" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:medium ;
+                  sh:class melod:Medium
+                ] ;
+  sh:property   [ sh:description  "Description of the hand" ;
+                  sh:name         "Description" ;
+                  sh:path         schema:description
+                ] ;              
+  sh:targetClass  melod:Hand .
+
+melod:OriginalContents rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "original contents"@en .
+
+melod:Additions rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "additions"@en .
+
+melod:Notes rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "notes"@en .
+
+melod:Title rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "title"@en .
+
+melod:Writer rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "writer"@en .
+
+melod:Dating rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "dating"@en .
+
+melod:Lyrics rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "lyrics"@en .
+
+melod:Caption rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "caption"@en .
+
+melod:Corrections rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "corrections"@en .
+
+melod:Revision rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "revision"@en .
+
+melod:Draft rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "draft"@en .
+
+melod:Other rdf:type owl:NamedIndividual , melod:HandType ;
+  skos:prefLabel "other"@en .
+
+melod:Ink rdf:type owl:NamedIndividual , melod:Medium ;
+  skos:prefLabel "ink"@en .
+
+melod:Pencil rdf:type owl:NamedIndividual , melod:Medium ;
+  skos:prefLabel "pencil"@en .
+
+melod:Crayon rdf:type owl:NamedIndividual , melod:Medium ;
+  skos:prefLabel "crayon"@en .
+
+melod:Pen rdf:type owl:NamedIndividual , melod:Medium ;
+  skos:prefLabel "pen"@en .
+
+melod:BallPen rdf:type owl:NamedIndividual , melod:Medium ;
+  skos:prefLabel "ball pen"@en .
