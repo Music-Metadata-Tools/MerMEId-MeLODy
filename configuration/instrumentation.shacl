@@ -1,0 +1,111 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix mus: <http://data.doremus.org/ontology#> .
+
+melod:Instrumentation
+  sh:targetClass melod:Instrumentation ;
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:description "Label of the instrumentation, e.g. Orchestra" ;
+                  sh:name "Label" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:path melod:hasInstrumentationDetail ;
+                  sh:node melod:InstrumentationDetail ;
+                  sh:name "Instrument or Voice" ;
+                  sh:group melod:Instruments
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:path melod:hasInstrumentationGroup ;
+                  sh:node melod:InstrumentationGroup ;
+                  sh:name "Ensemble" ;
+                  sh:group melod:Ensembles
+                ] .
+
+melod:Instruments
+  a               sh:PropertyGroup ;
+  rdfs:label      "Instruments or Voices" .
+
+melod:Ensembles
+  a               sh:PropertyGroup ;
+  rdfs:label      "Ensembles" .
+
+melod:InstrumentationGroup
+  a sh:NodeShape ;
+  sh:property   [ sh:description "Label" ;
+                  sh:name "Label" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+  sh:property   [ sh:minCount 1 ;
+                  sh:path melod:hasInstrumentationDetail ;
+                  sh:node melod:InstrumentationDetail ;
+                  sh:name "Instrument or Voice"
+                ] ;
+  sh:targetClass melod:InstrumentationGroup .
+
+melod:InstrumentationDetail
+  a               sh:NodeShape ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Medium of performance" ;
+                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
+                ] ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:name         "Link to external resource" ;
+                  sh:path         owl:sameAs ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     0 ;
+                  sh:name         "Quantity" ;
+                  sh:path         mus:U2_foresees_quantity_of_medium_of_performance ;
+                  sh:datatype xsd:integer
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     0 ;
+                  sh:name         "Solo" ;
+                  sh:path         melod:isSoloist ;
+                  sh:datatype xsd:boolean
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     0 ;
+                  sh:name         "Ad lib" ;
+                  sh:path         melod:adLib ;
+                  sh:datatype xsd:boolean
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     0 ;
+                  sh:name         "Casting Detail" ;
+                  sh:path         melod:hasCastingDetail ;
+                  sh:node melod:CastingDetail
+                ] ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:name         "Alternative instrumentation" ;
+                  sh:path         melod:hasAlternative ;
+                  sh:node melod:InstrumentationDetail
+                ] ;
+  sh:targetClass  melod:InstrumentationDetail .
+
+melod:CastingDetail
+  a               sh:NodeShape ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Role name" ;
+                  sh:path         melod:roleName ;
+                ] ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:name         "Role description" ;
+                  sh:path         melod:roleDesc ;
+                  dash:singleLine false ;
+                ] ;
+  sh:targetClass  melod:CastingDetail .
