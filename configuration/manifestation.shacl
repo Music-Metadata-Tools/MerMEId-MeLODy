@@ -58,7 +58,6 @@ melod:Manifestation
                   sh:maxCount 1 ;
                   sh:path melod:series
                 ] ;
-  
   sh:property   [ sh:description "Keywords for searching, grouping and indexing" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
@@ -81,7 +80,7 @@ melod:Manifestation
                   sh:nodeKind sh:IRI ;
                   sh:path efrbroo:R4_embodies
                 ] ;
-  sh:property   [ sh:description "Additional information related to the expression" ;
+  sh:property   [ sh:description "Additional information related to the manifestation" ;
                   sh:name "Description" ;
                   dash:singleLine false ;
                   sh:path schema:description

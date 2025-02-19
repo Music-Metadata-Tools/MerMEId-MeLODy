@@ -1,0 +1,162 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://mei-metadata.org/> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+melod:Bibliography
+  sh:targetClass melod:Bibliography ;
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:minCount     1 ;
+                  sh:maxCount     1 ;
+                  sh:name         "Label" ;
+                  sh:path         rdfs:label
+                ] ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:name         "Link to external resource" ;
+                  sh:description         "External resource, e.g. Zotero" ;
+                  sh:path         owl:sameAs ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:about ;
+                  sh:name "Category"
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:path melod:hasTitle ;
+                  sh:node melod:Title ;
+                  sh:name "Title"
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:abbr ;
+                  sh:name "Abbreviation" ;
+                  sh:description "Abbreviation or short title of the bibliographic entry"
+                ] ;
+  sh:property   [ sh:name "Author" ;
+                  sh:minCount 0 ;
+                  sh:path schema:author ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:name "Editor" ;
+                  sh:minCount 0 ;
+                  sh:path melod:editor ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:name "Extent" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:description "Extent of the bibliographic entry" ;
+                  sh:minCount 0 ;
+                  sh:path schema:materialExtent
+                ] ;
+  sh:property   [ sh:name "Imprint" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:publication ;
+                  sh:node melod:PublicationEvent
+                ] ;
+  sh:property   [ sh:name "Language" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:inLanguage ;
+                  sh:datatype rdf:langString
+                ] ;
+  sh:property   [ sh:name "Bibliographic Scope" ;
+                  sh:description "Scope of the article, chapter, ..." ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:pagination
+                ] ;
+  sh:property   [ sh:description "Series Statement" ;
+                  sh:name "Series Statement" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:isPartOf ;
+                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:description "Position in the series, volume number" ;
+                  sh:name "Series extent" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:position
+                ] ;
+  sh:property   [ sh:description "Genre of the bibliographic entry" ;
+                  sh:name "Genre" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path schema:genre
+                ] ;
+  sh:property   [ sh:description "Additional information related to the bibliographic entry" ;
+                  sh:name "Description" ;
+                  dash:singleLine false ;
+                  sh:path schema:description
+                ] .
+
+melod:PublicationEvent
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Label of the publication event" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:name      "Start date" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:startDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:name      "End date" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:endDate ;
+                  sh:datatype  xsd:date
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Publisher" ;
+                  sh:path         schema:publishedBy ;
+                  sh:defaultValue "https://mei-metadata.org/persons/" ;
+                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Place" ;
+                  sh:path         schema:location ;
+                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:property   [ sh:description "Description of the publication event" ;
+                  sh:name      "Description" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:targetClass  schema:PublicationEvent .
+
+  melod:Title
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Title of the bibliographic entry" ;
+                  sh:name      "Source title" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:name      "Type" ;
+                  sh:description "Type, e.g. subtitle" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:type
+                ] ;
+  sh:targetClass  melod:Title .

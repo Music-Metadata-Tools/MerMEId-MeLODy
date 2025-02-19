@@ -12,7 +12,6 @@
 
 melod:Item
   a               sh:NodeShape, rdfs:Class ;
-
   sh:property   [ sh:description "Optional label for the item" ;
                   sh:name "Label" ;
                   sh:minCount 0 ;
@@ -191,7 +190,7 @@ melod:Item
                   sh:path      melod:hasWatermark ;
                   sh:node melod:Watermark
                 ] ;
-  sh:property   [ sh:description "Physical medium of the manifestation" ;
+  sh:property   [ sh:description "Physical medium of the item" ;
                   sh:name "Physical medium" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
@@ -215,7 +214,7 @@ melod:Item
                   sh:maxCount 1 ;
                   sh:path melod:stamp
                 ] ;
-  sh:property   [ sh:description "Plate number of the manifestation" ;
+  sh:property   [ sh:description "Plate number of the item" ;
                   sh:name "Plate number" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
