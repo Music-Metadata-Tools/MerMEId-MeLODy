@@ -60,15 +60,6 @@ melod:Event
                   sh:node melod:Contributor ;
                   sh:path melod:hasContributor
                 ] ;
-  sh:property   [ sh:description "Cast/Instrumentation of the event" ;
-                  sh:name "Cast" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:nodeKind sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
-                  #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
-                  sh:path mus:U12_has_casting
-                ] ;
   sh:property   [ sh:description "Duration of the performance" ;
                   sh:name "Duration" ;
                   sh:minCount 0 ;

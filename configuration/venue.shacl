@@ -29,7 +29,7 @@ melod:Venue
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Annotations" ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
                   dash:singleLine false ;
                   sh:path schema:description

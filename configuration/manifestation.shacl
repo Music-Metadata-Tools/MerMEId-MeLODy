@@ -35,7 +35,7 @@ melod:Manifestation
   sh:property   [ sh:description "Title page of the manifestation" ;
                   sh:name "Title page" ;
                   sh:minCount 0 ;
-                  sh:path melod:hasTitlePage
+                  sh:path melod:hasTitlePage ;
                   sh:node melod:TitlePage
                 ] ;
   sh:property   [ sh:description "Physical Description" ;
@@ -274,7 +274,7 @@ melod:Watermark
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name      "Link" ;
                   sh:minCount  0 ;
-                  sh:nodeKind sh:IRI
+                  sh:nodeKind sh:IRI ;
                   sh:path      owl:sameAs
                 ] ;
   sh:property   [ sh:name      "Component" ;
