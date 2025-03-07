@@ -237,7 +237,7 @@ let SparqlQueries = {
         select ?entity_iri ?entity_type
         where {
             ?entity_iri a ?entity_type .
-            filter(strstarts(str(?entity_type), "melod:"))
+            filter(strstarts(str(?entity_type), STR(melod:)))
         }
     `,
 };
