@@ -131,7 +131,8 @@ melod:Work
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:hasPart
-                ] .
+                ] ;
+  sh:targetClass melod:Work .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
 #                  sh:name "Publication" ;
