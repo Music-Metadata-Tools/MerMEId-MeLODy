@@ -232,11 +232,12 @@ let SparqlQueries = {
         `
         prefix melod: <https://mei-metadata.org/>
         prefix schema: <http://schema.org/>
+        prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
         select ?entity_iri ?entity_type
         where {
             ?entity_iri a ?entity_type .
-            filter(strstarts(str(?entity_type), "https://mei-metadata.org/"))
+            filter(strstarts(str(?entity_type), "melod:"))
         }
     `,
 };
