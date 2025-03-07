@@ -210,6 +210,7 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
 });
 
 // TODO: move separately
+// TODO: change "urn:uuid:" to project specific variable
 let ui_language = "en";
 let SparqlQueries = {
     "entity_type_definitions":
@@ -237,7 +238,8 @@ let SparqlQueries = {
         select ?entity_iri ?entity_type
         where {
             ?entity_iri a ?entity_type .
-            filter(strstarts(str(?entity_type), STR(melod:)))
+            filter(strstarts(str(?entity_iri), "urn:uuid:"))
+            filter(strstarts(str(?entity_type), "https://mei-metadata.org/"))
         }
     `,
 };
