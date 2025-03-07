@@ -125,6 +125,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured while sharing the files with the remote repository.
             </sl-alert>
+            <sl-alert id="commit-and-push-need" variant="warning" duration="3000" closable>
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                An error occured loading unshared files. Please share the created files with the repository.
+            </sl-alert>
         `;
     }
 
@@ -357,12 +361,20 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         this.addEventListener("_save-entity", async (event) => {
             let entity_to_save = event.detail;
+            try {
+                await filesystem.save_and_stage_file(this._selected_repository_path, entity_to_save.rdf_contents, entity_to_save.path);
 
-            await filesystem.save_and_stage_file(this._selected_repository_path, entity_to_save.rdf_contents, entity_to_save.path);
-
-            // reload the filesystem
-            // TODO: use restore_state() for this component
-            await this._list_repository_names();
+                // reload the filesystem
+                // TODO: use restore_state() for this component
+                await this._list_repository_names();
+            } catch (error) {
+                console.error('Failed to save entity:', error);
+                // Show error message to user via UI
+                const errorToast = this.renderRoot.querySelector("sl-alert#commit-and-push-error");
+                if (errorToast) {
+                    errorToast.toast();
+                }
+            }
         });
 
         render_root.addEventListener("sl-show", async (event) => {
