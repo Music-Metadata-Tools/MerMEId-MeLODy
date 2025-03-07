@@ -188,14 +188,20 @@ export default class ADWLMVirtualFilesystem {
         };
     }
 
-    async add_file(repository_path,  file_relative_path) {
+    async add_file(repository_path, file_relative_path) {
         // remove the file from the git index
         await git.remove({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
         await this.pfs.unlink(`${repository_path}/${file_relative_path}`);
     }
 
     async save_and_stage_file(repository_path, file_contents, file_relative_path) {
-        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents);
+        let file_absolute_path = `${repository_path}/${file_relative_path}`;
+
+        // create the parent folder if it does not exist
+        let parent_folder_path = file_absolute_path.substring(0, file_absolute_path.lastIndexOf('/'));
+
+        await this.pfs.mkdir(parent_folder_path);
+        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents, { flag: "wx" });
         await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
     }
 
