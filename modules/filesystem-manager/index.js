@@ -370,7 +370,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             } catch (error) {
                 console.error('Failed to save entity:', error);
                 // Show error message to user via UI
-                const errorToast = this.renderRoot.querySelector("sl-alert#commit-and-push-error");
+                const errorToast = this.renderRoot.querySelector("sl-alert#commit-and-push-need");
                 if (errorToast) {
                     errorToast.toast();
                 }
