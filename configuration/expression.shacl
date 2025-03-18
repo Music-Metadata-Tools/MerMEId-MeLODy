@@ -152,10 +152,14 @@ melod:Expression
   sh:property   [ sh:description "Individual Piece of a Expression. E.g. movements, sections, scenes, acts" ;
                   sh:name "Components" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/expressions/" ;
-                  #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                  sh:path schema:includedComposition
+                  sh:path schema:includedComposition;
+                  sh:or (
+                    [ rdfs:label "IRI of included Expression" ;
+                      sh:defaultValue "https://mei-metadata.org/expressions/" ;
+                      #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
+                      sh:nodeKind sh:IRI ]
+                    [ sh:node melod:ExpressionComponent ; rdfs:label "Included Expression" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Additional information related to the expression" ;
                   sh:name "Annotations" ;
@@ -247,6 +251,16 @@ melod:Person
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:targetClass  melod:Person .
+
+melod:ExpressionComponent
+  a               sh:NodeShape, rdfs:Class ;
+  rdfs:label      "Espression component" ;
+  sh:property   [ sh:name "Label" ;
+                  sh:description "Title of expression component, e.g. 'Allegro'" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path rdfs:label
+                ] .
 
 melod:Institution
   a               sh:NodeShape ;
