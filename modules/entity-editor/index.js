@@ -24,6 +24,11 @@ const styles =
             color: var(--sl-color-primary-600);
             font-size: 1.5rem;
         }
+        sl-button-group sl-button::part(prefix) {
+            color: var(--sl-color-neutral-0);
+            margin-right: 0.3em;
+            font-size: 0.75em;
+        }
     `;
 
 export default class ADWLMEntityEditor extends LitElement {
@@ -38,6 +43,10 @@ export default class ADWLMEntityEditor extends LitElement {
         _entity_path: {
             type: String,
         },
+        _hasUnsavedChanges: {
+            type: Boolean,
+            state: true
+        }
     };
 
     updated(changedProperties) {
@@ -92,12 +101,19 @@ export default class ADWLMEntityEditor extends LitElement {
                     <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
                         <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
                     </sl-button>
-                    <sl-button id="save-entity" variant="primary" size="small" title="Save entity">Save
+                    <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
+                    ?disabled="${!this._hasUnsavedChanges}">
+                    ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
+                    Save
+                    <sl-icon name="floppy" slot="suffix"></sl-icon>
+                </sl-button>
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
                 ${this.entity_to_edit ? html`
-                    <h2>${this._getEntityName(this.entity_to_edit.entity_type)}</h2>
+                    <h2>
+                        ${this._getEntityName(this.entity_to_edit.entity_type)}
+                    </h2>
                 ` : ''}
                 <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
             </div>
@@ -120,7 +136,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
         editor.addEventListener("change", (event) => {
             let target = event.target;
-
+            this._hasUnsavedChanges = true;
             //console.log(editor.serialize());
         });
 
@@ -176,6 +192,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     "bubbles": true,
                     "composed": true,
                 }));
+                this._hasUnsavedChanges = false;
             }
         });
 
@@ -203,6 +220,7 @@ export default class ADWLMEntityEditor extends LitElement {
         this.entity_to_edit = null;
         this.entity_type_definitions = null;
         this._entity_path = null;
+        this._hasUnsavedChanges = false;
     }
 
     _generate_entity_id() {
