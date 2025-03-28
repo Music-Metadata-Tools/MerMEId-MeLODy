@@ -117,15 +117,15 @@ export default class ADWLMFilesystemManager extends LitElement {
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
-            <sl-alert id="commit-and-push-done" variant="primary" duration="3000" closable>
+            <sl-alert id="commit-and-push-done" variant="primary" duration="6000" closable>
                 <sl-icon slot="icon" name="info-circle"></sl-icon>
                 The files were shared with the remote repository.
             </sl-alert>
-            <sl-alert id="commit-and-push-error" variant="warning" duration="3000" closable>
+            <sl-alert id="commit-and-push-error" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured while sharing the files with the remote repository.
             </sl-alert>
-            <sl-alert id="commit-and-push-need" variant="warning" duration="3000" closable>
+            <sl-alert id="commit-and-push-need" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured loading unshared files. Please share the created files with the repository.
             </sl-alert>
@@ -360,12 +360,48 @@ export default class ADWLMFilesystemManager extends LitElement {
         });
 
         this.addEventListener("_save-entity", async (event) => {
-            let entity_to_save = event.detail;
-            await filesystem.save_and_stage_file(this._selected_repository_path, entity_to_save.rdf_contents, entity_to_save.path);
+            try {
+                let entity_to_save = event.detail;
+                const result = await filesystem.save_and_stage_file(
+                    this._selected_repository_path, 
+                    entity_to_save.rdf_contents, 
+                    entity_to_save.path
+                );
 
-            // reload the filesystem
-            // TODO: use restore_state() for this component
-            await this._list_repository_names();
+                // Show success notification
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'success';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                    Entity successfully created:
+                    <br>
+                    File: ${result.filename}
+                    <br>
+                    Entity: ${result.folder.toUpperCase()}
+                `;
+                document.body.append(alert);
+                alert.toast();
+
+                // Force refresh the file list
+                const repoTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+                if (repoTree) {
+                    const selectedFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
+                    if (selectedFolder) {
+                        // Clear and reload folder contents
+                        selectedFolder.innerHTML = '';
+                        const entries = await filesystem.list_entries_from_workdir(
+                            this._selected_repository_path, 
+                            selectedFolder.dataset.entryRelativePath
+                        );
+                        await this._populate_folder_contents(selectedFolder, entries);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to save entity:', error);
+                // Show error message to user
+            }
         });
 
         render_root.addEventListener("sl-show", async (event) => {
@@ -430,6 +466,44 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
+    }
+
+    async _populate_folder_contents(folderElement, entries) {
+        // Process folders
+        for (const folder_relative_path of entries.folders) {
+            const folder_name = folder_relative_path.includes("/") ? 
+                folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : 
+                folder_relative_path;
+            const folder_absolute_path = `${this._selected_repository_path}/${folder_relative_path}`;
+            
+            folderElement.insertAdjacentHTML('beforeend', 
+                `<sl-tree-item lazy 
+                    data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" 
+                    data-entry-absolute-path="${folder_absolute_path}"
+                    data-entry-relative-path="${folder_relative_path}" 
+                    data-entry-name="${folder_name}">
+                    ${folder_name}
+                </sl-tree-item>`
+            );
+        }
+
+        // Process files
+        for (const file_relative_path of entries.files) {
+            const file_name = file_relative_path.includes("/") ? 
+                file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : 
+                file_relative_path;
+            const file_absolute_path = `${this._selected_repository_path}/${file_relative_path}`;
+            
+            folderElement.insertAdjacentHTML('beforeend',
+                `<sl-tree-item 
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"
+                    data-entry-absolute-path="${file_absolute_path}"
+                    data-entry-relative-path="${file_relative_path}"
+                    data-entry-name="${file_name}">
+                    ${file_name}
+                </sl-tree-item>`
+            );
+        }
     }
 
 }

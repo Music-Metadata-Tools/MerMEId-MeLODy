@@ -195,15 +195,50 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async save_and_stage_file(repository_path, file_contents, file_relative_path) {
-        let file_absolute_path = `${repository_path}/${file_relative_path}`;
+        try {
+            // Create parent directories recursively
+            let parent_folder_path = `${repository_path}/${file_relative_path}`.substring(0, `${repository_path}/${file_relative_path}`.lastIndexOf('/'));
+            try {
+                await this.pfs.mkdir(parent_folder_path, { recursive: true });
+            } catch (err) {
+                // Ignore directory exists error
+                if (err.code !== 'EEXIST') {
+                    throw err;
+                }
+            }
 
-        // create the parent folder if it does not exist
-        let parent_folder_path = file_absolute_path.substring(0, file_absolute_path.lastIndexOf('/'));
-
-        await this.pfs.mkdir(parent_folder_path);
-        await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents, { flag: "wx" });
-        await git.add({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
+            // Write file with overwrite
+            await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents, { 
+                encoding: 'utf8',
+                flag: 'w'  // This will overwrite existing files
+            });
             
+            // Stage the file
+            await git.add({ 
+                fs: this.fs, 
+                dir: repository_path, 
+                filepath: file_relative_path 
+            });
+
+            // Update the Git index
+            await git.updateIndex({
+                fs: this.fs,
+                dir: repository_path,
+                add: true,
+                filepath: file_relative_path
+            });
+
+            // Return success with file details
+            return {
+                success: true,
+                filename: file_relative_path.split('/').pop(),
+                folder: file_relative_path.split('/')[0],
+                path: file_relative_path
+            };
+        } catch (error) {
+            console.error('Error saving file:', error);
+            throw new Error(`Failed to save file: ${error.message}`);
+        }
     }
 
     async read_file(repository_path, file_path) {
