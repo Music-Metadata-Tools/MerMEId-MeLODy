@@ -19,6 +19,11 @@ const styles =
             width: 100%;
             padding-bottom: 5px;
         }
+        h2 {
+            text-align: center;
+            color: var(--sl-color-primary-600);
+            font-size: 1.5rem;
+        }
     `;
 
 export default class ADWLMEntityEditor extends LitElement {
@@ -91,10 +96,20 @@ export default class ADWLMEntityEditor extends LitElement {
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
-                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                ${this.entity_to_edit ? html`
+                    <h2>${this._getEntityName(this.entity_to_edit.entity_type)}</h2>
+                ` : ''}
+                <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
             </div>
             <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
         `;
+    }
+
+    // Add this helper method to the class
+    _getEntityName(entity_type) {
+        if (!this.entity_type_definitions) return '';
+        const definition = this.entity_type_definitions.find(def => def.type === entity_type);
+        return definition ? definition.name : '';
     }
 
     firstUpdated() {
