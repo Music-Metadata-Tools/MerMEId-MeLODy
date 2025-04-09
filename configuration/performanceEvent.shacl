@@ -9,7 +9,7 @@
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
-melod:Event
+melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
@@ -17,44 +17,43 @@ melod:Event
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "Category" ;
-                  sh:name "Category" ;
+  sh:property   [ sh:description "Classification" ;
+                  sh:name "Classification" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:about
+                  sh:path melod:hasClassification
                 ] ;
-  sh:property   [ sh:description "Identifier (external resource, e.g. RISM)" ;
-                  sh:name "Identifier" ;
+  sh:property   [ sh:description "External resource (e.g. musiconn performance)" ;
+                  sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
-  sh:property   [ sh:description "Place of the Event" ;
+  sh:property   [ sh:description "Place of the Performance" ;
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
-  sh:property   [ sh:description "Venue of the Event" ;
+  sh:property   [ sh:description "Venue of the Performance" ;
                   sh:name "Venue" ;
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/venues/" ;
+                  #sh:defaultValue "https://mei-metadata.org/venues/" ;
                   #sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
-                  sh:path schema:location
+                  sh:path melod:hasVenue
                 ] ;
   sh:property   [ sh:description "Date of the event" ;
                   sh:name "Date" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:date ;
+                  sh:path melod:hasEventDate ;
                   sh:or (
                     [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Contributor of the expression version (Arranger or text author)" ;
+  sh:property   [ sh:description "Contributor of the performance event" ;
                   sh:name "Contributor" ;
                   sh:minCount 0 ;
                   sh:node melod:Contributor ;
@@ -64,7 +63,7 @@ melod:Event
                   sh:name "Duration" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path schema:duration
+                  sh:path melod:hasDuration
                 ] ;
   sh:property   [ sh:description "Additional information related to the institution" ;
                   sh:name "Description" ;
@@ -75,78 +74,57 @@ melod:Event
   sh:property   [ sh:description "Bibliography" ;
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
                 ] ;
-  sh:targetClass melod:Event .
+  sh:targetClass melod:PerformanceEvent .
 
   melod:Date
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Start date" ;
+  sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
-                  sh:path      schema:startDate ;
-                  sh:datatype  xsd:date
+                  sh:or (
+                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
+                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "End date" ;
+  sh:property   [ sh:name      "End" ;
                   sh:maxCount  1 ;
-                  sh:path      schema:endDate ;
-                  sh:datatype  xsd:date
+                  sh:or (
+                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
+                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "Not before" ;
+  sh:property   [ sh:name      "Description" ;
                   sh:maxCount  1 ;
-                  sh:path      melod:notBefore
-                ] ;
-  sh:property   [ sh:name      "Not after" ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:notAfter
+                  sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Date .
 
   melod:Contributor
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  sh:property   [ sh:maxCount  1 ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:path      melod:agent ;
-                  sh:or (
-                    [ sh:node melod:Person ; rdfs:label "Person" ]
-                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
-                  )
+                  sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
-                  sh:path         melod:role ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
                   sh:class melod:Role
-                ] ;              
-  sh:targetClass  melod:Contributor .
-
-  melod:Person
-  a               sh:NodeShape ;
-  rdfs:label      "Person" ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "IRI" ;
-                  sh:path         melod:iri ;
-                  sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
                 ] ;
-  sh:targetClass  melod:Person .
-
-melod:Institution
-  a               sh:NodeShape ;
-  rdfs:label      "Institution" ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "IRI" ;
-                  sh:path         melod:iri ;
-                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:targetClass  melod:Institution .
+  sh:property   [ sh:description  "Certainty of the contribution" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] .
 
 melod:Arranger rdf:type owl:NamedIndividual ,
         melod:Role ;

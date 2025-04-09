@@ -58,6 +58,7 @@ melod:InstrumentationDetail
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "Medium of performance" ;
+                  sh:class melod:Instrument ;
                   sh:path         mus:U2_foresees_use_of_medium_of_performance ;
                 ] ;
   sh:property   [ sh:minCount     0 ;
@@ -68,7 +69,7 @@ melod:InstrumentationDetail
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
                   sh:name         "Quantity" ;
-                  sh:path         mus:U2_foresees_quantity_of_medium_of_performance ;
+                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance ;
                   sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:maxCount     1 ;
@@ -80,7 +81,7 @@ melod:InstrumentationDetail
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
                   sh:name         "Ad lib" ;
-                  sh:path         melod:adLib ;
+                  sh:path         melod:isAdLib ;
                   sh:datatype xsd:boolean
                 ] ;
   sh:property   [ sh:maxCount     1 ;
@@ -101,11 +102,11 @@ melod:CastingDetail
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "Role name" ;
-                  sh:path         melod:roleName ;
+                  sh:path         melod:hasRoleName ;
                 ] ;
   sh:property   [ sh:minCount     0 ;
                   sh:name         "Role description" ;
-                  sh:path         melod:roleDesc ;
+                  sh:path         melod:hasRoleDesc ;
                   dash:singleLine false ;
                 ] ;
   sh:targetClass  melod:CastingDetail .

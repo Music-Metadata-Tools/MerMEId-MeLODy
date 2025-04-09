@@ -24,4 +24,38 @@ melod:Person
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
+  sh:property   [ sh:description "Gender of the person" ;
+                  sh:name "Gender" ;
+                  sh:maxCount 1 ;
+                  sh:path schema:gender ;
+                  sh:in ( "female" "male" "diverse")
+                ] ;
+  sh:property   [ sh:description "Birth date of the person" ;
+                  sh:name "Birth date" ;
+                  sh:maxCount 1;
+                  sh:datatype  xsd:date ;
+                  sh:path schema:birthDate
+                ] ;
+  sh:property   [ sh:description "Birth place of the person" ;
+                  sh:name "Birth place" ;
+                  sh:maxCount 1;
+                  sh:nodeKind sh:IRI ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:path schema:birthPlace
+                ] ;
+  sh:property   [ sh:description "Death date of the person" ;
+                  sh:name "Death date" ;
+                  sh:maxCount 1;
+                  sh:datatype  xsd:date ;
+                  sh:path schema:deathDate
+                ] ;
+  sh:property   [ sh:description "Death place of the person" ;
+                  sh:name "Death place" ;
+                  sh:maxCount 1;
+                  sh:nodeKind sh:IRI ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:path schema:deathPlace
+                ] ;
   sh:targetClass melod:Person .

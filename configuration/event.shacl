@@ -16,14 +16,13 @@ melod:Event
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "Category" ;
-                  sh:name "Category" ;
+  sh:property   [ sh:description "Classification" ;
+                  sh:name "Classification" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:about
+                  sh:path melod:hasClassification
                 ] ;
-  sh:property   [ sh:description "Identifier (external resource, e.g. RISM)" ;
-                  sh:name "Identifier" ;
+  sh:property   [ sh:description "External resource (e.g. musiconn performance)" ;
+                  sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
@@ -31,7 +30,7 @@ melod:Event
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
@@ -39,13 +38,13 @@ melod:Event
                   sh:name "Date" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:date ;
+                  sh:path melod:hasEventDate ;
                   sh:or (
                     [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Contributor of the expression version (Arranger or text author)" ;
+  sh:property   [ sh:description "Contributor of the event" ;
                   sh:name "Contributor" ;
                   sh:minCount 0 ;
                   sh:node melod:Contributor ;
@@ -69,43 +68,48 @@ melod:Event
 
   melod:Date
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Start date" ;
+  sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
-                  sh:path      schema:startDate ;
-                  sh:datatype  xsd:date
+                  sh:or (
+                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
+                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "End date" ;
+  sh:property   [ sh:name      "End" ;
                   sh:maxCount  1 ;
-                  sh:path      schema:endDate ;
-                  sh:datatype  xsd:date
+                  sh:or (
+                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
+                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
+                  )
                 ] ;
-  sh:property   [ sh:name      "Not before" ;
+  sh:property   [ sh:name      "Description" ;
                   sh:maxCount  1 ;
-                  sh:path      melod:notBefore
-                ] ;
-  sh:property   [ sh:name      "Not after" ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:notAfter
+                  sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Date .
 
   melod:Contributor
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  sh:property   [ sh:maxCount  1 ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:path      melod:agent ;
-                  sh:or (
-                    [ sh:node melod:Person ; rdfs:label "Person" ]
-                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
-                  )
+                  sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
-                  sh:path         melod:role ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
                   sh:class melod:Role
-                ] ;              
-  sh:targetClass  melod:Contributor .
+                ] ;
+  sh:property   [ sh:description  "Certainty of the contribution" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] .
 
   melod:Person
   a               sh:NodeShape ;

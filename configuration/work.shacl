@@ -19,22 +19,26 @@ melod:Work
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:name "Title" ;
                   sh:minCount 0 ;
+                  sh:group melod:General ;
                   sh:node melod:Title ;
                   sh:path melod:hasTitle
                 ] ;
   sh:property   [ sh:name "Identifier" ;
                   sh:minCount 0 ;
+                  sh:group melod:General ;
                   sh:node melod:Identifier ;
                   sh:path melod:hasIdentifier
                 ] ;
   sh:property   [ sh:description "e.g. Wikidata IRI" ;
                   sh:name "Same as" ;
+                  sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:description "work status" ;
-                  sh:name "Category of work" ;
+                  sh:name "Work status" ;
+                  sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path schema:creativeWorkStatus ;
@@ -42,54 +46,14 @@ melod:Work
                 ] ;
   sh:property   [ sh:name "Contributor" ;
                   sh:minCount 0 ;
+                  sh:group melod:General ;
                   sh:node melod:Contributor ;
                   sh:path melod:hasContributor ;
                 ] ;
 
-  sh:property   [ sh:name "Date of creation" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:dateCreated ;
-                  sh:or (
-                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
-                    [ sh:node melod:Date ; rdfs:label "Date span" ]
-                  )
-                ] ;
-
-  sh:property   [ sh:name "Place of creation" ;
-                  sh:minCount 0 ;
-                  sh:path schema:locationCreated ;
-                  sh:defaultValue "https://mei-metadata.org/places/" ;
-                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:nodeKind sh:IRI
-                ] ;
-
-  sh:property   [ sh:name "First performance" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path schema:firstPerformance ;
-                  sh:defaultValue "https://mei-metadata.org/performances/" ;
-                  #sh:pattern      "^https://mei-metadata.org/performances/\\d{8}" ;
-                  sh:nodeKind sh:IRI
-                ] ;
-
-  sh:property   [ sh:name "Language" ;
-                  sh:path schema:inLanguage ;
-                  sh:in ( "English" "German" "Latin" ) 
-                ] ;
-
-  sh:property   [ sh:name      "Instrumentation" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:nodeKind  sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
-                  #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
-                  sh:path         mus:U12_has_casting
-                ] ;
-
   sh:property   [ sh:name "Bibliography" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
@@ -98,20 +62,37 @@ melod:Work
   sh:property   [ sh:description "Annotation" ;
                   sh:name "Annotation" ;
                   sh:minCount 0 ;
+                  dash:singleLine false ;
                   sh:languageIn   ( "en" "de" ) ;
                   sh:path schema:description
                 ] ;
 
+  sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived" ;
+                  sh:name "Context" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:hasContext
+                ] ;
+  sh:property   [ sh:description "Creation history of a work" ;
+                  sh:name "History description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:hasHistoryDesc
+                ] ;
   sh:property   [ sh:description "Genre or classification" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
                   sh:languageIn   ( "en" "de" ) ;
-                  sh:path schema:keywords
+                  sh:path melod:hasClassification ;
+                  sh:class melod:Classification
                 ] ;
 
   sh:property   [ sh:name "Expression" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/expression/" ;
+                  sh:group melod:Relation ;
+                  #sh:defaultValue "https://mei-metadata.org/expression/" ;
                   #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path efrbroo:R9_is_realised_in
@@ -119,7 +100,8 @@ melod:Work
 
   sh:property   [ sh:name "Is part of" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/work/" ;
+                  sh:group melod:Relation ;
+                  #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:isPartOf
@@ -127,12 +109,56 @@ melod:Work
 
   sh:property   [ sh:name "Has part" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/work/" ;
+                  sh:group melod:Relation ;
+                  #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:hasPart
                 ] ;
+  sh:property   [ sh:name "Relation" ;
+                  sh:group melod:Relation ;
+                  sh:minCount 0 ;
+                  sh:nodeKind sh:IRI ;
+                  sh:or (
+                    [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
+                    [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
+                    [ sh:name "has adaptation" ; sh:description "has adaptation" ; sh:path  melod:hasAdaptation ; rdfs:label "has adaptation" ]
+                    [ sh:name "is adaptation of" ; sh:description "is adaptation of" ; sh:path melod:isAdaptationOf ; rdfs:label "is adaptation of" ]
+                    [ sh:name "has alternate" ; sh:description "has alternate" ; sh:path  melod:hasAlternate ; rdfs:label "has alternate" ]
+                    [ sh:name "is alternate of" ; sh:description "is alternate of" ; sh:path melod:isAlternateOf ; rdfs:label "is alternate of" ]
+                    [ sh:name "has arrangement" ; sh:description "has arrangement" ; sh:path  melod:hasArrangement ; rdfs:label "has arrangement" ]
+                    [ sh:name "is arrangement of" ; sh:description "is arrangement of" ; sh:path melod:isArrangementOf ; rdfs:label "is arrangement of" ]
+                    [ sh:name "has complement" ; sh:description "has complement" ; sh:path  melod:hasComplement ; rdfs:label "has complement" ]
+                    [ sh:name "is complement of" ; sh:description "is complement of" ; sh:path melod:isComplementOf ; rdfs:label "is complement of" ]
+                    [ sh:name "has imitation" ; sh:description "has imitation" ; sh:path  melod:hasImitation ; rdfs:label "has imitation" ]
+                    [ sh:name "is imitation of" ; sh:description "is imitation of" ; sh:path melod:isImitationOf ; rdfs:label "is imitation of" ]
+                    [ sh:name "has reconfiguration" ; sh:description "has reconfiguration" ; sh:path  melod:hasReconfiguration ; rdfs:label "has reconfiguration" ]
+                    [ sh:name "is reconfiguration of" ; sh:description "is reconfiguration of" ; sh:path melod:isReconfigurationOf ; rdfs:label "is reconfiguration of" ]
+                    [ sh:name "has reproduction" ; sh:description "has reproduction" ; sh:path  melod:hasReproduction ; rdfs:label "has reproduction" ]
+                    [ sh:name "is reproduction of" ; sh:description "is reproduction of" ; sh:path melod:isReproductionOf ; rdfs:label "is reproduction of" ]
+                    [ sh:name "has revision" ; sh:description "has revision" ; sh:path  melod:hasRevision ; rdfs:label "has revision" ]
+                    [ sh:name "is revision of" ; sh:description "is revision of" ; sh:path melod:isRevisionOf ; rdfs:label "is revision of" ]
+                    [ sh:name "has successor" ; sh:description "has successor" ; sh:path  melod:hasSuccessor ; rdfs:label "has successor" ]
+                    [ sh:name "is successor of" ; sh:description "is successor of" ; sh:path melod:isSuccessorOf ; rdfs:label "is successor of" ]
+                    [ sh:name "has summerization" ; sh:description "has summerization" ; sh:path  melod:hasSummerization ; rdfs:label "has summerization" ]
+                    [ sh:name "is summerization of" ; sh:description "is summerization of" ; sh:path melod:isSummerizationOf ; rdfs:label "is summerization of" ]
+                    [ sh:name "has supplement" ; sh:description "has supplement" ; sh:path  melod:hasSupplement ; rdfs:label "has supplement" ]
+                    [ sh:name "is supplement of" ; sh:description "is supplement of" ; sh:path melod:isSupplementOf ; rdfs:label "is supplement of" ]
+                    [ sh:name "has transformation" ; sh:description "has transformation" ; sh:path  melod:hasTransformation ; rdfs:label "has transformation" ]
+                    [ sh:name "is transformation of" ; sh:description "is transformation of" ; sh:path melod:isTransformationOf ; rdfs:label "is transformation of" ]
+                    [ sh:name "has translation" ; sh:description "has translation" ; sh:path  melod:hasTranslation ; rdfs:label "has translation" ]
+                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
+                  )
+                ] ;
   sh:targetClass melod:Work .
+
+  melod:Relation
+  a               sh:PropertyGroup ;
+  rdfs:label      "Relations" .
+
+  melod:General
+  a               sh:PropertyGroup ;
+  rdfs:label      "General Information" .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
 #                  sh:name "Publication" ;
@@ -157,24 +183,32 @@ melod:Title
   sh:property   [ sh:name      "Type of title" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:titleType ;
+                  sh:path      cidoc:P2_has_type ;
                   sh:in ( "original" "alternative" )
-                ] .
+                ] ;
+  sh:targetClass melod:Title .
 
 melod:Contributor
   a               sh:NodeShape ;
-  sh:property   [ sh:maxCount  1 ;
+  rdfs:label      "Contributors" ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:path      melod:agent ;
-                  sh:or (
-                    [ sh:node melod:Person ; rdfs:label "Person" ]
-                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
-                  )
+                  sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                 ] ;
-  sh:property   [ sh:name      "Role" ;
-                  sh:minCount  0 ;
-                  sh:path      melod:hadRole ;
-                  sh:class     melod:Role
+  sh:property   [ sh:description  "Role of the contribution" ;
+                  sh:name         "Role" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
+                  sh:class melod:Role
+                ] ;
+  sh:property   [ sh:description  "Certainty of the contribution" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
                 ] .
 
 melod:Person
@@ -205,7 +239,7 @@ melod:Identifier
                   sh:name      "Name of Identifier" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      schema:name
+                  sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:description "e.g. abc" ;
                   sh:name      "Value" ;
@@ -213,34 +247,9 @@ melod:Identifier
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
                   sh:path      owl:hasValue
-                ] .
-
-melod:Date
-  a               sh:NodeShape ;
-  sh:property   [ sh:name      "Start date" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:startDate ;
-                  sh:datatype  xsd:date
                 ] ;
-  sh:property   [ sh:name      "End date" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:endDate ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:name      "Not before" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:notBefore ;
-                  sh:datatype  xsd:date
-                ] ;
-  sh:property   [ sh:name      "Not after" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:notAfter ;
-                  sh:datatype  xsd:date
-                ] .
+  sh:targetClass melod:Identifier .
+  
 
 melod:Arranger rdf:type owl:NamedIndividual ,
         melod:Role ;

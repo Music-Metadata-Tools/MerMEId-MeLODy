@@ -16,6 +16,7 @@ melod:Expression
                   sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:General ;
                   sh:path rdfs:label
                 ] ;
 #  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
@@ -24,33 +25,47 @@ melod:Expression
 #                  sh:maxCount 1;
 #                  sh:path schema:name
 #                ] ;
-  sh:property   [ sh:description "Type of the expression" ;
-                  sh:name "Type" ;
+  sh:property   [ sh:description "Classification of the expression" ;
+                  sh:name "Classification" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path schema:about
+                  sh:group melod:General ;
+                  sh:path melod:hasClassification ;
+                  sh:class melod:Classification
                 ] ;
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name "Link" ;
                   sh:minCount 0 ;
                   sh:path owl:sameAs ;
+                  sh:group melod:General ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Index identifiers" ;
                   sh:name "Index identifiers" ;
                   sh:minCount 0 ;
-                  sh:path schema:identifier ;
+                  sh:group melod:General ;
+                  sh:path melod:hasIdentifier ;
                   sh:node melod:Identifier
                 ] ;
   sh:property   [ sh:description "Language usage" ;
                   sh:datatype rdf:langString ;
                   sh:name "Language" ;
+                  sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:langUsage
+                  sh:path melod:inLanguage
+                ] ;
+  sh:property   [ sh:description "completeness of the expression (complete, incomplete oder unspecified)" ;
+                  sh:name "Completeness" ;
+                  sh:group melod:General ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:completionStatus ;
+                  sh:class melod:Completeness
                 ] ;
   sh:property   [ sh:description "Contributor of the expression version (Arranger or text author)" ;
                   sh:name "Contributor" ;
+                  sh:group melod:Creation ;
                   sh:minCount 0 ;
                   sh:node melod:Contributor ;
                   sh:path melod:hasContributor
@@ -59,6 +74,7 @@ melod:Expression
                   sh:name "Creation date" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Creation ;
                   sh:path schema:dateCreated ;
                   sh:or (
                     [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
@@ -69,6 +85,7 @@ melod:Expression
                   sh:name "Creation place" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Creation ;
                   sh:path schema:locationCreated ;
                   sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
@@ -77,8 +94,9 @@ melod:Expression
   sh:property   [ sh:description "History of creation of the expression" ;
                   sh:name "History of creation" ;
                   sh:minCount 0 ;
-                  sh:path melod:history ;
-                  sh:defaultValue "https://mei-metadata.org/events/" ;
+                  sh:group melod:Creation ;
+                  sh:path melod:hasHistoricEvent ;
+                  #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
@@ -86,14 +104,16 @@ melod:Expression
                   sh:name "First performance" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Performances ;
                   sh:path schema:firstPerformance ;
-                  sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
+                  #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Other performance of the expression" ;
                   sh:name "Performance" ;
                   sh:minCount 0 ;
+                  sh:group melod:Performances ;
                   sh:path melod:hasPerformance ;
                   sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
@@ -101,25 +121,29 @@ melod:Expression
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
                   sh:name "Extent" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
-                  sh:path melod:extent
+                  sh:path schema:materialExtent
                 ] ;
   sh:property   [ sh:description "Allegro" ;
                   sh:name "Tempo" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
-                  sh:path melod:tempo
+                  sh:path melod:hasTempo
                 ] ;
   sh:property   [ sh:description "d minor modulierend" ;
                   sh:name "Key" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:node melod:Key ;
-                  sh:path melod:hasKey
+                  sh:path mus:U11_has_key
                 ] ;
   sh:property   [ sh:description "3/4 or c" ;
                   sh:name "Meter" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:node melod:Meter ;
@@ -127,38 +151,80 @@ melod:Expression
                 ] ;
   sh:property   [ sh:description "01:23:00 or 4'33 or approx. 10 minutes" ;
                   sh:name "Performance duration" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
-                  sh:path melod:duration
+                  sh:path melod:hasDuration
                 ] ;
   sh:property   [ sh:description "Information about mensuration" ;
                   sh:name "Mensuration" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
-                  sh:path melod:mensuration
+                  sh:path melod:hasMensuration
                 ] ;
   sh:property   [ sh:description  "Performance resource" ;
                   sh:name         "Performance resources" ;
+                  sh:group melod:Music ;
                   sh:nodeKind         sh:IRI ;
-                  sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
+                  #sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
                   #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
-                  sh:path         mus:U12_has_casting
+                  sh:path         melod:hasInstrumentation
                 ] ;
   sh:property   [ sh:description  "Incipit" ;
+                  sh:group melod:Music ;
                   sh:name         "Incipits" ;
                   sh:node         melod:MusicIncipit ;
-                  sh:path         schema:includedComposition
+                  sh:path         melod:hasIncipit
                 ] ;
   sh:property   [ sh:description "Individual Piece of a Expression. E.g. movements, sections, scenes, acts" ;
-                  sh:name "Components" ;
+                  sh:name "Movements" ;
+                  sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:path schema:includedComposition;
                   sh:or (
                     [ rdfs:label "IRI of included Expression" ;
-                      sh:defaultValue "https://mei-metadata.org/expressions/" ;
+                      #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                       #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                       sh:nodeKind sh:IRI ]
                     [ sh:node melod:ExpressionComponent ; rdfs:label "Included Expression" ]
+                  )
+                ] ;
+  sh:property   [ sh:name "Relation" ;
+                  sh:group melod:Relation ;
+                  sh:minCount 0 ;
+                  sh:nodeKind sh:IRI ;
+                  sh:or (
+                    [ sh:name "has part" ; sh:description "has part" ; sh:path  melod:hasPart ; rdfs:label "has part" ]
+                    [ sh:name "is part of" ; sh:description "is part of" ; sh:path melod:isPartOf ; rdfs:label "is part of" ]
+                    [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
+                    [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
+                    [ sh:name "has adaptation" ; sh:description "has adaptation" ; sh:path  melod:hasAdaptation ; rdfs:label "has adaptation" ]
+                    [ sh:name "is adaptation of" ; sh:description "is adaptation of" ; sh:path melod:isAdaptationOf ; rdfs:label "is adaptation of" ]
+                    [ sh:name "has alternate" ; sh:description "has alternate" ; sh:path  melod:hasAlternate ; rdfs:label "has alternate" ]
+                    [ sh:name "is alternate of" ; sh:description "is alternate of" ; sh:path melod:isAlternateOf ; rdfs:label "is alternate of" ]
+                    [ sh:name "has arrangement" ; sh:description "has arrangement" ; sh:path  melod:hasArrangement ; rdfs:label "has arrangement" ]
+                    [ sh:name "is arrangement of" ; sh:description "is arrangement of" ; sh:path melod:isArrangementOf ; rdfs:label "is arrangement of" ]
+                    [ sh:name "has complement" ; sh:description "has complement" ; sh:path  melod:hasComplement ; rdfs:label "has complement" ]
+                    [ sh:name "is complement of" ; sh:description "is complement of" ; sh:path melod:isComplementOf ; rdfs:label "is complement of" ]
+                    [ sh:name "has imitation" ; sh:description "has imitation" ; sh:path  melod:hasImitation ; rdfs:label "has imitation" ]
+                    [ sh:name "is imitation of" ; sh:description "is imitation of" ; sh:path melod:isImitationOf ; rdfs:label "is imitation of" ]
+                    [ sh:name "has reconfiguration" ; sh:description "has reconfiguration" ; sh:path  melod:hasReconfiguration ; rdfs:label "has reconfiguration" ]
+                    [ sh:name "is reconfiguration of" ; sh:description "is reconfiguration of" ; sh:path melod:isReconfigurationOf ; rdfs:label "is reconfiguration of" ]
+                    [ sh:name "has reproduction" ; sh:description "has reproduction" ; sh:path  melod:hasReproduction ; rdfs:label "has reproduction" ]
+                    [ sh:name "is reproduction of" ; sh:description "is reproduction of" ; sh:path melod:isReproductionOf ; rdfs:label "is reproduction of" ]
+                    [ sh:name "has revision" ; sh:description "has revision" ; sh:path  melod:hasRevision ; rdfs:label "has revision" ]
+                    [ sh:name "is revision of" ; sh:description "is revision of" ; sh:path melod:isRevisionOf ; rdfs:label "is revision of" ]
+                    [ sh:name "has successor" ; sh:description "has successor" ; sh:path  melod:hasSuccessor ; rdfs:label "has successor" ]
+                    [ sh:name "is successor of" ; sh:description "is successor of" ; sh:path melod:isSuccessorOf ; rdfs:label "is successor of" ]
+                    [ sh:name "has summerization" ; sh:description "has summerization" ; sh:path  melod:hasSummerization ; rdfs:label "has summerization" ]
+                    [ sh:name "is summerization of" ; sh:description "is summerization of" ; sh:path melod:isSummerizationOf ; rdfs:label "is summerization of" ]
+                    [ sh:name "has supplement" ; sh:description "has supplement" ; sh:path  melod:hasSupplement ; rdfs:label "has supplement" ]
+                    [ sh:name "is supplement of" ; sh:description "is supplement of" ; sh:path melod:isSupplementOf ; rdfs:label "is supplement of" ]
+                    [ sh:name "has transformation" ; sh:description "has transformation" ; sh:path  melod:hasTransformation ; rdfs:label "has transformation" ]
+                    [ sh:name "is transformation of" ; sh:description "is transformation of" ; sh:path melod:isTransformationOf ; rdfs:label "is transformation of" ]
+                    [ sh:name "has translation" ; sh:description "has translation" ; sh:path  melod:hasTranslation ; rdfs:label "has translation" ]
+                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
                   )
                 ] ;
   sh:property   [ sh:description "Additional information related to the expression" ;
@@ -175,6 +241,26 @@ melod:Expression
                   sh:path schema:citation
                 ] ;
   sh:targetClass  melod:Expression .
+
+melod:Relation
+  a               sh:PropertyGroup ;
+  rdfs:label      "Relations" .
+
+melod:General
+  a               sh:PropertyGroup ;
+  rdfs:label      "General Information" .
+
+melod:Performances
+  a               sh:PropertyGroup ;
+  rdfs:label      "Performances" .
+
+melod:Creation
+  a               sh:PropertyGroup ;
+  rdfs:label      "Creation" .
+
+melod:Music
+  a               sh:PropertyGroup ;
+  rdfs:label      "Music" .
 
 melod:Identifier
   a               sh:NodeShape ;
@@ -211,33 +297,32 @@ melod:Date
                 ] ;
   sh:property   [ sh:name      "Description" ;
                   sh:maxCount  1 ;
-                  sh:path      melod:dateDesc
+                  sh:path      schema:description
                 ] ;
-  sh:targetClass  schema:Date .
+  sh:targetClass  melod:Date .
 
 melod:Contributor
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  sh:property   [ sh:maxCount  1 ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:path      melod:agent ;
-                  sh:or (
-                    [ sh:node melod:Person ; rdfs:label "Person" ]
-                    [ sh:node melod:Institution ; rdfs:label "Institution" ]
-                  )
+                  sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
-                  sh:path         melod:role ;
-                  sh:class     melod:Role
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
+                  sh:class melod:Role
                 ] ;
   sh:property   [ sh:description  "Certainty of the contribution" ;
                   sh:name         "Certainty" ;
                   sh:maxCount  1 ;
-                  sh:path         melod:certainty ;
-                  sh:in ( "low" "medium" "high")
-                ] ;              
-  sh:targetClass  melod:Contributor .
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] .
 
 melod:Person
   a               sh:NodeShape ;
@@ -281,20 +366,23 @@ melod:Key
                   sh:name      "Pitch" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:pname ;
+                  sh:path      melod:hasPitch ;
+                  sh:class melod:Pitch ;
                   sh:in ( "c" "d" "e" "f" "g" "a" "b")
                 ] ;
   sh:property   [ sh:description "Accidental of the pitch" ;
                   sh:name      "Accidental" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:accid ;
+                  sh:path      melod:hasAccidental ;
+                  sh:class melod:Accidental ;
                   sh:in ("s" "f")
                 ] ;
   sh:property   [ sh:name      "Mode" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:mode ;
+                  sh:path      melod:isInMode ;
+                  sh:class melod:Mode ;
                   sh:in ( "major" "minor" )
                 ] ;
   sh:property   [ sh:name      "Description" ;
@@ -308,20 +396,20 @@ melod:Meter
   sh:property   [ sh:name      "Count" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:count ;
+                  sh:path      melod:hasMeterCount ;
                   sh:datatype  xsd:integer
                 ] ;
   sh:property   [ sh:name      "Unit" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:unit ;
+                  sh:path      melod:inMeterUnit ;
                   sh:datatype  xsd:integer
                 ]  ;
   sh:property   [ sh:name      "Symbol" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:sym ;
-                  sh:in ( "c" "c|" )
+                  sh:path      melod:usesMeterSymbol ;
+                  sh:in ( "common" "cut" )
                 ] ;
   sh:property   [ sh:name      "Description" ;
                   sh:minCount  0 ;
@@ -378,35 +466,23 @@ melod:Meter
   melod:MusicIncipit
   a               sh:NodeShape ;
   rdfs:label      "Incipit" ;
-  # To add: Ontology with clefs
-  sh:property   [ sh:description  "Clef of the plaine and easy code of the incipit" ;
-                  sh:name         "PAE clef" ;
-                  sh:path         melod:clef ;
-                  sh:maxCount     1 ;
-                  sh:in           ("G-2" "g-2" "C-3" "C+3" "F-4")
-                ] ;
-  # To add: Ontology with key signatures
-  sh:property   [ sh:description  "Keysig of the plaine and easy code of the incipit" ;
-                  sh:name         "PAE keysig" ;
-                  sh:path         melod:keysig ;
-                  sh:maxCount     1 ;
-                  sh:in           ("xFC" "bBEA" "xF")
-                ] ;
-  sh:property   [ sh:description  "Timesig of the plaine and easy code of the incipit" ;
-                  sh:name         "PAE timesig" ;
-                  sh:path         melod:timesig ;
-                  sh:maxCount     1 ;
-                  sh:in           ("2/4" "3/4" "4/4" "3" "c" "c3" "c/")
-                ] ;
   sh:property   [ sh:description  "Data of the plaine and easy code of the incipit" ;
                   sh:name         "PAE data" ;
-                  sh:path         melod:incipitData ;
+                  sh:path         melod:hasIncipitValue ;
                   sh:maxCount     1
                 ] ;
   sh:property   [ sh:description  "Text of the Incipit" ;
                   sh:name         "Incipit Text" ;
-                  sh:path         melod:incipitText ;
+                  sh:path         melod:hasIncipitText ;
                   dash:singleLine false ;
+                  sh:minCount     0 ;
+                  sh:maxCount     1
+                ] ;
+  sh:property   [ sh:description  "Incipit in MEI" ;
+                  sh:name         "Incipit in MEI" ;
+                  sh:path         melod:hasMEIScore ;
+                  dash:singleLine false ;
+                  sh:datatype     xsd:base64Binary ;
                   sh:minCount     0 ;
                   sh:maxCount     1
                 ] ;        
