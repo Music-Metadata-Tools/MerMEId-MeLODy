@@ -92,7 +92,7 @@ melod:InstrumentationDetail
                 ] ;
   sh:property   [ sh:minCount     0 ;
                   sh:name         "Alternative instrumentation" ;
-                  sh:path         melod:hasAlternative ;
+                  sh:path         melod:hasAlternativeInstrumentation ;
                   sh:node melod:InstrumentationDetail
                 ] ;
   sh:targetClass  melod:InstrumentationDetail .

@@ -49,15 +49,15 @@ melod:PerformanceEvent
                   sh:maxCount 1 ;
                   sh:path melod:hasEventDate ;
                   sh:or (
-                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
   sh:property   [ sh:description "Contributor of the performance event" ;
                   sh:name "Contributor" ;
                   sh:minCount 0 ;
-                  sh:node melod:Contributor ;
-                  sh:path melod:hasContributor
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution
                 ] ;
   sh:property   [ sh:description "Duration of the performance" ;
                   sh:name "Duration" ;
@@ -101,9 +101,34 @@ melod:PerformanceEvent
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
   sh:targetClass  melod:Date .
 
-  melod:Contributor
+  melod:ExactDate
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Date" ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path  melod:isodate
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:targetClass  melod:Date .
+
+  melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
@@ -124,7 +149,8 @@ melod:PerformanceEvent
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
-                ] .
+                ] ;
+  sh:targetClass  melod:Contribution .
 
 melod:Arranger rdf:type owl:NamedIndividual ,
         melod:Role ;

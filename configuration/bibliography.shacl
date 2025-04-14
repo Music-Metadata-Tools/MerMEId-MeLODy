@@ -157,6 +157,23 @@ melod:PublicationEvent
                   sh:description "Type, e.g. subtitle" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      cidoc:P2_has_type
+                  sh:path      melod:hasTitleType ;
+                  sh:class melod:TitleType
                 ] ;
   sh:targetClass  melod:Title .
+
+melod:MainTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "main"@en .
+
+melod:Subtitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "subtitle"@en .
+
+melod:AlternativeTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "alternative"@en .
+
+melod:OriginalTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "original"@en .

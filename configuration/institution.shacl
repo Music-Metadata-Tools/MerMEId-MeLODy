@@ -47,7 +47,7 @@ melod:Institution
                   sh:maxCount 1 ;
                   sh:path schema:foundingDate ;
                   sh:or (
-                    [ sh:datatype  xsd:date ; rdfs:label "Single date" ]
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
@@ -78,5 +78,30 @@ melod:Date
   sh:property   [ sh:name      "Description" ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:targetClass  melod:Date .
+
+  melod:ExactDate
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Date" ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path  melod:isodate
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
                 ] ;
   sh:targetClass  melod:Date .

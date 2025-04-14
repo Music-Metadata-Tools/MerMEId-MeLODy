@@ -47,8 +47,8 @@ melod:Work
   sh:property   [ sh:name "Contributor" ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
-                  sh:node melod:Contributor ;
-                  sh:path melod:hasContributor ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution ;
                 ] ;
 
   sh:property   [ sh:name "Bibliography" ;
@@ -178,17 +178,17 @@ melod:Title
                   sh:languageIn   ( "en" "de" ) ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
-                  sh:path      schema:name
+                  sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:name      "Type of title" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      cidoc:P2_has_type ;
+                  sh:path      melod:hasTitleType ;
                   sh:in ( "original" "alternative" )
                 ] ;
   sh:targetClass melod:Title .
 
-melod:Contributor
+melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
@@ -209,7 +209,8 @@ melod:Contributor
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
-                ] .
+                ] ;
+  sh:targetClass  melod:Contribution .
 
 melod:Person
   a               sh:NodeShape ;
@@ -286,3 +287,19 @@ melod:Lyricist rdf:type owl:NamedIndividual ,
 melod:Sponsor rdf:type owl:NamedIndividual ,
         melod:Role ;
         skos:prefLabel "sponsor"@en .
+
+melod:MainTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "main"@en .
+
+melod:Subtitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "subtitle"@en .
+
+melod:AlternativeTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "alternative"@en .
+
+melod:OriginalTitle rdf:type owl:NamedIndividual ,
+        melod:TitleType ;
+        skos:prefLabel "original"@en .

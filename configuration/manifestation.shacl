@@ -99,7 +99,7 @@ melod:Title
                   sh:description "Label, such as a letter, number or short description" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
-                  sh:path      melod:type
+                  sh:path      melod:hasTitleType
                 ] ;
   sh:targetClass  melod:Title .
 
