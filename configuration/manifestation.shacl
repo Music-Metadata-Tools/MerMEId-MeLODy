@@ -559,8 +559,8 @@ melod:Binding
                   dash:singleLine false ;
                   sh:path melod:hasCondition
                 ] ;
-  sh:property   [ sh:description "Decoration description" ;
-                  sh:name "Decoration description" ;
+  sh:property   [ sh:description "Decoration description of the binding" ;
+                  sh:name "Binding decoration description" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;

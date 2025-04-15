@@ -50,7 +50,6 @@ melod:Work
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution ;
                 ] ;
-
   sh:property   [ sh:name "Bibliography" ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
