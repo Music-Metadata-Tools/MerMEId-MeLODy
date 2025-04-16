@@ -1,6 +1,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
@@ -14,10 +14,12 @@
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
 @prefix mus: <http://data.doremus.org/ontology#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:Work
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:name "Title" ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:name "Titles" ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:node melod:Title ;
@@ -29,12 +31,18 @@ melod:Work
                   sh:node melod:Identifier ;
                   sh:path melod:hasIdentifier
                 ] ;
-  sh:property   [ sh:description "e.g. Wikidata IRI" ;
-                  sh:name "Same as" ;
+  sh:property   [ sh:description "Link to external resource, e.g. Wikidata IRI" ;
+                  sh:name "Link" ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
+                ] ;
+  sh:property   [ sh:name "Contributor" ;
+                  sh:minCount 0 ;
+                  sh:group melod:General ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution ;
                 ] ;
   sh:property   [ sh:description "work status" ;
                   sh:name "Work status" ;
@@ -44,14 +52,8 @@ melod:Work
                   sh:path schema:creativeWorkStatus ;
                   sh:in ( "authentic" "not authentic" "constructed" )
                 ] ;
-  sh:property   [ sh:name "Contributor" ;
-                  sh:minCount 0 ;
-                  sh:group melod:General ;
-                  sh:node melod:Contribution ;
-                  sh:path melod:hasContribution ;
-                ] ;
-
   sh:property   [ sh:name "Bibliography" ;
+                  sh:description "Insert ID of the bibliographic entry" ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
@@ -59,8 +61,8 @@ melod:Work
                   sh:path schema:citation
                 ] ;
 
-  sh:property   [ sh:description "Annotation" ;
-                  sh:name "Annotation" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
                   sh:minCount 0 ;
                   dash:singleLine false ;
                   sh:languageIn   ( "en" "de" ) ;
@@ -71,25 +73,20 @@ melod:Work
                   sh:name "Context" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:History ;
                   dash:singleLine false ;
                   sh:path melod:hasContext
                 ] ;
-  sh:property   [ sh:description "Creation history of a work" ;
+  sh:property   [ sh:description "Creation history of the work" ;
                   sh:name "History description" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:History ;
                   dash:singleLine false ;
                   sh:path melod:hasHistoryDesc
                 ] ;
-  sh:property   [ sh:description "Genre or classification" ;
-                  sh:name "Classification" ;
-                  sh:minCount 0 ;
-                  sh:languageIn   ( "en" "de" ) ;
-                  sh:path melod:hasClassification ;
-                  sh:class melod:Classification
-                ] ;
-
-  sh:property   [ sh:name "Expression" ;
+  sh:property   [ sh:description "Insert ID of the expression" ;
+                  sh:name "Expression" ;
                   sh:minCount 0 ;
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/expression/" ;
@@ -98,7 +95,8 @@ melod:Work
                   sh:path efrbroo:R9_is_realised_in
                 ] ;
 
-  sh:property   [ sh:name "Is part of" ;
+  sh:property   [ sh:description "Insert ID of the work" ;
+                  sh:name "Is part of" ;
                   sh:minCount 0 ;
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
@@ -107,7 +105,8 @@ melod:Work
                   sh:path schema:isPartOf
                 ] ;
 
-  sh:property   [ sh:name "Has part" ;
+  sh:property   [ sh:description "Insert ID of the work" ;
+                  sh:name "Has part" ;
                   sh:minCount 0 ;
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
@@ -150,15 +149,36 @@ melod:Work
                     [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
                   )
                 ] ;
+  sh:property   [ sh:description "Genre or classification" ;
+                  sh:name "Classification" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Keywords ;
+                  sh:path melod:hasClassification ;
+                  sh:or (
+                    [ sh:class melod:StageMusic ; rdfs:label "Stage music" ]
+                    [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ]
+                    [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ]
+                    [ sh:class melod:Classification; rdfs:label "Classification" ]
+                    [ rdfs:label "Custom classification" ]
+                  )
+                ] ;
   sh:targetClass melod:Work .
 
   melod:Relation
   a               sh:PropertyGroup ;
   rdfs:label      "Relations" .
 
+  melod:History
+  a               sh:PropertyGroup ;
+  rdfs:label      "History" .
+
   melod:General
   a               sh:PropertyGroup ;
   rdfs:label      "General Information" .
+
+  melod:Keywords
+  a               sh:PropertyGroup ;
+  rdfs:label      "Classification and Keywords" .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
 #                  sh:name "Publication" ;
@@ -173,6 +193,7 @@ melod:Work
 
 melod:Title
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Title of the work" ;
                   sh:name      "Title" ;
                   sh:languageIn   ( "en" "de" ) ;
@@ -180,17 +201,18 @@ melod:Title
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:name      "Type of title" ;
+  sh:property   [ sh:name      "Type" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
-                  sh:in ( "original" "alternative" )
+                  sh:class melod:TitleType ;
                 ] ;
   sh:targetClass melod:Title .
 
 melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
@@ -212,94 +234,19 @@ melod:Contribution
                 ] ;
   sh:targetClass  melod:Contribution .
 
-melod:Person
-  a               sh:NodeShape ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "Person" ;
-                  sh:path         melod:hasIri ; #owl:sameAs
-                  sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:nodeKind sh:IRI
-                ] .
-
-melod:Institution
-  a               sh:NodeShape ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "Institution" ;
-                  sh:path         melod:hasIri ; #owl:sameAs
-                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] .
-
 melod:Identifier
   a               sh:NodeShape ;
   sh:property   [ sh:description "e.g. TVWV" ;
-                  sh:name      "Name of Identifier" ;
+                  sh:name      "Name" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:description "e.g. abc" ;
-                  sh:name      "Value" ;
+                  sh:name      "Number" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
                   sh:path      owl:hasValue
                 ] ;
   sh:targetClass melod:Identifier .
-  
-
-melod:Arranger rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "arranger"@en .
-
-melod:Author rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "author"@en .
-
-melod:Composer rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "composer"@en .
-
-melod:Contributor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "contributor"@en .
-
-melod:Editor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "editor"@en .
-
-melod:Funder rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "funder"@en .
-
-melod:Librettist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "librettist"@en .
-
-melod:Lyricist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "lyricist"@en .
-
-melod:Sponsor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "sponsor"@en .
-
-melod:MainTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "main"@en .
-
-melod:Subtitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "subtitle"@en .
-
-melod:AlternativeTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "alternative"@en .
-
-melod:OriginalTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "original"@en .

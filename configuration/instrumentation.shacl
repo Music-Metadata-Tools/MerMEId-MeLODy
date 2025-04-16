@@ -1,12 +1,13 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:Instrumentation
   sh:targetClass melod:Instrumentation ;
@@ -20,23 +21,13 @@ melod:Instrumentation
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasInstrumentationDetail ;
                   sh:node melod:InstrumentationDetail ;
-                  sh:name "Instrument or Voice" ;
-                  sh:group melod:Instruments
+                  sh:name "Instruments and Voices" ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasInstrumentationGroup ;
                   sh:node melod:InstrumentationGroup ;
-                  sh:name "Ensemble" ;
-                  sh:group melod:Ensembles
+                  sh:name "Ensembles" ;
                 ] .
-
-melod:Instruments
-  a               sh:PropertyGroup ;
-  rdfs:label      "Instruments or Voices" .
-
-melod:Ensembles
-  a               sh:PropertyGroup ;
-  rdfs:label      "Ensembles" .
 
 melod:InstrumentationGroup
   a sh:NodeShape ;
@@ -49,20 +40,22 @@ melod:InstrumentationGroup
   sh:property   [ sh:minCount 1 ;
                   sh:path melod:hasInstrumentationDetail ;
                   sh:node melod:InstrumentationDetail ;
-                  sh:name "Instrument or Voice"
+                  sh:name "Instruments and Voices"
                 ] ;
   sh:targetClass melod:InstrumentationGroup .
 
 melod:InstrumentationDetail
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "Medium of performance" ;
                   sh:class melod:Instrument ;
-                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
+                  sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;
   sh:property   [ sh:minCount     0 ;
-                  sh:name         "Link to external resource" ;
+                  sh:description "Identifier (external resource, e.g. MARC)" ;
+                  sh:name         "Link" ;
                   sh:path         owl:sameAs ;
                   sh:nodeKind sh:IRI ;
                 ] ;
@@ -105,6 +98,7 @@ melod:CastingDetail
                   sh:path         melod:hasRoleName ;
                 ] ;
   sh:property   [ sh:minCount     0 ;
+                  sh:maxCount     1 ;
                   sh:name         "Role description" ;
                   sh:path         melod:hasRoleDesc ;
                   dash:singleLine false ;

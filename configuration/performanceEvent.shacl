@@ -1,6 +1,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -8,11 +8,13 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
+                  sh:group melod:General ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
@@ -24,20 +26,14 @@ melod:PerformanceEvent
                 ] ;
   sh:property   [ sh:description "External resource (e.g. musiconn performance)" ;
                   sh:name "Link" ;
+                  sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
-  sh:property   [ sh:description "Place of the Performance" ;
-                  sh:name "Place" ;
-                  sh:maxCount 1;
-                  sh:nodeKind sh:IRI ;
-                  #sh:defaultValue "https://mei-metadata.org/places/" ;
-                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:path schema:location
-                ] ;
-  sh:property   [ sh:description "Venue of the Performance" ;
+  sh:property   [ sh:description "Insert ID of the venue" ;
                   sh:name "Venue" ;
                   sh:maxCount 1;
+                  sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/venues/" ;
                   #sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
@@ -47,6 +43,7 @@ melod:PerformanceEvent
                   sh:name "Date" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:General ;
                   sh:path melod:hasEventDate ;
                   sh:or (
                     [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
@@ -54,8 +51,9 @@ melod:PerformanceEvent
                   )
                 ] ;
   sh:property   [ sh:description "Contributor of the performance event" ;
-                  sh:name "Contributor" ;
+                  sh:name "Person or Institution" ;
                   sh:minCount 0 ;
+                  sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;
@@ -63,17 +61,19 @@ melod:PerformanceEvent
                   sh:name "Duration" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:General ;
                   sh:path melod:hasDuration
                 ] ;
-  sh:property   [ sh:description "Additional information related to the institution" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
                   dash:singleLine false ;
                   sh:maxCount 1 ;
                   sh:path schema:description
                 ] ;
-  sh:property   [ sh:description "Bibliography" ;
+  sh:property   [ sh:description "Insert ID of the bibliographic entry" ;
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
+                  sh:group melod:Bibliography ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
@@ -131,6 +131,7 @@ melod:PerformanceEvent
   melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
@@ -152,46 +153,14 @@ melod:PerformanceEvent
                 ] ;
   sh:targetClass  melod:Contribution .
 
-melod:Arranger rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "arranger"@en .
+melod:Bibliography
+  a               sh:PropertyGroup ;
+  rdfs:label      "Evidence" .
 
-melod:Author rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "author"@en .
+melod:General
+a               sh:PropertyGroup ;
+rdfs:label      "General Information" .
 
-melod:Composer rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "composer"@en .
-
-melod:Contributor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "contributor"@en .
-
-melod:Editor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "editor"@en .
-
-melod:Funder rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "funder"@en .
-
-melod:Librettist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "librettist"@en .
-
-melod:Lyricist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "lyricist"@en .
-
-melod:Sponsor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "sponsor"@en .
-
-melod:Musician rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "musician"@en .
-
-melod:Violinist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "violinist"@en .
+melod:Contributors
+a               sh:PropertyGroup ;
+rdfs:label      "Contributors" .
