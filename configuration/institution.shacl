@@ -1,11 +1,12 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:Institution
   a sh:NodeShape, rdfs:Class ;
@@ -15,18 +16,18 @@ melod:Institution
                   sh:maxCount 1;
                   sh:path schema:name
                 ] ;
-  sh:property   [ sh:description "Abbreviation of the institution" ;
+  sh:property   [ sh:description "Abbreviation or siglum of the institution" ;
                   sh:name "Abbreviation" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation
                 ] ;
   sh:property   [ sh:description "Identifier (external resource, e.g. RISM)" ;
-                  sh:name "Identifier" ;
+                  sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
-  sh:property   [ sh:description "Place of the institution, e.g. Berlin" ;
+  sh:property   [ sh:description "Insert ID of place" ;
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:nodeKind sh:IRI ;
@@ -51,8 +52,8 @@ melod:Institution
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Additional information related to the institution" ;
-                  sh:name "Annotations" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
                   dash:singleLine false ;
                   sh:maxCount 1 ;
                   sh:path schema:description
@@ -61,6 +62,7 @@ melod:Institution
 
 melod:Date
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
                   sh:or (
@@ -75,7 +77,8 @@ melod:Date
                     [ sh:path  melod:notAfter ; rdfs:label "not after" ]
                   )
                 ] ;
-  sh:property   [ sh:name      "Description" ;
+  sh:property   [ sh:description "Description of the date" ;
+                  sh:name      "Description" ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
@@ -89,6 +92,7 @@ melod:Date
 
   melod:ExactDate
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name      "Date" ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;

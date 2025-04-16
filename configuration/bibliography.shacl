@@ -1,105 +1,120 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:Bibliography
   sh:targetClass melod:Bibliography ;
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:minCount     1 ;
-                  sh:maxCount     1 ;
-                  sh:name         "Label" ;
-                  sh:path         rdfs:label
-                ] ;
-  sh:property   [ sh:minCount     0 ;
-                  sh:name         "Link to external resource" ;
-                  sh:description         "External resource, e.g. Zotero" ;
-                  sh:path         owl:sameAs ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:property   [ sh:minCount 0 ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:description "Genre of the bibliographic entry" ;
+                  sh:name "Genre" ;
+                  sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:hasClassification;
-                  sh:name "Classification"
+                  sh:group melod:Reference ;
+                  sh:path schema:genre ;
+                  sh:class melod:BibliographicGenre ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasTitle ;
+                  sh:minCount 1 ;
                   sh:node melod:Title ;
-                  sh:name "Title"
+                  sh:group melod:Titles ;
+                  sh:name "Monograph/Article" ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation ;
+                  sh:group melod:Titles ;
                   sh:name "Abbreviation" ;
                   sh:description "Abbreviation or short title of the bibliographic entry"
                 ] ;
-  sh:property   [ sh:name "Author" ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:name         "Link to an external resource" ;
+                  sh:description         "External resource, e.g. Zotero" ;
+                  sh:path         owl:sameAs ;
+                  sh:nodeKind sh:IRI ;
+                  sh:group melod:Titles ;
+                ] ;
+  sh:property   [ sh:name "Name" ;
+                  sh:description "Insert ID of the person" ;
                   sh:minCount 0 ;
                   sh:path schema:author ;
+                  sh:group melod:Authors ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:name "Editor" ;
+  sh:property   [ sh:name "Name" ;
+                  sh:description "Insert ID of the person" ;
                   sh:minCount 0 ;
                   sh:path melod:hasEditor ;
+                  sh:group melod:Editors ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:name "Extent" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:description "Extent of the bibliographic entry" ;
-                  sh:minCount 0 ;
-                  sh:path schema:materialExtent
-                ] ;
   sh:property   [ sh:name "Imprint" ;
-                  sh:minCount 0 ;
+                  sh:minCount 1 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Publication ;
                   sh:path schema:publication ;
                   sh:node melod:PublicationEvent
                 ] ;
   sh:property   [ sh:name "Language" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Publication ;
                   sh:path schema:inLanguage ;
                   sh:datatype rdf:langString
                 ] ;
-  sh:property   [ sh:name "Bibliographic Scope" ;
+  sh:property   [ sh:name "Pages" ;
                   sh:description "Scope of the article, chapter, ..." ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Volume ;
                   sh:path schema:pagination
                 ] ;
-  sh:property   [ sh:description "Series Statement" ;
-                  sh:name "Series Statement" ;
+  sh:property   [ sh:name "Extent" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Volume ;
+                  sh:description "Extent of the bibliographic entry" ;
+                  sh:minCount 0 ;
+                  sh:path schema:materialExtent
+                ] ;
+  sh:property   [ sh:description "Name of the journal or series" ;
+                  sh:name "Journal or Series" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Titles ;
                   sh:path schema:isPartOf ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:description "Position in the series, volume number" ;
-                  sh:name "Series extent" ;
+                  sh:name "Volume number" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:Volume ;
                   sh:path schema:position
                 ] ;
-  sh:property   [ sh:description "Genre of the bibliographic entry" ;
-                  sh:name "Genre" ;
-                  sh:minCount 0 ;
+  sh:property   [ sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path schema:genre
+                  sh:path melod:hasClassification;
+                  sh:group melod:Notes ;
+                  sh:name "Classification"
                 ] ;
-  sh:property   [ sh:description "Additional information related to the bibliographic entry" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
                   dash:singleLine false ;
+                  sh:group melod:Notes ;
                   sh:path schema:description
                 ] .
 
@@ -147,6 +162,7 @@ melod:PublicationEvent
 
   melod:Title
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Title of the bibliographic entry" ;
                   sh:name      "Title" ;
                   sh:minCount  0 ;
@@ -158,22 +174,38 @@ melod:PublicationEvent
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
-                  sh:class melod:TitleType
+                  sh:or (
+                    [ sh:class melod:TitleType ; rdfs:label "Select from list" ]
+                    [ rdfs:label "Custom type" ]
+                  )
+                  
                 ] ;
   sh:targetClass  melod:Title .
 
-melod:MainTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "main"@en .
+  melod:Reference
+  a               sh:PropertyGroup ;
+  rdfs:label      "Reference Type" .
 
-melod:Subtitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "subtitle"@en .
+  melod:Authors
+  a               sh:PropertyGroup ;
+  rdfs:label      "Authors" .
 
-melod:AlternativeTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "alternative"@en .
+  melod:Editors
+  a               sh:PropertyGroup ;
+  rdfs:label      "Editors" .
 
-melod:OriginalTitle rdf:type owl:NamedIndividual ,
-        melod:TitleType ;
-        skos:prefLabel "original"@en .
+  melod:Titles
+  a               sh:PropertyGroup ;
+  rdfs:label      "Titles" .
+
+  melod:Volume
+  a               sh:PropertyGroup ;
+  rdfs:label      "Volume" .
+
+  melod:Publication
+  a               sh:PropertyGroup ;
+  rdfs:label      "Publication" .
+
+  melod:Notes
+  a               sh:PropertyGroup ;
+  rdfs:label      "Notes" .

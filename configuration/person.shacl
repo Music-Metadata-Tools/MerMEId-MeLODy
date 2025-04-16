@@ -1,9 +1,10 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
 @prefix owl: <https://www.w3.org/TR/owl-ref/> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 melod:Person
   a sh:NodeShape, rdfs:Class ;
@@ -11,51 +12,71 @@ melod:Person
                   sh:name "Surname" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
+                  sh:group melod:General ;
                   sh:path schema:familyName
                 ] ;
   sh:property   [ sh:description "First name of the person" ;
                   sh:name "First name" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
+                  sh:group melod:General ;
                   sh:path schema:givenName
                 ] ;
   sh:property   [ sh:description "Identifier e.g. GND, VIAF" ;
-                  sh:name "Identifier" ;
+                  sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
+                  sh:group melod:General ;
                   sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:description "Gender of the person" ;
                   sh:name "Gender" ;
                   sh:maxCount 1 ;
                   sh:path schema:gender ;
+                  sh:group melod:General ;
                   sh:in ( "female" "male" "diverse")
                 ] ;
   sh:property   [ sh:description "Birth date of the person" ;
-                  sh:name "Birth date" ;
+                  sh:name "Date" ;
                   sh:maxCount 1;
+                  sh:group melod:Birth ;
                   sh:datatype  xsd:date ;
                   sh:path schema:birthDate
                 ] ;
-  sh:property   [ sh:description "Birth place of the person" ;
-                  sh:name "Birth place" ;
+  sh:property   [ sh:description "Insert ID of birth place" ;
+                  sh:name "Place" ;
                   sh:maxCount 1;
+                  sh:group melod:Birth ;
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:birthPlace
                 ] ;
   sh:property   [ sh:description "Death date of the person" ;
-                  sh:name "Death date" ;
+                  sh:name "Date" ;
                   sh:maxCount 1;
+                  sh:group melod:Death ;
                   sh:datatype  xsd:date ;
                   sh:path schema:deathDate
                 ] ;
-  sh:property   [ sh:description "Death place of the person" ;
-                  sh:name "Death place" ;
+  sh:property   [ sh:description "Insert ID of death place" ;
+                  sh:name "Place" ;
                   sh:maxCount 1;
+                  sh:group melod:Death ;
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace
                 ] ;
   sh:targetClass melod:Person .
+
+melod:General
+a               sh:PropertyGroup ;
+rdfs:label      "General Information" .
+
+melod:Birth
+a               sh:PropertyGroup ;
+rdfs:label      "Birth" .
+
+melod:Death
+a               sh:PropertyGroup ;
+rdfs:label      "Death" .

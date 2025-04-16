@@ -1,6 +1,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
@@ -9,9 +9,11 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name "Label" ;
                   sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 0 ;
@@ -19,19 +21,18 @@ melod:Expression
                   sh:group melod:General ;
                   sh:path rdfs:label
                 ] ;
-#  sh:property   [ sh:description "Expression title, e.g. 'Version 1'" ;
-#                  sh:name "Title" ;
-#                  sh:minCount 0 ;
-#                  sh:maxCount 1;
-#                  sh:path schema:name
-#                ] ;
-  sh:property   [ sh:description "Classification of the expression" ;
+  sh:property   [ sh:description "Genre or classification" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:group melod:General ;
+                  sh:group melod:Keywords ;
                   sh:path melod:hasClassification ;
-                  sh:class melod:Classification
+                  sh:or (
+                    [ sh:class melod:StageMusic ; rdfs:label "Stage music" ]
+                    [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ]
+                    [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ]
+                    [ sh:class melod:Classification; rdfs:label "Classification" ]
+                    [ rdfs:label "Custom classification" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Link to an external web resource" ;
                   sh:name "Link" ;
@@ -48,20 +49,19 @@ melod:Expression
                   sh:node melod:Identifier
                 ] ;
   sh:property   [ sh:description "Language usage" ;
-                  sh:datatype rdf:langString ;
                   sh:name "Language" ;
                   sh:group melod:General ;
+                  sh:class melod:Language ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
                   sh:path melod:inLanguage
                 ] ;
-  sh:property   [ sh:description "completeness of the expression (complete, incomplete oder unspecified)" ;
-                  sh:name "Completeness" ;
+  sh:property   [ sh:description "Completeness of the expression (complete, incomplete oder unspecified)" ;
+                  sh:name "Completion Status" ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:completionStatus ;
-                  sh:class melod:Completeness
+                  sh:class melod:CompletionStatus
                 ] ;
   sh:property   [ sh:description "Contribution of the expression version (Arranger or text author)" ;
                   sh:name "Contribution" ;
@@ -81,17 +81,17 @@ melod:Expression
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Place of the creation of the expression" ;
+  sh:property   [ sh:description "Insert ID of the creation place" ;
                   sh:name "Creation place" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Creation ;
                   sh:path schema:locationCreated ;
-                  sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:description "History of creation of the expression" ;
+  sh:property   [ sh:description "Insert ID of the historic event" ;
                   sh:name "History of creation" ;
                   sh:minCount 0 ;
                   sh:group melod:Creation ;
@@ -100,7 +100,7 @@ melod:Expression
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:description "First performance of the expression" ;
+  sh:property   [ sh:description "Insert ID of the performance event" ;
                   sh:name "First performance" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
@@ -110,12 +110,12 @@ melod:Expression
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:description "Other performance of the expression" ;
+  sh:property   [ sh:description "Insert ID of the performance event" ;
                   sh:name "Performance" ;
                   sh:minCount 0 ;
                   sh:group melod:Performances ;
                   sh:path melod:hasPerformance ;
-                  sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
+                  #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:nodeKind sh:IRI
                 ] ;
@@ -163,8 +163,9 @@ melod:Expression
                   sh:maxCount 1;
                   sh:path melod:hasMensuration
                 ] ;
-  sh:property   [ sh:description  "Performance resource" ;
-                  sh:name         "Performance resources" ;
+  sh:property   [ sh:description  "Insert ID of the instrumentation" ;
+                  sh:name         "Instrumentation" ;
+                  sh:maxCount 1;
                   sh:group melod:Music ;
                   sh:nodeKind         sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
@@ -177,8 +178,8 @@ melod:Expression
                   sh:node         melod:MusicIncipit ;
                   sh:path         melod:hasIncipit
                 ] ;
-  sh:property   [ sh:description "Individual Piece of a Expression. E.g. movements, sections, scenes, acts" ;
-                  sh:name "Movements" ;
+  sh:property   [ sh:description "Insert ID of instrumentation" ;
+                  sh:name "Movements/Sections" ;
                   sh:group melod:Music ;
                   sh:minCount 0 ;
                   sh:path schema:includedComposition;
@@ -227,15 +228,16 @@ melod:Expression
                     [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Additional information related to the expression" ;
-                  sh:name "Annotations" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
+                  sh:maxCount 0 ;
                   dash:singleLine false ;
                   sh:path schema:description
                 ] ;
-  sh:property   [ sh:description "Bibliography" ;
+  sh:property   [ sh:description "Insert ID of bibliographic entry" ;
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
-                  sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:citation
@@ -262,17 +264,21 @@ melod:Music
   a               sh:PropertyGroup ;
   rdfs:label      "Music" .
 
+melod:Keywords
+  a               sh:PropertyGroup ;
+  rdfs:label      "Classification and Keywords" .
+
 melod:Identifier
   a               sh:NodeShape ;
 
   sh:property   [ sh:description "e.g. TVWV" ;
-                  sh:name      "Name of Identifier" ;
+                  sh:name      "Name" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:description "e.g. abc" ;
-                  sh:name      "Value" ;
+                  sh:name      "Number" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
@@ -281,6 +287,7 @@ melod:Identifier
 
 melod:Date
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name      "Start" ;
                   sh:maxCount  1 ;
                   sh:or (
@@ -295,40 +302,44 @@ melod:Date
                     [ sh:path  melod:notAfter ; rdfs:label "not after" ]
                   )
                 ] ;
-  sh:property   [ sh:name      "Description" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:description
-                ] ;
   sh:property   [ sh:description  "Certainty of the date" ;
                   sh:name         "Certainty" ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:description "Description, annotations or further information" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Date .
 
   melod:ExactDate
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name      "Date" ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
-                ] ;
-  sh:property   [ sh:name      "Description" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:description
                 ] ;
   sh:property   [ sh:description  "Certainty of the date" ;
                   sh:name         "Certainty" ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:description "Description, annotations or further information" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Date .
 
 melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
@@ -350,19 +361,6 @@ melod:Contribution
                 ] ;
   sh:targetClass  melod:Contribution .
 
-melod:Person
-  a               sh:NodeShape ;
-  rdfs:label      "Person" ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "IRI" ;
-                  sh:path         melod:iri ;
-                  sh:defaultValue "https://mei-metadata.org/persons/" ;
-                  #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:targetClass  melod:Person .
-
 melod:ExpressionComponent
   a               sh:NodeShape, rdfs:Class ;
   rdfs:label      "Espression component" ;
@@ -373,28 +371,15 @@ melod:ExpressionComponent
                   sh:path rdfs:label
                 ] .
 
-melod:Institution
-  a               sh:NodeShape ;
-  rdfs:label      "Institution" ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
-                  sh:name         "IRI" ;
-                  sh:path         melod:iri ;
-                  sh:defaultValue "https://mei-metadata.org/institutions/" ;
-                  #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
-                ] ;
-  sh:targetClass  melod:Institution .
-
 melod:Key
   a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Pitch" ;
                   sh:name      "Pitch" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPitch ;
                   sh:class melod:Pitch ;
-                  sh:in ( "c" "d" "e" "f" "g" "a" "b")
                 ] ;
   sh:property   [ sh:description "Accidental of the pitch" ;
                   sh:name      "Accidental" ;
@@ -402,16 +387,15 @@ melod:Key
                   sh:maxCount  1 ;
                   sh:path      melod:hasAccidental ;
                   sh:class melod:Accidental ;
-                  sh:in ("s" "f")
                 ] ;
   sh:property   [ sh:name      "Mode" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:isInMode ;
                   sh:class melod:Mode ;
-                  sh:in ( "major" "minor" )
                 ] ;
   sh:property   [ sh:name      "Description" ;
+                  sh:description "Description, annotations or further information" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
@@ -438,58 +422,13 @@ melod:Meter
                   sh:in ( "common" "cut" )
                 ] ;
   sh:property   [ sh:name      "Description" ;
+                  sh:description "Description, annotations or further information" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] . 
 
-#melod:Casting
-#  a               sh:NodeShape ;
-#  rdfs:label      "Casting" ;
-#  sh:property   [ sh:description  "Voice or Violin" ;
-#                  sh:name         "Instrument" ;
-#                  sh:path         cidoc:P3_has_note ;
-#                  sh:maxCount     1
-#                ] ;
-#  sh:property   [ sh:description "https://www.loc.gov/standards/valuelist/marcmusperf.html#va" ;
-#                  sh:name "Standard Marc Code" ;
-#                  sh:nodeKind sh:IRI ;
-#                  sh:path owl:sameAs ;
-#                  sh:maxCount     1
-#                ] ;
-#  sh:property   [ sh:description  "More information about the performance resource (soloist, quantity)" ;
-#                  sh:name         "Casting detail" ;
-#                  sh:node         melod:Casting_Detail ;
-#                  sh:path         mus:U23_has_casting_detail ;
-#                  sh:maxCount     1 ;
-#                  sh:minCount     1
-#                ] ;              
-#  sh:targetClass  mus:M6_Casting .
-
-#melod:Casting_Detail
-#  a               sh:NodeShape ;
-#  rdfs:label      "Casting Detail" ;
-#  sh:property   [ sh:datatype     xsd:integer ;
-#                  sh:description  "Quantity of the medium of performance" ;
-#                  sh:maxCount     1 ;
-#                  sh:minInclusive 1 ;
-#                  sh:name         "Quantity" ;
-#                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance
-#                ] ;
-#  sh:property   [ sh:datatype     xsd:boolean ;
-#                  sh:name         "Soloist" ;
-#                  sh:path         melod:isSoloist ;
-#                  sh:maxCount     1 ;
-#                  sh:order        1
-#                ] ;
-#  sh:property   [ sh:description  "Use of medium of performance" ;
-#                  sh:name         "Medium of performance" ;
-#                  sh:path         mus:U2_foresees_use_of_medium_of_performance ;
-#                  sh:maxCount     1
-#                ] ;              
-#  sh:targetClass  mus:M23_Casting_Detail .
-
-  melod:MusicIncipit
+melod:MusicIncipit
   a               sh:NodeShape ;
   rdfs:label      "Incipit" ;
   sh:property   [ sh:description  "Data of the plaine and easy code of the incipit" ;
@@ -513,40 +452,3 @@ melod:Meter
                   sh:maxCount     1
                 ] ;        
   sh:targetClass  schema:MusicIncipit .
-
-
-melod:Arranger rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "arranger"@en .
-
-melod:Author rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "author"@en .
-
-melod:Composer rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "composer"@en .
-
-melod:Contributor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "contributor"@en .
-
-melod:Editor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "editor"@en .
-
-melod:Funder rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "funder"@en .
-
-melod:Librettist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "librettist"@en .
-
-melod:Lyricist rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "lyricist"@en .
-
-melod:Sponsor rdf:type owl:NamedIndividual ,
-        melod:Role ;
-        skos:prefLabel "sponsor"@en .
