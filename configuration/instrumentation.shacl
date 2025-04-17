@@ -8,6 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
+@prefix melodTerms: <https://lod.academy/melod/vocab/terms#> .
 
 melod:Instrumentation
   sh:targetClass melod:Instrumentation ;
@@ -50,7 +51,18 @@ melod:InstrumentationDetail
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "Medium of performance" ;
-                  sh:class melod:Instrument ;
+                  sh:or (
+                    [ sh:class melodTerms:Brass ; rdfs:label "Brass" ]
+                    [ sh:class melodTerms:Electronic ; rdfs:label "Electronic" ]
+                    [ sh:class melodTerms:Keyboard ; rdfs:label "Keyboard" ]
+                    [ sh:class melodTerms:Percussion ; rdfs:label "Percussion" ]
+                    [ sh:class melodTerms:BowedStrings ; rdfs:label "Strings, bowed" ]
+                    [ sh:class melodTerms:PluckedStrings ; rdfs:label "Strings, plucked" ]
+                    [ sh:class melodTerms:Voices ; rdfs:label "Voices" ]
+                    [ sh:class melodTerms:Woodwinds ; rdfs:label "Woodwinds" ]
+                    [ sh:class melodTerms:Unspecified ; rdfs:label "Unspecified" ]
+                    [ rdfs:label "Custom instrument" ]
+                  ) ;
                   sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;
   sh:property   [ sh:minCount     0 ;

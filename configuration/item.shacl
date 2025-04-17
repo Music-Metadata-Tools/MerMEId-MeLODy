@@ -635,7 +635,7 @@ melod:Binding
   sh:property   [ sh:description  "Type of the hand" ;
                   sh:name         "Type" ;
                   sh:maxCount  1 ;
-                  sh:path         cidoc:P2_has_type ;
+                  sh:path         melod:hasHandType ;
                   sh:class melod:HandType
                 ] ;
   sh:property   [ sh:description  "Medium of the hand" ;
@@ -679,39 +679,3 @@ melod:Relation
   melod:Keywords
   a               sh:PropertyGroup ;
   rdfs:label      "Classification and Keywords" .
-
-melod:OriginalContents rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "original contents"@en .
-
-melod:Additions rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "additions"@en .
-
-melod:Notes rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "notes"@en .
-
-melod:Title rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "title"@en .
-
-melod:Writer rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "writer"@en .
-
-melod:Dating rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "dating"@en .
-
-melod:Lyrics rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "lyrics"@en .
-
-melod:Caption rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "caption"@en .
-
-melod:Corrections rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "corrections"@en .
-
-melod:Revision rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "revision"@en .
-
-melod:Draft rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "draft"@en .
-
-melod:Other rdf:type owl:NamedIndividual , melod:HandType ;
-  skos:prefLabel "other"@en .
