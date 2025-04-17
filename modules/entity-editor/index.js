@@ -24,10 +24,49 @@ const styles =
             color: var(--sl-color-primary-600);
             font-size: 1.5rem;
         }
+        sl-button::part(base) {
+            --sl-color-neutral-600: var(--sl-color-primary-600);
+        }
+        sl-button[disabled]::part(base) {
+            background-color: var(--sl-color-neutral-200);
+            border-color: var(--sl-color-neutral-200);
+            color: var(--sl-color-neutral-400);
+        }
         sl-button-group sl-button::part(prefix) {
             color: var(--sl-color-neutral-0);
             margin-right: 0.3em;
             font-size: 0.75em;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: transparent;
+        }
+        
+        .header-container h2 {
+            margin: 0;
+            text-align: left;
+            flex: 0 0 auto;
+        }
+        
+        .iri-container sl-button::part(base) {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--sl-color-neutral-600);
+            background-color: var(--sl-color-neutral-100);
+            border-color: var(--sl-color-neutral-200);
+            padding: 0.5rem 1rem;
+        }
+
+        .iri-container sl-button::part(base):hover {
+            background-color: var(--sl-color-neutral-200);
+            border-color: var(--sl-color-neutral-300);
+        }
+
+        .iri-container sl-button::part(suffix) {
+            margin-left: 0.5rem;
         }
     `;
 
@@ -102,18 +141,24 @@ export default class ADWLMEntityEditor extends LitElement {
                         <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
                     </sl-button>
                     <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
-                    ?disabled="${!this._hasUnsavedChanges}">
-                    ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
-                    Save
-                    <sl-icon name="floppy" slot="suffix"></sl-icon>
-                </sl-button>
+                        ?disabled="${!this._hasUnsavedChanges}">
+                        ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
+                        Save
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
                 </sl-button-group>
                 ${this.entity_to_edit ? html`
-                    <h2>
-                        ${this._getEntityName(this.entity_to_edit.entity_type)}
-                    </h2>
+                    <div class="header-container">
+                        <h2>
+                            ${this._getEntityName(this.entity_to_edit.entity_type)}
+                        </h2>
+                        <div class="iri-container">
+                            <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
+                                ${this.entity_to_edit.entity_iri}
+                                <sl-icon name="clipboard" slot="suffix"></sl-icon>
+                            </sl-button>
+                        </div>
+                    </div>
                 ` : ''}
                 <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
             </div>
@@ -171,6 +216,24 @@ export default class ADWLMEntityEditor extends LitElement {
             // the blur is needed, as the action is repeated every time the browser tab regains focus
             if (target.matches("sl-button")) {
                 target.blur();
+            }
+
+            if (target.matches("sl-button#copy-iri")) {
+                if (this.entity_to_edit?.entity_iri) {
+                    await navigator.clipboard.writeText(this.entity_to_edit.entity_iri);
+                    
+                    // Show success notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 3000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="clipboard-check"></sl-icon>
+                        Entity IRI copied to clipboard
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
             }
 
             if (target.matches("sl-button#add-entity")) {
