@@ -27,6 +27,47 @@ const styles =
             height: 60vh;
             overflow: scroll;
         }
+        /* Toggle button styles */
+        #filesystem-toggle {
+            display: none; /* Hide on desktop */
+        }
+
+        #filesystem-toggle sl-icon {
+            font-size: 1.5rem;
+        }
+        @media only screen and (max-width: 900px) {
+            div#container {
+                display: none;
+            }
+            div#container.open {
+                display: flex;
+                max-width: 30vw;
+            }
+            :host {
+                width: 80vw;
+            }
+            /* Toggle button styles */
+            #filesystem-toggle {
+                display: block; /* Show on mobile */
+                position: fixed;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 101;
+                border: none;
+                background: var(--sl-color-primary-600);
+                color: white;
+                padding: 0.5rem;
+                border-radius: 0 0.25rem 0.25rem 0;
+                cursor: pointer;
+                box-shadow: var(--sl-shadow-medium);
+            }
+            
+            #filesystem-toggle sl-icon {
+                font-size: 1.5rem;
+            }
+        }
+        
     `;
 
 export default class ADWLMFilesystemManager extends LitElement {
@@ -74,8 +115,31 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._init();
     }
 
+    _toggleFilesystemNav() {
+        const nav = document.querySelector('nav#filesystem-nav');
+        const container = this.renderRoot.querySelector('div#container');
+        const icon = this.renderRoot.querySelector('#filesystem-toggle sl-icon');
+        
+        if (!nav || !icon || !container) return;
+        
+        nav.classList.toggle('open');
+        container.classList.toggle('open');
+        
+        // Update toggle button icon and title
+        if (nav.classList.contains('open')) {
+            icon.name = 'chevron-left';
+            this.renderRoot.querySelector('#filesystem-toggle').title = "Close file browser";
+        } else {
+            icon.name = 'chevron-right';
+            this.renderRoot.querySelector('#filesystem-toggle').title = "Open file browser";
+        }
+    }
+
     render() {
         return html`
+            <button id="filesystem-toggle" @click="${this._toggleFilesystemNav}" title="Toggle file browser">
+                <sl-icon name="chevron-right"></sl-icon>
+            </button>
             <div id="container">
                 <sl-details id="repositories-details" summary="Repositories" open>
                     <div>

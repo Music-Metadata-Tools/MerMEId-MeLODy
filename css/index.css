@@ -41,9 +41,6 @@ body > main {
     box-sizing: border-box;
 }
 
-nav#filesystem-nav {
-    overflow-x: auto;
-}
 
 section {
     flex: 1;
@@ -128,10 +125,7 @@ section#editor-toolbar button {
 
 /* small screen sizes */
 @media only screen and (max-width: 664px) {
-    body {
-        font-size: 1.1rem;
-        padding: 2px;
-    }
+    
 
     header {
         font-size: 10px;
@@ -164,10 +158,35 @@ section#editor-toolbar button {
         height: 40px;
         width: 95vw;
     }
+    nav#filesystem-nav {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        width: 80vw;
+        max-width: 300px;
+        background: white;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: var(--sl-shadow-large);
+    }
+
+    nav#filesystem-nav.open {
+        left: 0;
+    }
+    body > main {
+        padding-left: 3rem; /* Space for toggle button */
+        gap: 10px;
+    }
+    section:has(adwlm-entity-editor) {
+        flex: 1;
+        width: 100%;
+    }
+    
 }
 
 /* medium screen sizes */
-@media only screen and (max-width: 835px) {
+@media only screen and (max-width: 900px) {
     body {
         font-size: 1.1rem;
         padding: 2px;
@@ -201,5 +220,29 @@ section#editor-toolbar button {
     button#save {
         height: 40px;
         width: 95vw;
+    }
+    nav#filesystem-nav {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        width: 80vw;
+        max-width: 300px;
+        background: white;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: var(--sl-shadow-large);
+    }
+
+    nav#filesystem-nav.open {
+        left: 0;
+    }
+    body > main {
+        padding-left: 3rem; /* Space for toggle button */
+        gap: 10px;
+    }
+    section:has(adwlm-entity-editor) {
+        flex: 1;
+        width: 100%;
     }
 }
