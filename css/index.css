@@ -163,14 +163,15 @@ section#editor-toolbar button {
 @media only screen and (max-width: 664px) {
     
 
-    header {
-        font-size: 10px;
-        padding: 0 1px;
-    }
-
     h1.title {
         text-align: justify;
         padding: 10px;
+        font-size: var(--step-1);
+    }
+
+    footer {
+        text-align: justify;
+        font-size: 15px;
     }
 
     section#editor-and-viewer {
@@ -225,17 +226,6 @@ section#editor-toolbar button {
 @media only screen and (max-width: 900px) {
     body {
         font-size: 1.1rem;
-        padding: 2px;
-    }
-
-    header {
-        font-size: 10px;
-        padding: 0 1px;
-    }
-
-    h1.title {
-        text-align: center;
-        padding: 10px;
     }
 
     section#editor-and-viewer {
