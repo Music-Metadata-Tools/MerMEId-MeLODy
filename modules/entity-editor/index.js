@@ -4,15 +4,15 @@ import "./entity-types-dialog/index.js";
 const styles =
     css`
         :host {
-            width: 300vw;
-            height: 70vh;
-            background-color: #bee2f7;
-        }
-        div#container {
-            width: 35vw;
             height: 82vh;
             background-color: #bee2f7;
-            overflow: scroll;
+        }
+    
+        div#container {
+            min-height: 82vh;
+            background-color:transparent;
+            overflow: auto;
+            margin-left: 0;
         }
         sl-button-group {
             background-color: white;
