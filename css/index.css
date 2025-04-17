@@ -66,11 +66,47 @@ section#renderer {
 }
 
 /* What is below has to be removed after the header and footer components are added. */
-body>header>*,
 body>footer>* {
-    background-color: #013657;
+    background: linear-gradient(45deg, #013657, #3d97f1);
     color: #ffffff;
-    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body>header>* {
+    color: #ffffff;
+    padding: 20px;
+    margin-bottom: 26px;
+    background: linear-gradient(45deg, #013657, #3d97f1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1.title {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+span.footer {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+img.logo {
+    width: auto;
+    height: 80px; /* Adjust this value to your preferred logo size */
+    margin-left: auto; /* Pushes logo to the right */
+}
+
+img.adw-logo {
+    width: auto;
+    height: 80px; /* Adjust this value to your preferred logo size */
+    margin-left: auto; /* Pushes logo to the right */
+    margin-top: 5px;
 }
 
 body>header>*,

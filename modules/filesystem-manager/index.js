@@ -19,6 +19,7 @@ const styles =
         div#container {
             display: flex;
             flex-direction: column;
+            padding-bottom: 20px;
         }
         sl-tree-item::part(label) {
             font-size: var(--sl-font-size-small);
