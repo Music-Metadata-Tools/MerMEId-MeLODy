@@ -226,16 +226,16 @@ section#editor-toolbar button {
         left: -100%;
         top: 0;
         height: 100%;
-        width: 80vw;
+        max-width: 30vw;
         max-width: 300px;
-        background: white;
         z-index: 100;
         transition: left 0.3s ease;
-        box-shadow: var(--sl-shadow-large);
     }
 
     nav#filesystem-nav.open {
         left: 0;
+        max-width: 30vw;
+        background-color: transparent;
     }
     body > main {
         padding-left: 3rem; /* Space for toggle button */
