@@ -215,7 +215,7 @@ let ui_language = "en";
 let SparqlQueries = {
     "entity_type_definitions":
         `
-        prefix melod: <https://mei-metadata.org/>
+        prefix melod: <https://lod.academy/melod/vocab/ontology#>
         prefix melod_ui: <https://mei-metadata.org/ui/>
         prefix schema: <http://schema.org/>
         prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -231,7 +231,7 @@ let SparqlQueries = {
     `,
     "entity_type_detection":
         `
-        prefix melod: <https://mei-metadata.org/>
+        prefix melod: <https://lod.academy/melod/vocab/ontology#>
         prefix schema: <http://schema.org/>
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -239,7 +239,7 @@ let SparqlQueries = {
         where {
             ?entity_iri a ?entity_type .
             filter(strstarts(str(?entity_iri), "urn:uuid:"))
-            filter(strstarts(str(?entity_type), "https://mei-metadata.org/"))
+            filter(strstarts(str(?entity_type), "https://lod.academy/melod/vocab/ontology#"))
         }
     `,
 };

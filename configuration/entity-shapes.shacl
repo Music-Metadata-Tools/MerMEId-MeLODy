@@ -1,5 +1,5 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix melod: <https://mei-metadata.org/> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
 @prefix owl: <https://www.w3.org/TR/owl-ref/> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .

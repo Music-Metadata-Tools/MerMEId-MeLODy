@@ -8,6 +8,7 @@
 
 melod:Place
   a sh:NodeShape, rdfs:Class ;
+  sh:targetClass melod:Place ;
   sh:property   [ sh:description "Place name" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
@@ -25,5 +26,4 @@ melod:Place
                   sh:maxCount 1;
                   dash:singleLine false ;
                   sh:path schema:description
-                ] ;
-  sh:targetClass melod:Place .
+                ] .
