@@ -557,7 +557,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 alert.duration = 6000;
                 alert.innerHTML = `
                     <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                    Entity successfully created:
+                    Entity successfully saved:
                     <br>
                     File: ${result.filename}
                     <br>
