@@ -154,7 +154,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button class="rename-entry" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
                                 <sl-icon name="arrow-counterclockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -326,7 +326,36 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#synchronize-repository")) {
-                await filesystem.pull(this._selected_repository_path);
+                target.loading = true;
+                try {
+                    await filesystem.pull(this._selected_repository_path);
+                    // Show success notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                        Successfully synchronized with remote repository
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } catch (error) {
+                    console.error('Failed to synchronize:', error);
+                    // Show error notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to synchronize with remote repository
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
+                    target.loading = false;
+                }
             }
 
             if (target.matches("sl-button#remove-entity")) {
