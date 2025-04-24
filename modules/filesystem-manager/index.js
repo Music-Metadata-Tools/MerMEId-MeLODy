@@ -95,6 +95,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         _lastPullTimestamp: {
             type: Object,
             state: true
+        },
+        _hasSelectedFiles: {
+            type: Boolean,
+            state: true
         }
     };
 
@@ -177,7 +181,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                 </sl-details>
                 <sl-details id="staged-files-details" summary="Share files" disabled>
                     <sl-button-group>
-                        <sl-button id="commit-and-push-staged-files" size="small" title="Share files">
+                        <sl-button 
+                            id="commit-and-push-staged-files" 
+                            size="small" 
+                            title="Share files"
+                            ?disabled="${!this._hasSelectedFiles}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
                     </sl-button-group>
@@ -254,6 +262,13 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
+            
+            // Add this new condition
+            if (target.matches("sl-tree#staged-files-tree")) {
+                const selectedItems = target.querySelectorAll('sl-tree-item[selected]');
+                this._hasSelectedFiles = selectedItems.length > 0;
+            }
+
             let selection = event.detail.selection[0];
 
             if (target.matches("sl-tree#repositories-tree")) {
@@ -414,10 +429,27 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
-                let staged_file_paths = staged_file_nodes
-                    .map(item => item.dataset.entryRelativePath);
                 let selected_staged_file_paths = staged_file_nodes
                     .filter(item => item.selected)
+                    .map(item => item.dataset.entryRelativePath);
+
+                if (selected_staged_file_paths.length === 0) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'warning';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Please select files to share.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                // Get all staged files for validation
+                let staged_file_paths = staged_file_nodes
                     .map(item => item.dataset.entryRelativePath);
 
                 // Validate selection before committing
@@ -452,6 +484,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (push_result) {
                     await this._list_staged_files();
                     commit_and_push_done_toast.toast();
+                    // Disable the button after successful commit
+                    this._hasSelectedFiles = false;
+                    // Clear selections in the staged files tree
+                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                        .forEach(item => item.selected = false);
                 } else {
                     commit_and_push_error_toast.toast();
                 }
@@ -567,6 +604,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._staged_files = [];
         this._displayed_staged_files = [];
         this._repository_buttons_disabled = true;
+        this._hasSelectedFiles = false;
     }
 
     // initialize the filesystem
