@@ -367,15 +367,43 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let selected_staged_file_paths = staged_file_nodes
                     .filter(item => item.selected)
                     .map(item => item.dataset.entryRelativePath);
-                let push_result = await filesystem.commit_and_push_file(this._selected_repository_path, staged_file_paths, selected_staged_file_paths);
+
+                // Validate selection before committing
+                const missingDirectories = await this._validateStagedSelection(staged_file_paths, selected_staged_file_paths);
+                
+                if (missingDirectories.length > 0) {
+                    // Create warning alert
+                    const warningAlert = document.createElement('sl-alert');
+                    warningAlert.variant = 'warning';
+                    warningAlert.closable = true;
+                    warningAlert.duration = 10000;
+                    warningAlert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        <strong>Warning:</strong> You need to select the following directories to properly commit their contents:
+                        <br>
+                        ${missingDirectories.join('<br>')}
+                        <br><br>
+                        Please select both the directories and their files to ensure proper commit.
+                    `;
+                    document.body.append(warningAlert);
+                    warningAlert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                let push_result = await filesystem.commit_and_push_file(
+                    this._selected_repository_path, 
+                    staged_file_paths, 
+                    selected_staged_file_paths
+                );
+                
                 if (push_result) {
                     await this._list_staged_files();
                     commit_and_push_done_toast.toast();
-                    target.loading = false;
                 } else {
                     commit_and_push_error_toast.toast();
-                    target.loading = false;
                 }
+                target.loading = false;
             }
         });
 
@@ -527,7 +555,14 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = staged_file_relative_path.includes("/") ? staged_file_relative_path.substring(staged_file_relative_path.lastIndexOf("/") + 1) : staged_file_relative_path;
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file_relative_path}`;
 
-            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${staged_file_absolute_path}" data-entry-relative-path="${staged_file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            tree_items += `
+                <sl-tree-item 
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
+                    data-entry-absolute-path="${staged_file_absolute_path}" 
+                    data-entry-relative-path="${staged_file_relative_path}" 
+                    data-entry-name="${file_name}">
+                    ${file_name}
+                </sl-tree-item>`;
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
@@ -569,6 +604,24 @@ export default class ADWLMFilesystemManager extends LitElement {
                 </sl-tree-item>`
             );
         }
+    }
+
+    // Add this method to the ADWLMFilesystemManager class
+    async _validateStagedSelection(stagedFiles, selectedFiles) {
+        const directoriesNeeded = new Set();
+        
+        // Check each selected file's parent directory
+        for (const filePath of selectedFiles) {
+            const parentDir = filePath.substring(0, filePath.lastIndexOf('/'));
+            if (parentDir && stagedFiles.includes(parentDir)) {
+                // Parent directory exists and is staged
+                if (!selectedFiles.includes(parentDir)) {
+                    directoriesNeeded.add(parentDir);
+                }
+            }
+        }
+        
+        return Array.from(directoriesNeeded);
     }
 
 }
