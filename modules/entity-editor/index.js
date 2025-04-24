@@ -85,6 +85,10 @@ export default class ADWLMEntityEditor extends LitElement {
         _hasUnsavedChanges: {
             type: Boolean,
             state: true
+        },
+        _skipNextUpdate: {
+            type: Boolean,
+            state: true
         }
     };
 
@@ -94,14 +98,55 @@ export default class ADWLMEntityEditor extends LitElement {
         if (changedProperties.has("entity_to_edit")) {
             let entity_to_edit = this.entity_to_edit;
 
-            if (entity_to_edit !== null) {
-                let editor = this.renderRoot.querySelector("shacl-form");
-                let shacl_file_location = this._get_shacl_file_location();
+            if (entity_to_edit !== null && !this._skipNextUpdate) {
+                // Check for unsaved changes before loading new file
+                if (this._hasUnsavedChanges) {
+                    // Show warning dialog
+                    const dialog = document.createElement('sl-dialog');
+                    dialog.label = 'Unsaved Changes';
+                    dialog.innerHTML = `
+                        <p>You have unsaved changes. Do you want to continue without saving?</p>
+                        <sl-button slot="footer" variant="neutral" id="cancel">Cancel</sl-button>
+                        <sl-button slot="footer" variant="primary" id="continue">Continue</sl-button>
+                    `;
 
-                editor.dataset.values = entity_to_edit.contents;
-                editor.dataset.valuesSubject = entity_to_edit.entity_iri;
-                editor.dataset.shapesUrl = shacl_file_location;
-                this._entity_path = entity_to_edit.path;
+                    // Add event listener for dialog close request (x button or cancel button)
+                    dialog.addEventListener('sl-request-close', (event) => {
+                        this._skipNextUpdate = true;
+                        const previousEntity = changedProperties.get("entity_to_edit");
+                        this.entity_to_edit = previousEntity;
+                        dialog.hide();
+                        setTimeout(() => {
+                            dialog.remove();
+                            this._skipNextUpdate = false;
+                        }, 100);
+                    });
+
+                    // Handle dialog buttons
+                    dialog.querySelector('#cancel').addEventListener('click', () => {
+                        this._skipNextUpdate = true;
+                        const previousEntity = changedProperties.get("entity_to_edit");
+                        this.entity_to_edit = previousEntity;
+                        dialog.hide();
+                        setTimeout(() => {
+                            dialog.remove();
+                            this._skipNextUpdate = false;
+                        }, 100);
+                    });
+
+                    dialog.querySelector('#continue').addEventListener('click', () => {
+                        this._loadNewEntity(entity_to_edit);
+                        dialog.hide();
+                        setTimeout(() => dialog.remove(), 100); // Clean up dialog after animation
+                    });
+
+                    document.body.append(dialog);
+                    dialog.show();
+                    return; // Stop further processing until user decides
+                } else {
+                    // No unsaved changes, load new entity directly
+                    this._loadNewEntity(entity_to_edit);
+                }
             }
         }
 
@@ -123,6 +168,20 @@ export default class ADWLMEntityEditor extends LitElement {
                 entity_name_tree_dialog.entity_name_tree_items = tree_items;
             }
         }
+    }
+
+    // Add new helper method to handle entity loading
+    _loadNewEntity(entity_to_edit) {
+        let editor = this.renderRoot.querySelector("shacl-form");
+        let shacl_file_location = this._get_shacl_file_location();
+
+        editor.dataset.values = entity_to_edit.contents;
+        editor.dataset.valuesSubject = entity_to_edit.entity_iri;
+        editor.dataset.shapesUrl = shacl_file_location;
+        this._entity_path = entity_to_edit.path;
+        
+        // Reset unsaved changes state when loading new file
+        this._hasUnsavedChanges = false;
     }
 
     static styles = styles;
@@ -284,6 +343,7 @@ export default class ADWLMEntityEditor extends LitElement {
         this.entity_type_definitions = null;
         this._entity_path = null;
         this._hasUnsavedChanges = false;
+        this._skipNextUpdate = false;
     }
 
     _generate_entity_id() {
