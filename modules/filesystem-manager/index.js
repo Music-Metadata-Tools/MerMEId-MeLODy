@@ -571,8 +571,16 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (repoTree) {
                     const selectedFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
                     if (selectedFolder) {
-                        // Clear and reload folder contents
-                        selectedFolder.innerHTML = '';
+                        // Keep existing folder name element
+                        const folderName = selectedFolder.dataset.entryName;
+                        // Clear only child elements
+                        while (selectedFolder.firstChild) {
+                            selectedFolder.removeChild(selectedFolder.firstChild);
+                        }
+                        // Add back the folder name
+                        selectedFolder.textContent = folderName;
+                        
+                        // Reload folder contents
                         const entries = await filesystem.list_entries_from_workdir(
                             this._selected_repository_path, 
                             selectedFolder.dataset.entryRelativePath
