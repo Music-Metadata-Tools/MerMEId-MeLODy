@@ -410,52 +410,71 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await this._list_repository_names();
             }
 
+            // Modify the commit-and-push-staged-files button handler
             if (target.matches("sl-button#commit-and-push-staged-files")) {
                 target.loading = true;
 
-                let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
-                let staged_file_paths = staged_file_nodes
-                    .map(item => item.dataset.entryRelativePath);
-                let selected_staged_file_paths = staged_file_nodes
-                    .filter(item => item.selected)
-                    .map(item => item.dataset.entryRelativePath);
+                try {
+                    // Add pull before committing
+                    await filesystem.pull(this._selected_repository_path);
 
-                // Validate selection before committing
-                const missingDirectories = await this._validateStagedSelection(staged_file_paths, selected_staged_file_paths);
-                
-                if (missingDirectories.length > 0) {
-                    // Create warning alert
-                    const warningAlert = document.createElement('sl-alert');
-                    warningAlert.variant = 'warning';
-                    warningAlert.closable = true;
-                    warningAlert.duration = 10000;
-                    warningAlert.innerHTML = `
+                    let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
+                    let staged_file_paths = staged_file_nodes
+                        .map(item => item.dataset.entryRelativePath);
+                    let selected_staged_file_paths = staged_file_nodes
+                        .filter(item => item.selected)
+                        .map(item => item.dataset.entryRelativePath);
+
+                    // Validate selection before committing
+                    const missingDirectories = await this._validateStagedSelection(staged_file_paths, selected_staged_file_paths);
+                    
+                    if (missingDirectories.length > 0) {
+                        // Create warning alert
+                        const warningAlert = document.createElement('sl-alert');
+                        warningAlert.variant = 'warning';
+                        warningAlert.closable = true;
+                        warningAlert.duration = 10000;
+                        warningAlert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            <strong>Warning:</strong> You need to select the following directories to properly commit their contents:
+                            <br>
+                            ${missingDirectories.join('<br>')}
+                            <br><br>
+                            Please select both the directories and their files to ensure proper commit.
+                        `;
+                        document.body.append(warningAlert);
+                        warningAlert.toast();
+                        return;
+                    }
+
+                    let push_result = await filesystem.commit_and_push_file(
+                        this._selected_repository_path, 
+                        staged_file_paths, 
+                        selected_staged_file_paths
+                    );
+                    
+                    if (push_result) {
+                        await this._list_staged_files();
+                        commit_and_push_done_toast.toast();
+                    } else {
+                        commit_and_push_error_toast.toast();
+                    }
+                } catch (error) {
+                    console.error('Failed to synchronize before commit:', error);
+                    // Show error notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
                         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        <strong>Warning:</strong> You need to select the following directories to properly commit their contents:
-                        <br>
-                        ${missingDirectories.join('<br>')}
-                        <br><br>
-                        Please select both the directories and their files to ensure proper commit.
+                        Failed to synchronize with remote repository before committing changes. Please try again.
                     `;
-                    document.body.append(warningAlert);
-                    warningAlert.toast();
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
                     target.loading = false;
-                    return;
                 }
-
-                let push_result = await filesystem.commit_and_push_file(
-                    this._selected_repository_path, 
-                    staged_file_paths, 
-                    selected_staged_file_paths
-                );
-                
-                if (push_result) {
-                    await this._list_staged_files();
-                    commit_and_push_done_toast.toast();
-                } else {
-                    commit_and_push_error_toast.toast();
-                }
-                target.loading = false;
             }
         });
 
