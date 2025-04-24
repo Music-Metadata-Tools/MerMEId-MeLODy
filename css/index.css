@@ -198,7 +198,6 @@ section#editor-toolbar button {
     nav#filesystem-nav {
         position: fixed;
         left: -100%;
-        top: 0;
         height: 100%;
         width: 80vw;
         max-width: 300px;
@@ -250,7 +249,6 @@ section#editor-toolbar button {
     nav#filesystem-nav {
         position: fixed;
         left: -100%;
-        top: 0;
         height: 100%;
         max-width: 30vw;
         max-width: 300px;

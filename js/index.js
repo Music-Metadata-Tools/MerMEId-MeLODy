@@ -309,6 +309,17 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
     let entity_to_edit = event.detail;
     let file_contents = entity_to_edit.contents;
 
+    // Update the XML and RDF renderers
+    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    
+    if (xml_renderer) {
+        xml_renderer.innerText = entity_to_edit.xml_output || '';
+    }
+    if (rdf_renderer) {
+        rdf_renderer.innerText = entity_to_edit.rdf_output || file_contents;
+    }
+
     let start = performance.now();
 
     let graph_store = new oxigraph.Store();

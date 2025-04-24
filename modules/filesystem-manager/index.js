@@ -91,6 +91,14 @@ export default class ADWLMFilesystemManager extends LitElement {
         },
         _repository_buttons_disabled: {
             type: Boolean,
+        },
+        _lastPullTimestamp: {
+            type: Object,
+            state: true
+        },
+        _hasSelectedFiles: {
+            type: Boolean,
+            state: true
         }
     };
 
@@ -154,7 +162,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button class="rename-entry" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
                                 <sl-icon name="arrow-counterclockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -173,7 +181,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                 </sl-details>
                 <sl-details id="staged-files-details" summary="Share files" disabled>
                     <sl-button-group>
-                        <sl-button id="commit-and-push-staged-files" size="small" title="Share files">
+                        <sl-button 
+                            id="commit-and-push-staged-files" 
+                            size="small" 
+                            title="Share files"
+                            ?disabled="${!this._hasSelectedFiles}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
                     </sl-button-group>
@@ -250,6 +262,13 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
+            
+            // Add this new condition
+            if (target.matches("sl-tree#staged-files-tree")) {
+                const selectedItems = target.querySelectorAll('sl-tree-item[selected]');
+                this._hasSelectedFiles = selectedItems.length > 0;
+            }
+
             let selection = event.detail.selection[0];
 
             if (target.matches("sl-tree#repositories-tree")) {
@@ -265,20 +284,39 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                let file_path = selection.dataset.entryRelativePath;
-
-                // get the file contents
-                let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
-
-                let entity_to_edit = {
-                    contents: file_contents,
-                    path: file_path,
-                };
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
-                    "detail": entity_to_edit,
-                    "bubbles": true,
-                    "composed": true,
-                }));
+                try {
+                    // Only pull if needed
+                    if (await this._shouldPull(this._selected_repository_path)) {
+                        await filesystem.pull(this._selected_repository_path);
+                    }
+                    
+                    let file_path = selection.dataset.entryRelativePath;
+                    let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
+            
+                    let entity_to_edit = {
+                        contents: file_contents,
+                        path: file_path,
+                    };
+                    
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
+                        "detail": entity_to_edit,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+            
+                } catch (error) {
+                    console.error('Failed to load file:', error);
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to load file. Please try again.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
             }
         });
 
@@ -326,7 +364,36 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#synchronize-repository")) {
-                await filesystem.pull(this._selected_repository_path);
+                target.loading = true;
+                try {
+                    await filesystem.pull(this._selected_repository_path);
+                    // Show success notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                        Successfully synchronized with remote repository
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } catch (error) {
+                    console.error('Failed to synchronize:', error);
+                    // Show error notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to synchronize with remote repository
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
+                    target.loading = false;
+                }
             }
 
             if (target.matches("sl-button#remove-entity")) {
@@ -362,20 +429,70 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
-                let staged_file_paths = staged_file_nodes
-                    .map(item => item.dataset.entryRelativePath);
                 let selected_staged_file_paths = staged_file_nodes
                     .filter(item => item.selected)
                     .map(item => item.dataset.entryRelativePath);
-                let push_result = await filesystem.commit_and_push_file(this._selected_repository_path, staged_file_paths, selected_staged_file_paths);
+
+                if (selected_staged_file_paths.length === 0) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'warning';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Please select files to share.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                // Get all staged files for validation
+                let staged_file_paths = staged_file_nodes
+                    .map(item => item.dataset.entryRelativePath);
+
+                // Validate selection before committing
+                const missingDirectories = await this._validateStagedSelection(staged_file_paths, selected_staged_file_paths);
+                
+                if (missingDirectories.length > 0) {
+                    // Create warning alert
+                    const warningAlert = document.createElement('sl-alert');
+                    warningAlert.variant = 'warning';
+                    warningAlert.closable = true;
+                    warningAlert.duration = 10000;
+                    warningAlert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        <strong>Warning:</strong> You need to select the following directories to properly commit their contents:
+                        <br>
+                        ${missingDirectories.join('<br>')}
+                        <br><br>
+                        Please select both the directories and their files to ensure proper commit.
+                    `;
+                    document.body.append(warningAlert);
+                    warningAlert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                let push_result = await filesystem.commit_and_push_file(
+                    this._selected_repository_path, 
+                    staged_file_paths, 
+                    selected_staged_file_paths
+                );
+                
                 if (push_result) {
                     await this._list_staged_files();
                     commit_and_push_done_toast.toast();
-                    target.loading = false;
+                    // Disable the button after successful commit
+                    this._hasSelectedFiles = false;
+                    // Clear selections in the staged files tree
+                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                        .forEach(item => item.selected = false);
                 } else {
                     commit_and_push_error_toast.toast();
-                    target.loading = false;
                 }
+                target.loading = false;
             }
         });
 
@@ -440,7 +557,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 alert.duration = 6000;
                 alert.innerHTML = `
                     <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                    Entity successfully created:
+                    Entity successfully saved:
                     <br>
                     File: ${result.filename}
                     <br>
@@ -454,8 +571,16 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (repoTree) {
                     const selectedFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
                     if (selectedFolder) {
-                        // Clear and reload folder contents
-                        selectedFolder.innerHTML = '';
+                        // Keep existing folder name element
+                        const folderName = selectedFolder.dataset.entryName;
+                        // Clear only child elements
+                        while (selectedFolder.firstChild) {
+                            selectedFolder.removeChild(selectedFolder.firstChild);
+                        }
+                        // Add back the folder name
+                        selectedFolder.textContent = folderName;
+                        
+                        // Reload folder contents
                         const entries = await filesystem.list_entries_from_workdir(
                             this._selected_repository_path, 
                             selectedFolder.dataset.entryRelativePath
@@ -487,6 +612,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._staged_files = [];
         this._displayed_staged_files = [];
         this._repository_buttons_disabled = true;
+        this._hasSelectedFiles = false;
     }
 
     // initialize the filesystem
@@ -527,7 +653,14 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = staged_file_relative_path.includes("/") ? staged_file_relative_path.substring(staged_file_relative_path.lastIndexOf("/") + 1) : staged_file_relative_path;
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file_relative_path}`;
 
-            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${staged_file_absolute_path}" data-entry-relative-path="${staged_file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            tree_items += `
+                <sl-tree-item 
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
+                    data-entry-absolute-path="${staged_file_absolute_path}" 
+                    data-entry-relative-path="${staged_file_relative_path}" 
+                    data-entry-name="${file_name}">
+                    ${file_name}
+                </sl-tree-item>`;
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
@@ -569,6 +702,40 @@ export default class ADWLMFilesystemManager extends LitElement {
                 </sl-tree-item>`
             );
         }
+    }
+
+    // Add this method to the ADWLMFilesystemManager class
+    async _validateStagedSelection(stagedFiles, selectedFiles) {
+        const directoriesNeeded = new Set();
+        
+        // Check each selected file's parent directory
+        for (const filePath of selectedFiles) {
+            const parentDir = filePath.substring(0, filePath.lastIndexOf('/'));
+            if (parentDir && stagedFiles.includes(parentDir)) {
+                // Parent directory exists and is staged
+                if (!selectedFiles.includes(parentDir)) {
+                    directoriesNeeded.add(parentDir);
+                }
+            }
+        }
+        
+        return Array.from(directoriesNeeded);
+    }
+
+    // Add this helper method
+    async _shouldPull(repositoryPath) {
+        const now = Date.now();
+        const lastPull = this._lastPullTimestamp?.[repositoryPath] || 0;
+        const PULL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+        
+        if (now - lastPull > PULL_INTERVAL) {
+            this._lastPullTimestamp = {
+                ...this._lastPullTimestamp,
+                [repositoryPath]: now
+            };
+            return true;
+        }
+        return false;
     }
 
 }
