@@ -91,6 +91,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         },
         _repository_buttons_disabled: {
             type: Boolean,
+        },
+        _lastPullTimestamp: {
+            type: Object,
+            state: true
         }
     };
 
@@ -265,20 +269,39 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                let file_path = selection.dataset.entryRelativePath;
-
-                // get the file contents
-                let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
-
-                let entity_to_edit = {
-                    contents: file_contents,
-                    path: file_path,
-                };
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
-                    "detail": entity_to_edit,
-                    "bubbles": true,
-                    "composed": true,
-                }));
+                try {
+                    // Only pull if needed
+                    if (await this._shouldPull(this._selected_repository_path)) {
+                        await filesystem.pull(this._selected_repository_path);
+                    }
+                    
+                    let file_path = selection.dataset.entryRelativePath;
+                    let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
+            
+                    let entity_to_edit = {
+                        contents: file_contents,
+                        path: file_path,
+                    };
+                    
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
+                        "detail": entity_to_edit,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+            
+                } catch (error) {
+                    console.error('Failed to load file:', error);
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to load file. Please try again.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
             }
         });
 
@@ -651,6 +674,22 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
         
         return Array.from(directoriesNeeded);
+    }
+
+    // Add this helper method
+    async _shouldPull(repositoryPath) {
+        const now = Date.now();
+        const lastPull = this._lastPullTimestamp?.[repositoryPath] || 0;
+        const PULL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+        
+        if (now - lastPull > PULL_INTERVAL) {
+            this._lastPullTimestamp = {
+                ...this._lastPullTimestamp,
+                [repositoryPath]: now
+            };
+            return true;
+        }
+        return false;
     }
 
 }
