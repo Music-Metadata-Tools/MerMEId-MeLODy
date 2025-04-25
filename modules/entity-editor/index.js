@@ -37,6 +37,11 @@ const styles =
             margin-right: 0.3em;
             font-size: 0.75em;
         }
+        sl-button#undo-changes sl-icon::part(base) {
+            font-size: 1.5rem;  // Make icon bigger
+            color: var(--sl-color-neutral-0);  // Keep white color
+            vertical-align: middle;  // Center align the bigger icon
+        }
         .header-container {
             display: flex;
             justify-content: space-between;
@@ -209,6 +214,9 @@ export default class ADWLMEntityEditor extends LitElement {
                         Save
                         <sl-icon name="floppy" slot="suffix"></sl-icon>
                     </sl-button>
+                    <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
+                        <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
+                    </sl-button>
                 </sl-button-group>
                 ${this.entity_to_edit ? html`
                     <div class="header-container">
@@ -319,6 +327,46 @@ export default class ADWLMEntityEditor extends LitElement {
                     "composed": true,
                 }));
                 this._hasUnsavedChanges = false;
+            }
+
+            if (target.matches("sl-button#undo-changes")) {
+                try {
+                    // Get the current editor form
+                    const editor = this.renderRoot.querySelector("shacl-form");
+                    
+                    // Get the last saved state from the entity_to_edit
+                    if (this.entity_to_edit) {
+                        // Reset the form to the last saved state
+                        editor.dataset.values = this.entity_to_edit.contents;
+                        
+                        // Reset unsaved changes flag
+                        this._hasUnsavedChanges = false;
+                        
+                        // Show success notification
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 3000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="arrow-counterclockwise"></sl-icon>
+                            Changes undone successfully
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                    }
+                } catch (error) {
+                    console.error('Failed to undo changes:', error);
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to undo changes. Please try again.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
             }
         });
 
