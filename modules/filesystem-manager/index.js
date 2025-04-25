@@ -177,7 +177,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
                             <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
-                                <sl-icon name="arrow-counterclockwise"></sl-icon>
+                                <sl-icon name="arrow-clockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
@@ -205,6 +205,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                             ?disabled="${!this._hasSelectedFiles}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
+                        <sl-button
+                            id="unstage-files"
+                            size="small"
+                            title="Unstage selected files"
+                            ?disabled="${!this._hasSelectedFiles}">
+                            <sl-icon name="arrow-counterclockwise"></sl-icon>
+                        </sl-button>
                     </sl-button-group>
                     <sl-tree id="staged-files-tree" selection="multiple">
                         ${this._displayed_staged_files}
@@ -224,6 +231,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             <sl-alert id="commit-and-push-need" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured loading unshared files. Please share the created files with the repository.
+            </sl-alert>
+            <sl-alert id="unstage-files-done" variant="primary" duration="6000" closable>
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                The selected files were unstaged successfully.
             </sl-alert>
         `;
     }
@@ -514,6 +525,70 @@ export default class ADWLMFilesystemManager extends LitElement {
                     commit_and_push_error_toast.toast();
                 }
                 target.loading = false;
+            }
+
+            if (target.matches("sl-button#unstage-files")) {
+                target.loading = true;
+
+                try {
+                    let staged_files_tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
+                    let selected_staged_files = [...staged_files_tree.querySelectorAll("sl-tree-item[selected]")]
+                        .map(item => ({
+                            path: item.dataset.entryRelativePath,
+                            absolutePath: item.dataset.entryAbsolutePath
+                        }));
+
+                    if (selected_staged_files.length === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'warning';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Please select files to unstage.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        return;
+                    }
+
+                    // Unstage each selected file
+                    for (const file of selected_staged_files) {
+                        await filesystem.unstageFile(this._selected_repository_path, file.path);
+                    }
+
+                    // Update UI
+                    await this._list_staged_files();
+                    await this._updateRepositoryTreeStatus();
+
+                    // Show success message
+                    const unstageAlert = this.renderRoot.querySelector("sl-alert#unstage-files-done");
+                    unstageAlert.toast();
+
+                    // Clear selections and disable buttons if no files remain
+                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                        .forEach(item => item.selected = false);
+                    
+                    // Update button states based on remaining files
+                    const remainingFiles = staged_files_tree.querySelectorAll('sl-tree-item');
+                    this._hasSelectedFiles = false; // Reset selection state
+                    this._hasUnsharedFiles = remainingFiles.length > 0; // Update unshared state
+                        
+                } catch (error) {
+                    console.error('Failed to unstage files:', error);
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to unstage files. Please try again.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
+                    target.loading = false;
+                }
             }
         });
 

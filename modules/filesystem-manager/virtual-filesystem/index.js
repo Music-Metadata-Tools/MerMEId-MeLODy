@@ -395,6 +395,31 @@ export default class ADWLMVirtualFilesystem {
         console.log("elapsed time for git.pull() = " + (end - start) + "ms");
     }
 
+    async unstageFile(repository_path, file_relative_path) {
+        try {
+            // Reset the index entry for this file
+            await git.resetIndex({
+                fs: this.fs,
+                dir: repository_path,
+                filepath: file_relative_path
+            });
+
+            // Restore the file from HEAD
+            await git.checkout({
+                fs: this.fs,
+                dir: repository_path,
+                ref: 'HEAD',
+                force: true,
+                filepaths: [file_relative_path]
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error unstaging file:', error);
+            throw new Error(`Failed to unstage file: ${error.message}`);
+        }
+    }
+
     async _list_refs(repository_metadata, refs_type) {
         let refs = await git.listServerRefs({
             http,
