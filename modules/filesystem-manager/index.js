@@ -561,19 +561,23 @@ export default class ADWLMFilesystemManager extends LitElement {
                     await this._list_staged_files();
                     await this._updateRepositoryTreeStatus();
 
-                    // Show success message
-                    const unstageAlert = this.renderRoot.querySelector("sl-alert#unstage-files-done");
-                    unstageAlert.toast();
-
-                    // Clear selections and disable buttons if no files remain
+                    // Clear selections
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
                     
-                    // Update button states based on remaining files
+                    // Update selection state and button states
+                    this._hasSelectedFiles = false;
+                    
+                    // Get remaining files count
                     const remainingFiles = staged_files_tree.querySelectorAll('sl-tree-item');
-                    this._hasSelectedFiles = false; // Reset selection state
-                    this._hasUnsharedFiles = remainingFiles.length > 0; // Update unshared state
-                        
+                    this._hasUnsharedFiles = remainingFiles.length > 0;
+
+                    // Show success message only if the alert exists
+                    const unstageAlert = this.renderRoot.querySelector("sl-alert#unstage-files-done");
+                    if (unstageAlert) {
+                        unstageAlert.toast();
+                    }
+
                 } catch (error) {
                     console.error('Failed to unstage files:', error);
                     const alert = document.createElement('sl-alert');
