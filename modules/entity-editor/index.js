@@ -89,6 +89,10 @@ export default class ADWLMEntityEditor extends LitElement {
         _skipNextUpdate: {
             type: Boolean,
             state: true
+        },
+        _hasUnsharedFiles: {
+            type: Boolean,
+            state: true
         }
     };
 
