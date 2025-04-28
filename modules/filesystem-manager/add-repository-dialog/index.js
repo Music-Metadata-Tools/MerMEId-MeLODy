@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
+import { CredentialsHelper } from '../credentials-helper.js';
 
 class RepositoryToClone {
     constructor() {
@@ -160,10 +161,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
-                        <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="mermeid-sample-data" required="true" autofocus="true"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git" required="true"></sl-input>
-                        <sl-input id="username" label="Username" value="teoclaud" required="true"></sl-input>
-                        <sl-input id="personal-access-token" label="Personal access token" value="aGrcXmKzFAypt57zox-y" required="true"></sl-input>
+                        <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="" required="true" autofocus="true" autocomplete="off"></sl-input>
+                        <sl-input id="repository-url" label="Repository URL" value="" required="true" autocomplete="off"></sl-input>
+                        <sl-input id="username" label="Username" value="" required="true" autocomplete="off"></sl-input>
+                        <sl-input id="personal-access-token" label="Personal access token" type="password" value="" required="true"></sl-input>
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
                         <sl-select id="repository-branches" label="${this._get_repositiory_branches_label()}"></sl-select>
@@ -175,8 +176,17 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         `;
     }
 
-    firstUpdated() {
+    async firstUpdated() {
         this._credentials_alert = this.shadowRoot.querySelector("sl-alert#credentials");
+        
+        // Auto-fill last used credentials
+        const credentials = await CredentialsHelper.getCredentials();
+        console.log('Retrieved credentials:', credentials); // Add this debug line
+        if (credentials) {
+            this.renderRoot.querySelector("sl-input#repository-folder-name").value = credentials.folder;
+            this.renderRoot.querySelector("sl-input#repository-url").value = credentials.url;
+            this.renderRoot.querySelector("sl-input#username").value = credentials.username;
+        }
     }
 
     createRenderRoot() {
@@ -277,6 +287,13 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     "bubbles": true,
                     "composed": true,
                 }));
+
+                // Save credentials if clone was successful
+                await CredentialsHelper.saveCredentials(
+                    this._repository_to_clone.folder.replace('/', ''),  // Remove the leading slash
+                    this._repository_to_clone.url,
+                    this._repository_to_clone.username
+                );
             }
         });
 
@@ -308,6 +325,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this.renderRoot.querySelector("sl-tab-group").show(this._tab_panel_1_name);
         this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
         this.renderRoot.querySelector("sl-input#repository-url").value = "";
+        this.renderRoot.querySelector("sl-input#username").value = ""; // Add this line
         this.renderRoot.querySelector("sl-input#personal-access-token").value = "";
         let repository_branches_select = this.renderRoot.querySelector("sl-select#repository-branches");
         repository_branches_select.value = "";
