@@ -69,6 +69,20 @@ const styles =
             }
         }
         
+        sl-details[data-has-unshared="true"]::part(summary) {
+            color: var(--sl-color-warning-500);
+            font-weight: var(--sl-font-weight-semibold);
+        }
+        
+        sl-tree-item[data-has-unshared="true"]::part(base) {
+            color: var(--sl-color-warning-500);
+            font-weight: var(--sl-font-weight-semibold);
+        }
+        
+        sl-tree-item[data-is-unshared="true"]::part(base) {
+            color: var(--sl-color-warning-500);
+            font-style: italic;
+        }
     `;
 
 export default class ADWLMFilesystemManager extends LitElement {
@@ -163,7 +177,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
                             <sl-button id="synchronize-repository" size="small" title="Synchronize repository">
-                                <sl-icon name="arrow-counterclockwise"></sl-icon>
+                                <sl-icon name="arrow-clockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
@@ -179,7 +193,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         })}
                     </div>
                 </sl-details>
-                <sl-details id="staged-files-details" summary="Share files" disabled>
+                <sl-details 
+                    id="staged-files-details" 
+                    summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
+                    disabled>
                     <sl-button-group>
                         <sl-button 
                             id="commit-and-push-staged-files" 
@@ -188,8 +205,17 @@ export default class ADWLMFilesystemManager extends LitElement {
                             ?disabled="${!this._hasSelectedFiles}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
+                        <sl-button
+                            id="unstage-files"
+                            size="small"
+                            title="Unstage selected files"
+                            ?disabled="${!this._hasSelectedFiles}">
+                            <sl-icon name="arrow-counterclockwise"></sl-icon>
+                        </sl-button>
                     </sl-button-group>
-                    <sl-tree id="staged-files-tree" selection="multiple">${this._displayed_staged_files}</sl-tree>
+                    <sl-tree id="staged-files-tree" selection="multiple">
+                        ${this._displayed_staged_files}
+                    </sl-tree>
                 </sl-details>
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
@@ -205,6 +231,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             <sl-alert id="commit-and-push-need" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured loading unshared files. Please share the created files with the repository.
+            </sl-alert>
+            <sl-alert id="unstage-files-done" variant="primary" duration="6000" closable>
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                The selected files were unstaged successfully.
             </sl-alert>
         `;
     }
@@ -483,9 +513,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                 
                 if (push_result) {
                     await this._list_staged_files();
-                    commit_and_push_done_toast.toast();
-                    // Disable the button after successful commit
+                    this._hasUnsharedFiles = false;
                     this._hasSelectedFiles = false;
+                    this._staged_files = [];
+                    await this._updateRepositoryTreeStatus();
+                    commit_and_push_done_toast.toast();
                     // Clear selections in the staged files tree
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
@@ -493,6 +525,74 @@ export default class ADWLMFilesystemManager extends LitElement {
                     commit_and_push_error_toast.toast();
                 }
                 target.loading = false;
+            }
+
+            if (target.matches("sl-button#unstage-files")) {
+                target.loading = true;
+
+                try {
+                    let staged_files_tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
+                    let selected_staged_files = [...staged_files_tree.querySelectorAll("sl-tree-item[selected]")]
+                        .map(item => ({
+                            path: item.dataset.entryRelativePath,
+                            absolutePath: item.dataset.entryAbsolutePath
+                        }));
+
+                    if (selected_staged_files.length === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'warning';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Please select files to unstage.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        return;
+                    }
+
+                    // Unstage each selected file
+                    for (const file of selected_staged_files) {
+                        await filesystem.unstageFile(this._selected_repository_path, file.path);
+                    }
+
+                    // Update UI
+                    await this._list_staged_files();
+                    await this._updateRepositoryTreeStatus();
+
+                    // Clear selections
+                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                        .forEach(item => item.selected = false);
+                    
+                    // Update selection state and button states
+                    this._hasSelectedFiles = false;
+                    
+                    // Get remaining files count
+                    const remainingFiles = staged_files_tree.querySelectorAll('sl-tree-item');
+                    this._hasUnsharedFiles = remainingFiles.length > 0;
+
+                    // Show success message only if the alert exists
+                    const unstageAlert = this.renderRoot.querySelector("sl-alert#unstage-files-done");
+                    if (unstageAlert) {
+                        unstageAlert.toast();
+                    }
+
+                } catch (error) {
+                    console.error('Failed to unstage files:', error);
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to unstage files. Please try again.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
+                    target.loading = false;
+                }
             }
         });
 
@@ -588,6 +688,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         await this._populate_folder_contents(selectedFolder, entries);
                     }
                 }
+
+                // Update staged files list and tree status
+                await this._list_staged_files();
             } catch (error) {
                 console.error('Failed to save entity:', error);
                 // Show error message to user
@@ -639,11 +742,22 @@ export default class ADWLMFilesystemManager extends LitElement {
         // Maybe load the files asynchronously, as they are discovered?
         // The current approach implies 0.5-1.5 seconds for listing the files, for
         // a repo with 4K+ files, so async loading is not needed.
-        let tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
+        const tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
+        const details = this.renderRoot.querySelector("sl-details#staged-files-details");
         tree.innerHTML = "";
         tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
+        
+        // Store staged files in memory for later use
+        this._staged_files = staged_file_relative_paths;
+        
+        // Update repository tree to show unshared status
+        await this._updateRepositoryTreeStatus();
+        
+        // Update unshared files status
+        this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
+        details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
 
         tree.innerHTML = "";
 
@@ -738,6 +852,42 @@ export default class ADWLMFilesystemManager extends LitElement {
         return false;
     }
 
+    async _updateRepositoryTreeStatus() {
+        const repoTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+        if (!repoTree || !this._staged_files) return;
+    
+        // Reset all statuses
+        repoTree.querySelectorAll('sl-tree-item').forEach(item => {
+            item.removeAttribute('data-has-unshared');
+            item.removeAttribute('data-is-unshared');
+        });
+    
+        // Mark unshared files and their parent folders
+        this._staged_files.forEach(stagedPath => {
+            // Mark the file itself
+            const fileItem = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${stagedPath}"]`);
+            if (fileItem) {
+                fileItem.setAttribute('data-is-unshared', 'true');
+            }
+    
+            // Mark all parent folders
+            let currentPath = stagedPath;
+            while (currentPath.includes('/')) {
+                currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                const folderItem = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${currentPath}"]`);
+                if (folderItem) {
+                    folderItem.setAttribute('data-has-unshared', 'true');
+                }
+            }
+    
+            // Mark root folder if it contains unshared files
+            const rootFolder = stagedPath.split('/')[0];
+            const rootItem = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${rootFolder}"]`);
+            if (rootItem) {
+                rootItem.setAttribute('data-has-unshared', 'true');
+            }
+        });
+    }
 }
 
 window.customElements.define("adwlm-filesystem-manager", ADWLMFilesystemManager);
