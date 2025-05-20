@@ -98,7 +98,7 @@ span.footer {
 
 img.logo {
     width: auto;
-    height: 80px; /* Adjust this value to your preferred logo size */
+    height: 100px; /* Adjust this value to your preferred logo size */
     margin-left: auto; /* Pushes logo to the right */
 }
 
