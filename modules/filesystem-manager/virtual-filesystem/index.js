@@ -372,6 +372,16 @@ export default class ADWLMVirtualFilesystem {
 
     async pull(repository_path) {
         // get some metadata
+        let personal_access_token = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.pat"
+        });
+        let username = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.name"
+        });
         let current_branch = await git.currentBranch({
             fs: this.fs,
             dir: repository_path,
@@ -386,7 +396,12 @@ export default class ADWLMVirtualFilesystem {
                 http,
                 dir: repository_path,
                 ref: current_branch,
-                singleBranch: true
+                singleBranch: true,
+                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+                onAuth: () => ({
+                    username: username,
+                    password: personal_access_token,
+                })
             });
         } catch (error) {
             console.error(error);
