@@ -395,6 +395,20 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
+                if (!this._selected_repository_path) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'warning';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Please select a repository to synchronize.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
                 try {
                     await filesystem.pull(this._selected_repository_path);
                     // Show success notification
