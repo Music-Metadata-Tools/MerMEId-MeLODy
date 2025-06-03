@@ -422,6 +422,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
                 } finally {
+                    // Collapse files tree to force reloading
+                    let repo_folder_tree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"]`);
+                    repo_folder_tree.removeAttribute("expanded");
                     target.loading = false;
                 }
             }
