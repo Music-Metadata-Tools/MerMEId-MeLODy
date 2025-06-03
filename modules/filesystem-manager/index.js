@@ -316,24 +316,24 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
                 try {
                     // Only pull if needed
-                    if (await this._shouldPull(this._selected_repository_path)) {
-                        await filesystem.pull(this._selected_repository_path);
-                    }
-                    
+                    //if (await this._shouldPull(this._selected_repository_path)) {
+                    //    await filesystem.pull(this._selected_repository_path);
+                    //}
+
                     let file_path = selection.dataset.entryRelativePath;
                     let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
-            
+
                     let entity_to_edit = {
                         contents: file_contents,
                         path: file_path,
                     };
-                    
+
                     this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
                         "detail": entity_to_edit,
                         "bubbles": true,
                         "composed": true,
                     }));
-            
+
                 } catch (error) {
                     console.error('Failed to load file:', error);
                     const alert = document.createElement('sl-alert');
