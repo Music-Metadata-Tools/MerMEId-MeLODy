@@ -94,6 +94,9 @@ export default class ADWLMFilesystemManager extends LitElement {
         _selected_repository_path: {
             type: String,
         },
+        _file_path: {
+            type: String,
+        },
         _staged_files: {
             type: Array,
         },
@@ -292,7 +295,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
-            
+
             // Add this new condition
             if (target.matches("sl-tree#staged-files-tree")) {
                 const selectedItems = target.querySelectorAll('sl-tree-item[selected]');
@@ -320,12 +323,12 @@ export default class ADWLMFilesystemManager extends LitElement {
                     //    await filesystem.pull(this._selected_repository_path);
                     //}
 
-                    let file_path = selection.dataset.entryRelativePath;
-                    let file_contents = await filesystem.read_file(this._selected_repository_path, file_path);
+                    this._file_path = selection.dataset.entryRelativePath;
+                    let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
 
                     let entity_to_edit = {
                         contents: file_contents,
-                        path: file_path,
+                        path: this._file_path,
                     };
 
                     this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
@@ -424,9 +427,45 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
                 } finally {
-                    // Collapse files tree to force reloading
+                    // reload the previously selected file, if any
+                    if (this._selected_repository_path && this._file_path) {
+                        let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
+
+                        let entity_to_edit = {
+                            contents: file_contents,
+                            path: this._file_path,
+                        };
+
+                        this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
+                            "detail": entity_to_edit,
+                            "bubbles": true,
+                            "composed": true,
+                        }));
+                    }
+
+                    // Collect all expanded items before collapsing
+                    let expandedItems = [...render_root.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
+                        path: item.dataset.entryRelativePath,
+                        type: item.dataset.entryType
+                    }));
+
+                    // Collapse repository folder
                     let repo_folder_tree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"]`);
                     repo_folder_tree.removeAttribute("expanded");
+
+                    // Re-expand previously expanded items
+                    const expandItems = async () => {
+                        for (const itemInfo of expandedItems) {
+                            const item = render_root.querySelector(`sl-tree-item[data-entry-relative-path="${itemInfo.path}"][data-entry-type="${itemInfo.type}"]`);
+                            if (item) {
+                                item.setAttribute('expanded', '');
+                                // Wait for lazy loading to complete
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                            }
+                        }
+                    };
+                    setTimeout(() => expandItems(), 500);
+
                     target.loading = false;
                 }
             }
