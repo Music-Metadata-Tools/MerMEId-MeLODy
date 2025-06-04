@@ -405,6 +405,7 @@ export default class ADWLMVirtualFilesystem {
             });
         } catch (error) {
             console.error(error);
+            throw error;
         }
         let end = performance.now();
         console.log("elapsed time for git.pull() = " + (end - start) + "ms");

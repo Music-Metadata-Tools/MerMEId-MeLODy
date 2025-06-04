@@ -418,6 +418,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     alert.innerHTML = `
                         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                         Failed to synchronize with remote repository
+                        <br><br>
+                        <em>${error.message}<em>
                     `;
                     document.body.append(alert);
                     alert.toast();
