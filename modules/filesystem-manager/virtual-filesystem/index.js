@@ -254,7 +254,9 @@ export default class ADWLMVirtualFilesystem {
                 }
             },
         });
-        file_contents = new TextDecoder().decode(file_contents);
+        if (file_contents) {
+            file_contents = new TextDecoder().decode(file_contents);
+        }
 
         return file_contents;
     }

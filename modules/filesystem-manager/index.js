@@ -317,39 +317,8 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                try {
-                    // Only pull if needed
-                    //if (await this._shouldPull(this._selected_repository_path)) {
-                    //    await filesystem.pull(this._selected_repository_path);
-                    //}
-
-                    this._file_path = selection.dataset.entryRelativePath;
-                    let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
-
-                    let entity_to_edit = {
-                        contents: file_contents,
-                        path: this._file_path,
-                    };
-
-                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
-                        "detail": entity_to_edit,
-                        "bubbles": true,
-                        "composed": true,
-                    }));
-
-                } catch (error) {
-                    console.error('Failed to load file:', error);
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Failed to load file. Please try again.
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                }
+                this._file_path = selection.dataset.entryRelativePath;
+                await this._load_entity_to_edit();
             }
         });
 
@@ -422,25 +391,14 @@ export default class ADWLMFilesystemManager extends LitElement {
                         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                         Failed to synchronize with remote repository
                         <br><br>
-                        <em>${error.message}<em>
+                        <em>${error.message}</em>
                     `;
                     document.body.append(alert);
                     alert.toast();
                 } finally {
                     // reload the previously selected file, if any
                     if (this._selected_repository_path && this._file_path) {
-                        let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
-
-                        let entity_to_edit = {
-                            contents: file_contents,
-                            path: this._file_path,
-                        };
-
-                        this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
-                            "detail": entity_to_edit,
-                            "bubbles": true,
-                            "composed": true,
-                        }));
+                        await this._load_entity_to_edit();
                     }
 
                     // Collect all expanded items before collapsing
@@ -780,6 +738,55 @@ export default class ADWLMFilesystemManager extends LitElement {
             return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-absolute-path="${entry_path}" data-entry-relative-path="${entry_name}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
         });
         this._displayed_repository_names = displayed_repository_names;
+    }
+
+    async _load_entity_to_edit() {
+        try {
+            // Only pull if needed
+            //if (await this._shouldPull(this._selected_repository_path)) {
+            //    await filesystem.pull(this._selected_repository_path);
+            //}
+            let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
+            if (!file_contents || file_contents.trim() === "") {
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'warning';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    The selected file is empty or does not exist anymore.
+                `;
+                document.body.append(alert);
+                alert.toast();
+                return;
+            }
+
+            let entity_to_edit = {
+                contents: file_contents,
+                path: this._file_path,
+            };
+
+            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
+                "detail": entity_to_edit,
+                "bubbles": true,
+                "composed": true,
+            }));
+
+        } catch (error) {
+            console.error('Failed to load file:', error);
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'danger';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to load file. Please try again.
+                <br><br>
+                <em>${error.message}</em>
+            `;
+            document.body.append(alert);
+            alert.toast();
+        }
     }
 
     async _list_staged_files() {
