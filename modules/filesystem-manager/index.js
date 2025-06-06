@@ -618,6 +618,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             add_repository_dialog.reset();
         });
 
+        document.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
+            await this._deselect_files_tree();
+        });
+
         render_root.addEventListener("adwlm-rename-filesystem-entry-dialog:new-entry-name", async (event) => {
             let new_entry_metadata = event.detail;
             let entry = new_entry_metadata.entry;
@@ -787,6 +791,19 @@ export default class ADWLMFilesystemManager extends LitElement {
             document.body.append(alert);
             alert.toast();
         }
+    }
+
+    async _deselect_files_tree(){
+        const treeContainer = this.renderRoot.querySelector('#repositories-tree-container');
+        if (!treeContainer) return;
+
+        // Find selected tree items
+        const selectedItems = treeContainer.querySelectorAll('sl-tree-item[selected]');
+
+        // Remove selected attribute from each item
+        selectedItems.forEach(item => {
+            item.removeAttribute('selected');
+        });
     }
 
     async _list_staged_files() {
