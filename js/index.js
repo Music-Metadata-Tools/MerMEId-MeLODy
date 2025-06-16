@@ -1,6 +1,9 @@
 import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
 await init_oxigraph();
 import { PersonConverter } from '../modules/rdf-xml-converter/src/converters/person/converter.js';
+import { PlaceConverter } from '../modules/rdf-xml-converter/src/converters/place/converter.js';
+import { VenueConverter } from '../modules/rdf-xml-converter/src/converters/venue/converter.js';
+import { EventConverter } from '../modules/rdf-xml-converter/src/converters/event/converter.js';
 
 // configuration
 const classifications = {
@@ -144,10 +147,16 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Person'
     );
     
-    console.log('Is Person Entity:', isPersonEntity);
-    
     const isPlaceEntity = json_ld_contents.some(item =>
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Place'
+    );
+
+    const isVenueEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Venue'
+    );
+
+    const isEventEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Event'
     );
 
     let xml = '';
@@ -157,32 +166,20 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     } 
     
     else if (isPlaceEntity) {
-        let place_name = "";
-        let alternate_name = "";
-        let description = "";
-        let country = "";
-        let date = "";
         
-        json_ld_contents.forEach((item) => {
-            if (item.hasOwnProperty("http://schema.org/name")) {
-                place_name = item["http://schema.org/name"]["@value"];
-            }
-            if (item.hasOwnProperty("http://schema.org/alternateName")) {
-                alternate_name = item["http://schema.org/alternateName"]["@value"];
-            }
-            if (item.hasOwnProperty("http://schema.org/description")) {
-                description = item["http://schema.org/description"]["@value"];
-            }
-            if (item.hasOwnProperty("http://www.cidoc-crm.org/cidoc-crm/P89_falls_within")) {
-                country = item["http://www.cidoc-crm.org/cidoc-crm/P89_falls_within"]["@value"];
-            }
-            if (item.hasOwnProperty("https://d-nb.info/standards/elementset/gnd#dateOfEstablishment")) {
-                date = item["https://d-nb.info/standards/elementset/gnd#dateOfEstablishment"]["@value"];
-            }
-        });
-
-        xml = place_template({ place_name, alternate_name, country, date, description });
+        xml = PlaceConverter.toXML(json_ld_contents);
     } 
+
+    else if (isVenueEntity) {
+        
+        xml = VenueConverter.toXML(json_ld_contents);
+    }
+
+    else if (isEventEntity) {
+        
+        xml = EventConverter.toXML(json_ld_contents);
+    }
+
     else {
         // Manifestation or other entity types
         let title = "";
