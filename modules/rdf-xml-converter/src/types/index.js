@@ -12,6 +12,18 @@
  */
 
 /**
+ * @typedef {Object} InstitutionData
+ * @property {string} subjectUri
+ * @property {string} name
+ * @property {string} [abbreviation]
+ * @property {string} [location]
+ * @property {string} [address]
+ * @property {Date} [date]
+ * @property {string} [description]
+ * @property {string[]} [sameAs]
+ */
+
+/**
  * @typedef {Object} PlaceData
  * @property {string} subjectUri
  * @property {string} name
