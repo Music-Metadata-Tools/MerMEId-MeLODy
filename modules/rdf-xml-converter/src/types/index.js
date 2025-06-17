@@ -59,5 +59,19 @@
  * @property {string[]} [citations]
  */
 
+/**
+ * @typedef {Object} PerformanceEventData
+ * @property {string} subjectUri
+ * @property {string} label
+ * @property {string} [classification]
+ * @property {string} [venue]
+ * @property {string} [duration]
+ * @property {string} [description]
+ * @property {string[]} [sameAs]
+ * @property {Date} [date]
+ * @property {Contribution[]} [contributions]
+ * @property {string[]} [citations]
+ */
+
 export {};
 

@@ -4,6 +4,7 @@ import { PersonConverter } from '../modules/rdf-xml-converter/src/converters/per
 import { PlaceConverter } from '../modules/rdf-xml-converter/src/converters/place/converter.js';
 import { VenueConverter } from '../modules/rdf-xml-converter/src/converters/venue/converter.js';
 import { EventConverter } from '../modules/rdf-xml-converter/src/converters/event/converter.js';
+import { PerformanceEventConverter } from '../modules/rdf-xml-converter/src/converters/performance-event/converter.js';
 
 // configuration
 const classifications = {
@@ -159,6 +160,10 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Event'
     );
 
+    const isPerformanceEventEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#PerformanceEvent'
+    );
+
     let xml = '';
     
     if (isPersonEntity) {
@@ -178,6 +183,11 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     else if (isEventEntity) {
         
         xml = EventConverter.toXML(json_ld_contents);
+    }
+
+    else if (isPerformanceEventEntity) {
+        
+        xml = PerformanceEventConverter.toXML(json_ld_contents);
     }
 
     else {
