@@ -38,6 +38,10 @@
 /**
  * @typedef {Object} Date
  * @property {string} value
+ * @property {string} [startDate]
+ * @property {string} [endDate]
+ * @property {string} [notBefore]
+ * @property {string} [notAfter]
  * @property {string} [certainty]
  * @property {string} [dateDescription]
  */
