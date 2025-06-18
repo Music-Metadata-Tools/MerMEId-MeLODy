@@ -10,6 +10,7 @@
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
+@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/mermeid-sample-data/datasets/> .
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
@@ -339,13 +340,16 @@ melod:Date
 melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl, dataset:persons.ttl ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
-                  sh:nodeKind sh:IRI ;
+                  sh:or (
+                    [ sh:class melod:Person ; rdfs:label "Person" ]
+                    [ sh:class melod:Institution; rdfs:label "Institution" ]
+                  )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
