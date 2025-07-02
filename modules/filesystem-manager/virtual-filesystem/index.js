@@ -349,7 +349,7 @@ export default class ADWLMVirtualFilesystem {
             dir: repository_path,
             remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
             ref: current_branch,
-            force: true,
+            force: false,
             onAuth: () => ({
                 username: username,
                 password: personal_access_token,
