@@ -342,19 +342,25 @@ export default class ADWLMVirtualFilesystem {
             message: commit_message
         });
 
-        // push all the committed files
-        let push_result = await git.push({
-            fs: this.fs,
-            http,
-            dir: repository_path,
-            remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
-            ref: current_branch,
-            force: false,
-            onAuth: () => ({
-                username: username,
-                password: personal_access_token,
-            }),
-        });
+        let push_result = {};
+        try {
+            // push all the committed files
+            push_result = await git.push({
+                fs: this.fs,
+                http,
+                dir: repository_path,
+                remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
+                ref: current_branch,
+                force: false,
+                onAuth: () => ({
+                    username: username,
+                    password: personal_access_token,
+                }),
+            });
+        } catch (error) {
+            //console.error(error);
+            throw error;
+        }
 
         // in case when not all files were selected,
         // stage back the files that were not selected

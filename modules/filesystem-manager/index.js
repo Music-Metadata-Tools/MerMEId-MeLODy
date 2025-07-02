@@ -549,12 +549,31 @@ export default class ADWLMFilesystemManager extends LitElement {
                     return;
                 }
 
-                let push_result = await filesystem.commit_and_push_file(
-                    this._selected_repository_path, 
-                    staged_file_paths, 
-                    selected_staged_file_paths
-                );
-                
+                let push_result = false;
+                try {
+                    push_result = await filesystem.commit_and_push_file(
+                        this._selected_repository_path,
+                        staged_file_paths,
+                        selected_staged_file_paths
+                    );
+                } catch (error) {
+                    console.error('Failed to share files:', error);
+                    // Show error notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to share files with remote repository. Try to synchronize before sharing.
+                        <br><br>
+                        <em>${error.message}</em>
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    push_result = false;
+                }
+
                 if (push_result) {
                     await this._list_staged_files();
                     this._hasUnsharedFiles = false;
