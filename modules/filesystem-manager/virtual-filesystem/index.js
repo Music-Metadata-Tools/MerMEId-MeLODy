@@ -414,6 +414,12 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async unstageFile(repository_path, file_relative_path) {
+        let current_branch = await git.currentBranch({
+            fs: this.fs,
+            dir: repository_path,
+            fullname: false
+        });
+
         try {
             // Reset the index entry for this file
             await git.resetIndex({
@@ -422,11 +428,11 @@ export default class ADWLMVirtualFilesystem {
                 filepath: file_relative_path
             });
 
-            // Restore the file from HEAD
+            // Restore the file from current branch
             await git.checkout({
                 fs: this.fs,
                 dir: repository_path,
-                ref: 'HEAD',
+                ref: current_branch,
                 force: true,
                 filepaths: [file_relative_path]
             });
