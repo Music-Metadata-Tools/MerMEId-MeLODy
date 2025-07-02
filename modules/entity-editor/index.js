@@ -177,6 +177,14 @@ export default class ADWLMEntityEditor extends LitElement {
                 entity_name_tree_dialog.entity_name_tree_items = tree_items;
             }
         }
+
+        if (changedProperties.has('_hasUnsavedChanges')) {
+            this.dispatchEvent(new CustomEvent('adwlm-entity-editor:unsaved-changes', {
+                detail: { hasUnsavedChanges: this._hasUnsavedChanges },
+                bubbles: true,
+                composed: true
+            }));
+        }
     }
 
     // Add new helper method to handle entity loading

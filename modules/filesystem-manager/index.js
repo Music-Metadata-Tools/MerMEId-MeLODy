@@ -113,6 +113,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             type: Object,
             state: true
         },
+        _hasUnsavedChanges: {
+            type: Boolean,
+            state: false
+        },
         _hasSelectedFiles: {
             type: Boolean,
             state: true
@@ -253,6 +257,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         let commit_and_push_done_toast = render_root.querySelector("sl-alert#commit-and-push-done");
         let commit_and_push_error_toast = render_root.querySelector("sl-alert#commit-and-push-error");
 
+        document.addEventListener('adwlm-entity-editor:unsaved-changes', (event) => {
+            this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
+        });
+
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
 
@@ -367,19 +375,41 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
-                try {
-                    await filesystem.pull(this._selected_repository_path);
-                    // Show success notification
+
+                // Alert unsaved changes might be deleted or overwritten after pull
+                if (this._hasUnsavedChanges) {
                     const alert = document.createElement('sl-alert');
-                    alert.variant = 'success';
+                    alert.variant = 'danger';
                     alert.closable = true;
                     alert.duration = 6000;
                     alert.innerHTML = `
-                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                        Successfully synchronized with remote repository
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Unsaved changes might be deleted or overwritten during synchronization.
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                // Alert that staged files might be deleted or overwritten after pull
+                if (this._staged_files && this._staged_files.length > 0) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Staged files might be deleted or overwritten during synchronization.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
+                try {
+                    await filesystem.pull(this._selected_repository_path);
                 } catch (error) {
                     console.error('Failed to synchronize:', error);
                     // Show error notification
@@ -396,6 +426,18 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
                 } finally {
+                    // Show success notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                        Successfully synchronized with remote repository
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+
                     // reload the previously selected file, if any
                     if (this._selected_repository_path && this._file_path) {
                         await this._load_entity_to_edit();
