@@ -767,11 +767,16 @@ export default class ADWLMFilesystemManager extends LitElement {
         render_root.addEventListener("sl-show", async (event) => {
             let target = event.target;
 
-            if (target.matches("sl-details")) {
-                [...container.querySelectorAll("sl-details")].map(details => (details.open = target === details));
+            // Close all other details when one is shown
+            //if (target.matches("sl-details")) {
+            //    [...container.querySelectorAll("sl-details")].map(details => (details.open = target === details));
+            //}
+
+            if (target.matches("sl-details#repositories-details") && !this._repository_buttons_disabled) {
+                await this._list_staged_files();
             }
 
-            if (target.matches("sl-details#staged-files-details")) {
+            if (target.matches("sl-details#staged-files-details") && !this._repository_buttons_disabled) {
                 await this._list_staged_files();
             }
         });
@@ -877,13 +882,13 @@ export default class ADWLMFilesystemManager extends LitElement {
         tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
-        
+
         // Store staged files in memory for later use
         this._staged_files = staged_file_relative_paths;
-        
+
         // Update repository tree to show unshared status
         await this._updateRepositoryTreeStatus();
-        
+
         // Update unshared files status
         this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
         details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
