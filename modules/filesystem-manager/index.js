@@ -780,6 +780,14 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await this._list_staged_files();
             }
         });
+
+        render_root.addEventListener("sl-expand", async (event) => {
+            let target = event.target;
+
+            if (target.matches("sl-tree-item") && target.closest("sl-tree#repositories-tree")) {
+                await this._list_staged_files();
+            }
+        });
     }
 
     _init() {
