@@ -606,6 +606,28 @@ export default class ADWLMFilesystemManager extends LitElement {
                         await filesystem.unstageFile(this._selected_repository_path, file.path);
                     }
 
+                    // Update repository tree
+                    if (this._selected_repository_path) {
+                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+
+                        if (repoTree) {
+                            const entry_relative_path = repoTree.getAttribute('data-entry-relative-path');
+
+                            // Generate the repository tree
+                            const tree_items = await this._generate_repository_tree(
+                                this._selected_repository_path,
+                                entry_relative_path
+                            );
+
+                            // Clear existing content while preserving the folder name
+                            const folderName = repoTree.dataset.entryName;
+                            repoTree.innerHTML = folderName
+
+                            // Insert the new tree items
+                            repoTree.insertAdjacentHTML("beforeend", tree_items);
+                        }
+                    }
+
                     // Update UI
                     await this._list_staged_files();
                     await this._updateRepositoryTreeStatus();
