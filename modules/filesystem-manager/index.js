@@ -270,33 +270,19 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let entry_absolute_path = target.dataset.entryAbsolutePath;
                 let entry_relative_path = target.dataset.entryRelativePath;
 
-                // case of a repo folder
+                // If expanding a repo folder: store repo path and enable staged files details
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
                 }
 
-                // case of a plain folder
-                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, entry_relative_path);
+                // Generate the repository tree
+                const tree_items = await this._generate_repository_tree(
+                    this._selected_repository_path,
+                    entry_relative_path
+                );
 
-                let tree_items = "";
-
-                // process the subfolders
-                for (const folder_relative_path of entries.folders) {
-                    let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
-                    let folder_absolute_path = `${this._selected_repository_path}/${folder_relative_path}`;
-
-                    tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
-                }
-
-                // process the files
-                for (const file_relative_path of entries.files) {
-                    let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
-                    let file_absolute_path = `${this._selected_repository_path}/${file_relative_path}`;
-
-                    tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
-                }
-
+                // Insert the tree items into the DOM
                 target.insertAdjacentHTML("beforeend", tree_items);
             }
         });
@@ -816,6 +802,30 @@ export default class ADWLMFilesystemManager extends LitElement {
             return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-absolute-path="${entry_path}" data-entry-relative-path="${entry_name}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
         });
         this._displayed_repository_names = displayed_repository_names;
+    }
+
+    async _generate_repository_tree(repository_path, relative_path) {
+        // Get files and directories in expanded folder
+        let entries = await filesystem.list_entries_from_workdir(repository_path, relative_path);
+
+        let tree_items = ""
+        // insert subfolders in tree
+        for (const folder_relative_path of entries.folders) {
+            let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
+            let folder_absolute_path = `${repository_path}/${folder_relative_path}`;
+
+            tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
+        }
+
+        // insert files in tree
+        for (const file_relative_path of entries.files) {
+            let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
+            let file_absolute_path = `${repository_path}/${file_relative_path}`;
+
+            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+        }
+
+        return tree_items;
     }
 
     async _load_entity_to_edit() {
