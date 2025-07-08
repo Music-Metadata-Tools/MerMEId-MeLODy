@@ -742,7 +742,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 alert.toast();
 
                 // Force refresh the file list
-                const repoTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+                let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
                 if (repoTree) {
                     const selectedFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
                     if (selectedFolder) {
@@ -761,6 +761,35 @@ export default class ADWLMFilesystemManager extends LitElement {
                             selectedFolder.dataset.entryRelativePath
                         );
                         await this._populate_folder_contents(selectedFolder, entries);
+                    } else {
+                        const tree_folder = await this._generate_repository_tree(
+                            this._selected_repository_path,
+                            this._selected_repository_path.split('/')[1]
+                        );
+
+                        // Keep existing folder name element
+                        const folderName = repoTree.dataset.entryName;
+
+                        // Clear child elements
+                        while (repoTree.firstChild) {
+                            repoTree.removeChild(repoTree.firstChild);
+                        }
+
+                        // Add back the folder name
+                        repoTree.textContent = folderName;
+
+                        // Insert the new tree items
+                        repoTree.insertAdjacentHTML("beforeend", tree_folder);
+
+                        // Generate the files tree
+                        const tree_files = await this._generate_repository_tree(
+                            this._selected_repository_path,
+                            entity_to_save.path.split('/')[0]
+                        );
+
+                        const newFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
+
+                        newFolder.setAttribute('expanded', '');
                     }
                 }
 
