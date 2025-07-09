@@ -6,6 +6,7 @@ import { VenueConverter } from '../modules/rdf-xml-converter/src/converters/venu
 import { EventConverter } from '../modules/rdf-xml-converter/src/converters/event/converter.js';
 import { PerformanceEventConverter } from '../modules/rdf-xml-converter/src/converters/performance-event/converter.js';
 import { InstitutionConverter } from '../modules/rdf-xml-converter/src/converters/institution/converter.js';
+import { BibliographyConverter } from '../modules/rdf-xml-converter/src/converters/bibliography/converter.js';
 
 // configuration
 const classifications = {
@@ -130,20 +131,7 @@ output.querySelector("pre").innerText = form.serialize();
 let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
-document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
-    let entity_to_save = event.detail;
-
-    // TODO: replace this with event dispatched to adwlm-entity-renderer
-    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
-    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
-    // END TODO
-
-    let rdf_contents = entity_to_save.rdf_contents;
-    let json_ld_contents = JSON.parse(entity_to_save.json_ld_contents);
-
-    // Debug logging
-    console.log('Full JSON-LD contents:', json_ld_contents);
-
+function convertJsonLdToXml(json_ld_contents) {
     // Check entity type
     const isPersonEntity = json_ld_contents.some(item => 
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Person'
@@ -169,35 +157,42 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Institution'
     );
 
-    let xml = '';
-    
+    const isBibliographyEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Bibliography'
+    );
+
     if (isPersonEntity) {
-        xml = PersonConverter.toXML(json_ld_contents);
+        return PersonConverter.toXML(json_ld_contents);
     } 
     
     else if (isPlaceEntity) {
         
-        xml = PlaceConverter.toXML(json_ld_contents);
+        return PlaceConverter.toXML(json_ld_contents);
     } 
 
     else if (isVenueEntity) {
         
-        xml = VenueConverter.toXML(json_ld_contents);
+        return VenueConverter.toXML(json_ld_contents);
     }
 
     else if (isEventEntity) {
         
-        xml = EventConverter.toXML(json_ld_contents);
+        return EventConverter.toXML(json_ld_contents);
     }
 
     else if (isPerformanceEventEntity) {
         
-        xml = PerformanceEventConverter.toXML(json_ld_contents);
+        return PerformanceEventConverter.toXML(json_ld_contents);
     }
 
     else if (isInstitutionEntity) {
         
-        xml = InstitutionConverter.toXML(json_ld_contents);
+        return InstitutionConverter.toXML(json_ld_contents);
+    }
+
+    else if (isBibliographyEntity) {
+        
+        return BibliographyConverter.toXML(json_ld_contents);
     }
 
     else {
@@ -239,8 +234,25 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
             }
         });
 
-        xml = source_template({ title, classification, repository, persons });
+        return source_template({ title, classification, repository, persons });
     }
+}
+
+document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
+    let entity_to_save = event.detail;
+
+    // TODO: replace this with event dispatched to adwlm-entity-renderer
+    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    // END TODO
+
+    let rdf_contents = entity_to_save.rdf_contents;
+    let json_ld_contents = JSON.parse(entity_to_save.json_ld_contents);
+
+    // Debug logging
+    console.log('Full JSON-LD contents:', json_ld_contents);
+
+    let xml = convertJsonLdToXml(json_ld_contents);
 
     // Update displays
     xml_renderer.innerText = xml;

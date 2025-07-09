@@ -85,5 +85,38 @@
  * @property {string[]} [citations]
  */
 
+/**
+ * @typedef {Object} Publication
+ *  @property {string} [publisher]
+ *  @property {string} [label]
+ *  @property {string} [startDate]
+ *  @property {string} [endDate]
+ *  @property {string} [publisher]
+ *  @property {string} [location]
+ *  @property {string} [description]
+ */
+
+/**
+ * @typedef {Object} BibliographyData
+ * @property {string} subjectUri
+ * @property {string} genre
+ * @property {string} [classification]
+ * @property {string} [title]
+ * @property {string} [titleType]
+ * @property {string} [description]
+ * @property {string} [abbreviation]
+ * @property {string} [isPartOf]
+ * @property {string[]} [sameAs]
+ * @property {string[]} [authors]
+ * @property {string[]} [editors]
+ * @property {Publication} [publication]
+ * @property {string} [position]
+ * @property {string} [pagination]
+ * @property {string} [materialExtent]
+ * @property {string} [language]
+ * @property {Contribution[]} [contributions]
+ * @property {string[]} [citations]
+ */
+
 export {};
 
