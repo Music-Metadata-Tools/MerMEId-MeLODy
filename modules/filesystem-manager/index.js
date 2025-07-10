@@ -936,44 +936,6 @@ export default class ADWLMFilesystemManager extends LitElement {
         tree.insertAdjacentHTML("beforeend", tree_items);
     }
 
-    async _populate_folder_contents(folderElement, entries) {
-        // Process folders
-        for (const folder_relative_path of entries.folders) {
-            const folder_name = folder_relative_path.includes("/") ? 
-                folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : 
-                folder_relative_path;
-            const folder_absolute_path = `${this._selected_repository_path}/${folder_relative_path}`;
-            
-            folderElement.insertAdjacentHTML('beforeend', 
-                `<sl-tree-item lazy 
-                    data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" 
-                    data-entry-absolute-path="${folder_absolute_path}"
-                    data-entry-relative-path="${folder_relative_path}" 
-                    data-entry-name="${folder_name}">
-                    ${folder_name}
-                </sl-tree-item>`
-            );
-        }
-
-        // Process files
-        for (const file_relative_path of entries.files) {
-            const file_name = file_relative_path.includes("/") ? 
-                file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : 
-                file_relative_path;
-            const file_absolute_path = `${this._selected_repository_path}/${file_relative_path}`;
-            
-            folderElement.insertAdjacentHTML('beforeend',
-                `<sl-tree-item 
-                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"
-                    data-entry-absolute-path="${file_absolute_path}"
-                    data-entry-relative-path="${file_relative_path}"
-                    data-entry-name="${file_name}">
-                    ${file_name}
-                </sl-tree-item>`
-            );
-        }
-    }
-
     // Add this method to the ADWLMFilesystemManager class
     async _validateStagedSelection(stagedFiles, selectedFiles) {
         const directoriesNeeded = new Set();
