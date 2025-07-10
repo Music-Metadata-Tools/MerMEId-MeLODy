@@ -265,25 +265,16 @@ export default class ADWLMFilesystemManager extends LitElement {
             let target = event.target;
 
             if (target.matches("sl-tree#repositories-tree sl-tree-item[lazy]")) {
-                target.innerHTML = target.dataset.entryName;
                 let entry_type = target.dataset.entryType;
                 let entry_absolute_path = target.dataset.entryAbsolutePath;
-                let entry_relative_path = target.dataset.entryRelativePath;
 
-                // If expanding a repo folder: store repo path and enable staged files details
+                // If loading a repo folder: store repo path and enable staged files details
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
                 }
 
-                // Generate the repository tree
-                const tree_items = await this._generate_repository_tree(
-                    this._selected_repository_path,
-                    entry_relative_path
-                );
-
-                // Insert the tree items into the DOM
-                target.insertAdjacentHTML("beforeend", tree_items);
+                this._generate_folder_tree(target);
             }
         });
 
@@ -609,22 +600,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Update repository tree
                     if (this._selected_repository_path) {
                         let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
-
                         if (repoTree) {
-                            const entry_relative_path = repoTree.getAttribute('data-entry-relative-path');
-
-                            // Generate the repository tree
-                            const tree_items = await this._generate_repository_tree(
-                                this._selected_repository_path,
-                                entry_relative_path
-                            );
-
-                            // Clear existing content while preserving the folder name
-                            const folderName = repoTree.dataset.entryName;
-                            repoTree.innerHTML = folderName
-
-                            // Insert the new tree items
-                            repoTree.insertAdjacentHTML("beforeend", tree_items);
+                            this._generate_folder_tree(repoTree);
                         }
                     }
 
@@ -741,56 +718,23 @@ export default class ADWLMFilesystemManager extends LitElement {
                 document.body.append(alert);
                 alert.toast();
 
-                // Force refresh the file list
-                let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
-                if (repoTree) {
-                    const selectedFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
-                    if (selectedFolder) {
-                        // Keep existing folder name element
-                        const folderName = selectedFolder.dataset.entryName;
-                        // Clear only child elements
-                        while (selectedFolder.firstChild) {
-                            selectedFolder.removeChild(selectedFolder.firstChild);
-                        }
-                        // Add back the folder name
-                        selectedFolder.textContent = folderName;
-                        
-                        // Reload folder contents
-                        const entries = await filesystem.list_entries_from_workdir(
-                            this._selected_repository_path, 
-                            selectedFolder.dataset.entryRelativePath
-                        );
-                        await this._populate_folder_contents(selectedFolder, entries);
-                    } else {
-                        const tree_folder = await this._generate_repository_tree(
-                            this._selected_repository_path,
-                            this._selected_repository_path.split('/')[1]
-                        );
+                // Refresh files tree
+                let folder_relative_path = entity_to_save.path.split('/')[0];
 
-                        // Keep existing folder name element
-                        const folderName = repoTree.dataset.entryName;
+                let folderTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${folder_relative_path}"]`);
 
-                        // Clear child elements
-                        while (repoTree.firstChild) {
-                            repoTree.removeChild(repoTree.firstChild);
-                        }
+                if (folderTree) {
+                    this._generate_folder_tree(folderTree);
 
-                        // Add back the folder name
-                        repoTree.textContent = folderName;
+                } else {
+                    // Update repository tree to include the new folder
+                    let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
 
-                        // Insert the new tree items
-                        repoTree.insertAdjacentHTML("beforeend", tree_folder);
+                    await this._generate_folder_tree(repoTree);
 
-                        // Generate the files tree
-                        const tree_files = await this._generate_repository_tree(
-                            this._selected_repository_path,
-                            entity_to_save.path.split('/')[0]
-                        );
-
-                        const newFolder = repoTree.querySelector(`sl-tree-item[data-entry-relative-path="${entity_to_save.path.split('/')[0]}"]`);
-
-                        newFolder.setAttribute('expanded', '');
-                    }
+                    // Expand the new folder in the tree
+                    let newfolderTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${folder_relative_path}"]`)
+                    newfolderTree.setAttribute('expanded', '');
                 }
 
                 // Update staged files list and tree status
@@ -855,17 +799,25 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._displayed_repository_names = displayed_repository_names;
     }
 
-    async _generate_repository_tree(repository_path, relative_path) {
-        // Get files and directories in expanded folder
-        let entries = await filesystem.list_entries_from_workdir(repository_path, relative_path);
+    async _generate_folder_tree(treeItem) {
+        // Clear existing subitems
+        treeItem.innerHTML = treeItem.dataset.entryName;
+        // Get data from the tree item
+        let entry_type = treeItem.dataset.entryType;                   //e.g. "folder"
+        let entry_absolute_path = treeItem.dataset.entryAbsolutePath;  //e.g. "/repo/persons"
+        let entry_relative_path = treeItem.dataset.entryRelativePath;  //e.g. "persons"
+        let repository_path = this._selected_repository_path;          //e.g. "/repo"
 
-        let tree_items = ""
+        // Get files and directories in folder
+        let entries = await filesystem.list_entries_from_workdir(repository_path, entry_relative_path);
+
+        let tree_subitems = ""
         // insert subfolders in tree
         for (const folder_relative_path of entries.folders) {
-            let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
+            let folder_name = folder_relative_path;
             let folder_absolute_path = `${repository_path}/${folder_relative_path}`;
 
-            tree_items += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
+            tree_subitems += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
         }
 
         // insert files in tree
@@ -873,10 +825,11 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
             let file_absolute_path = `${repository_path}/${file_relative_path}`;
 
-            tree_items += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
         }
 
-        return tree_items;
+        // Insert subitems into the input tree
+        treeItem.insertAdjacentHTML("beforeend", tree_subitems);
     }
 
     async _load_entity_to_edit() {
