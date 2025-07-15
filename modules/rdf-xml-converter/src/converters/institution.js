@@ -1,4 +1,4 @@
-import { generateInstitutionXML } from './template.js';
+import { generateInstitutionXML } from '../templates/institution.js';
 
 export class InstitutionConverter {
     /**

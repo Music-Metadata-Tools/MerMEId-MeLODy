@@ -1,17 +1,18 @@
-import { generateEventXML } from './template.js';
+import { generatePerformanceEventXML } from '../templates/performance-event.js';
 
-export class EventConverter {
+export class PerformanceEventConverter {
     /**
      * Convert JSON-LD data to XML format
      * @param {any[]} jsonLdData
      * @returns {string}
      */
     static toXML(jsonLdData) {
-        const eventData = {
+        const performanceEventData = {
             subjectUri: '',
             label: '',
             classification: '',
-            location: '',
+            venue: '',
+            duration: '',
             description: '',
             sameAs: [],
             date: {
@@ -62,67 +63,70 @@ export class EventConverter {
             });
 
             if (contribution.agent) {
-                eventData.contributions.push(contribution);
+                performanceEventData.contributions.push(contribution);
             }
         });
 
         // Extract other data from JSON-LD
         jsonLdData.forEach(item => {
             if (item['@id'] && !item['@id'].startsWith('_:')) {
-                eventData.subjectUri = item['@id'];
+                performanceEventData.subjectUri = item['@id'];
             }
 
             // Check descriptions based on their subject IDs
             if (item['https://schema.org/description']) {
                 if (item['@id'] === dateObjectId) {
                     // This is the date description
-                    eventData.date.dateDescription = item['https://schema.org/description']['@value'];
-                } else if (item['@id'] === eventData.subjectUri) {
+                    performanceEventData.date.dateDescription = item['https://schema.org/description']['@value'];
+                } else if (item['@id'] === performanceEventData.subjectUri) {
                     // This is the event description
-                    eventData.description = item['https://schema.org/description']['@value'];
+                    performanceEventData.description = item['https://schema.org/description']['@value'];
                 }
             }
             
             if (item['http://www.w3.org/2000/01/rdf-schema#label']) {
-                eventData.label = item['http://www.w3.org/2000/01/rdf-schema#label']['@value'];
+                performanceEventData.label = item['http://www.w3.org/2000/01/rdf-schema#label']['@value'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasClassification']) {
-                eventData.classification = item['https://lod.academy/melod/vocab/ontology#hasClassification']['@value'];
+                performanceEventData.classification = item['https://lod.academy/melod/vocab/ontology#hasClassification']['@value'];
             }
-            if (item['https://schema.org/location']) {
-                eventData.location = item['https://schema.org/location']['@id'];
+            if (item['https://lod.academy/melod/vocab/ontology#hasVenue']) {
+                performanceEventData.venue = item['https://lod.academy/melod/vocab/ontology#hasVenue']['@id'];
+            }
+            if (item['https://lod.academy/melod/vocab/ontology#hasDuration']) {
+                performanceEventData.duration = item['https://lod.academy/melod/vocab/ontology#hasDuration']['@id'];
             }
             if (item['http://www.w3.org/2002/07/owl#sameAs']) {
-                eventData.sameAs.push(item['http://www.w3.org/2002/07/owl#sameAs']['@id']);
+                performanceEventData.sameAs.push(item['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
             if (item['https://schema.org/citation']) {
-                eventData.citations.push(item['https://schema.org/citation']['@id']);
+                performanceEventData.citations.push(item['https://schema.org/citation']['@id']);
             }
 
             // Handle date information
             if (item['https://lod.academy/melod/vocab/ontology#isodate']) {
-                eventData.date.value = item['https://lod.academy/melod/vocab/ontology#isodate']['@value'];
+                performanceEventData.date.value = item['https://lod.academy/melod/vocab/ontology#isodate']['@value'];
             }
             if (item['https://schema.org/startDate']) {
-                eventData.date.startDate = item['https://schema.org/startDate']['@value'];
+                performanceEventData.date.startDate = item['https://schema.org/startDate']['@value'];
             }
             if (item['https://schema.org/endDate']) {
-                eventData.date.endDate = item['https://schema.org/endDate']['@value'];
+                performanceEventData.date.endDate = item['https://schema.org/endDate']['@value'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#notBefore']) {
-                eventData.date.notBefore = item['https://lod.academy/melod/vocab/ontology#notBefore']['@value'];
+                performanceEventData.date.notBefore = item['https://lod.academy/melod/vocab/ontology#notBefore']['@value'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#notAfter']) {
-                eventData.date.notAfter = item['https://lod.academy/melod/vocab/ontology#notAfter']['@value'];
+                performanceEventData.date.notAfter = item['https://lod.academy/melod/vocab/ontology#notAfter']['@value'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
-                eventData.date.certainty = item['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
+                performanceEventData.date.certainty = item['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
             }
         });
 
         // Debug logging
-        console.log('Processed contributions:', eventData.contributions);
+        console.log('Processed contributions:', performanceEventData.contributions);
 
-        return generateEventXML(eventData);
+        return generatePerformanceEventXML(performanceEventData);
     }
 }

@@ -1,4 +1,4 @@
-import { generateBibliographyXML } from './template.js';
+import { generateBibliographyXML } from '../templates/bibliography.js';
 
 export class BibliographyConverter {
     /**

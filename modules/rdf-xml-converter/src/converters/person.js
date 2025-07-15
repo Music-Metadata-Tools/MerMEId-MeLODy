@@ -1,4 +1,4 @@
-import { generatePersonXML } from './template.js';
+import { generatePersonXML } from '../templates/person.js';
 
 export class PersonConverter {
     /**

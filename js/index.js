@@ -1,12 +1,12 @@
 import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
 await init_oxigraph();
-import { PersonConverter } from '../modules/rdf-xml-converter/src/converters/person/converter.js';
-import { PlaceConverter } from '../modules/rdf-xml-converter/src/converters/place/converter.js';
-import { VenueConverter } from '../modules/rdf-xml-converter/src/converters/venue/converter.js';
-import { EventConverter } from '../modules/rdf-xml-converter/src/converters/event/converter.js';
-import { PerformanceEventConverter } from '../modules/rdf-xml-converter/src/converters/performance-event/converter.js';
-import { InstitutionConverter } from '../modules/rdf-xml-converter/src/converters/institution/converter.js';
-import { BibliographyConverter } from '../modules/rdf-xml-converter/src/converters/bibliography/converter.js';
+import { PersonConverter } from '../modules/rdf-xml-converter/src/converters/person.js';
+import { PlaceConverter } from '../modules/rdf-xml-converter/src/converters/place.js';
+import { VenueConverter } from '../modules/rdf-xml-converter/src/converters/venue.js';
+import { EventConverter } from '../modules/rdf-xml-converter/src/converters/event.js';
+import { PerformanceEventConverter } from '../modules/rdf-xml-converter/src/converters/performance-event.js';
+import { InstitutionConverter } from '../modules/rdf-xml-converter/src/converters/institution.js';
+import { BibliographyConverter } from '../modules/rdf-xml-converter/src/converters/bibliography.js';
 
 // configuration
 const classifications = {

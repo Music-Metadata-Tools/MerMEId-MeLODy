@@ -1,4 +1,4 @@
-import { generateVenueXML } from './template.js';
+import { generateVenueXML } from '../templates/venue.js';
 
 export class VenueConverter {
     /**

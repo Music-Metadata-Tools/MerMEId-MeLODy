@@ -1,4 +1,4 @@
-import { generatePlaceXML } from './template.js';
+import { generatePlaceXML } from '../templates/place.js';
 
 export class PlaceConverter {
     /**
