@@ -11,10 +11,9 @@ export class BibliographyConverter {
             subjectUri: '',
             genre: '',
             classification: '',
-            title: '',
-            titleType: '',
+            title: [],
             abbreviation: '',
-            sameAs: '',
+            sameAs: [],
             isPartOf: '',
             authors: [],
             editors: [],
@@ -30,13 +29,40 @@ export class BibliographyConverter {
             pagination: '',
             materialExtent: '',
             language: '',
-            description: ''
+            langcode: '',
+            description: []
         };
 
-        // Find the title object ID
-        const titleObjectId = jsonLdData.find(item => 
-            item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Title'
-        )?.['@id'];
+        // --- COLLECT TITLE OBJECTS BY @id ---
+        const titleObjects = {};
+        jsonLdData.forEach(item => {
+            if (
+                item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Title'
+                || item['@id'] && jsonLdData.some(obj => obj['@id'] === item['@id'] && (
+                    obj['http://www.w3.org/2000/01/rdf-schema#label'] ||
+                    obj['https://lod.academy/melod/vocab/ontology#hasTitleType'] ||
+                    obj['https://lod.academy/melod/vocab/ontology#hasTitleLevel']
+                ))
+            ) {
+                const id = item['@id'];
+                if (!titleObjects[id]) titleObjects[id] = {};
+                Object.assign(titleObjects[id], item);
+            }
+        });
+
+        // --- BUILD TITLES ARRAY ---
+        for (const id in titleObjects) {
+            const obj = titleObjects[id];
+            if (
+                obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Title'
+            ) {
+                bibliographyData.title.push({
+                    title: obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '',
+                    titleType: obj['https://lod.academy/melod/vocab/ontology#hasTitleType']?.['@id']?.split('#')[1] || '',
+                    titleLevel: obj['https://lod.academy/melod/vocab/ontology#hasTitleLevel']?.['@id']?.split('#')[1] || ''
+                });
+            }
+        }
 
         // Find publication event object ID
         const publicationObjectId = jsonLdData.find(item =>
@@ -59,20 +85,10 @@ export class BibliographyConverter {
                 bibliographyData.abbreviation = item['https://lod.academy/melod/vocab/ontology#hasAbbreviation']['@value'];
             }
             if (item['http://www.w3.org/2002/07/owl#sameAs']) {
-                bibliographyData.sameAs = item['http://www.w3.org/2002/07/owl#sameAs']['@id'];
+                bibliographyData.sameAs.push(item['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
             if (item['https://schema.org/isPartOf']) {
                 bibliographyData.isPartOf = item['https://schema.org/isPartOf']['@id'];
-            }
-
-            // Title properties
-            if (item['@id'] === titleObjectId) {
-                if (item['http://www.w3.org/2000/01/rdf-schema#label']) {
-                    bibliographyData.title = item['http://www.w3.org/2000/01/rdf-schema#label']['@value'];
-                }
-                if (item['https://lod.academy/melod/vocab/ontology#hasTitleType']) {
-                    bibliographyData.titleType = item['https://lod.academy/melod/vocab/ontology#hasTitleType']['@id'].split('#')[1];
-                }
             }
 
             // Publication event properties
@@ -115,9 +131,12 @@ export class BibliographyConverter {
             }
             if (item['https://schema.org/inLanguage']) {
                 bibliographyData.language = item['https://schema.org/inLanguage']['@value'];
+                bibliographyData.langcode = item['https://schema.org/inLanguage']['@language'];
             }
-            if (item['https://schema.org/description']) {
-                bibliographyData.description = item['https://schema.org/description']['@value'];
+            if (item['@id'] === bibliographyData.subjectUri) {
+                if (item['https://schema.org/description']) {
+                    bibliographyData.description.push(item['https://schema.org/description']['@value']);
+                }
             }
         });
 

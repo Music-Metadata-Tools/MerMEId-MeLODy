@@ -97,12 +97,18 @@
  */
 
 /**
+ * @typedef {Object} Title
+ *  @property {string} [title]
+ *  @property {string} [titleType]
+ *  @property {string} [titleLevel]
+ */
+
+/**
  * @typedef {Object} BibliographyData
  * @property {string} subjectUri
  * @property {string} genre
  * @property {string} [classification]
- * @property {string} [title]
- * @property {string} [titleType]
+ * @property {Title} [title]
  * @property {string} [description]
  * @property {string} [abbreviation]
  * @property {string} [isPartOf]

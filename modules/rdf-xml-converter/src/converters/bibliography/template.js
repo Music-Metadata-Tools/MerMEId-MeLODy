@@ -11,14 +11,20 @@ export function generateBibliographyXML(data) {
             `    <title type="short">${data.abbreviation}</title>` : null,
         
         // External identifier (e.g. Zotero)
-        data.sameAs ? 
-            `    <identifier auth="Zotero" auth.uri="${data.sameAs}"/>` : null,
-        
+        data.sameAs?.length > 0 ? 
+            data.sameAs.map(sameAs => 
+                `    <identifier auth="${sameAs.split('/')[0]}" auth.uri="${sameAs}"/>`
+            ).join('\n') : null,
+
         // Pagination and volume
         data.pagination ? 
             `    <biblScope unit="page">${data.pagination}</biblScope>` : null,
         data.position ? 
             `    <biblScope unit="vol">${data.position}</biblScope>` : null,
+        data.materialExtent ? 
+            `    <extent>${data.materialExtent}</extent>` : null,
+        data.language ? 
+            `    <textLang xml:lang="${data.langcode}">${data.language}</textLang>` : null,
         
         // Genre entries
         data.genre ? 
@@ -33,10 +39,13 @@ export function generateBibliographyXML(data) {
             ).join('\n') : null,
         
         // Main title and related titles
-        data.title ? 
-            `    <title level="a" type="${data.titleType || ''}">${data.title}</title>` : null,
+        data.title?.length > 0 ? 
+            data.title.map(title => 
+                `    <title level="${title.titleLevel || ''}" type="${title.titleType || ''}">${title.title}</title>`
+            ).join('\n') : null,
+        
         data.isPartOf ? 
-            `    <title level="${data.genre === 'article' ? 'j' : 'm'}"  type="${data.titleType || ''}" xml:id="${data.isPartOf}"/>` : null,
+            `    <title level="${data.genre === 'article' ? 'j' : 'm'}" xml:id="${data.isPartOf}"/>` : null,
         
         // Editors
         data.editors?.length > 0 ? 
@@ -51,7 +60,11 @@ export function generateBibliographyXML(data) {
         <pubPlace xml:id="${data.publication.location || ''}"/>
         <publisher xml:id="${data.publication.publisher || ''}"/>${
             data.publication.description ? `\n        <annot>${data.publication.description}</annot>` : ''}
-    </imprint>`
+    </imprint>`,
+        data.description?.length > 0 ? 
+            data.description.map(description => 
+                `    <annot>${description}</annot>`
+            ).join('\n') : null,
     ];
 
     const validElements = elements.filter(Boolean).join('\n');
