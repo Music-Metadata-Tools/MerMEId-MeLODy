@@ -1,6 +1,6 @@
 /**
  * Generates XML string with person data
- * @param {import('../../types').PlaceData} data 
+ * @param {import('../types').PlaceData} data 
  * @returns {string}
  */
 export function generatePlaceXML(data) {

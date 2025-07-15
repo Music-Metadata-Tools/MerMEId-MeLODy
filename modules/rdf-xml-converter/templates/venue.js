@@ -1,6 +1,6 @@
 /**
  * Generates XML string with person data
- * @param {import('../../types').VenueData} data 
+ * @param {import('../types').VenueData} data 
  * @returns {string}
  */
 export function generateVenueXML(data) {

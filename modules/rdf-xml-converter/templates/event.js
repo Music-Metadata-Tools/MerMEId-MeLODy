@@ -1,9 +1,9 @@
 /**
  * Generates XML string with event data
- * @param {import('../../types').PerformanceEventData} data 
+ * @param {import('../types').EventData} data 
  * @returns {string}
  */
-export function generatePerformanceEventXML(data) {
+export function generateEventXML(data) {
     const elements = [
     `    <name>${data.label || ''}</name>`,
     data.date ? `    <date${data.date.value ? ` isodate="${data.date.value}"` : ''}${
@@ -13,8 +13,7 @@ export function generatePerformanceEventXML(data) {
         data.date.notAfter ? ` notafter="${data.date.notAfter}"` : ''}${
         data.date.certainty ? ` cert="${data.date.certainty}"` : ''}>${
         data.date.dateDescription || ''}</date>` : null,
-        data.venue ? `    <geogName type="venue" xml:id="${data.venue}"/>` : null,
-        data.duration ? `    <p type="duration">${data.duration}"</p>` : null
+        data.location ? `    <geogName xml:id="${data.location}"/>` : null
     ];
 
     // Add contributions with persName/corpName elements inside contributor
@@ -55,7 +54,7 @@ ${biblElements}
     const validElements = elements.filter(Boolean).join('\n');
 
     return `<?xml version="1.0" encoding="UTF-8"?>
-<event type="performance" 
+<event type="${data.classification || ''}" 
        label="${data.label || ''}" 
        xml:id="${data.subjectUri}" 
        sameas="${data.sameAs.join(' ')}">

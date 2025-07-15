@@ -1,6 +1,6 @@
 /**
  * Generates XML string with person data
- * @param {import('../../types').PersonData} data 
+ * @param {import('../types').PersonData} data 
  * @returns {string}
  */
 export function generatePersonXML(data) {

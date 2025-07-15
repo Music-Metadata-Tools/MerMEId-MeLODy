@@ -1,6 +1,6 @@
 /**
  * Generates XML string with bibliography data
- * @param {import('../../types').BibliographyData} data 
+ * @param {import('../types').BibliographyData} data 
  * @returns {string}
  */
 export function generateBibliographyXML(data) {
