@@ -172,6 +172,13 @@ melod:PublicationEvent
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
+  sh:property   [ sh:name      "Level of the title" ;
+                  sh:description "Level, e.g. analytic" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      melod:hasTitleLevel ;
+                  sh:class melod:BibliographicLevel
+                ] ;
   sh:property   [ sh:name      "Type" ;
                   sh:description "Type, e.g. subtitle" ;
                   sh:minCount  0 ;
