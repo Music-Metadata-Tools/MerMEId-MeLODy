@@ -508,7 +508,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     ...this._staged_directories
                 ];
 
-                // Get directories from selected files and check if they are staged
+                // Get directories from selected files and check if they need to be committed
                 let directories_to_commit = new Set();
                 selected_staged_file_paths.forEach(filePath => {
                     if (filePath.includes('/')) {
@@ -594,6 +594,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Unstage each selected file
                     for (const file of selected_staged_files) {
                         await filesystem.unstageFile(this._selected_repository_path, file.path);
+
+                        // Check if the directory is empty after unstage and remove it if so
+                        const directory = file.path.split('/')[0];
+                        let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, directory);
+                        if (entries.files.length === 0) {
+                            await filesystem.unstageFile(this._selected_repository_path, directory);
+                        }
                     }
 
                     // Update repository tree
