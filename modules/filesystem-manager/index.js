@@ -475,8 +475,20 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 await filesystem.add_file(this._selected_repository_path, file_relative_path);
 
+                // Update repository tree
+                if (this._selected_repository_path) {
+                    let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                    if (repoTree) {
+                        this._generate_folder_tree(repoTree);
+                    }
+                }
+
+                // Update UI
+                await this._list_staged_files();
+                await this._updateRepositoryTreeStatus();
+
                 // TODO: apply restore_state()
-                await this._list_repository_names();
+                //await this._list_repository_names();
             }
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
@@ -918,7 +930,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         // Sort files and directories in different arrays
         staged_file_relative_paths.forEach(path => {
-            if (path.includes("/") && path.endsWith('.ttl')) {
+            if (path.includes("/") && path.includes('.ttl')) {
                 this._staged_files.push(path);
             } else {
                 this._staged_directories.push(path);
