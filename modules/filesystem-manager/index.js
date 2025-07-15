@@ -100,6 +100,9 @@ export default class ADWLMFilesystemManager extends LitElement {
         _staged_files: {
             type: Array,
         },
+        _staged_directories: {
+            type: Array,
+        },
         _displayed_staged_files: {
             type: Array,
         },
@@ -499,32 +502,28 @@ export default class ADWLMFilesystemManager extends LitElement {
                     return;
                 }
 
-                // Get all staged files for validation
-                let staged_file_paths = staged_file_nodes
-                    .map(item => item.dataset.entryRelativePath);
+                // Get all staged files and directories
+                let staged_file_paths = [
+                    ...this._staged_files,
+                    ...this._staged_directories
+                ];
 
-                // Validate selection before committing
-                const missingDirectories = await this._validateStagedSelection(staged_file_paths, selected_staged_file_paths);
-                
-                if (missingDirectories.length > 0) {
-                    // Create warning alert
-                    const warningAlert = document.createElement('sl-alert');
-                    warningAlert.variant = 'warning';
-                    warningAlert.closable = true;
-                    warningAlert.duration = 10000;
-                    warningAlert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        <strong>Warning:</strong> You need to select the following directories to properly commit their contents:
-                        <br>
-                        ${missingDirectories.join('<br>')}
-                        <br><br>
-                        Please select both the directories and their files to ensure proper commit.
-                    `;
-                    document.body.append(warningAlert);
-                    warningAlert.toast();
-                    target.loading = false;
-                    return;
-                }
+                // Get directories from selected files and check if they are staged
+                let directories_to_commit = new Set();
+                selected_staged_file_paths.forEach(filePath => {
+                    if (filePath.includes('/')) {
+                        const directory = filePath.split('/')[0];
+                        if (staged_file_paths.includes(directory)) {
+                            directories_to_commit.add(directory);
+                        }
+                    }
+                });
+
+                // Add found directories to selected paths
+                selected_staged_file_paths = [
+                    ...selected_staged_file_paths,
+                    ...directories_to_commit
+                ];
 
                 let push_result = false;
                 try {
@@ -774,6 +773,7 @@ export default class ADWLMFilesystemManager extends LitElement {
     _init() {
         this._displayed_repository_names = [];
         this._staged_files = [];
+        this._staged_directories = [];
         this._displayed_staged_files = [];
         this._repository_buttons_disabled = true;
         this._hasSelectedFiles = false;
@@ -905,8 +905,18 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
-        // Store staged files in memory for later use
-        this._staged_files = staged_file_relative_paths;
+        // Reset arrays
+        this._staged_files = [];
+        this._staged_directories = [];
+
+        // Sort files and directories in different arrays
+        staged_file_relative_paths.forEach(path => {
+            if (path.includes("/") && path.endsWith('.ttl')) {
+                this._staged_files.push(path);
+            } else {
+                this._staged_directories.push(path);
+            }
+        });
 
         // Update repository tree to show unshared status
         await this._updateRepositoryTreeStatus();
@@ -919,39 +929,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let tree_items = "";
         // process the files
-        for (const staged_file_relative_path of staged_file_relative_paths) {
-            let file_name = staged_file_relative_path.includes("/") ? staged_file_relative_path.substring(staged_file_relative_path.lastIndexOf("/") + 1) : staged_file_relative_path;
-            let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file_relative_path}`;
+        for (const staged_file of this._staged_files) {
+            let file_name = staged_file.split('/')[1];
+            let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
             tree_items += `
                 <sl-tree-item 
                     data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
                     data-entry-absolute-path="${staged_file_absolute_path}" 
-                    data-entry-relative-path="${staged_file_relative_path}" 
+                    data-entry-relative-path="${staged_file}"
                     data-entry-name="${file_name}">
-                    ${file_name}
+                    ${staged_file}
                 </sl-tree-item>`;
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
-    }
-
-    // Add this method to the ADWLMFilesystemManager class
-    async _validateStagedSelection(stagedFiles, selectedFiles) {
-        const directoriesNeeded = new Set();
-        
-        // Check each selected file's parent directory
-        for (const filePath of selectedFiles) {
-            const parentDir = filePath.substring(0, filePath.lastIndexOf('/'));
-            if (parentDir && stagedFiles.includes(parentDir)) {
-                // Parent directory exists and is staged
-                if (!selectedFiles.includes(parentDir)) {
-                    directoriesNeeded.add(parentDir);
-                }
-            }
-        }
-        
-        return Array.from(directoriesNeeded);
     }
 
     // Add this helper method
