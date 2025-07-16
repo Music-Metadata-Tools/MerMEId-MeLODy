@@ -473,7 +473,15 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 let file_relative_path = selected_entry.dataset.entryRelativePath;
 
+                // Be careful, add_file means remove_file
                 await filesystem.add_file(this._selected_repository_path, file_relative_path);
+
+                // Check if the directory is empty after removing the file and remove it if so
+                const directory = file_relative_path.split('/')[0];
+                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, directory);
+                if (entries.files.length === 0) {
+                    await filesystem.add_file(this._selected_repository_path, directory);
+                }
 
                 // Update repository tree
                 if (this._selected_repository_path) {
