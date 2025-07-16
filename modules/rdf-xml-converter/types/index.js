@@ -108,8 +108,8 @@
  * @property {string} subjectUri
  * @property {string} genre
  * @property {string} [classification]
- * @property {Title} [title]
- * @property {string} [description]
+ * @property {Title[]} [title]
+ * @property {string[]} [description]
  * @property {string} [abbreviation]
  * @property {string} [isPartOf]
  * @property {string[]} [sameAs]
@@ -120,8 +120,37 @@
  * @property {string} [pagination]
  * @property {string} [materialExtent]
  * @property {string} [language]
- * @property {Contribution[]} [contributions]
  * @property {string[]} [citations]
+ */
+
+/**
+ * @typedef {Object} InstrumentationData
+ * @property {string} [label] - Label of the instrumentation (e.g. "Orchestra")
+ * @property {InstrumentationDetail[]} [details] - Instruments and voices
+ * @property {InstrumentationGroup[]} [groups] - Ensembles
+ */
+
+/**
+ * @typedef {Object} InstrumentationGroup
+ * @property {string} [label] - Label of the group (e.g. "String section")
+ * @property {InstrumentationDetail[]} details - Instruments and voices (required, minCount 1)
+ */
+
+/**
+ * @typedef {Object} InstrumentationDetail
+ * @property {string} [medium] - Medium of performance (e.g. URI or label)
+ * @property {string} [link] - External identifier (IRI, e.g. MARC)
+ * @property {number} [quantity] - Quantity of this medium
+ * @property {boolean} [solo] - Is soloist
+ * @property {boolean} [adLib] - Is ad libitum
+ * @property {CastingDetail} [castingDetail] - Casting detail
+ * @property {InstrumentationDetail[]} [alternativeInstrumentation] - Alternative instrumentation
+ */
+
+/**
+ * @typedef {Object} CastingDetail
+ * @property {string} roleName - Name of the role (required)
+ * @property {string} [roleDescription] - Description of the role
  */
 
 export {};
