@@ -99,6 +99,7 @@
 /**
  * @typedef {Object} Title
  *  @property {string} [title]
+ *  @property {string} [language]
  *  @property {string} [titleType]
  *  @property {string} [titleLevel]
  */
@@ -151,6 +152,31 @@
  * @typedef {Object} CastingDetail
  * @property {string} roleName - Name of the role (required)
  * @property {string} [roleDescription] - Description of the role
+ */
+
+/**
+ * @typedef {Object} WorkData
+ * @property {string} subjectUri
+ * @property {Title[]} [titles]                // melod:hasTitle
+ * @property {Identifier[]} [identifiers]      // melod:hasIdentifier
+ * @property {string[]} [sameAs]               // owl:sameAs
+ * @property {Contribution[]} [contributors]   // melod:hasContribution
+ * @property {string} [workStatus]             // schema:creativeWorkStatus
+ * @property {string[]} [citations]            // schema:citation
+ * @property {string[]} [description]          // schema:description
+ * @property {string} [context]                // melod:hasContext
+ * @property {string} [historyDescription]     // melod:hasHistoryDesc
+ * @property {string[]} [expressions]          // efrbroo:R9_is_realised_in
+ * @property {string[]} [isPartOf]               // schema:isPartOf
+ * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
+ * @property {string[]} [classification]       // melod:hasClassification
+ */
+
+/**
+ * @typedef {Object} Identifier
+ * @property {string} [label]      // rdfs:label
+ * @property {string} [value]      // owl:hasValue
  */
 
 export {};

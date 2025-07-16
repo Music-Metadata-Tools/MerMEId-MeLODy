@@ -8,6 +8,7 @@ import { PerformanceEventConverter } from '../modules/rdf-xml-converter/converte
 import { InstitutionConverter } from '../modules/rdf-xml-converter/converters/institution.js';
 import { BibliographyConverter } from '../modules/rdf-xml-converter/converters/bibliography.js';
 import { InstrumentationConverter } from '../modules/rdf-xml-converter/converters/instrumentation.js';
+import { WorkConverter } from '../modules/rdf-xml-converter/converters/work.js';
 
 // configuration
 const classifications = {
@@ -166,6 +167,10 @@ function convertJsonLdToXml(json_ld_contents) {
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Instrumentation'
     );
 
+    const isWorkEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Work'
+    );
+
     if (isPersonEntity) {
         return PersonConverter.toXML(json_ld_contents);
     } 
@@ -203,6 +208,11 @@ function convertJsonLdToXml(json_ld_contents) {
     else if (isInstrumentationEntity) {
         
         return InstrumentationConverter.toXML(json_ld_contents);
+    }
+
+    else if (isWorkEntity) {
+        
+        return WorkConverter.toXML(json_ld_contents);
     }
 
     else {
