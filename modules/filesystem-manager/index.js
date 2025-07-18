@@ -418,33 +418,18 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
 
+                    // Update repository tree
+                    if (this._selected_repository_path) {
+                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                        if (repoTree) {
+                            this._generate_folder_tree(repoTree);
+                        }
+                    }
+
                     // reload the previously selected file, if any
                     if (this._selected_repository_path && this._file_path) {
                         await this._load_entity_to_edit();
                     }
-
-                    // Collect all expanded items before collapsing
-                    let expandedItems = [...render_root.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
-                        path: item.dataset.entryRelativePath,
-                        type: item.dataset.entryType
-                    }));
-
-                    // Collapse repository folder
-                    let repo_folder_tree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"]`);
-                    repo_folder_tree.removeAttribute("expanded");
-
-                    // Re-expand previously expanded items
-                    const expandItems = async () => {
-                        for (const itemInfo of expandedItems) {
-                            const item = render_root.querySelector(`sl-tree-item[data-entry-relative-path="${itemInfo.path}"][data-entry-type="${itemInfo.type}"]`);
-                            if (item) {
-                                item.setAttribute('expanded', '');
-                                // Wait for lazy loading to complete
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                            }
-                        }
-                    };
-                    setTimeout(() => expandItems(), 500);
 
                     target.loading = false;
                 }
