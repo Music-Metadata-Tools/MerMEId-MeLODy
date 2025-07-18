@@ -827,8 +827,15 @@ export default class ADWLMFilesystemManager extends LitElement {
     }
 
     async _generate_folder_tree(treeItem) {
+        // Collect all expanded items before clearing items
+        let expandedItems = [...treeItem.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
+            path: item.dataset.entryRelativePath,
+            type: item.dataset.entryType
+        }));
+
         // Clear existing subitems
         treeItem.innerHTML = treeItem.dataset.entryName;
+
         // Get data from the tree item
         let entry_type = treeItem.dataset.entryType;                   //e.g. "folder"
         let entry_absolute_path = treeItem.dataset.entryAbsolutePath;  //e.g. "/repo/persons"
@@ -854,6 +861,19 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
         }
+
+        // Re-expand previously expanded items
+        const expandItems = async () => {
+            for (const itemInfo of expandedItems) {
+                const item = treeItem.querySelector(`sl-tree-item[data-entry-relative-path="${itemInfo.path}"][data-entry-type="${itemInfo.type}"]`);
+                if (item) {
+                    item.setAttribute('expanded', '');
+                    // Wait for lazy loading to complete
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+        };
+        setTimeout(() => expandItems(), 500);
 
         // Insert subitems into the input tree
         treeItem.insertAdjacentHTML("beforeend", tree_subitems);
