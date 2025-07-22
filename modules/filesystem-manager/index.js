@@ -468,6 +468,12 @@ export default class ADWLMFilesystemManager extends LitElement {
                     await filesystem.add_file(this._selected_repository_path, directory);
                 }
 
+                // Clear the entity editor
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                    "bubbles": true,
+                    "composed": true,
+                }));
+
                 // Update repository tree
                 if (this._selected_repository_path) {
                     let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
