@@ -191,7 +191,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
-                            <sl-button id="remove-entity" size="small" title="Remove entity">
+                            <sl-button id="remove-entity" size="small" title="Remove entity" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
                         </sl-button-group>
