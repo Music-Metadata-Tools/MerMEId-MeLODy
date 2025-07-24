@@ -328,11 +328,21 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await filesystem.remove_repository(this._selected_repository_path);
                 await this._list_repository_names();
 
-                // disable the repositories-tree
-                // let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                // Clear staged files details
+                await this._list_staged_files();
+                this._hasUnsharedFiles = false;
+                this._hasSelectedFiles = false;
+                this._staged_files = [];
 
+                // Disable buttons and details
                 this._repository_buttons_disabled = true;
                 staged_files_details.disabled = true;
+
+                // Clear the entity editor
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                    "bubbles": true,
+                    "composed": true,
+                }));
 
                 target.loading = false;
             }
