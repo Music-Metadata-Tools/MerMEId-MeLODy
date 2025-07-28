@@ -179,7 +179,7 @@ melod:Expression
                   sh:node         melod:MusicIncipit ;
                   sh:path         melod:hasIncipit
                 ] ;
-  sh:property   [ sh:description "Insert ID of instrumentation" ;
+  sh:property   [ sh:description "Insert ID of expression component" ;
                   sh:name "Movements/Sections" ;
                   sh:group melod:Music ;
                   sh:minCount 0 ;
@@ -231,7 +231,6 @@ melod:Expression
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
-                  sh:maxCount 0 ;
                   dash:singleLine false ;
                   sh:path schema:description
                 ] ;
@@ -403,7 +402,8 @@ melod:Key
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
-                ] .
+                ] ;
+  sh:targetClass  melod:Key .
 
 melod:Meter
   a               sh:NodeShape ;
@@ -430,7 +430,8 @@ melod:Meter
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
-                ] . 
+                ] ;
+  sh:targetClass  melod:Meter .
 
 melod:MusicIncipit
   a               sh:NodeShape ;

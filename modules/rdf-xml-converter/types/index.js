@@ -179,5 +179,63 @@
  * @property {string} [value]      // owl:hasValue
  */
 
+/**
+ * @typedef {Object} ExpressionData
+ * @property {string} subjectUri
+ * @property {string} label
+ * @property {string[]} [sameAs]               // owl:sameAs
+ * @property {Identifier[]} [identifiers]      // melod:hasIdentifier
+ * @property {string[]} [language]             // schema:inLanguage
+ * @property {string} [completionStatus]       // melod:completionStatus
+ * @property {Contribution[]} [contributors]   // melod:hasContribution
+ * @property {Date} [creationDate]             // schema:dateCreated
+ * @property {string} [creationLocation]       // schema:locationCreated
+ * @property {string[]} [historicEvent]        // melod:hasHistoricEvent
+ * @property {string} [firstPerformance]       // schema:firstPerformance
+ * @property {string[]} [performances]         // melod:hasPerformance
+ * @property {string} [extent]                 // schema:materialExtent
+ * @property {string} [tempo]                  // melod:hasTempo
+ * @property {Key} [key]                       // mus:U11_has_key
+ * @property {Meter} [meter]                   // melod:hasMeter
+ * @property {string} [duration]               // melod:hasDuration
+ * @property {string} [mensuration]            // melod:hasMensuration
+ * @property {string} [instrumentation]        // melod:hasInstrumentation
+ * @property {Incipit} [incipit]               // melod:hasIncipit
+ * @property {ExpressionComponent[]} [movements] // schema:includedComposition
+ * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
+ * @property {string[]} [classification]       // melod:hasClassification
+ * @property {string[]} [citations]            // schema:citation
+ * @property {string[]} [description]          // schema:description
+ */
+
+/**
+ * @typedef {Object} Key
+ * @property {string} [pitch]      
+ * @property {string} [accidental]
+ * @property {string} [mode]
+ * @property {string} [description]
+ */
+
+/**
+ * @typedef {Object} Meter
+ * @property {string} [count]
+ * @property {string} [unit]
+ * @property {string} [symbol]
+ * @property {string} [description]
+ */
+
+/**
+ * @typedef {Object} Incipit
+ * @property {string[]} [value]
+ * @property {string} [text]
+ * @property {string[]} [mei]
+ */
+
+/**
+ * @typedef {Object} ExpressionComponent
+ * @property {string} [expression]
+ * @property {string} [label]
+ */
+
 export {};
 
