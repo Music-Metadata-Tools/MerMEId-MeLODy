@@ -73,7 +73,7 @@ melod:Item
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Provenance ;
-                  sh:path melod:acquisition ;
+                  sh:path melod:hasAcquisition ;
                   sh:or (
                     [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]

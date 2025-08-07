@@ -1,0 +1,487 @@
+import { generateManifestationXML } from '../templates/manifestation.js';
+
+export class ManifestationConverter {
+    /**
+     * Convert JSON-LD data to XML format
+     * @param {any[]} jsonLdData
+     * @returns {string}
+     */
+    static toXML(jsonLdData) {
+        const manifestationData = {
+            subjectUri: '',
+            title: {
+                title: '',
+                titleType: '',
+            },
+            sameAs: [],
+            classification: [],
+            contributors: [],
+            physDesc: {
+                extent: {
+                    value: '',
+                    unit: '',
+                },
+                dimensions: [],
+                watermarks: [],
+                physicalMedium: '',
+                paperDetail: {
+                    label: '',
+                    pagination: '',
+                    orientation: '',
+                    extent: {
+                        value: '',
+                        unit: '',
+                    },
+                    format: [],
+                    rastral: {
+                        dimensions: [],
+                    },
+                    watermarks: [],
+                    quality: '',
+                    condition: '',
+                    binding: {
+                        description: '',
+                        dimensions: [],
+                        condition: '',
+                        decoDesc: ''
+                    },
+                },
+                plateNumber: '',
+                addDescAuto: '',
+                addDescForeign: '',
+                supportDescAuto: '',
+                supportDescForeign: '',
+                binding: {
+                    description: '',
+                    dimensions: [],
+                    condition: '',
+                    decoDesc: ''
+                },
+                condition: '',
+                decoDesc: '',
+                scriptDesc: '',
+                stamp: '',
+                inscription: {
+                    description: '',
+                    agent: ''
+                },
+            },
+            titlePages: [],
+            publication: {
+                label: '',
+                startDate: '',
+                endDate: '',
+                publisher: '',
+                location: '',
+                description: ''
+            },
+            description: [],
+            expressions: [],
+            isPartOf: [],
+            hasPart: [],
+            otherRelations: []
+        };
+
+        // --- Merge all objects with the same @id ---
+        const byId = {};
+        jsonLdData.forEach(obj => {
+            if (obj['http://www.w3.org/2002/07/owl#sameAs'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.sameAs.push(obj['http://www.w3.org/2002/07/owl#sameAs']['@id']);
+            }
+            if (obj['https://schema.org/description'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.description.push(obj['https://schema.org/description']['@value']) || '';
+            }
+            if (obj['http://www.cidoc-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.expressions.push(obj['http://www.cidoc-crm.org/efrbroo/R4_embodies']['@id']);
+            }
+
+            if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.isPartOf.push(obj['https://schema.org/isPartOf']['@id']);
+            }
+
+            if (obj['https://schema.org/hasPart'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.hasPart.push(obj['https://schema.org/hasPart']['@id']);
+            }
+
+            if (obj['https://lod.academy/melod/vocab/ontology#hasClassificationOfManifestation'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.classification.push(obj['https://lod.academy/melod/vocab/ontology#hasClassificationOfManifestation']['@id']);
+            }
+            if (obj['@id']) {
+                if (!byId[obj['@id']]) {
+                    byId[obj['@id']] = { ...obj };
+                } else {
+                    // Merge properties (arrays for repeated keys)
+                    for (const key in obj) {
+                        if (key === '@id') continue;
+                        if (byId[obj['@id']][key]) {
+                            // If already array, push; else, make array
+                            if (!Array.isArray(byId[obj['@id']][key])) {
+                                byId[obj['@id']][key] = [byId[obj['@id']][key]];
+                            }
+                            byId[obj['@id']][key].push(obj[key]);
+                        } else {
+                            byId[obj['@id']][key] = obj[key];
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Find main manifestation object ---
+        const main = Object.values(byId).find(obj =>
+            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Manifestation'
+        );
+        if (!main) {
+            console.warn('No main manifestation object found');
+            return '';
+        }
+
+
+        // --- Find physDesc manifestation object ---
+        const physicalDesc = Object.values(byId).find(obj =>
+            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#PhysicalDescription'
+        );
+        if (!physicalDesc) {
+            console.warn('No PhysicalDescription object found');
+        }
+
+        // --- Find paper manifestation object ---
+        const paperDetail = Object.values(byId).find(obj =>
+            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#PaperDetail'
+        );
+        if (!paperDetail) {
+            console.warn('No PaperDetail object found');
+        }
+
+        // --- Find publication manifestation object ---
+        const publication = Object.values(byId).find(obj =>
+            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://schema.org/PublicationEvent'
+        );
+        if (!publication) {
+            console.warn('No PublicationEvent object found');
+        }
+
+        // --- Find inscription manifestation object ---
+        const inscription = Object.values(byId).find(obj =>
+            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Inscription'
+        );
+        if (!inscription) {
+            console.warn('No Inscription object found');
+        }
+
+        manifestationData.subjectUri = main['@id'];
+
+        if (physicalDesc) {
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']) {
+                manifestationData.physDesc.physicalMedium = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']) {
+                manifestationData.physDesc.plateNumber = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasAddDescAutograph']) {
+                manifestationData.physDesc.addDescAuto = physicalDesc['https://lod.academy/melod/vocab/ontology#hasAddDescAutograph']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasAddDescForeign']) {
+                manifestationData.physDesc.addDescForeign = physicalDesc['https://lod.academy/melod/vocab/ontology#hasAddDescForeign']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasSupportDescAutograph']) {
+                manifestationData.physDesc.supportDescAuto = physicalDesc['https://lod.academy/melod/vocab/ontology#hasSupportDescAutograph']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasSupportDescForeign']) {
+                manifestationData.physDesc.supportDescForeign = physicalDesc['https://lod.academy/melod/vocab/ontology#hasSupportDescForeign']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasCondition']) {
+                manifestationData.physDesc.condition = physicalDesc['https://lod.academy/melod/vocab/ontology#hasCondition']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasDecoDesc']) {
+                manifestationData.physDesc.decoDesc = physicalDesc['https://lod.academy/melod/vocab/ontology#hasDecoDesc']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']) {
+                manifestationData.physDesc.scriptDesc = physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']['@value'] || '';
+            }
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']) {
+                manifestationData.physDesc.stamp = physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '';
+            }
+        }
+
+        if (paperDetail) {
+            if (paperDetail['http://www.w3.org/2000/01/rdf-schema#label']) {
+                manifestationData.physDesc.paperDetail.label = paperDetail['http://www.w3.org/2000/01/rdf-schema#label']['@value'] || '';
+            }
+
+            if (paperDetail['https://schema.org/pagination']) {
+                manifestationData.physDesc.paperDetail.pagination = paperDetail['https://schema.org/pagination']['@value'] || '';
+            }
+
+            if (paperDetail['https://lod.academy/melod/vocab/ontology#hasOrientation']) {
+                manifestationData.physDesc.paperDetail.orientation = paperDetail['https://lod.academy/melod/vocab/ontology#hasOrientation']['@value'] || '';
+            }
+
+            if (paperDetail['https://lod.academy/melod/vocab/ontology#hasPaperQuality']) {
+                manifestationData.physDesc.paperDetail.quality = paperDetail['https://lod.academy/melod/vocab/ontology#hasPaperQuality']['@value'] || '';
+            }
+
+            if (paperDetail['https://lod.academy/melod/vocab/ontology#hasCondition']) {
+                manifestationData.physDesc.paperDetail.condition = paperDetail['https://lod.academy/melod/vocab/ontology#hasCondition']['@value'] || '';
+            }
+        }
+
+        if (publication) {
+
+            if (publication['http://www.w3.org/2000/01/rdf-schema#label']) {
+                manifestationData.publication.label = publication['http://www.w3.org/2000/01/rdf-schema#label']['@value'];
+            }
+
+            if (publication['https://schema.org/startDate']) {
+                manifestationData.publication.startDate = publication['https://schema.org/startDate']['@value'];
+            }
+
+            if (publication['https://schema.org/endDate']) {
+                manifestationData.publication.endDate = publication['https://schema.org/endDate']['@value'];
+            }
+
+            if (publication['https://schema.org/publishedBy']) {
+                manifestationData.publication.publisher = publication['https://schema.org/publishedBy']['@id'];
+            }
+
+            if (publication['https://schema.org/location']) {
+                manifestationData.publication.location = publication['https://schema.org/location']['@id'];
+            }
+
+            if (publication['https://schema.org/description']) {
+                manifestationData.publication.description = publication['https://schema.org/description']['@value'];
+            }
+        }
+
+        if (inscription) {
+            if (inscription['https://schema.org/description']) {
+                manifestationData.physDesc.inscription.description = inscription['https://schema.org/description']['@value'] || '';
+            }
+
+            if (inscription['https://lod.academy/melod/vocab/ontology#hasAgent']) {
+                manifestationData.physDesc.inscription.agent = inscription['https://lod.academy/melod/vocab/ontology#hasAgent']['@id'];
+            }
+        }
+
+        // --- Title ---
+        let titleLink = main['https://lod.academy/melod/vocab/ontology#hasTitle'];
+        if (titleLink) {
+            manifestationData.title = parseTitle(titleLink['@id'], byId)
+        }
+
+        // --- Contribution ---
+        let contributorsLinks = main['https://lod.academy/melod/vocab/ontology#hasContribution'];
+        if (contributorsLinks) {
+            if (!Array.isArray(contributorsLinks)) contributorsLinks = [contributorsLinks];
+            manifestationData.contributors = contributorsLinks
+                .map(link => parseContribution(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Title Pages ---
+        let titlePageLinks = main['https://lod.academy/melod/vocab/ontology#hasTitlePage'];
+        if (titlePageLinks) {
+            if (!Array.isArray(titlePageLinks)) titlePageLinks = [titlePageLinks];
+            manifestationData.titlePages = titlePageLinks
+                .map(link => parseTitlePages(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Phys Desc Dimensions ---
+        let dimensionsLinks = physicalDesc?.['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+        if (dimensionsLinks) {
+            if (!Array.isArray(dimensionsLinks)) dimensionsLinks = [dimensionsLinks];
+            manifestationData.physDesc.dimensions = dimensionsLinks
+                .map(link => parseDimensions(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Phys Desc Watermarks ---
+        let watermarksLinks = physicalDesc?.['https://lod.academy/melod/vocab/ontology#hasWatermark'];
+        if (watermarksLinks) {
+            if (!Array.isArray(watermarksLinks)) watermarksLinks = [watermarksLinks];
+            manifestationData.physDesc.watermarks = watermarksLinks
+                .map(link => parseWatermarks(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Paper Detail Watermarks ---
+        let paperWatermarksLinks = paperDetail?.['https://lod.academy/melod/vocab/ontology#hasWatermark'];
+        if (paperWatermarksLinks) {
+            if (!Array.isArray(paperWatermarksLinks)) paperWatermarksLinks = [paperWatermarksLinks];
+            manifestationData.physDesc.paperDetail.watermarks = paperWatermarksLinks
+                .map(link => parseWatermarks(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // Debug logging
+        console.log('Processed manifestation:', manifestationData);
+
+        return generateManifestationXML(manifestationData);
+    }
+}
+
+// Helper: Parse Titles
+function parseTitle(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const title = {};
+
+    // Title and language
+    if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
+        title.title = obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '';
+    }
+    // TitleType
+    if (obj['https://lod.academy/melod/vocab/ontology#hasTitleType']) {
+        title.titleType = obj['https://lod.academy/melod/vocab/ontology#hasTitleType']['@value'];
+    }
+    return title;
+}
+
+// Helper: Parse Contribution
+function parseContribution(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const contribution = {};
+
+    // Agent
+    if (obj['https://lod.academy/melod/vocab/ontology#hasAgent']) {
+        contribution.agent = obj['https://lod.academy/melod/vocab/ontology#hasAgent']['@id'];
+    }
+    // Role
+    if (obj['https://lod.academy/melod/vocab/ontology#hasRole']) {
+        contribution.role = obj['https://lod.academy/melod/vocab/ontology#hasRole']['@id'];
+    }
+    // Certainty
+    if (obj['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
+        contribution.certainty = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
+    }
+    return contribution;
+}
+
+// Helper: Parse Title Pages
+function parseTitlePages(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const titlePage = {};
+
+    // type
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']) {
+        titlePage.type = obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']['@value'] || '';
+    }
+
+    // paragraph
+    if (obj['https://lod.academy/melod/vocab/ontology#paragraph']) {
+        titlePage.paragraph = obj['https://lod.academy/melod/vocab/ontology#paragraph']['@value'] || '';
+    }
+
+    return titlePage;
+}
+
+// Helper: Parse Dimensions
+function parseDimensions(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const dimension = {};
+
+    // type
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']) {
+        dimension.type = obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']['@value'] || '';
+    }
+
+    // value
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P90_has_value']) {
+        dimension.value = obj['http://www.cidoc-crm.org/cidoc-crm/P90_has_value']['@value'] || '';
+    }
+
+    // unit
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P91_has_unit']) {
+        dimension.unit = obj['http://www.cidoc-crm.org/cidoc-crm/P91_has_unit']['@id'] || '';
+    }
+
+    return dimension;
+}
+
+// Helper: Parse Watermarks
+function parseWatermarks(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const watermark = {};
+
+    // type
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']) {
+        watermark.type = obj['http://www.cidoc-crm.org/cidoc-crm/P2_has_type']['@value'] || '';
+    }
+
+    // sameAs (kann einzelnes Objekt oder Array sein)
+    const sameAs = obj['http://www.w3.org/2002/07/owl#sameAs'];
+    if (sameAs) {
+        watermark.sameAs = [];
+
+        if (Array.isArray(sameAs)) {
+            for (const item of sameAs) {
+                if (item['@id']) {
+                    watermark.sameAs.push(item['@id']);
+                }
+            }
+        } else if (sameAs['@id']) {
+            watermark.sameAs.push(sameAs['@id']);
+        }
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasHeraldry']) {
+        watermark.heraldry = obj['https://lod.academy/melod/vocab/ontology#hasHeraldry']['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasContent']) {
+        watermark.content = obj['https://lod.academy/melod/vocab/ontology#hasContent']['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#paperPosition']) {
+        watermark.position = obj['https://lod.academy/melod/vocab/ontology#paperPosition']['@value'] || '';
+    }
+
+    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    if (dimensions) {
+        watermark.dimensions = [];
+
+        if (Array.isArray(dimensions)) {
+            for (const dim of dimensions) {
+                if (dim['@id']) {
+                    const parsed = parseDimensions(dim['@id'], byId);
+                    if (parsed) watermark.dimensions.push(parsed);
+                }
+            }
+        } else if (dimensions['@id']) {
+            const parsed = parseDimensions(dimensions['@id'], byId);
+            if (parsed) watermark.dimensions.push(parsed);
+        }
+    }
+
+    if (obj['https://schema.org/creationLocation']) {
+        watermark.creationLocation = obj['https://schema.org/creationLocation']['@id'];
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasPaperMaker']) {
+        watermark.paperMaker = obj['https://lod.academy/melod/vocab/ontology#hasPaperMaker']['@id'];
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasPaperMill']) {
+        watermark.paperMill = obj['https://lod.academy/melod/vocab/ontology#hasPaperMill']['@id'];
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasTwinMark']) {
+        watermark.twinMark = obj['https://lod.academy/melod/vocab/ontology#hasTwinMark']['@id'];
+    }
+
+    return watermark;
+}

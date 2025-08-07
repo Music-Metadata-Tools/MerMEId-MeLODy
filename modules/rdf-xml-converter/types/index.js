@@ -237,5 +237,146 @@
  * @property {string} [label]
  */
 
+/**
+ * @typedef {Object} ManifestationData
+ * @property {string} subjectUri
+ * @property {Title} [title]                // melod:hasTitle
+ * @property {string[]} [sameAs]               // owl:sameAs
+ * @property {string[]} [classification]       // melod:hasClassificationOfManifestation
+ * @property {Contribution[]} [contributors]   // melod:hasContribution
+ * @property {PhysDesc} [physDesc]             // melod:hasPhysicalDescription
+ * @property {TitlePage[]} [titlePages]         // melod:hasTitlePage
+ * @property {Publication} [publication]       // schema:publication
+ * @property {string[]} [description]          // schema:description
+ * @property {string[]} [expressions]          // efrbroo:R4_embodies
+ * @property {string[]} [isPartOf]               // schema:isPartOf
+ * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
+ */
+
+/**
+ * @typedef {Object} PhysDesc
+ * @property {Extent} [extent]
+ * @property {Dimension[]} [dimensions]
+ * @property {Watermark[]} [watermarks]
+ * @property {string} [physicalMedium]
+ * @property {PaperDetail} [paperDetail]
+ * @property {string} [plateNumber]
+ * @property {string} [addDescAuto]
+ * @property {string} [addDescForeign]
+ * @property {string} [supportDescAuto]
+ * @property {string} [supportDescForeign]
+ * @property {Binding} [binding]
+ * @property {string} [condition]
+ * @property {string} [decoDesc]
+ * @property {string} [scriptDesc]
+ * @property {string} [stamp]
+ * @property {Inscription} [inscription]
+ */
+
+/**
+ * @typedef {Object} PaperDetail
+ * @property {string} [label]
+ * @property {string} [pagination]
+ * @property {string} [orientation]
+ * @property {Extent} [extent]
+ * @property {Format[]} [format]
+ * @property {Rastral} [rastral]
+ * @property {Watermark[]} [watermarks]
+ * @property {string} [quality]
+ * @property {string} [condition]
+ * @property {Binding} [binding]
+ */
+
+/**
+ * @typedef {Object} Extent
+ * @property {string} [value]
+ * @property {string} [unit]
+ */
+
+/**
+ * @typedef {Object} Format
+ * @property {string} [type]
+ * @property {string} [value]
+ * @property {string} [unit]
+ */
+
+/**
+ * @typedef {Object} Dimension
+ * @property {string} [type]
+ * @property {string} [value]
+ * @property {string} [unit]
+ */
+
+/**
+ * @typedef {Object} Watermark
+ * @property {string} [type]
+ * @property {string[]} [sameAs]
+ * @property {string} [heraldry]
+ * @property {string} [content]
+ * @property {string} [position]
+ * @property {Dimension[]} [dimensions]
+ * @property {Date} [creationDate]             // schema:dateCreated
+ * @property {string} [creationLocation]       // schema:locationCreated
+ * @property {string} [paperMaker]            // melod:hasPaperMaker
+ * @property {string} [paperMill]            // melod:hasPaperMill
+ * @property {string} [twinMark]            // melod:hasTwinMark
+ */
+
+/**
+ * @typedef {Object} Binding
+ * @property {string} [description]
+ * @property {Dimension[]} [dimensions]
+ * @property {string} [condition]
+ * @property {string} [decoDesc]
+ */
+
+/**
+ * @typedef {Object} Inscription
+ * @property {string} [description]
+ * @property {string} [agent]
+ */
+
+/**
+ * @typedef {Object} Rastral
+ * @property {Format[]} [dimensions]
+ */
+
+/**
+ * @typedef {Object} TitlePage
+ * @property {string} [type]
+ * @property {string} [paragraph]
+ */
+
+/**
+ * @typedef {Object} ItemData
+ * @property {string} subjectUri
+ * @property {string} label
+ * @property {string[]} [sameAs]               // owl:sameAs
+ * @property {string[]} [classification]       // melod:hasClassificationOfManifestation
+ * @property {string} [repository]             // cidoc:P50_has_current_keeper
+ * @property {string} [shelfmark]             // melod:hasShelfmark
+ * @property {string} [formerShelfmark]        // melod:hasFormerShelfmark
+ * @property {Date} [acquisition]             // melod:hasAcquisition
+ * @property {string[]} [provenance]             // melod:hasProvenance
+ * @property {Hand[]} [hands]                   // melod:hasHand
+ * @property {string[]} [history]             // melod:hasHistoricEvent
+ * @property {PhysDesc} [physDesc]             // melod:hasPhysicalDescription
+ * @property {TitlePage[]} [titlePage]         // melod:hasTitlePage
+ * @property {string[]} [manifestations]          // efrbroo:R7_is_materialization_of
+ * @property {string[]} [isPartOf]               // schema:isPartOf
+ * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
+ * @property {string[]} [description]          // schema:description
+ */
+
+/**
+ * @typedef {Object} Hand
+ * @property {string} [agent]
+ * @property {string} [type]
+ * @property {string} [medium]
+ * @property {string} [description]
+ */
+
 export {};
 

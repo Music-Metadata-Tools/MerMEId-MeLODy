@@ -313,7 +313,7 @@ melod:PaperDetail
   sh:property   [ sh:name      "Rastral mirror" ;
                   sh:description "Height or width of the rastral mirror" ;
                   sh:minCount  0 ;
-                  sh:maxCount  2 ;
+                  sh:maxCount  1 ;
                   sh:path      melod:hasRastral ;
                   sh:node melod:Rastral
                 ] ;

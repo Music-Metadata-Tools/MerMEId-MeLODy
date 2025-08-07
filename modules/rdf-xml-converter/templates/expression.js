@@ -81,7 +81,7 @@ ${data.performances.map(event =>
     // incipit
         `   <incip>
         ${data.incipit.text ? 
-            `    <incipText><p>${data.incipit.text}</p>/incipText>` : ''}
+            `    <incipText><p>${data.incipit.text}</p></incipText>` : ''}
         ${data.incipit.mei?.length > 0 ? 
             data.incipit.mei.map(score => 
                 `           <score xml:id="${score || ''}"/>`
