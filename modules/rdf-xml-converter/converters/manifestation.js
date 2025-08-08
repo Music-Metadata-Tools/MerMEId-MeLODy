@@ -305,6 +305,18 @@ export class ManifestationConverter {
                 .filter(Boolean);
         }
 
+        // --- Phys Desc Extent ---
+        let extentLink = physicalDesc?.['https://lod.academy/melod/vocab/ontology#hasExtent'];
+        if (extentLink) {
+            manifestationData.physDesc.extent = parseExtent(extentLink['@id'], byId)
+        }
+
+        // --- Phys Desc Binding ---
+        let bindingLink = physicalDesc?.['https://lod.academy/melod/vocab/ontology#hasBinding'];
+        if (bindingLink) {
+            manifestationData.physDesc.binding = parseBinding(bindingLink['@id'], byId)
+        }
+
         // --- Phys Desc Watermarks ---
         let watermarksLinks = physicalDesc?.['https://lod.academy/melod/vocab/ontology#hasWatermark'];
         if (watermarksLinks) {
@@ -321,6 +333,33 @@ export class ManifestationConverter {
             manifestationData.physDesc.paperDetail.watermarks = paperWatermarksLinks
                 .map(link => parseWatermarks(link['@id'], byId))
                 .filter(Boolean);
+        }
+
+        // --- Paper Detail Extent ---
+        let paperExtentLink = paperDetail?.['https://lod.academy/melod/vocab/ontology#hasExtent'];
+        if (paperExtentLink) {
+            manifestationData.physDesc.paperDetail.extent = parseExtent(paperExtentLink['@id'], byId)
+        }
+
+        // --- Paper Detail Format ---
+        let paperFormatLinks = paperDetail?.['https://lod.academy/melod/vocab/ontology#hasFormat'];
+        if (paperFormatLinks) {
+            if (!Array.isArray(paperFormatLinks)) paperFormatLinks = [paperFormatLinks];
+            manifestationData.physDesc.paperDetail.format = paperFormatLinks
+                .map(link => parseDimensions(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Paper Detail Binding ---
+        let paperBindingLink = paperDetail?.['https://lod.academy/melod/vocab/ontology#hasBinding'];
+        if (paperBindingLink) {
+            manifestationData.physDesc.paperDetail.binding = parseBinding(paperBindingLink['@id'], byId)
+        }
+
+        // --- Paper Detail Rastral ---
+        let paperRastralLink = paperDetail?.['https://lod.academy/melod/vocab/ontology#hasRastral'];
+        if (paperRastralLink) {
+            manifestationData.physDesc.paperDetail.rastral = parseRastral(paperRastralLink['@id'], byId)
         }
 
         // Debug logging
@@ -409,6 +448,89 @@ function parseDimensions(id, byId) {
     }
 
     return dimension;
+}
+
+// Helper: Parse Extent
+function parseExtent(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const extent = {};
+
+    // value
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P90_has_value']) {
+        extent.value = obj['http://www.cidoc-crm.org/cidoc-crm/P90_has_value']['@value'] || '';
+    }
+
+    // unit
+    if (obj['http://www.cidoc-crm.org/cidoc-crm/P91_has_unit']) {
+        extent.unit = obj['http://www.cidoc-crm.org/cidoc-crm/P91_has_unit']['@id'] || '';
+    }
+
+    return extent;
+}
+
+// Helper: Parse Binding
+function parseBinding(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const binding = {};
+
+    if (obj['https://schema.org/description']) {
+        binding.description = obj['https://schema.org/description']['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasCondition']) {
+        binding.condition = obj['https://lod.academy/melod/vocab/ontology#hasCondition']['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasDecoDesc']) {
+        binding.decoDesc = obj['https://lod.academy/melod/vocab/ontology#hasDecoDesc']['@value'] || '';
+    }
+
+    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    if (dimensions) {
+        binding.dimensions = [];
+
+        if (Array.isArray(dimensions)) {
+            for (const dim of dimensions) {
+                if (dim['@id']) {
+                    const parsed = parseDimensions(dim['@id'], byId);
+                    if (parsed) binding.dimensions.push(parsed);
+                }
+            }
+        } else if (dimensions['@id']) {
+            const parsed = parseDimensions(dimensions['@id'], byId);
+            if (parsed) binding.dimensions.push(parsed);
+        }
+    }
+
+    return binding;
+}
+
+// Helper: Parse Rastral
+function parseRastral(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const rastral = {};
+
+    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    if (dimensions) {
+        rastral.dimensions = [];
+
+        if (Array.isArray(dimensions)) {
+            for (const dim of dimensions) {
+                if (dim['@id']) {
+                    const parsed = parseDimensions(dim['@id'], byId);
+                    if (parsed) rastral.dimensions.push(parsed);
+                }
+            }
+        } else if (dimensions['@id']) {
+            const parsed = parseDimensions(dimensions['@id'], byId);
+            if (parsed) rastral.dimensions.push(parsed);
+        }
+    }
+
+    return rastral;
 }
 
 // Helper: Parse Watermarks
