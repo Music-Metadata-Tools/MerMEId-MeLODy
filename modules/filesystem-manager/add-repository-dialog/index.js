@@ -321,11 +321,11 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
     }
 
     reset() {
-        this._repository_to_clone = {};
+        this._repository_to_clone = new RepositoryToClone();
         this.renderRoot.querySelector("sl-tab-group").show(this._tab_panel_1_name);
-        this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
-        this.renderRoot.querySelector("sl-input#repository-url").value = "";
-        this.renderRoot.querySelector("sl-input#username").value = ""; // Add this line
+        //this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
+        //this.renderRoot.querySelector("sl-input#repository-url").value = "";
+        //this.renderRoot.querySelector("sl-input#username").value = "";
         this.renderRoot.querySelector("sl-input#personal-access-token").value = "";
         let repository_branches_select = this.renderRoot.querySelector("sl-select#repository-branches");
         repository_branches_select.value = "";
