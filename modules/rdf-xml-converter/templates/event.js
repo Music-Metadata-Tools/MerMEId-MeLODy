@@ -53,11 +53,16 @@ ${biblElements}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
+let xml =  `<?xml version="1.0" encoding="UTF-8"?>
 <event type="${data.classification || ''}" 
        label="${data.label || ''}" 
        xml:id="${data.subjectUri}" 
        sameas="${data.sameAs.join(' ')}">
 ${validElements}
 </event>`;
+
+// Remove empty lines (lines with only whitespace)
+xml = xml.replace(/^\s*[\r\n]/gm, '');
+
+return xml;
 }

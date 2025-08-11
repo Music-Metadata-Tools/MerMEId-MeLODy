@@ -15,31 +15,35 @@ export function generateWorkXML(data) {
         data.identifiers?.length > 0 ? 
             data.identifiers.map(identifier => 
                 `    <identifier label="${identifier.label || ''}">${identifier.value}</identifier>`
-            ).join('\n') : null,
+            ).join('\n') : '',
 
         // Titles with type
         data.titles?.length > 0 ? 
             data.titles.map(title => 
                 `    <title type="${title.titleType || ''}" xml:lang="${title.language || ''}">${title.title}</title>`
-            ).join('\n') : null,
+            ).join('\n') : '',
 
         // work status
         data.workStatus ? 
-            `    <annot type="workStatus"><p>${data.workStatus}</p></annot>` : null,
+            `    <annot type="workStatus">
+                    <p>${data.workStatus}</p>
+                </annot>` : '',
 
         // Description
         data.description?.length > 0 ? 
             data.description.map(description => 
-                `    <annot type="description"><p>${description}</p></annot>`
-            ).join('\n') : null,
+                `   <annot type="description">
+                        <p>${description}</p>
+                    </annot>`
+            ).join('\n') : '',
         
         // context
         data.context ? 
-            `    <context><p>${data.context}</p></context>` : null,
+            `    <context><p>${data.context}</p></context>` : '',
 
         // history description
         data.historyDescription ? 
-            `    <history><p>${data.historyDescription}</p></history>` : null,
+            `    <history><p>${data.historyDescription}</p></history>` : '',
     ];
 
     // Add contributions with persName/corpName elements inside contributor
@@ -114,8 +118,13 @@ ${otherElements}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
+let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <work xml:id="${data.subjectUri}"${link}>
 ${validElements}
 </work>`;
+
+// Remove empty lines (lines with only whitespace)
+xml = xml.replace(/^\s*[\r\n]/gm, '');
+
+return xml;
 }

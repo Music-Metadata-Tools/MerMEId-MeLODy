@@ -15,8 +15,13 @@ export function generatePlaceXML(data) {
         identifiers ? identifiers : null
     ].filter(Boolean).join('\n');
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
+let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <place xml:id="${data.subjectUri}">
 ${elements}
 </place>`;
+
+// Remove empty lines (lines with only whitespace)
+xml = xml.replace(/^\s*[\r\n]/gm, '');
+
+return xml;
 }
