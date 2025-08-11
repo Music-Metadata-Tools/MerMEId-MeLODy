@@ -396,6 +396,21 @@ export default class ADWLMEntityEditor extends LitElement {
             // configure the editor
             this.entity_to_edit = entity_to_edit;
         });
+
+        document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
+            let editor = this.renderRoot.querySelector("shacl-form");
+
+            editor.dataset.values = "";
+            editor.dataset.valuesSubject = "";
+            editor.dataset.shapesUrl = "";
+            editor.dataset.shapeSubject = "";
+
+            this._entity_path = null;
+            this.entity_to_edit = null;
+
+            // Reset unsaved changes state when deleting file
+            this._hasUnsavedChanges = false;
+        });
     }
 
     _init() {

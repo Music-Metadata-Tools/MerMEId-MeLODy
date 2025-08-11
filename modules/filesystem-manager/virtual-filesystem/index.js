@@ -277,7 +277,7 @@ export default class ADWLMVirtualFilesystem {
                 let entry_type = await tree_entry.type();
 
                 // TODO: consider the case of deleted files
-                if (stage_entry === null) {
+                if (stage_entry === null && entry_path.endsWith(".ttl")) {
                     return `${entry_path}-deleted`;
                 }
                 // END TODO:

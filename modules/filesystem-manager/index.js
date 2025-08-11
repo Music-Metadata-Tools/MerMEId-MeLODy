@@ -191,7 +191,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
-                            <sl-button id="remove-entity" size="small" title="Remove entity">
+                            <sl-button id="remove-entity" size="small" title="Remove entity" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -328,11 +328,21 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await filesystem.remove_repository(this._selected_repository_path);
                 await this._list_repository_names();
 
-                // disable the repositories-tree
-                // let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+                // Clear staged files details
+                await this._list_staged_files();
+                this._hasUnsharedFiles = false;
+                this._hasSelectedFiles = false;
+                this._staged_files = [];
 
+                // Disable buttons and details
                 this._repository_buttons_disabled = true;
                 staged_files_details.disabled = true;
+
+                // Clear the entity editor
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                    "bubbles": true,
+                    "composed": true,
+                }));
 
                 target.loading = false;
             }
@@ -418,33 +428,18 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
 
+                    // Update repository tree
+                    if (this._selected_repository_path) {
+                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                        if (repoTree) {
+                            this._generate_folder_tree(repoTree);
+                        }
+                    }
+
                     // reload the previously selected file, if any
                     if (this._selected_repository_path && this._file_path) {
                         await this._load_entity_to_edit();
                     }
-
-                    // Collect all expanded items before collapsing
-                    let expandedItems = [...render_root.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
-                        path: item.dataset.entryRelativePath,
-                        type: item.dataset.entryType
-                    }));
-
-                    // Collapse repository folder
-                    let repo_folder_tree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"]`);
-                    repo_folder_tree.removeAttribute("expanded");
-
-                    // Re-expand previously expanded items
-                    const expandItems = async () => {
-                        for (const itemInfo of expandedItems) {
-                            const item = render_root.querySelector(`sl-tree-item[data-entry-relative-path="${itemInfo.path}"][data-entry-type="${itemInfo.type}"]`);
-                            if (item) {
-                                item.setAttribute('expanded', '');
-                                // Wait for lazy loading to complete
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                            }
-                        }
-                    };
-                    setTimeout(() => expandItems(), 500);
 
                     target.loading = false;
                 }
@@ -473,7 +468,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 let file_relative_path = selected_entry.dataset.entryRelativePath;
 
+                // Be careful, add_file means remove_file
                 await filesystem.add_file(this._selected_repository_path, file_relative_path);
+
+                // Check if the directory is empty after removing the file and remove it if so
+                const directory = file_relative_path.split('/')[0];
+                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, directory);
+                if (entries.files.length === 0) {
+                    await filesystem.add_file(this._selected_repository_path, directory);
+                }
+
+                // Clear the entity editor
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                    "bubbles": true,
+                    "composed": true,
+                }));
 
                 // Update repository tree
                 if (this._selected_repository_path) {
@@ -819,8 +828,15 @@ export default class ADWLMFilesystemManager extends LitElement {
     }
 
     async _generate_folder_tree(treeItem) {
+        // Collect all expanded items before clearing items
+        let expandedItems = [...treeItem.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
+            path: item.dataset.entryRelativePath,
+            type: item.dataset.entryType
+        }));
+
         // Clear existing subitems
         treeItem.innerHTML = treeItem.dataset.entryName;
+
         // Get data from the tree item
         let entry_type = treeItem.dataset.entryType;                   //e.g. "folder"
         let entry_absolute_path = treeItem.dataset.entryAbsolutePath;  //e.g. "/repo/persons"
@@ -846,6 +862,19 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
         }
+
+        // Re-expand previously expanded items
+        const expandItems = async () => {
+            for (const itemInfo of expandedItems) {
+                const item = treeItem.querySelector(`sl-tree-item[data-entry-relative-path="${itemInfo.path}"][data-entry-type="${itemInfo.type}"]`);
+                if (item) {
+                    item.setAttribute('expanded', '');
+                    // Wait for lazy loading to complete
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+        };
+        setTimeout(() => expandItems(), 500);
 
         // Insert subitems into the input tree
         treeItem.insertAdjacentHTML("beforeend", tree_subitems);
