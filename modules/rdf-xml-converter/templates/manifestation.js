@@ -43,7 +43,7 @@ export function generateManifestationXML(data) {
 ${data.physDesc.dimensions.map(dimension => `           <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" value="${dimension.value}"/>`
             ).join('\n')}
         </dimensions>` : ''}
-${data.titlePages?.length > 0 ? data.titlePages.map((titlePage, index) => `         <titlePage label="${titlePage.type || ''}" n="${index + 1}">
+${data.titlePages?.length > 0 ? data.titlePages.map((titlePage, index) => `        <titlePage label="${titlePage.type || ''}" n="${index + 1}">
             <p>${titlePage.paragraph}</p>
         </titlePage>`
             ).join('\n') : '' }
@@ -53,6 +53,11 @@ ${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermar
             <p>${watermark.content || ''}</p>
             <locus>${watermark.position || ''}</locus>
             <annot type="creation">
+                <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
+            watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
+            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.certainty ? ` cert"${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate.dateDescription || ''}</date>
                 <geogName type="place" xml:id="${watermark.creationLocation || ''}"/>
                 <geogName type="paper_mill" xml:id="${watermark.paperMill || ''}"/>
                 <persName role="paper_maker" xml:id="${watermark.paperMaker || ''}"/>
@@ -139,6 +144,11 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
                 <p>${watermark.content || ''}</p>
                 <locus>${watermark.position || ''}</locus>
                 <annot type="creation">
+                    <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
+            watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
+            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.certainty ? ` cert"${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
                     <geogName type="place" xml:id="${watermark.creationLocation || ''}"/>
                     <geogName type="paper_mill" xml:id="${watermark.paperMill || ''}"/>
                     <persName role="paper_maker" xml:id="${watermark.paperMaker || ''}"/>
@@ -150,6 +160,10 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
             </watermark>`
             ).join('\n') : '' }
         </physMedium>` : ''}
+        ${!isEffectivelyEmpty(data.physDesc.inscription) ? `<inscription>
+                <p>${data.physDesc.inscription.description || ''}</p>
+                <persName xml:id="${data.physDesc.inscription.agent || ''}"/>
+            </inscription>` : ''}
     </physDesc>` : '' ,
 
         // Description

@@ -469,6 +469,50 @@ function parseExtent(id, byId) {
     return extent;
 }
 
+// Helper: Parse Date
+function parseDate(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const date = {};
+
+    // isodate
+    if (obj['https://lod.academy/melod/vocab/ontology#isodate']) {
+        date.value = obj['https://lod.academy/melod/vocab/ontology#isodate']['@value'] || '';
+    }
+
+    // startDate
+    if (obj['https://schema.org/startDate']) {
+        date.startDate = obj['https://schema.org/startDate']['@value'] || '';
+    }
+
+    // endDate
+    if (obj['https://schema.org/endDate']) {
+        date.endDate = obj['https://schema.org/endDate']['@value'] || '';
+    }
+
+    // not before
+    if (obj['https://lod.academy/melod/vocab/ontology#notBefore']) {
+        date.notBefore = obj['https://lod.academy/melod/vocab/ontology#notBefore']['@value'] || '';
+    }
+
+    // not after
+    if (obj['https://lod.academy/melod/vocab/ontology#notAfter']) {
+        date.notAfter = obj['https://lod.academy/melod/vocab/ontology#notAfter']['@value'] || '';
+    }
+
+    // certainty
+    if (obj['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
+        date.notAfter = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'] || '';
+    }
+
+    // description
+    if (obj['https://schema.org/description']) {
+        date.dateDescription = obj['https://schema.org/description']['@value'] || '';
+    }
+
+    return date;
+}
+
 // Helper: Parse Binding
 function parseBinding(id, byId) {
     const obj = byId[id];
@@ -570,6 +614,11 @@ function parseWatermarks(id, byId) {
 
     if (obj['https://lod.academy/melod/vocab/ontology#paperPosition']) {
         watermark.position = obj['https://lod.academy/melod/vocab/ontology#paperPosition']['@value'] || '';
+    }
+
+    const creationDate = obj['https://schema.org/dateCreated'];
+    if (creationDate) {
+        watermark.creationDate = parseDate(creationDate['@id'], byId)
     }
 
     const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
