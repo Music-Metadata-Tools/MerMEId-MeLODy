@@ -11,6 +11,7 @@ import { InstrumentationConverter } from '../modules/rdf-xml-converter/converter
 import { WorkConverter } from '../modules/rdf-xml-converter/converters/work.js';
 import { ExpressionConverter } from '../modules/rdf-xml-converter/converters/expression.js';
 import { ManifestationConverter } from '../modules/rdf-xml-converter/converters/manifestation.js';
+import { ItemConverter } from '../modules/rdf-xml-converter/converters/item.js';
 
 // configuration
 const classifications = {
@@ -181,6 +182,10 @@ function convertJsonLdToXml(json_ld_contents) {
         item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Manifestation'
     );
 
+    const isItemEntity = json_ld_contents.some(item =>
+        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Item'
+    );
+
     if (isPersonEntity) {
         return PersonConverter.toXML(json_ld_contents);
     } 
@@ -233,6 +238,11 @@ function convertJsonLdToXml(json_ld_contents) {
     else if (isManifestationEntity) {
         
         return ManifestationConverter.toXML(json_ld_contents);
+    }
+
+    else if (isItemEntity) {
+        
+        return ItemConverter.toXML(json_ld_contents);
     }
 
     else {
