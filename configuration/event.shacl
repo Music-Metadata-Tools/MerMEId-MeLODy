@@ -23,6 +23,7 @@ melod:Event
   sh:property   [ sh:description "Classification" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
+                  sh:maxCount 1 ;
                   sh:path melod:hasClassification
                 ] ;
   sh:property   [ sh:description "External resource (e.g. musiconn performance)" ;
