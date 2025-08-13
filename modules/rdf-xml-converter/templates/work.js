@@ -3,6 +3,26 @@
  * @param {import('../types').WorkData} data
  * @returns {string}
  */
+
+// Formatting helper function
+function formatXML(xml) {
+    let formatted = '';
+    let indent = '';
+    const tab = '    ';
+    xml.split(/>\s*</).forEach(node => {
+        if (node.match(/^\/\w/)) {
+            // Closing tag
+            indent = indent.substring(tab.length);
+        }
+        formatted += indent + '<' + node + '>\n';
+        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) {
+            // Add indent for next line
+            indent += tab;
+        }
+    });
+    return formatted.substring(1, formatted.length - 2);
+}
+
 export function generateWorkXML(data) {
     
     const link = data.sameAs
@@ -125,6 +145,8 @@ ${validElements}
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
+
+xml = formatXML(xml);
 
 return xml;
 }

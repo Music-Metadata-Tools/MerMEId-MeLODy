@@ -4,7 +4,7 @@
  * @returns {string}
  */
 
-// Add this helper function before generateEventXML
+// Formatting helper function
 function formatXML(xml) {
     let formatted = '';
     let indent = '';
