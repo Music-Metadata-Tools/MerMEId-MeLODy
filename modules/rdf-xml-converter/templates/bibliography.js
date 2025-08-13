@@ -6,6 +6,9 @@
 export function generateBibliographyXML(data) {
 
     const elements = [
+        // Genre entries
+        data.genre ? 
+            `    <genre sameas="${data.genre}">${data.genre.split('#')[1]}</genre>` : null,
         // Short title
         data.abbreviation ? 
             `    <title type="short">${data.abbreviation}</title>` : null,
@@ -14,6 +17,12 @@ export function generateBibliographyXML(data) {
         data.sameAs?.length > 0 ? 
             data.sameAs.map(sameAs => 
                 `    <identifier auth="${sameAs.split('/')[0]}" auth.uri="${sameAs}"/>`
+            ).join('\n') : null,
+
+        // Main title and related titles
+        data.title?.length > 0 ? 
+            data.title.map(title => 
+                `    <title${title.titleLevel ? ` level="${title.titleLevel}"` : ''}${title.titleType ? ` type="${title.titleType}"}"` : ''}>${title.title}</title>`
             ).join('\n') : null,
 
         // Pagination and volume
@@ -26,22 +35,13 @@ export function generateBibliographyXML(data) {
         data.language ? 
             `    <textLang xml:lang="${data.langcode}">${data.language}</textLang>` : null,
         
-        // Genre entries
-        data.genre ? 
-            `    <genre>${data.genre}</genre>` : null,
         data.classification ? 
-            `    <classification>${data.classification}</classification>` : null,
+            `    <term>${data.classification}</term>` : null,
         
         // Authors
         data.authors?.length > 0 ? 
             data.authors.map(author => 
-                `    <author xml:id="${author}"/>`
-            ).join('\n') : null,
-        
-        // Main title and related titles
-        data.title?.length > 0 ? 
-            data.title.map(title => 
-                `    <title level="${title.titleLevel || ''}" type="${title.titleType || ''}">${title.title}</title>`
+                `    <author sameas="${author}"/>`
             ).join('\n') : null,
         
         data.isPartOf ? 
@@ -50,29 +50,44 @@ export function generateBibliographyXML(data) {
         // Editors
         data.editors?.length > 0 ? 
             data.editors.map(editor => 
-                `    <editor xml:id="${editor}"/>`
+                `    <editor sameas="${editor}"/>`
             ).join('\n') : null,
         
         // Imprint information
         `    <imprint label="${data.publication?.label || ''}">
         <date${data.publication?.startDate ? ` startdate="${data.publication.startDate}"` : ''}${
             data.publication?.endDate ? ` enddate="${data.publication.endDate}"` : ''}/>
-        <pubPlace xml:id="${data.publication.location || ''}"/>
-        <publisher xml:id="${data.publication.publisher || ''}"/>${
-            data.publication.description ? `\n        <annot>${data.publication.description}</annot>` : ''}
+        <pubPlace${data.publication.location ? ` sameas="${data.publication.location}"`: ''}/>
+        <publisher${data.publication.publisher ? ` sameas="${data.publication.publisher || ''}"`: ''}/>${
+            data.publication.description ? `\n        <annot><p>${data.publication.description}</p></annot>` : ''}
     </imprint>`,
         data.description?.length > 0 ? 
             data.description.map(description => 
-                `    <annot>${description}</annot>`
+                `    <annot><p>${description}</p></annot>`
             ).join('\n') : null,
     ];
 
     const validElements = elements.filter(Boolean).join('\n');
 
-let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<bibl xml:id="${data.subjectUri}">
-${validElements}
-</bibl>`;
+let xml = 
+`<meiHead xmlns="http://www.music-encoding.org/ns/mei">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <workList>
+        <work>
+            <title/>
+            <biblList>
+                <bibl sameas="${data.subjectUri}">
+                ${validElements}
+                </bibl>
+            </biblList>
+        </work>
+    </workList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');

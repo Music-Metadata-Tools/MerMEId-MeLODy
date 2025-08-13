@@ -76,7 +76,7 @@ export class BibliographyConverter {
 
             // Main bibliography properties
             if (item['https://schema.org/genre']) {
-                bibliographyData.genre = item['https://schema.org/genre']['@id'].split('#')[1];
+                bibliographyData.genre = item['https://schema.org/genre']['@id'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasClassification']) {
                 bibliographyData.classification = item['https://lod.academy/melod/vocab/ontology#hasClassification']['@value'];
