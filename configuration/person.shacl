@@ -1,6 +1,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix melod: <https://lod.academy/melod/vocab/ontology#> .
-@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -9,6 +9,7 @@
 
 melod:Person
   a sh:NodeShape, rdfs:Class ;
+  owl:imports     dataset:places.ttl ;
   sh:targetClass melod:Person ;
   sh:property   [ sh:description "Surname of the person" ;
                   sh:name "Surname" ;
@@ -48,7 +49,7 @@ melod:Person
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:group melod:Birth ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Place ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:birthPlace
@@ -64,7 +65,7 @@ melod:Person
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:group melod:Death ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Place ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace

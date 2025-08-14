@@ -12,7 +12,7 @@
 
 melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:places.ttl ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
@@ -36,7 +36,7 @@ melod:Event
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:group melod:General ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Place ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location

@@ -14,7 +14,7 @@
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:places.ttl ;
   sh:property   [ sh:name "Label" ;
                   sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 0 ;
@@ -90,7 +90,7 @@ melod:Expression
                   sh:path schema:locationCreated ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:nodeKind sh:IRI
+                  sh:class melod:Place ;
                 ] ;
   sh:property   [ sh:description "Insert ID of the historic event" ;
                   sh:name "History of creation" ;

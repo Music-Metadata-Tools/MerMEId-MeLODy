@@ -364,6 +364,7 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
+  owl:imports     dataset:places.ttl ;
   sh:property   [ sh:description "Type of the watermark" ;
                   sh:name      "Type" ;
                   sh:minCount  0 ;
@@ -420,7 +421,7 @@ melod:Watermark
                   sh:path schema:locationCreated ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:nodeKind sh:IRI
+                  sh:class melod:Place
                 ] ;
   sh:property   [ sh:description  "Insert ID of the paper maker (person)" ;
                   sh:name         "Paper maker" ;
@@ -496,6 +497,7 @@ melod:Date
 
 melod:PublicationEvent
   a               sh:NodeShape ;
+  owl:imports     dataset:places.ttl ;
   sh:property   [ sh:description "Label of the publication event" ;
                   sh:name      "Label" ;
                   sh:minCount  0 ;
@@ -528,7 +530,7 @@ melod:PublicationEvent
                   sh:path         schema:location ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Place ;
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name      "Description" ;
