@@ -116,7 +116,9 @@ export class EventConverter {
                 eventData.date.notAfter = item['https://lod.academy/melod/vocab/ontology#notAfter']['@value'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
-                eventData.date.certainty = item['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
+                if (item['@id'] === dateObjectId) {
+                    eventData.date.certainty = item['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
+                }
             }
         });
 
