@@ -51,6 +51,7 @@ export class ExpressionConverter {
                 mei: []
             },
             movements: [],
+            movementIris: [],
             otherRelations: [],
             classification: [],
             citations: [],
@@ -79,6 +80,10 @@ export class ExpressionConverter {
             if (obj['https://schema.org/citation'] && !obj['@id'].startsWith('_:')) {
                 expressionData.citations.push(obj['https://schema.org/citation']['@id']);
             }
+
+            if (obj['https://schema.org/includedComposition'] && !obj['@id'].startsWith('_:') && !obj['https://schema.org/includedComposition']['@id'].startsWith('_:')) {
+                expressionData.movementIris.push(obj['https://schema.org/includedComposition']['@id']);
+            }
             // Check descriptions based on their subject IDs
             if (obj['https://schema.org/description']) {
                 if (obj['@id'] === dateObjectId) {
@@ -93,7 +98,7 @@ export class ExpressionConverter {
                     // This is the date description
                     expressionData.meter.description = obj['https://schema.org/description']['@value'];
                 }
-                else if (obj['@id'] === expressionData.subjectUri) {
+                else {
                     // This is the expression description
                     expressionData.description.push(obj['https://schema.org/description']['@value']) || '';
                 }

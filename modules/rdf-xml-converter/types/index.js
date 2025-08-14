@@ -202,6 +202,7 @@
  * @property {string} [instrumentation]        // melod:hasInstrumentation
  * @property {Incipit} [incipit]               // melod:hasIncipit
  * @property {ExpressionComponent[]} [movements] // schema:includedComposition
+ * @property {string[]} [movementIris] // schema:includedComposition
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
  * @property {string[]} [classification]       // melod:hasClassification
  * @property {string[]} [citations]            // schema:citation
