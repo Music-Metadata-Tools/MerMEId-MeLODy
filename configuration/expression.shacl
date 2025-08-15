@@ -14,7 +14,7 @@
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:places.ttl , dataset:instrumentations.ttl ;
   sh:property   [ sh:name "Label" ;
                   sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 0 ;
@@ -168,7 +168,7 @@ melod:Expression
                   sh:name         "Instrumentation" ;
                   sh:maxCount 1;
                   sh:group melod:Music ;
-                  sh:nodeKind         sh:IRI ;
+                  sh:class         melod:Instrumentation ;
                   #sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
                   #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
                   sh:path         melod:hasInstrumentation
