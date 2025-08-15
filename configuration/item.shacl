@@ -14,7 +14,7 @@
 
 melod:Item
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:institutions.ttl ;
   sh:property   [ sh:description "Optional label for the item" ;
                   sh:name "Label" ;
                   sh:group melod:General ;
@@ -51,7 +51,7 @@ melod:Item
                   sh:group melod:Location ;
                   #sh:defaultValue "https://mei-metadata.org/institutions/" ;
                   #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Institution ;
                   sh:path cidoc:P50_has_current_keeper
                 ] ;
   sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository" ;

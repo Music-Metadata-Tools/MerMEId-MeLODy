@@ -20,7 +20,7 @@ melod:Institution
                 ] ;
   sh:property   [ sh:description "Abbreviation or siglum of the institution" ;
                   sh:name "Abbreviation" ;
-                  sh:minCount 0 ;
+                  sh:minCount 1 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation
                 ] ;
