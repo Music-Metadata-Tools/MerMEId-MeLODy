@@ -12,7 +12,7 @@
 melod:Bibliography
   sh:targetClass melod:Bibliography ;
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl, dataset:persons.ttl ;
+  owl:imports     terms:melod-terms.ttl, dataset:persons.ttl , dataset:bibliography.ttl;
   sh:property   [ sh:description "Genre of the bibliographic entry" ;
                   sh:name "Genre" ;
                   sh:minCount 0 ;
@@ -99,7 +99,7 @@ melod:Bibliography
                   sh:path schema:isPartOf ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Bibliography ;
                 ] ;
   sh:property   [ sh:description "Position in the series, volume number" ;
                   sh:name "Volume number" ;
@@ -123,7 +123,7 @@ melod:Bibliography
 
 melod:PublicationEvent
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl ;
+  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Label of the publication event" ;
                   sh:name      "Label" ;
                   sh:minCount  0 ;
@@ -146,7 +146,7 @@ melod:PublicationEvent
                   sh:path         schema:publishedBy ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Person ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;

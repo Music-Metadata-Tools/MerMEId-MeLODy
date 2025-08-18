@@ -13,6 +13,7 @@
 
 melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
+  owl:imports dataset:venues.ttl , dataset:bibliography.ttl;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
                   sh:group melod:General ;
@@ -35,7 +36,7 @@ melod:PerformanceEvent
                   sh:name "Venue" ;
                   sh:maxCount 1;
                   sh:group melod:General ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Venue ;
                   #sh:defaultValue "https://mei-metadata.org/venues/" ;
                   #sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
                   sh:path melod:hasVenue
@@ -77,7 +78,7 @@ melod:PerformanceEvent
                   sh:group melod:Bibliography ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Bibliography ;
                   sh:path schema:citation
                 ] ;
   sh:targetClass melod:PerformanceEvent .

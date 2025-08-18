@@ -12,7 +12,7 @@
 
 melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:places.ttl, dataset:bibliography.ttl ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
@@ -71,7 +71,7 @@ melod:Event
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class sh:Bibliography ;
                   sh:path schema:citation
                 ] ;
   sh:targetClass melod:Event .

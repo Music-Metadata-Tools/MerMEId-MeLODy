@@ -14,7 +14,7 @@
 
 melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:expressions.ttl , dataset:manifestations.ttl ;
   sh:property   [ sh:description "Title of the manifestation" ;
                   sh:name "Title" ;
                   sh:minCount 1 ;
@@ -93,7 +93,7 @@ melod:Manifestation
                   sh:minCount 1 ;
                   #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                   #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Expression ;
                   sh:path efrbroo:R4_embodies
                 ] ;
   sh:property   [ sh:description "Insert ID of the manifestation" ;
@@ -102,7 +102,7 @@ melod:Manifestation
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
                   #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Manifestation ;
                   sh:path schema:hasPart
                 ] ;
   sh:property   [ sh:description "Insert ID of the manifestation" ;
@@ -111,13 +111,13 @@ melod:Manifestation
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
                   #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Manifestation ;
                   sh:path schema:isPartOf
                 ] ;
   sh:property   [ sh:name "Relation" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Manifestation ;
                   sh:or (
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
@@ -364,7 +364,7 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl ;
+  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Type of the watermark" ;
                   sh:name      "Type" ;
                   sh:minCount  0 ;
@@ -427,7 +427,7 @@ melod:Watermark
                   sh:name         "Paper maker" ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPaperMaker ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Person ;
                 ] ;
   sh:property   [ sh:description  "Insert link or name of the paper mill" ;
                   sh:name         "Paper mill" ;
@@ -624,12 +624,13 @@ melod:Binding
 
 melod:Inscription
   a               sh:NodeShape ;
+  owl:imports     dataset:persons.ttl ;
   sh:property   [ sh:description  "Insert ID of the person" ;
                   sh:name         "Person" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Person ;
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name      "Description" ;

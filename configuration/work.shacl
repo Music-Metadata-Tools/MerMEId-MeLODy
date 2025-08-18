@@ -19,7 +19,7 @@
 
 melod:Work
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:bibliography.ttl , dataset:expressions.ttl , dataset:works.ttl ;
   sh:property   [ sh:name "Titles" ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
@@ -58,7 +58,7 @@ melod:Work
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Bibliography ;
                   sh:path schema:citation
                 ] ;
 
@@ -92,7 +92,7 @@ melod:Work
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/expression/" ;
                   #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Expression ;
                   sh:path efrbroo:R9_is_realised_in
                 ] ;
 
@@ -102,7 +102,7 @@ melod:Work
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Work ;
                   sh:path schema:isPartOf
                 ] ;
 
@@ -112,13 +112,13 @@ melod:Work
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Work ;
                   sh:path schema:hasPart
                 ] ;
   sh:property   [ sh:name "Other Relation" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Work ;
                   sh:or (
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
