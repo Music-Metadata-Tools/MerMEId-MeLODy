@@ -188,17 +188,17 @@ melod:Expression
                     [ rdfs:label "IRI of included Expression" ;
                       #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                       #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
-                      sh:class melod:Expression ]
+                      sh:class melod:ExpressionEntity ]
                     [ sh:node melod:ExpressionComponent ; rdfs:label "Included Expression" ]
                   )
                 ] ;
   sh:property   [ sh:name "Relation" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
-                  sh:nodeKind sh:IRI ;
+                  sh:class melod:ExpressionEntity ;
                   sh:or (
-                    [ sh:name "has part" ; sh:description "has part" ; sh:path  melod:hasPart ; rdfs:label "has part" ; sh:class melod:Expression]
-                    [ sh:name "is part of" ; sh:description "is part of" ; sh:path melod:isPartOf ; rdfs:label "is part of" ; sh:class melod:Expression]
+                    [ sh:name "has part" ; sh:description "has part" ; sh:path  melod:hasPart ; rdfs:label "has part" ]
+                    [ sh:name "is part of" ; sh:description "is part of" ; sh:path melod:isPartOf ; rdfs:label "is part of" ]
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
                     [ sh:name "has adaptation" ; sh:description "has adaptation" ; sh:path  melod:hasAdaptation ; rdfs:label "has adaptation" ]

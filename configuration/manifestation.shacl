@@ -93,7 +93,7 @@ melod:Manifestation
                   sh:minCount 1 ;
                   #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                   #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
-                  sh:class melod:Expression ;
+                  sh:class melod:ExpressionEntity ;
                   sh:path efrbroo:R4_embodies
                 ] ;
   sh:property   [ sh:description "Insert ID of the manifestation" ;
@@ -102,7 +102,7 @@ melod:Manifestation
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
                   #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
-                  sh:class melod:Manifestation ;
+                  sh:class melod:ManifestationEntity ;
                   sh:path schema:hasPart
                 ] ;
   sh:property   [ sh:description "Insert ID of the manifestation" ;
@@ -111,13 +111,13 @@ melod:Manifestation
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
                   #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
-                  sh:class melod:Manifestation ;
+                  sh:class melod:ManifestationEntity ;
                   sh:path schema:isPartOf
                 ] ;
   sh:property   [ sh:name "Relation" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
-                  sh:class melod:Manifestation ;
+                  sh:class melod:ManifestationEntity ;
                   sh:or (
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
