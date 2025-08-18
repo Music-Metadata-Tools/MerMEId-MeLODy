@@ -175,7 +175,8 @@ melod:Expression
                 ] ;
   sh:property   [ sh:description  "Incipit" ;
                   sh:group melod:Music ;
-                  sh:name         "Incipits" ;
+                  sh:name         "Incipit" ;
+                  sh:maxCount 1;
                   sh:node         melod:MusicIncipit ;
                   sh:path         melod:hasIncipit
                 ] ;
@@ -439,7 +440,6 @@ melod:MusicIncipit
   sh:property   [ sh:description  "Data of the plaine and easy code of the incipit" ;
                   sh:name         "PAE data" ;
                   sh:path         melod:hasIncipitValue ;
-                  sh:maxCount     1
                 ] ;
   sh:property   [ sh:description  "Text of the Incipit" ;
                   sh:name         "Incipit Text" ;
@@ -454,6 +454,5 @@ melod:MusicIncipit
                   dash:singleLine false ;
                   sh:datatype     xsd:base64Binary ;
                   sh:minCount     0 ;
-                  sh:maxCount     1
                 ] ;        
   sh:targetClass  schema:MusicIncipit .
