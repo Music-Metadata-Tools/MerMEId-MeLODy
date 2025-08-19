@@ -66,6 +66,12 @@ melod:InstrumentationDetail
                   sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;
   sh:property   [ sh:minCount     0 ;
+                  sh:description "Name of the medium of performance" ;
+                  sh:name         "Name" ;
+                  sh:maxCount     1 ;
+                  sh:path         schema:description
+                ] ;
+  sh:property   [ sh:minCount     0 ;
                   sh:description "Identifier (external resource, e.g. MARC)" ;
                   sh:name         "Link" ;
                   sh:path         owl:sameAs ;
