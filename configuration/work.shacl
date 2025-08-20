@@ -53,21 +53,13 @@ melod:Work
                   sh:path schema:creativeWorkStatus ;
                   sh:in ( "authentic" "not authentic" "constructed" )
                 ] ;
-  sh:property   [ sh:name "Bibliography" ;
-                  sh:description "Insert ID of the bibliographic entry" ;
-                  sh:minCount 0 ;
-                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
-                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:class melod:Bibliography ;
-                  sh:path schema:citation
-                ] ;
 
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
                   sh:minCount 0 ;
-                  dash:singleLine false ;
-                  sh:languageIn   ( "en" "de" ) ;
-                  sh:path schema:description
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation ;
+                  sh:group melod:General ;
                 ] ;
 
   sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived" ;
@@ -163,6 +155,15 @@ melod:Work
                     [ rdfs:label "Custom classification" ]
                   )
                 ] ;
+  sh:property   [ sh:name "Bibliography" ;
+                  sh:description "Insert ID of the bibliographic entry" ;
+                  sh:minCount 0 ;
+                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
+                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
+                  sh:class melod:Bibliography ;
+                  sh:path schema:citation ;
+                  sh:group melod:Evidence
+                ] ;
   sh:targetClass melod:Work .
 
   melod:Relation
@@ -180,6 +181,10 @@ melod:Work
   melod:Keywords
   a               sh:PropertyGroup ;
   rdfs:label      "Classification and Keywords" .
+
+  melod:Evidence
+  a               sh:PropertyGroup ;
+  rdfs:label      "Evidence" .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
 #                  sh:name "Publication" ;
@@ -209,6 +214,23 @@ melod:Title
                   sh:class melod:TitleType ;
                 ] ;
   sh:targetClass melod:Title .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph" ;
+                  sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] .
 
 melod:Contribution
   a               sh:NodeShape ;

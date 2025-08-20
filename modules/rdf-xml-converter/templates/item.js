@@ -207,17 +207,22 @@ ${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" med
         </handList>` : ''}
     </physDesc>` : '' ,
 
-        // Description
-        data.description?.length > 0 ? 
-            data.description.map(description => 
-                `    <annot type="description"><p>${description}</p></annot>`
-            ).join('\n') : null,
+        // Annotations
+        data.annotation?.length > 0 ? 
+            data.annotation.map(annotation => 
+                `   <annot label="${annotation.label || ''}" type="description">
+                        ${annotation.paragraph?.length > 0 ? 
+                            annotation.paragraph.map(paragraph => 
+                `<p>${paragraph}</p>`
+            ).join('\n') : ''}
+                    </annot>`
+            ).join('\n') : '',
     ];
 
     // Add term elements inside classification
     if (data.classification && data.classification.length > 0) {
         const termElements = data.classification.map(term => {
-            return `            <term sameAs="${term}"/>`;
+            return `            <term sameas="${term}"/>`;
         }).join('\n');
 
         elements.push(`    <classification>
@@ -230,19 +235,19 @@ ${termElements}
     // Add relation elements inside relationList
     if (data.manifestations || data.isPartOf || data.hasPart || data.otherRelations ) {
         const manifestationElements = data.manifestations.map(manifestation => {
-            return `        <relation rel="isMaterializationOf" xml:id="${manifestation}"/>`;
+            return `        <relation rel="isMaterializationOf" target="${manifestation}"/>`;
         }).join('\n');
 
         const partOfElements = data.isPartOf.map(partOf => {
-            return `        <relation rel="isPartOf" xml:id="${partOf}"/>`;
+            return `        <relation rel="isPartOf" target="${partOf}"/>`;
         }).join('\n');
 
         const hasPartElements = data.hasPart.map(hasPart => {
-            return `        <relation rel="hasPart" xml:id="${hasPart}"/>`;
+            return `        <relation rel="hasPart" target="${hasPart}"/>`;
         }).join('\n');
 
         const otherElements = data.otherRelations.map(relation => {
-            return `        <relation rel="" xml:id="${relation}"/>`;
+            return `        <relation rel="" target="${relation}"/>`;
         }).join('\n');
 
         elements.push(`    <relationList>

@@ -82,10 +82,9 @@ melod:Manifestation
                 ] ;
   sh:property   [ sh:description "Additional information related to the manifestation" ;
                   sh:name "Description" ;
-                  sh:maxCount 1 ;
-                  dash:singleLine false ;
                   sh:group melod:General ;
-                  sh:path schema:description
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation
                 ] ;
   sh:property   [ sh:description "Insert ID of the related expression" ;
                   sh:name "Embodies" ;
@@ -166,6 +165,23 @@ melod:Title
                   sh:path      melod:hasTitleType ;
                 ] ;
   sh:targetClass  melod:Title .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph" ;
+                  sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] .
 
 melod:PhysDesc
   a               sh:NodeShape ;

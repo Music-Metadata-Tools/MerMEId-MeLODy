@@ -75,7 +75,7 @@ export class ManifestationConverter {
                 location: '',
                 description: ''
             },
-            description: [],
+            annotation: [],
             expressions: [],
             isPartOf: [],
             hasPart: [],
@@ -87,9 +87,6 @@ export class ManifestationConverter {
         jsonLdData.forEach(obj => {
             if (obj['http://www.w3.org/2002/07/owl#sameAs'] && !obj['@id'].startsWith('_:')) {
                 manifestationData.sameAs.push(obj['http://www.w3.org/2002/07/owl#sameAs']['@id']);
-            }
-            if (obj['https://schema.org/description'] && !obj['@id'].startsWith('_:')) {
-                manifestationData.description.push(obj['https://schema.org/description']['@value']) || '';
             }
             if (obj['http://www.cidoc-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
                 manifestationData.expressions.push(obj['http://www.cidoc-crm.org/efrbroo/R4_embodies']['@id']);
@@ -278,6 +275,15 @@ export class ManifestationConverter {
             manifestationData.title = parseTitle(titleLink['@id'], byId)
         }
 
+        // --- Annotations ---
+        let annotationLinks = main['https://lod.academy/melod/vocab/ontology#hasAnnotation'];
+        if (annotationLinks) {
+            if (!Array.isArray(annotationLinks)) annotationLinks = [annotationLinks];
+            manifestationData.annotation = annotationLinks
+                .map(link => parseAnnotation(link['@id'], byId))
+                .filter(Boolean);
+        }
+
         // --- Contribution ---
         let contributorsLinks = main['https://lod.academy/melod/vocab/ontology#hasContribution'];
         if (contributorsLinks) {
@@ -384,6 +390,36 @@ function parseTitle(id, byId) {
         title.titleType = obj['https://lod.academy/melod/vocab/ontology#hasTitleType']['@value'];
     }
     return title;
+}
+
+// Helper: Parse Annotations
+function parseAnnotation(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const annotation = {};
+
+    // Label
+    if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
+        annotation.label = obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '';
+    }
+
+    // paragraph
+    const paragraph = obj['https://lod.academy/melod/vocab/ontology#paragraph'];
+    if (paragraph) {
+        annotation.paragraph = [];
+
+        if (Array.isArray(paragraph)) {
+            for (const item of paragraph) {
+                if (item['@value']) {
+                    annotation.paragraph.push(item['@value']);
+                }
+            }
+        } else if (paragraph['@value']) {
+            annotation.paragraph.push(paragraph['@value']);
+        }
+    }
+    
+    return annotation;
 }
 
 // Helper: Parse Contribution

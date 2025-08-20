@@ -185,11 +185,16 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
             </inscription>` : ''}
     </physDesc>` : '' ,
 
-        // Description
-        data.description?.length > 0 ? 
-            data.description.map(description => 
-                `    <annot type="description"><p>${description}</p></annot>`
-            ).join('\n') : null,
+        // Annotations
+        data.annotation?.length > 0 ? 
+            data.annotation.map(annotation => 
+                `   <annot label="${annotation.label || ''}" type="description">
+                        ${annotation.paragraph?.length > 0 ? 
+                            annotation.paragraph.map(paragraph => 
+                `<p>${paragraph}</p>`
+            ).join('\n') : ''}
+                    </annot>`
+            ).join('\n') : '',
     ];
 
     // Add contributions with persName/corpName elements inside contributor

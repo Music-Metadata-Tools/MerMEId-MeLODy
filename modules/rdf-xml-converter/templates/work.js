@@ -49,11 +49,14 @@ export function generateWorkXML(data) {
                     <p>${data.workStatus}</p>
                 </annot>` : '',
 
-        // Description
-        data.description?.length > 0 ? 
-            data.description.map(description => 
-                `   <annot type="description">
-                        <p>${description}</p>
+        // Annotations
+        data.annotation?.length > 0 ? 
+            data.annotation.map(annotation => 
+                `   <annot label="${annotation.label || ''}" type="description">
+                        ${annotation.paragraph?.length > 0 ? 
+                            annotation.paragraph.map(paragraph => 
+                `<p>${paragraph}</p>`
+            ).join('\n') : ''}
                     </annot>`
             ).join('\n') : '',
         

@@ -163,7 +163,7 @@
  * @property {Contribution[]} [contributors]   // melod:hasContribution
  * @property {string} [workStatus]             // schema:creativeWorkStatus
  * @property {string[]} [citations]            // schema:citation
- * @property {string[]} [description]          // schema:description
+ * @property {Annotation[]} [annotation]       // melod:hasAnnotation
  * @property {string} [context]                // melod:hasContext
  * @property {string} [historyDescription]     // melod:hasHistoryDesc
  * @property {string[]} [expressions]          // efrbroo:R9_is_realised_in
@@ -177,6 +177,12 @@
  * @typedef {Object} Identifier
  * @property {string} [label]      // rdfs:label
  * @property {string} [value]      // owl:hasValue
+ */
+
+/**
+ * @typedef {Object} Annotation
+ * @property {string} [label]      // rdfs:label
+ * @property {string[]} [paragraph]      // melod:paragraph
  */
 
 /**
@@ -206,7 +212,7 @@
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
  * @property {string[]} [classification]       // melod:hasClassification
  * @property {string[]} [citations]            // schema:citation
- * @property {string[]} [description]          // schema:description
+ * @property {Annotation[]} [annotation]          // melod:hasAnnotation
  */
 
 /**
@@ -248,7 +254,7 @@
  * @property {PhysDesc} [physDesc]             // melod:hasPhysicalDescription
  * @property {TitlePage[]} [titlePages]         // melod:hasTitlePage
  * @property {Publication} [publication]       // schema:publication
- * @property {string[]} [description]          // schema:description
+ * @property {Annotation[]} [annotation]          // melod:hasAnnotation
  * @property {string[]} [expressions]          // efrbroo:R4_embodies
  * @property {string[]} [isPartOf]               // schema:isPartOf
  * @property {string[]} [hasPart]              // schema:hasPart
@@ -368,7 +374,7 @@
  * @property {string[]} [isPartOf]               // schema:isPartOf
  * @property {string[]} [hasPart]              // schema:hasPart
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
- * @property {string[]} [description]          // schema:description
+ * @property {Annotation[]} [annotation]          // melod:hasAnnotation
  */
 
 /**

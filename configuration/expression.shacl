@@ -236,11 +236,14 @@ melod:Expression
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
                   dash:singleLine false ;
-                  sh:path schema:description
+                  sh:group melod:General ;
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation ;
                 ] ;
   sh:property   [ sh:description "Insert ID of bibliographic entry" ;
                   sh:name "Bibliography" ;
                   sh:minCount 0 ;
+                  sh:group melod:Evidence ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:class melod:Bibliography ;
@@ -272,6 +275,10 @@ melod:Keywords
   a               sh:PropertyGroup ;
   rdfs:label      "Classification and Keywords" .
 
+melod:Evidence
+  a               sh:PropertyGroup ;
+  rdfs:label      "Evidence" .
+
 melod:Identifier
   a               sh:NodeShape ;
 
@@ -287,6 +294,23 @@ melod:Identifier
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
                   sh:path      owl:hasValue
+                ] .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph" ;
+                  sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
                 ] .
 
 melod:Date

@@ -186,8 +186,8 @@ melod:Item
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
                   sh:group melod:General ;
-                  dash:singleLine false ;
-                  sh:path schema:description
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation
                 ] ;
   sh:targetClass  melod:Item .
 
@@ -545,6 +545,23 @@ melod:Inscription
                   sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Inscription .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph" ;
+                  sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] .
 
 melod:Binding
   a               sh:NodeShape ;

@@ -55,7 +55,7 @@ export class ExpressionConverter {
             otherRelations: [],
             classification: [],
             citations: [],
-            description: []
+            annotation: []
         };
         // Find the date object ID
         const dateObjectId = jsonLdData.find(item => 
@@ -243,6 +243,15 @@ export class ExpressionConverter {
                 .filter(Boolean);
         }
 
+        // --- Annotations ---
+        let annotationLinks = main['https://lod.academy/melod/vocab/ontology#hasAnnotation'];
+        if (annotationLinks) {
+            if (!Array.isArray(annotationLinks)) annotationLinks = [annotationLinks];
+            expressionData.annotation = annotationLinks
+                .map(link => parseAnnotation(link['@id'], byId))
+                .filter(Boolean);
+        }
+
         // --- Contribution ---
         let contributorsLinks = main['https://lod.academy/melod/vocab/ontology#hasContribution'];
         if (contributorsLinks) {
@@ -283,6 +292,36 @@ function parseIdentifier(id, byId) {
         identifier.value = obj['http://www.w3.org/2002/07/owl#hasValue']?.['@value'] || '';
     }
     return identifier;
+}
+
+// Helper: Parse Annotations
+function parseAnnotation(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const annotation = {};
+
+    // Label
+    if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
+        annotation.label = obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '';
+    }
+
+    // paragraph
+    const paragraph = obj['https://lod.academy/melod/vocab/ontology#paragraph'];
+    if (paragraph) {
+        annotation.paragraph = [];
+
+        if (Array.isArray(paragraph)) {
+            for (const item of paragraph) {
+                if (item['@value']) {
+                    annotation.paragraph.push(item['@value']);
+                }
+            }
+        } else if (paragraph['@value']) {
+            annotation.paragraph.push(paragraph['@value']);
+        }
+    }
+    
+    return annotation;
 }
 
 // Helper: Parse Movements

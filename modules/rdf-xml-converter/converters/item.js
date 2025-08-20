@@ -78,7 +78,7 @@ export class ItemConverter {
                 },
             },
             titlePages: [],
-            description: [],
+            annotation: [],
             manifestations: [],
             isPartOf: [],
             hasPart: [],
@@ -93,9 +93,6 @@ export class ItemConverter {
             }
             if (obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent'] && !obj['@id'].startsWith('_:')) {
                 itemData.history.push(obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent']['@id']);
-            }
-            if (obj['https://schema.org/description'] && !obj['@id'].startsWith('_:')) {
-                itemData.description.push(obj['https://schema.org/description']['@value']) || '';
             }
             if (obj['https://lod.academy/melod/vocab/ontology#hasProvenance'] && !obj['@id'].startsWith('_:')) {
                 itemData.provenance.push(obj['https://lod.academy/melod/vocab/ontology#hasProvenance']['@id']);
@@ -271,6 +268,15 @@ export class ItemConverter {
                 .filter(Boolean);
         }
 
+        // --- Annotations ---
+        let annotationLinks = main['https://lod.academy/melod/vocab/ontology#hasAnnotation'];
+        if (annotationLinks) {
+            if (!Array.isArray(annotationLinks)) annotationLinks = [annotationLinks];
+            itemData.annotation = annotationLinks
+                .map(link => parseAnnotation(link['@id'], byId))
+                .filter(Boolean);
+        }
+
         // --- Hands ---
         let handLinks = main['https://lod.academy/melod/vocab/ontology#hasHand'];
         if (handLinks) {
@@ -376,6 +382,36 @@ function parseTitlePages(id, byId) {
     }
 
     return titlePage;
+}
+
+// Helper: Parse Annotations
+function parseAnnotation(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const annotation = {};
+
+    // Label
+    if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
+        annotation.label = obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '';
+    }
+
+    // paragraph
+    const paragraph = obj['https://lod.academy/melod/vocab/ontology#paragraph'];
+    if (paragraph) {
+        annotation.paragraph = [];
+
+        if (Array.isArray(paragraph)) {
+            for (const item of paragraph) {
+                if (item['@value']) {
+                    annotation.paragraph.push(item['@value']);
+                }
+            }
+        } else if (paragraph['@value']) {
+            annotation.paragraph.push(paragraph['@value']);
+        }
+    }
+    
+    return annotation;
 }
 
 // Helper: Parse Hands

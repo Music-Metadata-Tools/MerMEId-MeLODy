@@ -144,12 +144,18 @@ ${data.performances.map(event =>
     biblElements ? `<biblList>${biblElements}</biblList>` : '',
     
     //work status and description
-    data.completionStatus || data.description ? `    <notesStmt>
+    data.completionStatus || data.annotation ? `    <notesStmt>
         ${data.completionStatus ? 
             `   <annot type="completionStatus"><p>${data.completionStatus.split('#')[1]}</p></annot>` : ''}
-        ${data.description?.length > 0 ? 
-            data.description.map(description => 
-                `    <annot type="description"><p>${description}</p></annot>`
+        ${// Annotations
+        data.annotation?.length > 0 ? 
+            data.annotation.map(annotation => 
+                `   <annot label="${annotation.label || ''}" type="description">
+                        ${annotation.paragraph?.length > 0 ? 
+                            annotation.paragraph.map(paragraph => 
+                `<p>${paragraph}</p>`
+            ).join('\n') : ''}
+                    </annot>`
             ).join('\n') : ''}</notesStmt>` : ''
     ];
 
