@@ -103,7 +103,10 @@ melod:Item
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
-                  sh:class melod:Events ;
+                  sh:or (
+                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ]
+                    [ sh:node melod:Event ; rdfs:label "Event" ]
+                  ) ;
                   sh:path melod:hasHistoricEvent
                 ] ;
   sh:property   [ sh:description "Title page of the manifestation" ;
