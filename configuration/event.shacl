@@ -73,7 +73,7 @@ melod:Event
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:class sh:Bibliography ;
+                  sh:class melod:Bibliography ;
                   sh:path schema:citation
                 ] ;
   sh:targetClass melod:Event .
