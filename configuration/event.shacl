@@ -24,7 +24,8 @@ melod:Event
                   sh:name "Classification" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  sh:path melod:hasClassification
+                  sh:path melod:hasClassification ;
+                  sh:group melod:General ;
                 ] ;
   sh:property   [ sh:description "External resource (e.g. musiconn performance)" ;
                   sh:name "Link" ;
@@ -63,6 +64,7 @@ melod:Event
                   sh:name "Description" ;
                   dash:singleLine false ;
                   sh:maxCount 1 ;
+                  sh:group melod:General ;
                   sh:path schema:description
                 ] ;
   sh:property   [ sh:description "Insert ID of the bibliographic entry" ;
