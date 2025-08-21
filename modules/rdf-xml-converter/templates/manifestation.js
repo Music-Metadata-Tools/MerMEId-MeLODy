@@ -34,10 +34,10 @@ function isEffectivelyEmpty(obj) {
 }
 
 export function generateManifestationXML(data) {
-    
+    let contributorElements = [];
     // Add contributions with persName/corpName elements inside contributor
     if (data.contributors && data.contributors.length > 0) {
-        const contributorElements = data.contributors.map(contribution => {
+        contributorElements = data.contributors.map(contribution => {
             const agent = ` sameas="${contribution.agent}"` || '';
             const role = contribution.role || '';
             const cert = contribution.certainty || '';
@@ -261,7 +261,7 @@ ${otherElements || ''}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+    let xml = `
 <manifestation sameas="${data.subjectUri}" label="${data.title?.titleType || ''}">
 ${validElements}
 </manifestation>`;
