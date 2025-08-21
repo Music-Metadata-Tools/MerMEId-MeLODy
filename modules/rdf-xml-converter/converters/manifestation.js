@@ -23,7 +23,7 @@ export class ManifestationConverter {
                 },
                 dimensions: [],
                 watermarks: [],
-                physicalMedium: '',
+                physicalMedium: [],
                 paperDetail: {
                     label: '',
                     pagination: '',
@@ -90,6 +90,10 @@ export class ManifestationConverter {
             }
             if (obj['http://www.cidoc-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
                 manifestationData.expressions.push(obj['http://www.cidoc-crm.org/efrbroo/R4_embodies']['@id']);
+            }
+
+            if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
+                manifestationData.physDesc.physicalMedium.push(obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '');
             }
 
             if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
@@ -538,7 +542,7 @@ function parseDate(id, byId) {
 
     // certainty
     if (obj['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
-        date.notAfter = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'] || '';
+        date.certainty = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'] || '';
     }
 
     // description

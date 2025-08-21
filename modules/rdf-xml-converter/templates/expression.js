@@ -88,7 +88,7 @@ export function generateExpressionXML(data) {
             `    <incipText><p>${data.incipit.text}</p></incipText>` : ''}
         ${data.incipit.mei?.length > 0 ? 
             data.incipit.mei.map(score => 
-                `           <score xml:id="${score || ''}"/>`
+                `           <score sameas="${score || ''}"/>`
             ).join('\n') : '' }
         ${data.incipit.value?.length > 0 ? 
             data.incipit.value.map(pae => 
@@ -103,8 +103,8 @@ export function generateExpressionXML(data) {
         `   <creation>
         <date${data.creationDate?.value ? ` isodate="${data.creationDate.value}"` : ''}${data.creationDate?.startDate ? ` startdate="${data.creationDate.startDate}"` : ''}${
             data.creationDate?.endDate ? ` enddate="${data.creationDate.endDate}"` : ''}${
-            data.creationDate?.notAfter ? ` notAfter="${data.creationDate.notAfter}"` : ''}${
-            data.creationDate?.notBefore ? ` notBefore="${data.creationDate.notBefore}"` : ''}${
+            data.creationDate?.notAfter ? ` notafter="${data.creationDate.notAfter}"` : ''}${
+            data.creationDate?.notBefore ? ` notbefore="${data.creationDate.notBefore}"` : ''}${
             data.creationDate?.certainty ? ` cert="${data.creationDate.certainty}"` : ''}>${data.creationDate.dateDescription}</date>
         <geogName sameas="${data.creationLocation || ''}"/>
     </creation>`,

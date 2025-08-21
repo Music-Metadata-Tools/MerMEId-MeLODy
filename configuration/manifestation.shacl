@@ -352,13 +352,13 @@ melod:PaperDetail
                   dash:singleLine false ;
                   sh:path melod:hasCondition
                 ] ;
-  sh:property   [ sh:description "General description of binding" ;
-                  sh:name "Binding" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:hasBinding ;
-                  sh:node melod:Binding
-                ] ;
+#  sh:property   [ sh:description "General description of binding" ;
+#                 sh:name "Binding" ;
+#                  sh:minCount 0 ;
+#                  sh:maxCount 1 ;
+#                 sh:path melod:hasBinding ;
+#                  sh:node melod:Binding
+#                ] ;
   sh:targetClass  melod:PaperDetail .
 
 melod:Extent
@@ -551,11 +551,11 @@ melod:PublicationEvent
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:class melod:Place ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:description
-                ] ;
+# sh:property   [ sh:description "Description, annotations or further information" ;
+#                  sh:name      "Description" ;
+#                  sh:maxCount  1 ;
+#                  sh:path      schema:description
+#                ] ;
   sh:targetClass  schema:PublicationEvent .
 
 melod:Dimension

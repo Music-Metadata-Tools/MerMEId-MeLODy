@@ -173,7 +173,7 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
             ).join('\n') : '' }
         </physMedium>` : ''}
         ${!isEffectivelyEmpty(data.physDesc.inscription) ? `<inscription>
-                <persName sameas="${data.physDesc.inscription.agent || ''}"/>
+                <persName${data.physDesc.inscription.agent ? ` sameas="${data.physDesc.inscription.agent || ''}}"` : ''}/>
                 <annot><p>${data.physDesc.inscription.description || ''}</p></annot>
             </inscription>` : ''}
             ${data.hands?.length > 0 ? `<handList>
@@ -222,7 +222,7 @@ ${data.history.map(event =>
                 `<p>${paragraph}</p>`
             ).join('\n') : ''}
                     </annot>`
-            ).join('\n')}</notesStmt` : '',
+            ).join('\n')}</notesStmt>` : '',
     ];
 
     // Add term elements inside classification

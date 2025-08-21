@@ -35,59 +35,80 @@ function isEffectivelyEmpty(obj) {
 
 export function generateManifestationXML(data) {
     
-    const link = data.sameAs
-            ? ` sameAs="${Array.isArray(data.sameAs) ? data.sameAs.join(' ') : data.sameAs}"`
-            : '';
+    // Add contributions with persName/corpName elements inside contributor
+    if (data.contributors && data.contributors.length > 0) {
+        const contributorElements = data.contributors.map(contribution => {
+            const agent = ` sameas="${contribution.agent}"` || '';
+            const role = contribution.role || '';
+            const cert = contribution.certainty || '';
+            
+            // Check if it's an institution or person
+            const isInstitution = agent.toLowerCase().includes('institution');
+            
+            const elementType = isInstitution ? 'corpName' : 'persName';
+            
+            return `        <${elementType} role="${role}" cert="${cert}"/>`;
+        }).join('\n');
+    }
+
+    const identifiers = data.sameAs.map(uri => 
+        `    <identifier auth.uri="${uri}"/>`
+    ).join('\n');
 
     const elements = [
+
+        // Identifiers
+        identifiers ? identifiers : null,
 
         // Titles with type
         `   <titleStmt>
         <title>${data.title?.title}</title>
+        ${contributorElements ? `<respStmt>
+${contributorElements}
+        </respStmt>` : ''}
     </titleStmt>`,
 
         // Imprint information
         `    <pubStmt label="${data.publication?.label || ''}">
         <date${data.publication?.startDate ? ` startdate="${data.publication.startDate}"` : ''}${
                 data.publication?.endDate ? ` enddate="${data.publication.endDate}"` : ''}/>
-        <pubPlace xml:id="${data.publication.location || ''}"/>
-        <publisher xml:id="${data.publication.publisher || ''}"/>${
-                data.publication.description ? `\n        <annot><p>${data.publication.description}</p></annot>` : ''}
+        <pubPlace sameas="${data.publication.location || ''}"/>
+        <publisher sameas="${data.publication.publisher || ''}"/>
     </pubStmt>`,
         
         // phys desc
         !isEffectivelyEmpty(data.physDesc) || data.titlePages?.length > 0 ? `   <physDesc>
     ${!isEffectivelyEmpty(data.physDesc?.extent) ? `    <extent quantity="${data.physDesc?.extent?.value || ''}" unit="${data.physDesc?.extent?.unit.split('#')[1] || ''}"/>` : ''}
     ${data.physDesc?.dimensions?.length > 0 ? `    <dimensions>
-${data.physDesc.dimensions.map(dimension => `           <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" value="${dimension.value}"/>`
+${data.physDesc.dimensions.map(dimension => `           <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
             ).join('\n')}
         </dimensions>` : ''}
 ${data.titlePages?.length > 0 ? data.titlePages.map((titlePage, index) => `        <titlePage label="${titlePage.type || ''}" n="${index + 1}">
             <p>${titlePage.paragraph}</p>
         </titlePage>`
             ).join('\n') : '' }
-${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermark => `         <watermark sameAs="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
+${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermark => `         <watermark sameas="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
             <title>${watermark.type || ''}</title>
             <heraldry>${watermark.heraldry || ''}</heraldry>
-            <p>${watermark.content || ''}</p>
+            <annot type="content"><p>${watermark.content || ''}</p></annot>
             <locus>${watermark.position || ''}</locus>
             <annot type="creation">
                 <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
-            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
-            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
-            watermark.creationDate?.certainty ? ` cert"${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate.dateDescription || ''}</date>
-                <geogName type="place" xml:id="${watermark.creationLocation || ''}"/>
-                <geogName type="paper_mill" xml:id="${watermark.paperMill || ''}"/>
-                <persName role="paper_maker" xml:id="${watermark.paperMaker || ''}"/>
+            watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate.dateDescription || ''}</date>
+                <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
+                <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
+                <persName role="paper_maker"${watermark.paperMaker ? ` sameas="${watermark.paperMaker}"` : ''}/>
             </annot>
     ${watermark.dimensions?.length > 0 ? `        <dimensions>
-${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" value="${dimension.value}"/>`
+${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
             ).join('\n')}
             </dimensions>` : ''}
         </watermark>`
             ).join('\n') : '' }
-    ${data.physDesc.physicalMedium ? `    <physMedium><p>${data.physDesc.physicalMedium}</p></physMedium>` : ''}
+    ${data.physDesc.physicalMedium?.length > 0 ?data.physDesc.physicalMedium.map(medium => `    <physMedium><p>${medium}</p></physMedium>`).join('\n') : ''}
     ${data.physDesc.plateNumber ? `    <plateNum>${data.physDesc.plateNumber}</plateNum>` : ''}
     ${data.physDesc?.addDescAuto || data.physDesc?.addDescForeign ? `    <addDesc>
             <annot type="autograph">
@@ -112,7 +133,6 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
         ${data.physDesc.scriptDesc ? `    <scriptDesc><p>${data.physDesc.scriptDesc}</p></scriptDesc>` : ''}
         ${data.physDesc.stamp ? `    <stamp>${data.physDesc.stamp}</stamp>` : ''}
     ${!isEffectivelyEmpty(data.physDesc.binding) ? `    <bindingDesc>
-            <p>${data.physDesc.binding.description || ''}</p>
             <binding>
                 <condition>
                     <p>${data.physDesc.binding.condition || ''}</p>
@@ -121,10 +141,11 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
                     <p>${data.physDesc.binding.decoDesc || ''}</p>
                 </decoNote>
     ${data.physDesc.binding.dimensions?.length > 0 ? `        <dimensions>
-                    ${data.physDesc.binding.dimensions?.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit?.split('#')[1] || ''}" value="${dimension.value}"/>`
+                    ${data.physDesc.binding.dimensions?.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit?.split('#')[1] || ''}" quantity="${dimension.value}"/>`
         ).join('\n')}
                 </dimensions>` : ''}
             </binding>
+            <p>${data.physDesc.binding.description || ''}</p>
         </bindingDesc>` : ''}
     ${!isEffectivelyEmpty(data.physDesc.paperDetail) ? `    <physMedium type="paper" label="${data.physDesc.paperDetail.label || ''}">
             <dimensions>
@@ -134,93 +155,75 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
             ${data.physDesc.paperDetail.orientation ? `    <term>${data.physDesc.paperDetail.orientation}</term>` : ''}
             ${!isEffectivelyEmpty(data.physDesc.paperDetail.extent) ? `    <extent quantity="${data.physDesc.paperDetail.extent.value}" unit="${data.physDesc.paperDetail.extent.unit.split('#')[1]}"/>` : ''}
             ${data.physDesc.paperDetail.format.length > 0 ? `     <dimensions type="format">
-${data.physDesc.paperDetail.format.map(format => `                  <${format.type || ''} unit="${format.unit?.split('#')[1] || ''}" value="${format.value}"/>`
+${data.physDesc.paperDetail.format.map(format => `                  <${format.type || ''} unit="${format.unit?.split('#')[1] || ''}" quantity="${format.value}"/>`
             ).join('\n')}
                 </dimensions>` : ''}
             ${data.physDesc.paperDetail.rastral.dimensions.length > 0 ? `     <dimensions type="rastral_mirror">
-${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `                   <${dimension.type || ''} unit="${dimension.unit?.split('#')[1] || ''}" value="${dimension.value}"/>`
+${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `                   <${dimension.type || ''} unit="${dimension.unit?.split('#')[1] || ''}" quantity="${dimension.value}"/>`
             ).join('\n')}
                 </dimensions>` : ''}
             </dimensions>
-            <supportDesc>
+            ${data.physDesc.paperDetail.quality || data.physDesc.paperDetail.condition ? `    <supportDesc>
             ${data.physDesc.paperDetail.quality ? `    <support type="paper_quality"><p>${data.physDesc.paperDetail.quality}</p></support>` : ''}
             ${data.physDesc.paperDetail.condition ? `    <condition><p>${data.physDesc.paperDetail.condition}</p></condition>` : ''}
-            </supportDesc>
+            </supportDesc>` : ''}
             ${!isEffectivelyEmpty(data.physDesc.paperDetail.binding) ? `<bindingDesc>
-                <p>${data.physDesc.paperDetail.binding.description || ''}</p>
                 <binding>
                     <condition><p>${data.physDesc.paperDetail.binding.condition || ''}</p></condition>
                     <decoNote><p>${data.physDesc.paperDetail.binding.decoDesc || ''}</p></decoNote>
                  ${data.physDesc.paperDetail.binding.dimensions?.length > 0 ? `<dimensions>
-                        ${data.physDesc.paperDetail.binding.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" value="${dimension.value}"/>`
+                        ${data.physDesc.paperDetail.binding.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
             ).join('\n')}
                     </dimensions>` : ''}
                 </binding>
+                <p>${data.physDesc.paperDetail.binding.description || ''}</p>
             </bindingDesc>` : ''}
-            ${data.physDesc?.paperDetail.watermarks?.length > 0 ? data.physDesc?.paperDetail.watermarks.map(watermark => `<watermark sameAs="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
+            ${data.physDesc?.paperDetail.watermarks?.length > 0 ? data.physDesc?.paperDetail.watermarks.map(watermark => `<watermark sameas="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
                 <title>${watermark.type || ''}</title>
                 <heraldry>${watermark.heraldry || ''}</heraldry>
-                <p>${watermark.content || ''}</p>
+                <annot type="content"><p>${watermark.content || ''}</p></annot>
                 <locus>${watermark.position || ''}</locus>
                 <annot type="creation">
                     <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
-            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
-            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
-            watermark.creationDate?.certainty ? ` cert"${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
-                    <geogName type="place" xml:id="${watermark.creationLocation || ''}"/>
-                    <geogName type="paper_mill" xml:id="${watermark.paperMill || ''}"/>
-                    <persName role="paper_maker" xml:id="${watermark.paperMaker || ''}"/>
+            watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
+                    <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
+                    <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
+                    <persName role="paper_maker"${watermark.paperMaker ? ` sameas="${watermark.paperMaker}"` : ''}/>
                 </annot>
         ${watermark.dimensions?.length > 0 ? `        <dimensions>
-    ${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" value="${dimension.value}"/>`
+    ${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
                 ).join('\n')}
                 </dimensions>` : ''}
             </watermark>`
             ).join('\n') : '' }
         </physMedium>` : ''}
         ${!isEffectivelyEmpty(data.physDesc.inscription) ? `<inscription>
-                <p>${data.physDesc.inscription.description || ''}</p>
-                <persName xml:id="${data.physDesc.inscription.agent || ''}"/>
+                <persName${data.physDesc.inscription.agent ? ` sameas="${data.physDesc.inscription.agent || ''}}"` : ''}/>
+                <annot><p>${data.physDesc.inscription.description || ''}</p></annot>
             </inscription>` : ''}
     </physDesc>` : '' ,
 
         // Annotations
-        data.annotation?.length > 0 ? 
-            data.annotation.map(annotation => 
+        data.annotation?.length > 0 ? `<notesStmt>
+            ${data.annotation.map(annotation => 
                 `   <annot label="${annotation.label || ''}" type="description">
                         ${annotation.paragraph?.length > 0 ? 
                             annotation.paragraph.map(paragraph => 
                 `<p>${paragraph}</p>`
             ).join('\n') : ''}
                     </annot>`
-            ).join('\n') : '',
+            ).join('\n')}</notesStmt>` : '',
     ];
 
-    // Add contributions with persName/corpName elements inside contributor
-    if (data.contributors && data.contributors.length > 0) {
-        const contributorElements = data.contributors.map(contribution => {
-            const agent = contribution.agent || '';
-            const role = contribution.role || '';
-            const cert = contribution.certainty || '';
-            
-            // Check if it's an institution or person
-            const isInstitution = agent.toLowerCase().includes('institution');
-            
-            const elementType = isInstitution ? 'corpName' : 'persName';
-            
-            return `        <${elementType} role="${role}" cert="${cert}" xml:id="${agent}"/>`;
-        }).join('\n');
-
-        elements.push(`    <contributor>
-${contributorElements}
-    </contributor>`);
-    }
+    
 
     // Add term elements inside classification
     if (data.classification && data.classification.length > 0) {
         const termElements = data.classification.map(term => {
-            return `            <term sameAs="${term}"/>`;
+            return `            <term sameas="${term}"/>`;
         }).join('\n');
 
         elements.push(`    <classification>
@@ -233,19 +236,19 @@ ${termElements}
     // Add relation elements inside relationList
     if (data.expressions || data.isPartOf || data.hasPart || data.otherRelations ) {
         const expressionElements = data.expressions.map(expression => {
-            return `        <relation rel="isEmbodimentOf" xml:id="${expression}"/>`;
+            return `        <relation rel="isEmbodimentOf" target="${expression}"/>`;
         }).join('\n');
 
         const partOfElements = data.isPartOf.map(partOf => {
-            return `        <relation rel="isPartOf" xml:id="${partOf}"/>`;
+            return `        <relation rel="isPartOf" target="${partOf}"/>`;
         }).join('\n');
 
         const hasPartElements = data.hasPart.map(hasPart => {
-            return `        <relation rel="hasPart" xml:id="${hasPart}"/>`;
+            return `        <relation rel="hasPart" target="${hasPart}"/>`;
         }).join('\n');
 
         const otherElements = data.otherRelations.map(relation => {
-            return `        <relation rel="" xml:id="${relation}"/>`;
+            return `        <relation rel="" target="${relation}"/>`;
         }).join('\n');
 
         elements.push(`    <relationList>
@@ -259,7 +262,7 @@ ${otherElements || ''}
     const validElements = elements.filter(Boolean).join('\n');
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<manifestation xml:id="${data.subjectUri}"${link} label="${data.title?.titleType || ''}">
+<manifestation sameas="${data.subjectUri}" label="${data.title?.titleType || ''}">
 ${validElements}
 </manifestation>`;
 
