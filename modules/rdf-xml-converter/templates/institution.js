@@ -47,7 +47,7 @@ export function generateInstitutionXML(data) {
     ].filter(Boolean).join('\n');
 
 let xml = `
-<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0.0">
+<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
     <fileDesc>
         <titleStmt>
             <title/>

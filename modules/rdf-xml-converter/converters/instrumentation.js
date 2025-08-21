@@ -88,7 +88,10 @@ function parseDetail(id, byId) {
             detail.link = [sameAs['@id']];
         }
     }
-    
+    // Name
+    if (obj['https://schema.org/description']) {
+        detail.name = obj['https://schema.org/description']['@value'] || '';
+    }
     // Quantity
     if (obj['http://data.doremus.org/ontology#U30_foresees_quantity_of_medium_of_performance']) {
         detail.quantity = parseInt(obj['http://data.doremus.org/ontology#U30_foresees_quantity_of_medium_of_performance']['@value'], 10);

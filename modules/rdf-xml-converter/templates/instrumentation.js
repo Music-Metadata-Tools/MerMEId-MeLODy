@@ -28,10 +28,10 @@ export function generateInstrumentationXML(data) {
     // Helper: perfRes element (recursive for alternatives)
     function perfRes(detail, isAlt = false) {
         if (!detail) return '';
-        const mediumLabel = detail.medium?.split('#')[1] || '';
-        const medium = detail.medium;
+        const mediumLabel = detail.name || '';
+        const medium = detail.medium || '';
         const link = detail.link
-            ? ` sameAs="${Array.isArray(detail.link) ? detail.link.join(' ') : detail.link}"`
+            ? ` sameas="${Array.isArray(detail.link) ? detail.link.join(' ') : detail.link}"`
             : '';
         const count = detail.quantity ? ` count="${detail.quantity}"` : '';
         const solo = typeof detail.solo === 'boolean' ? ` solo="${detail.solo}"` : '';
@@ -41,16 +41,16 @@ export function generateInstrumentationXML(data) {
         if (detail.alternativeInstrumentation?.length) {
             alt = detail.alternativeInstrumentation.map(a => perfRes(a, true)).join('');
         }
-        return `        <perfRes xml:id="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>`;
+        return `        <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>`;
     }
 
     // Helper: castItem for each detail with castingDetail
     function castItem(detail) {
         if (!detail?.castingDetail) return '';
-        const medium = detail.medium;
-        const mediumLabel = detail.medium?.split('#')[1] || '';
+        const medium = detail.medium || '';
+        const mediumLabel = detail.name || '';
         const link = detail.link
-            ? ` sameAs="${Array.isArray(detail.link) ? detail.link.join(' ') : detail.link}"`
+            ? ` sameas="${Array.isArray(detail.link) ? detail.link.join(' ') : detail.link}"`
             : '';
         const solo = typeof detail.solo === 'boolean' ? ` solo="${detail.solo}"` : '';
         const count = detail.quantity ? ` count="${detail.quantity}"` : '';
@@ -63,7 +63,7 @@ export function generateInstrumentationXML(data) {
             alt = detail.alternativeInstrumentation.map(a => perfRes(a, true)).join('');
         }
         return `        <castItem>
-            <perfRes xml:id="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>
+            <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>
             <role>
                 <name>${roleName}</name>
             </role>
@@ -101,11 +101,15 @@ ${g.details.map(d => perfRes(d)).join('\n')}
         return items.join('\n');
     }
 
+    const hasCastingDetail =
+        (data.details && data.details.some(d => d.castingDetail)) ||
+        (data.groups && data.groups.some(g => g.details.some(d => d.castingDetail)));
+
     const elements = [
     data.label ? `  <head>${data.label}</head>` : null,
-        `   <castList>
+    hasCastingDetail ? `   <castList>
 ${castList(data.details, data.groups)}
-    </castList>`,
+    </castList>` : null,
         `   <perfResList>
 ${perfResList(data.details, data.groups)}
     </perfResList>`
@@ -113,10 +117,27 @@ ${perfResList(data.details, data.groups)}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<perfMedium xml:id="${data.subjectUri}">
+let xml = `<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <workList>
+        <work>
+            <title/>
+            <expressionList>
+                <expression>
+                    <title/>
+<perfMedium sameas="${data.subjectUri}">
 ${validElements}
-</perfMedium>`;
+</perfMedium>
+                </expression>
+            </expressionList>
+        </work>
+    </workList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
