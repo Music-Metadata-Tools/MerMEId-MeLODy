@@ -61,8 +61,8 @@ export class InstitutionConverter {
                     institutionData.description = item['https://schema.org/description']['@value'];
                 }
             }
-            if (item['https://www.w3.org/TR/owl-ref/sameAs']) {
-                institutionData.sameAs.push(item['https://www.w3.org/TR/owl-ref/sameAs']['@id']);
+            if (item['http://www.w3.org/2002/07/owl#sameAs']) {
+                institutionData.sameAs.push(item['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
 
             // Handle date information

@@ -33,7 +33,8 @@ export function generateInstitutionXML(data) {
         identifiers ? identifiers : null,
         `    <name>${data.name || ''}</name>`,
         data.abbreviation ? `    <abbr>${data.abbreviation}</abbr>` : null,
-        data.address ? `    <address>${data.address}</address>` : null,
+        data.location ? `    <geogName sameas="${data.location}"/>` : null,
+        data.address ? `    <address><addrLine>${data.address}</addrLine></address>` : null,
         data.date ? `    <date${data.date.value ? ` isodate="${data.date.value}"` : ''}${
         data.date.startDate ? ` startdate="${data.date.startDate}"` : ''}${
         data.date.endDate ? ` enddate="${data.date.endDate}"` : ''}${
@@ -41,15 +42,29 @@ export function generateInstitutionXML(data) {
         data.date.notAfter ? ` notafter="${data.date.notAfter}"` : ''}${
         data.date.certainty ? ` cert="${data.date.certainty}"` : ''}>${
         data.date.dateDescription || ''}</date>` : null,
-        data.location ? `    <geogName xml:id="${data.location}"/>` : null,
-        data.description ? `    <desc>${data.description}</desc>` : null
+        data.description ? `    <annot type="description"><p>${data.description}</p></annot>` : null
         
     ].filter(Boolean).join('\n');
 
-let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<corpName xml:id="${data.subjectUri}">
+let xml = `
+<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <workList>
+        <work>
+            <title/>
+            <contributor>
+<corpName sameas="${data.subjectUri}">
 ${elements}
-</corpName>`;
+</corpName>
+</contributor>
+        </work>
+    </workList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
