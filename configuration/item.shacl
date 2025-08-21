@@ -376,7 +376,7 @@ melod:PaperDetail
                 ] ;
   sh:property   [ sh:name      "Range" ;
                   sh:description "Page range of the given paper type" ;
-                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
                   sh:path      schema:pagination
                 ] ;
   sh:property   [ sh:name      "Orientation" ;
@@ -401,7 +401,7 @@ melod:PaperDetail
   sh:property   [ sh:name      "Rastral mirror" ;
                   sh:description "Height or width of the rastral mirror" ;
                   sh:minCount  0 ;
-                  sh:maxCount  2 ;
+                  sh:maxCount  1 ;
                   sh:path      melod:hasRastral ;
                   sh:node melod:Rastral
                 ] ;
@@ -417,13 +417,13 @@ melod:PaperDetail
                   dash:singleLine false ;
                   sh:path melod:hasPaperQuality
                 ] ;
-  sh:property   [ sh:description "General description of binding" ;
-                  sh:name "Binding" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:hasBinding ;
-                  sh:node melod:Binding
-                ] ;
+  #sh:property   [ sh:description "General description of binding" ;
+  #                sh:name "Binding" ;
+  #                sh:minCount 0 ;
+  #                sh:maxCount 1 ;
+  #                sh:path melod:hasBinding ;
+  #                sh:node melod:Binding
+  #              ] ;
   sh:property   [ sh:description "Condition" ;
                   sh:name "Condition" ;
                   sh:minCount 0 ;
@@ -645,6 +645,17 @@ melod:Binding
                   sh:path      cidoc:P91_has_unit
                 ] ;
   sh:targetClass  cidoc:E54_Dimension .
+
+  melod:Rastral
+  a               sh:NodeShape ;
+  sh:property   [ sh:name      "Dimension" ;
+                  sh:description "Height and width of the rastral" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  2 ;
+                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:node melod:Format
+                ] ;
+  sh:targetClass  melod:Rastral .
 
   melod:Hand
   a               sh:NodeShape ;

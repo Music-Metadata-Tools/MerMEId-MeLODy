@@ -140,6 +140,7 @@
 /**
  * @typedef {Object} InstrumentationDetail
  * @property {string} [medium] - Medium of performance (e.g. URI or label)
+ * @property {string} [name] - Name of the medium (e.g. "Violin")
  * @property {string} [link] - External identifier (IRI, e.g. MARC)
  * @property {number} [quantity] - Quantity of this medium
  * @property {boolean} [solo] - Is soloist
@@ -266,7 +267,7 @@
  * @property {Extent} [extent]
  * @property {Dimension[]} [dimensions]
  * @property {Watermark[]} [watermarks]
- * @property {string} [physicalMedium]
+ * @property {string[]} [physicalMedium]
  * @property {PaperDetail} [paperDetail]
  * @property {string} [plateNumber]
  * @property {string} [addDescAuto]

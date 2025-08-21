@@ -34,7 +34,7 @@ export class ItemConverter {
                 },
                 dimensions: [],
                 watermarks: [],
-                physicalMedium: '',
+                physicalMedium: [],
                 paperDetail: {
                     label: '',
                     pagination: '',
@@ -99,6 +99,9 @@ export class ItemConverter {
             }
             if (obj['http://www.cidoc-crm.org/efrbroo/R7_is_materialization_of'] && !obj['@id'].startsWith('_:')) {
                 itemData.manifestations.push(obj['http://www.cidoc-crm.org/efrbroo/R7_is_materialization_of']['@id']);
+            }
+            if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
+                itemData.physDesc.physicalMedium.push(obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '');
             }
 
             if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
@@ -186,7 +189,8 @@ export class ItemConverter {
         }
 
         if (physicalDesc) {
-            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']) {
+
+            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@type'] === "http://www.w3.org/2001/XMLSchema#string") {
                 itemData.physDesc.physicalMedium = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '';
             }
 
@@ -476,7 +480,7 @@ function parseDate(id, byId) {
 
     // certainty
     if (obj['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
-        date.notAfter = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'] || '';
+        date.certainty = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'] || '';
     }
 
     // description
