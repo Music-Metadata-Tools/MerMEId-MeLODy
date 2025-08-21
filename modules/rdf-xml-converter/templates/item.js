@@ -64,8 +64,8 @@ ${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermar
             <annot type="creation">
                 <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
-            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
-            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
             watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDat?.dateDescription || ''}</date>
                 <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
                 <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
@@ -158,8 +158,8 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
                 <annot type="creation">
                     <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
-            watermark.creationDate?.notAfter ? ` notAfter="${watermark.creationDate.notAfter}"` : ''}${
-            watermark.creationDate?.notBefore ? ` notBefore="${watermark.creationDate.notBefore}"` : ''}${
+            watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
+            watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
             watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
                     <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
                     <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
@@ -194,8 +194,8 @@ ${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" med
         ${!isEffectivelyEmpty(data.acquisition) ? `<acquisition>
             <date${data.acquisition?.value ? ` isodate="${data.acquisition?.value}"` : ''}${data.acquisition?.startDate ? ` startdate="${data.acquisition?.startDate}"` : ''}${
             data.acquisition?.endDate ? ` enddate="${data.acquisition?.endDate}"` : ''}${
-            data.acquisition?.notAfter ? ` notAfter="${data.acquisition?.notAfter}"` : ''}${
-            data.acquisition?.notBefore ? ` notBefore="${data.acquisition?.notBefore}"` : ''}${
+            data.acquisition?.notAfter ? ` notafter="${data.acquisition?.notAfter}"` : ''}${
+            data.acquisition?.notBefore ? ` notbefore="${data.acquisition?.notBefore}"` : ''}${
             data.acquisition?.certainty ? ` cert="${data.acquisition?.certainty}"` : ''}>${data.acquisition?.dateDescription || ''}</date>
         </acquisition>` : ''}
         ${data.provenance?.length > 0 ? `<provenance>
