@@ -24,7 +24,9 @@ function formatXML(xml) {
 }
 
 export function generatePerformanceEventXML(data) {
+
     const elements = [
+
     `    <name>${data.label || ''}</name>`,
     data.date ? `    <date${data.date.value ? ` isodate="${data.date.value}"` : ''}${
         data.date.startDate ? ` startdate="${data.date.startDate}"` : ''}${
@@ -33,7 +35,8 @@ export function generatePerformanceEventXML(data) {
         data.date.notAfter ? ` notafter="${data.date.notAfter}"` : ''}${
         data.date.certainty ? ` cert="${data.date.certainty}"` : ''}>${
         data.date.dateDescription || ''}</date>` : null,
-        data.venue ? `    <geogName type="venue" xml:id="${data.venue}"/>` : null,
+        data.venue ? `    <geogName type="venue" sameas="${data.venue}"/>` : null,
+        data.location ? `    <geogName type="place" sameas="${data.location}"/>` : null,
         data.duration ? `    <p type="duration">${data.duration}"</p>` : null
     ];
 
@@ -49,18 +52,20 @@ export function generatePerformanceEventXML(data) {
             
             const elementType = isInstitution ? 'corpName' : 'persName';
             
-            return `        <${elementType} role="${role}" cert="${cert}" xml:id="${agent}"/>`;
+            return `        <${elementType} role="${role}" cert="${cert}" sameas="${agent}"/>`;
         }).join('\n');
 
-        elements.push(`    <contributor>
-${contributorElements}
-    </contributor>`);
+        elements.push(contributorElements);
+    }
+    
+    if (data.description) {
+        elements.push(`    <desc>${data.description}</desc>`);
     }
 
     // Add bibliography/citations
     if (data.citations.length > 0) {
         const biblElements = data.citations.map(citation =>
-            `        <bibl xml:id="${citation}"/>`
+            `        <bibl sameas="${citation}"/>`
         ).join('\n');
 
         elements.push(`    <biblList>
@@ -68,16 +73,28 @@ ${biblElements}
     </biblList>`);
     }
 
-    if (data.description) {
-        elements.push(`    <desc>${data.description}</desc>`);
-    }
-
     const validElements = elements.filter(Boolean).join('\n');
 
-let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<event type="performance" label="${data.label || ''}" xml:id="${data.subjectUri}" sameas="${data.sameAs.join(' ')}">
+let xml = `<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <workList>
+        <work>
+            <title/>
+            <history>
+            <eventList type="performances">
+                <event type="${data.classification || 'performance'}" label="${data.label || ''}" sameas="${data.subjectUri}${data.sameAs?.length > 0 ? ` ${data.sameAs.join(' ')}` : ''}">
 ${validElements}
-</event>`;
+</event>
+            </eventList>
+            </history>
+        </work>
+    </workList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');

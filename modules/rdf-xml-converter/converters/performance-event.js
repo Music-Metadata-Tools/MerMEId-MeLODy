@@ -12,6 +12,7 @@ export class PerformanceEventConverter {
             label: '',
             classification: '',
             venue: '',
+            location: '',
             duration: '',
             description: '',
             sameAs: [],
@@ -92,6 +93,9 @@ export class PerformanceEventConverter {
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasVenue']) {
                 performanceEventData.venue = item['https://lod.academy/melod/vocab/ontology#hasVenue']['@id'];
+            }
+            if (item['https://schema.org/location']) {
+                performanceEventData.location = item['https://schema.org/location']['@id'];
             }
             if (item['https://lod.academy/melod/vocab/ontology#hasDuration']) {
                 performanceEventData.duration = item['https://lod.academy/melod/vocab/ontology#hasDuration']['@id'];

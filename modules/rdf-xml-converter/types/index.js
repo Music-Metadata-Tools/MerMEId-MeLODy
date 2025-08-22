@@ -77,6 +77,7 @@
  * @property {string} label
  * @property {string} [classification]
  * @property {string} [venue]
+ * @property {string} [location]
  * @property {string} [duration]
  * @property {string} [description]
  * @property {string[]} [sameAs]
