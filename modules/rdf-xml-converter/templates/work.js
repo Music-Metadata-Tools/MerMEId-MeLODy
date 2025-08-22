@@ -24,54 +24,16 @@ function formatXML(xml) {
 }
 
 export function generateWorkXML(data) {
-    
-    const link = data.sameAs
-            ? ` sameAs="${Array.isArray(data.sameAs) ? data.sameAs.join(' ') : data.sameAs}"`
-            : '';
 
-    const elements = [
+    const identifiers = data.sameAs.map(uri => 
+        `    <identifier auth.uri="${uri}"/>`
+    ).join('\n');
 
-        // Identifiers
-        data.identifiers?.length > 0 ? 
-            data.identifiers.map(identifier => 
-                `    <identifier label="${identifier.label || ''}">${identifier.value}</identifier>`
-            ).join('\n') : '',
-
-        // Titles with type
-        data.titles?.length > 0 ? 
-            data.titles.map(title => 
-                `    <title type="${title.titleType || ''}" xml:lang="${title.language || ''}">${title.title}</title>`
-            ).join('\n') : '',
-
-        // work status
-        data.workStatus ? 
-            `    <annot type="workStatus">
-                    <p>${data.workStatus}</p>
-                </annot>` : '',
-
-        // Annotations
-        data.annotation?.length > 0 ? 
-            data.annotation.map(annotation => 
-                `   <annot label="${annotation.label || ''}" type="description">
-                        ${annotation.paragraph?.length > 0 ? 
-                            annotation.paragraph.map(paragraph => 
-                `<p>${paragraph}</p>`
-            ).join('\n') : ''}
-                    </annot>`
-            ).join('\n') : '',
-        
-        // context
-        data.context ? 
-            `    <context><p>${data.context}</p></context>` : '',
-
-        // history description
-        data.historyDescription ? 
-            `    <history><p>${data.historyDescription}</p></history>` : '',
-    ];
+    let contributorElements = [];
 
     // Add contributions with persName/corpName elements inside contributor
     if (data.contributors && data.contributors.length > 0) {
-        const contributorElements = data.contributors.map(contribution => {
+        contributorElements = data.contributors.map(contribution => {
             const agent = contribution.agent || '';
             const role = contribution.role || '';
             const cert = contribution.certainty || '';
@@ -81,29 +43,70 @@ export function generateWorkXML(data) {
             
             const elementType = isInstitution ? 'corpName' : 'persName';
             
-            return `        <${elementType} role="${role}" cert="${cert}" xml:id="${agent}"/>`;
+            return `        <${elementType} role="${role}" cert="${cert}" sameas="${agent}"/>`;
         }).join('\n');
-
-        elements.push(`    <contributor>
-${contributorElements}
-    </contributor>`);
     }
+
+    let biblElements = [];
 
     // Add bibl elements inside biblList
     if (data.citations && data.citations.length > 0) {
-        const biblElements = data.citations.map(bibl => {
-            return `        <bibl xml:id="${bibl}"/>`;
+        biblElements = data.citations.map(bibl => {
+            return `        <bibl sameas="${bibl}"/>`;
         }).join('\n');
-
-        elements.push(`    <biblList>
-${biblElements }
-    </biblList>`);
     }
+
+    const elements = [
+
+        // Identifiers
+        data.identifiers?.length > 0 ? 
+            data.identifiers.map(identifier => 
+                `    <identifier label="${identifier.label || ''}">${identifier.value}</identifier>`
+            ).join('\n') : '',
+
+        // External Identifiers
+        identifiers ? identifiers : null,
+
+        // Titles with type
+        data.titles?.length > 0 ? 
+            data.titles?.map(title => 
+                `    <title type="${title.titleType.split('#')[1] || ''}" xml:lang="${title.language || ''}">${title.title}</title>`
+            ).join('\n') : '<title/>',
+
+        // Contributors
+        contributorElements.length > 0 ? `<contributor>${contributorElements}</contributor>` : null,
+
+        // history description
+        data.historyDescription ? 
+            `    <history><p>${data.historyDescription}</p></history>` : '',
+        
+        // context
+        data.context ? 
+            `    <context><p>${data.context}</p></context>` : '',
+
+        // Bibliography/citations
+        biblElements.length > 0 ? `<biblList>${biblElements}</biblList>` : null,
+
+        //work status and description
+        data.workStatus || data.annotation?.length > 0 ? `    <notesStmt>
+        ${data.workStatus ? 
+            `   <annot type="workStatus"><p>${data.workStatus}</p></annot>` : ''}
+        ${// Annotations
+        data.annotation?.length > 0 ? 
+            data.annotation.map(annotation => 
+                `   <annot label="${annotation.label || ''}" type="description">
+                        ${annotation.paragraph?.length > 0 ? 
+                            annotation.paragraph.map(paragraph => 
+                `<p>${paragraph}</p>`
+            ).join('\n') : ''}
+                    </annot>`
+            ).join('\n') : ''}</notesStmt>` : '',
+    ];
 
     // Add term elements inside classification
     if (data.classification && data.classification.length > 0) {
         const termElements = data.classification.map(term => {
-            return `        <term sameAs="${term}"/>`;
+            return `        <term sameas="${term}"/>`;
         }).join('\n');
 
         elements.push(`    <classification>
@@ -116,19 +119,19 @@ ${termElements}
     // Add relation elements inside relationList
     if (data.expressions || data.isPartOf || data.hasPart || data.otherRelations ) {
         const expressionElements = data.expressions.map(expression => {
-            return `        <relation rel="isRealisedIn" xml:id="${expression}"/>`;
+            return `        <relation rel="isRealisedIn" target="${expression}"/>`;
         }).join('\n');
 
         const partOfElements = data.isPartOf.map(partOf => {
-            return `        <relation rel="isPartOf" xml:id="${partOf}"/>`;
+            return `        <relation rel="isPartOf" target="${partOf}"/>`;
         }).join('\n');
 
         const hasPartElements = data.hasPart.map(hasPart => {
-            return `        <relation rel="hasPart" xml:id="${hasPart}"/>`;
+            return `        <relation rel="hasPart" target="${hasPart}"/>`;
         }).join('\n');
 
         const otherElements = data.otherRelations.map(relation => {
-            return `        <relation rel="" xml:id="${relation}"/>`;
+            return `        <relation rel="" target="${relation}"/>`;
         }).join('\n');
 
         elements.push(`    <relationList>
@@ -141,10 +144,19 @@ ${otherElements}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<work xml:id="${data.subjectUri}"${link}>
+let xml = `<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <workList>
+<work sameas="${data.subjectUri}">
 ${validElements}
-</work>`;
+</work>
+    </workList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
