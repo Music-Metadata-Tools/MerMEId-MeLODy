@@ -266,9 +266,23 @@ ${otherElements || ''}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-    let xml = `<item sameas="${data.subjectUri}" label="${data.label || ''}">
+    let xml = `<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <manifestationList>
+        <manifestation>
+            <itemList>
+<item sameas="${data.subjectUri}" label="${data.label || ''}">
 ${validElements}
-</item>`;
+</item>
+</itemList>
+        </manifestation>
+    </manifestationList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
