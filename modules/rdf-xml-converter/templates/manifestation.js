@@ -62,7 +62,7 @@ export function generateManifestationXML(data) {
 
         // Titles with type
         `   <titleStmt>
-        <title>${data.title?.title}</title>
+        <title>${data.title?.title || ''}</title>
         ${contributorElements ? `<respStmt>
 ${contributorElements}
         </respStmt>` : ''}
@@ -72,8 +72,8 @@ ${contributorElements}
         `    <pubStmt label="${data.publication?.label || ''}">
         <date${data.publication?.startDate ? ` startdate="${data.publication.startDate}"` : ''}${
                 data.publication?.endDate ? ` enddate="${data.publication.endDate}"` : ''}/>
-        <pubPlace sameas="${data.publication.location || ''}"/>
-        <publisher sameas="${data.publication.publisher || ''}"/>
+        <pubPlace${data.publication.location ? ` sameas="${data.publication.location}"` : ''}/>
+        <publisher${data.publication.publisher ? ` sameas="${data.publication.publisher}"` : ''}/>
     </pubStmt>`,
         
         // phys desc
@@ -261,10 +261,19 @@ ${otherElements || ''}
 
     const validElements = elements.filter(Boolean).join('\n');
 
-    let xml = `
+    let xml = `<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <fileDesc>
+        <titleStmt>
+            <title/>
+        </titleStmt>
+        <pubStmt/>
+    </fileDesc>
+    <manifestationList>
 <manifestation sameas="${data.subjectUri}" label="${data.title?.titleType || ''}">
 ${validElements}
-</manifestation>`;
+</manifestation>
+    </manifestationList>
+</meiHead>`;
 
 // Remove empty lines (lines with only whitespace)
 xml = xml.replace(/^\s*[\r\n]/gm, '');
