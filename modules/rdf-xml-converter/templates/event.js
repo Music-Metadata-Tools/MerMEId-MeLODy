@@ -74,7 +74,7 @@ ${biblElements}
     const validElements = elements.filter(Boolean).join('\n');
 
 let xml =  
-`<meiHead xmlns="http://www.music-encoding.org/ns/mei">
+`<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
     <fileDesc>
         <titleStmt>
             <title/>
@@ -85,7 +85,7 @@ let xml =
         <work>
             <title/>
             <history>
-                <eventList>
+                <eventList type="history">
                     <event${data.classification ? ` type="${data.classification || ''}"` : ''}${data.label ? ` label="${data.label || ''}"` : ''} sameas="${data.subjectUri}${data.sameAs?.length > 0 ? ` ${data.sameAs.join(' ')}` : ''}">
                     ${validElements}
                     </event>

@@ -69,7 +69,7 @@ export function generateExpressionXML(data) {
         // Title
         `    <title>${data.label || ''}</title>`,
 
-        contributorElements ? `<contributor>${contributorElements}</contributor>` : '',
+        contributorElements?.length > 0 ? `<contributor>${contributorElements}</contributor>` : '',
         
         // key information
         `    <key${data.key?.pitch ? ` pname="${data.key.pitch.split('#')[1]}"` : ''}${
@@ -106,7 +106,7 @@ export function generateExpressionXML(data) {
             data.creationDate?.notAfter ? ` notafter="${data.creationDate.notAfter}"` : ''}${
             data.creationDate?.notBefore ? ` notbefore="${data.creationDate.notBefore}"` : ''}${
             data.creationDate?.certainty ? ` cert="${data.creationDate.certainty}"` : ''}>${data.creationDate.dateDescription}</date>
-        <geogName sameas="${data.creationLocation || ''}"/>
+        <geogName type="place"${data.creationLocation ? ` sameas="${data.creationLocation}"`: ''}/>
     </creation>`,
 
     // history information
@@ -127,7 +127,7 @@ ${data.performances.map(event =>
         </eventList>` : ''}
     </history>`,
 
-    langElements ? `<langUsage>${langElements}</langUsage>` : '',
+    langElements?.length > 0 ? `<langUsage>${langElements}</langUsage>` : '',
     
     // instrumentation
         data.instrumentation ? 
@@ -141,10 +141,10 @@ ${data.performances.map(event =>
         data.extent ? 
             `    <extent>${data.extent}</extent>` : null,
 
-    biblElements ? `<biblList>${biblElements}</biblList>` : '',
+    biblElements?.length > 0 ? `<biblList>${biblElements}</biblList>` : '',
     
     //work status and description
-    data.completionStatus || data.annotation ? `    <notesStmt>
+    data.completionStatus || data.annotation?.length > 0 ? `    <notesStmt>
         ${data.completionStatus ? 
             `   <annot type="completionStatus"><p>${data.completionStatus.split('#')[1]}</p></annot>` : ''}
         ${// Annotations
@@ -210,7 +210,7 @@ ${otherElements}
     const validElements = elements.filter(Boolean).join('\n');
 
 let xml = 
-`<meiHead xmlns="http://www.music-encoding.org/ns/mei">
+`<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
     <fileDesc>
         <titleStmt>
             <title/>

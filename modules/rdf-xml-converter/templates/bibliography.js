@@ -70,7 +70,7 @@ export function generateBibliographyXML(data) {
     const validElements = elements.filter(Boolean).join('\n');
 
 let xml = 
-`<meiHead xmlns="http://www.music-encoding.org/ns/mei">
+`<meiHead xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
     <fileDesc>
         <titleStmt>
             <title/>
