@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import "./entity-types-dialog/index.js";
+import { filesystemService } from "../services/filesystem-service.js";
 
 const styles =
     css`
@@ -98,7 +99,11 @@ export default class ADWLMEntityEditor extends LitElement {
         _hasUnsharedFiles: {
             type: Boolean,
             state: true
-        }
+        },
+        _selected_repository_path: {
+        type: String,
+        state: true
+    }
     };
 
     updated(changedProperties) {
@@ -188,13 +193,42 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     // Add new helper method to handle entity loading
-    _loadNewEntity(entity_to_edit) {
+    async _loadNewEntity(entity_to_edit) {
         let editor = this.renderRoot.querySelector("shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
-
-        editor.dataset.values = entity_to_edit.contents;
-        editor.dataset.valuesSubject = entity_to_edit.entity_iri;
-        editor.dataset.shapesUrl = shacl_file_location;
+        
+        // Pass the full entity path
+        const config = await this._getRepoConfig();
+        
+        if (config && config.datasetBaseUrl) {
+            try {
+                // Read the SHACL file content
+                const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+                
+                // Replace the dataset namespace
+                const modifiedShaclContent = shaclContent.replace(
+                    /dataset: <[^>]+>/g,
+                    `dataset: <${config.datasetBaseUrl}>`
+                );
+                
+                // Create a blob URL for the modified content
+                const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
+                const modifiedFileUrl = URL.createObjectURL(blob);
+                
+                // Use the modified file URL
+                editor.dataset.values = entity_to_edit.contents;
+                editor.dataset.valuesSubject = entity_to_edit.entity_iri;
+                editor.dataset.shapesUrl = modifiedFileUrl;
+            } catch (error) {
+                console.error('Failed to modify SHACL file:', error);
+                // Fallback to original file
+                editor.dataset.shapesUrl = shacl_file_location;
+            }
+        } else {
+            // Use original file if no config is found
+            editor.dataset.shapesUrl = shacl_file_location;
+        }
+        
         this._entity_path = entity_to_edit.path;
         
         // Reset unsaved changes state when loading new file
@@ -205,8 +239,12 @@ export default class ADWLMEntityEditor extends LitElement {
 
     constructor() {
         super();
-
         this._init();
+        
+        // Listen for repository selection events
+        document.addEventListener('adwlm-filesystem-manager:repository-selected', (event) => {
+            this._selected_repository_path = event.detail.repositoryPath;
+        });
     }
 
     render() {
@@ -378,13 +416,15 @@ export default class ADWLMEntityEditor extends LitElement {
             }
         });
 
-        this.addEventListener("adwlm-entity-types-dialog:entity-to-add", (event) => {
+        this.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
             let entity_type = event.detail;
             let entity_type_definition = this.entity_type_definitions.filter(item => item.type === entity_type)[0];
             let entity_folder_name = entity_type_definition.folder_name;
             let entity_id = this._generate_entity_id();
+            const config = await this._getRepoConfig();
+            const domain = config?.projectDomain ?? 'urn:uuid:';
             let entity_path = `${entity_folder_name}/${entity_id}.ttl`;
-            let entity_iri = `urn:uuid:${entity_id}`;
+            let entity_iri = `${domain}${entity_folder_name}/${entity_id}`;
 
             let entity_to_edit = {
                 contents: "",
@@ -434,6 +474,44 @@ export default class ADWLMEntityEditor extends LitElement {
             .filter(definition => definition.type === entity_type)[0].shacl_file_location;
 
         return shacl_file_location;
+    }
+
+    async _getRepoConfig() {
+        try {
+            const filesystem = filesystemService.getInstance();
+            
+            if (!this._selected_repository_path) {
+                throw new Error('No repository selected');
+            }
+            
+            const configPath = `${this._selected_repository_path}/configuration/config.json`;
+            console.log('Reading config from:', configPath); // Debug line
+            
+            const configContent = await filesystem.read_file(this._selected_repository_path, 'configuration/config.json');
+            console.log('Raw config content:', configContent); // Debug line
+            
+            if (!configContent || configContent.trim() === '') {
+                throw new Error('Config file is empty');
+            }
+            
+            const config = JSON.parse(configContent);
+            console.log('Parsed config:', config); // Debug line
+            return config;
+        } catch (error) {
+            console.error('Failed to read repository config:', error);
+            console.log('Selected repository path:', this._selected_repository_path); // Debug line
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'warning';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to load repository configuration: ${error.message}
+            `;
+            document.body.append(alert);
+            alert.toast();
+            return null;
+        }
     }
 }
 

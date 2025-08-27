@@ -3,11 +3,9 @@ import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
+import { filesystemService } from "../services/filesystem-service.js";
 
-// TODO: conditionally import of the datatype for the repository data
-import VirtualFilesystem from "./virtual-filesystem/index.js";
-let filesystem = new VirtualFilesystem();
-// END TODO
+const filesystem = filesystemService.getInstance();
 
 const styles =
     css`
@@ -301,6 +299,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
                     this._selected_repository_path = selected_tree_item.dataset.entryAbsolutePath;
                     staged_files_details.disabled = false;
+                    
+                    // Dispatch event with repository path
+                    this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                        detail: { repositoryPath: this._selected_repository_path },
+                        bubbles: true,
+                        composed: true
+                    }));
                 }
             }
 
