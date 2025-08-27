@@ -202,7 +202,7 @@ melod:Title
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Title of the work" ;
                   sh:name      "Title" ;
-                  sh:languageIn   ( "en" "de" ) ;
+                  sh:datatype     rdf:langString ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label

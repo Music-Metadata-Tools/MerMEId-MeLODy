@@ -293,7 +293,7 @@ melod:Item
                   sh:minCount 0 ;
                   sh:or (
                     [ rdfs:label "paper" ; sh:node melod:PaperDetail ]
-                    [ rdfs:label "other physical mediums" ]
+                    [ rdfs:label "other physical mediums" ; dash:singleLine false ]
                   ) ;
                   sh:path melod:hasPhysMedium
                 ] ;
