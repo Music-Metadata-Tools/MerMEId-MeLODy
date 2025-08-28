@@ -111,10 +111,24 @@ export function generateExpressionXML(data) {
 
     // history information
         `   <history>
-    ${data.historicEvent?.length > 0 ? 
+    ${data.historicEvent?.length > 0  || data.historicEventObj?.length > 0 ? 
             `   <eventList type="history">
 ${data.historicEvent.map(event => 
                 `           <event sameas="${event || ''}"/>`
+            ).join('\n')}
+${data.historicEventObj.map(event => 
+                `               <event>
+                <name>${event.label || ''}</name>
+                <geogName type="place"${event.location ? ` sameas="${event.location}"` : ''}/>
+                <date${event.date?.value ? ` isodate="${event.date?.value}"` : ''}${event.date?.startDate ? ` startdate="${event.date?.startDate}"` : ''}${
+            event.date?.endDate ? ` enddate="${event.date?.endDate}"` : ''}${
+            event.date?.notAfter ? ` notafter="${event.date?.notAfter}"` : ''}${
+            event.date?.notBefore ? ` notbefore="${event.date?.notBefore}"` : ''}${
+            event.date?.certainty ? ` cert="${event.date?.certainty}"` : ''}>${event.date?.dateDescription || ''}</date>
+                ${event.contributions?.length > 0 && event.contribution.agent ? event.contributions.map(contribution => 
+                    `<${contribution.agent.toLowerCase().includes('institution') ? 'corpName' : 'persName'} role="${contribution.role || ''}" sameas="${contribution.agent}"`).join('\n') : ''}
+                <desc>${event.description || ''}</desc>
+            </event>`
             ).join('\n')}
         </eventList>` : ''}
     ${data.performances?.length > 0 || data.firstPerformance ? 

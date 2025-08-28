@@ -199,6 +199,7 @@
  * @property {Date} [creationDate]             // schema:dateCreated
  * @property {string} [creationLocation]       // schema:locationCreated
  * @property {string[]} [historicEvent]        // melod:hasHistoricEvent
+ * @property {EventData[]} [historicEventObj]        // melod:hasHistoricEvent
  * @property {string} [firstPerformance]       // schema:firstPerformance
  * @property {string[]} [performances]         // melod:hasPerformance
  * @property {string} [extent]                 // schema:materialExtent
@@ -368,8 +369,10 @@
  * @property {string} [formerShelfmark]        // melod:hasFormerShelfmark
  * @property {Date} [acquisition]             // melod:hasAcquisition
  * @property {string[]} [provenance]             // melod:hasProvenance
+ * @property {EventData[]} [provenanceObj]       // melod:hasProvenance
  * @property {Hand[]} [hands]                   // melod:hasHand
  * @property {string[]} [history]             // melod:hasHistoricEvent
+ * @property {EventData[]} [historyObj]          // melod:hasHistoricEvent
  * @property {PhysDesc} [physDesc]             // melod:hasPhysicalDescription
  * @property {TitlePage[]} [titlePage]         // melod:hasTitlePage
  * @property {string[]} [manifestations]          // efrbroo:R7_is_materialization_of

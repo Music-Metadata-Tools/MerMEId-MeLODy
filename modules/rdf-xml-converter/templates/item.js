@@ -190,7 +190,7 @@ ${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" med
     </physLoc>` : '',
 
     // history
-        data.history?.length > 0 || data.provenance?.length > 0 || !isEffectivelyEmpty(data.acquisition) ? `    <history>
+        data.history?.length > 0 || data.historyObj?.length > 0 || data.provenance?.length > 0 || data.provenanceObj?.length > 0 || !isEffectivelyEmpty(data.acquisition) ? `    <history>
         ${!isEffectivelyEmpty(data.acquisition) ? `<acquisition>
             <date${data.acquisition?.value ? ` isodate="${data.acquisition?.value}"` : ''}${data.acquisition?.startDate ? ` startdate="${data.acquisition?.startDate}"` : ''}${
             data.acquisition?.endDate ? ` enddate="${data.acquisition?.endDate}"` : ''}${
@@ -198,17 +198,45 @@ ${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" med
             data.acquisition?.notBefore ? ` notbefore="${data.acquisition?.notBefore}"` : ''}${
             data.acquisition?.certainty ? ` cert="${data.acquisition?.certainty}"` : ''}>${data.acquisition?.dateDescription || ''}</date>
         </acquisition>` : ''}
-        ${data.provenance?.length > 0 ? `<provenance>
+        ${data.provenance?.length > 0 || data.provenanceObj?.length > 0 ? `<provenance>
             <eventList>
 ${data.provenance.map(event => 
                 `               <event sameas="${event || ''}"/>`
             ).join('\n')}
+${data.provenanceObj.map(event => 
+                `               <event>
+                <name>${event.label || ''}</name>
+                <geogName type="place"${event.location ? ` sameas="${event.location}"` : ''}/>
+                <date${event.date?.value ? ` isodate="${event.date?.value}"` : ''}${event.date?.startDate ? ` startdate="${event.date?.startDate}"` : ''}${
+            event.date?.endDate ? ` enddate="${event.date?.endDate}"` : ''}${
+            event.date?.notAfter ? ` notafter="${event.date?.notAfter}"` : ''}${
+            event.date?.notBefore ? ` notbefore="${event.date?.notBefore}"` : ''}${
+            event.date?.certainty ? ` cert="${event.date?.certainty}"` : ''}>${event.date?.dateDescription || ''}</date>
+                ${event.contributions?.length > 0 && event.contribution.agent ? event.contributions.map(contribution => 
+                    `<${contribution.agent.toLowerCase().includes('institution') ? 'corpName' : 'persName'} role="${contribution.role || ''}" sameas="${contribution.agent}"`).join('\n') : ''}
+                <desc>${event.description || ''}</desc>
+            </event>`
+            ).join('\n')}
             </eventList>
         </provenance>` : ''}
-        ${data.history?.length > 0 ? 
-            `<eventList>
+        ${data.history?.length > 0 || data.historyObj?.length > 0 ? 
+            `<eventList type="history">
 ${data.history.map(event => 
                 `           <event sameas="${event || ''}"/>`
+            ).join('\n')}
+            ${data.historyObj.map(event => 
+                `               <event>
+                <name>${event.label || ''}</name>
+                <geogName type="place"${event.location ? ` sameas="${event.location}"` : ''}/>
+                <date${event.date?.value ? ` isodate="${event.date?.value}"` : ''}${event.date?.startDate ? ` startdate="${event.date?.startDate}"` : ''}${
+            event.date?.endDate ? ` enddate="${event.date?.endDate}"` : ''}${
+            event.date?.notAfter ? ` notafter="${event.date?.notAfter}"` : ''}${
+            event.date?.notBefore ? ` notbefore="${event.date?.notBefore}"` : ''}${
+            event.date?.certainty ? ` cert="${event.date?.certainty}"` : ''}>${event.date?.dateDescription || ''}</date>
+                ${event.contributions?.length > 0 && event.contribution.agent ? event.contributions.map(contribution => 
+                    `<${contribution.agent.toLowerCase().includes('institution') ? 'corpName' : 'persName'} role="${contribution.role || ''}" sameas="${contribution.agent}"`).join('\n') : ''}
+                <desc>${event.description || ''}</desc>
+            </event>`
             ).join('\n')}
         </eventList>` : ''}
     </history>` : '',

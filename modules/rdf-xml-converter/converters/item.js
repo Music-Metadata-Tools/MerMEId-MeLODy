@@ -12,6 +12,7 @@ export class ItemConverter {
             label: '',
             sameAs: [],
             history: [],
+            historyObj: [],
             classification: [],
             repository: '',
             shelfmark: '',
@@ -27,6 +28,7 @@ export class ItemConverter {
                 dateDescription: ''
             },
             provenance: [],
+            provenanceObj: [],
             physDesc: {
                 extent: {
                     value: '',
@@ -91,10 +93,10 @@ export class ItemConverter {
             if (obj['http://www.w3.org/2002/07/owl#sameAs'] && !obj['@id'].startsWith('_:')) {
                 itemData.sameAs.push(obj['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
-            if (obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent'] && !obj['@id'].startsWith('_:')) {
+            if (obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent'] && !obj['@id'].startsWith('_:') && !obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent']['@id'].startsWith('_:')) {
                 itemData.history.push(obj['https://lod.academy/melod/vocab/ontology#hasHistoricEvent']['@id']);
             }
-            if (obj['https://lod.academy/melod/vocab/ontology#hasProvenance'] && !obj['@id'].startsWith('_:')) {
+            if (obj['https://lod.academy/melod/vocab/ontology#hasProvenance'] && !obj['@id'].startsWith('_:') && !obj['https://lod.academy/melod/vocab/ontology#hasProvenance']['@id'].startsWith('_:')) {
                 itemData.provenance.push(obj['https://lod.academy/melod/vocab/ontology#hasProvenance']['@id']);
             }
             if (obj['http://www.cidoc-crm.org/efrbroo/R7_is_materialization_of'] && !obj['@id'].startsWith('_:')) {
@@ -290,6 +292,24 @@ export class ItemConverter {
                 .filter(Boolean);
         }
 
+        // --- Provenance ---
+        let provenanceLinks = main['https://lod.academy/melod/vocab/ontology#hasProvenance'];
+        if (provenanceLinks) {
+            if (!Array.isArray(provenanceLinks)) provenanceLinks = [provenanceLinks];
+            itemData.provenanceObj = provenanceLinks
+                .map(link => parseEvents(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- History Obj ---
+        let historyLinks = main['https://lod.academy/melod/vocab/ontology#hasHistoricEvent'];
+        if (historyLinks) {
+            if (!Array.isArray(historyLinks)) historyLinks = [historyLinks];
+            itemData.historyObj = historyLinks
+                .map(link => parseEvents(link['@id'], byId))
+                .filter(Boolean);
+        }
+
         // --- Acquisition ---
         let acquisitionLink = main['https://lod.academy/melod/vocab/ontology#hasAcquisition'];
         if (acquisitionLink) {
@@ -445,6 +465,63 @@ function parseHands(id, byId) {
     }
 
     return hand;
+}
+
+// Helper: Parse Events
+function parseEvents(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const event = {};
+
+    // name
+    if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
+        event.label = obj['http://www.w3.org/2000/01/rdf-schema#label']['@value'] || '';
+    }
+
+    // location
+    if (obj['https://schema.org/location']) {
+        event.location = obj['https://schema.org/location']['@id'] || '';
+    }
+
+    // event contributor
+    const eventContribution = obj['https://lod.academy/melod/vocab/ontology#hasContribution'];
+    if (eventContribution) {
+        event.contributions = parseContribution(eventContribution['@id'], byId)
+    }
+
+    // event date
+    const eventDate = obj['https://lod.academy/melod/vocab/ontology#hasEventDate'];
+    if (eventDate) {
+        event.date = parseDate(eventDate['@id'], byId)
+    }
+
+    // description
+    if (obj['https://schema.org/description']) {
+        event.description = obj['https://schema.org/description']['@value'] || '';
+    }
+
+    return event;
+}
+
+// Helper: Parse Contribution
+function parseContribution(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const contribution = {};
+
+    // Agent
+    if (obj['https://lod.academy/melod/vocab/ontology#hasAgent']) {
+        contribution.agent = obj['https://lod.academy/melod/vocab/ontology#hasAgent']['@id'];
+    }
+    // Role
+    if (obj['https://lod.academy/melod/vocab/ontology#hasRole']) {
+        contribution.role = obj['https://lod.academy/melod/vocab/ontology#hasRole']['@id'];
+    }
+    // Certainty
+    if (obj['https://lod.academy/melod/vocab/ontology#hasCertainty']) {
+        contribution.certainty = obj['https://lod.academy/melod/vocab/ontology#hasCertainty']['@id'];
+    }
+    return contribution;
 }
 
 // Helper: Parse Date
