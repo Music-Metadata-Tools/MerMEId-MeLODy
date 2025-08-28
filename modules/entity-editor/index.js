@@ -103,7 +103,11 @@ export default class ADWLMEntityEditor extends LitElement {
         _selected_repository_path: {
         type: String,
         state: true
-    }
+        },
+        _cachedConfig: {
+            type: Object,
+            state: true
+        }
     };
 
     updated(changedProperties) {
@@ -244,6 +248,8 @@ export default class ADWLMEntityEditor extends LitElement {
         // Listen for repository selection events
         document.addEventListener('adwlm-filesystem-manager:repository-selected', (event) => {
             this._selected_repository_path = event.detail.repositoryPath;
+            // Clear cached config when repository changes
+            this._cachedConfig = null;
         });
     }
 
@@ -459,6 +465,7 @@ export default class ADWLMEntityEditor extends LitElement {
         this._entity_path = null;
         this._hasUnsavedChanges = false;
         this._skipNextUpdate = false;
+        this._cachedConfig = null;
     }
 
     _generate_entity_id() {
@@ -477,6 +484,11 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     async _getRepoConfig() {
+        // Return cached config if available
+        if (this._cachedConfig) {
+            return this._cachedConfig;
+        }
+
         try {
             const filesystem = filesystemService.getInstance();
             
@@ -485,32 +497,43 @@ export default class ADWLMEntityEditor extends LitElement {
             }
             
             const configPath = `${this._selected_repository_path}/configuration/config.json`;
-            console.log('Reading config from:', configPath); // Debug line
+            console.log('Reading config from:', configPath);
             
             const configContent = await filesystem.read_file(this._selected_repository_path, 'configuration/config.json');
-            console.log('Raw config content:', configContent); // Debug line
             
             if (!configContent || configContent.trim() === '') {
                 throw new Error('Config file is empty');
             }
             
             const config = JSON.parse(configContent);
-            console.log('Parsed config:', config); // Debug line
+            
+            // Cache the successful config
+            this._cachedConfig = config;
             return config;
         } catch (error) {
             console.error('Failed to read repository config:', error);
-            console.log('Selected repository path:', this._selected_repository_path); // Debug line
-            const alert = document.createElement('sl-alert');
-            alert.variant = 'warning';
-            alert.closable = true;
-            alert.duration = 6000;
-            alert.innerHTML = `
-                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                Failed to load repository configuration: ${error.message}
-            `;
-            document.body.append(alert);
-            alert.toast();
-            return null;
+            
+            // Only show alert if we haven't cached a config yet
+            if (!this._cachedConfig) {
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'warning';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    Using default configuration: ${error.message}
+                `;
+                document.body.append(alert);
+                alert.toast();
+                
+                // Cache the default config
+                this._cachedConfig = {
+                    datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/mermeid-sample-data/datasets/',
+                    projectDomain: 'urn:uuid:'
+                };
+            }
+            
+            return this._cachedConfig;
         }
     }
 }
