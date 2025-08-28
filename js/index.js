@@ -137,54 +137,46 @@ let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
 function convertJsonLdToXml(json_ld_contents) {
-    // Check entity type
-    const isPersonEntity = json_ld_contents.some(item => 
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Person'
+    // First find the subject entity (the one with urn:uuid)
+    const subjectEntity = json_ld_contents.find(item => 
+        {if (item['@id'] && item['@id'].startsWith('urn:uuid') && item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']) {
+                return item['@id'];
+            }}
     );
+
+    if (subjectEntity) {
+        console.log('Subject entity found:', subjectEntity);
+    }
+
+    if (!subjectEntity) {
+        console.error('No subject entity with urn:uuid found');
+        return;
+    }
+
+    // Check entity type based only on the subject entity
+    const isPersonEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Person';
     
-    const isPlaceEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Place'
-    );
+    const isPlaceEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Place';
 
-    const isVenueEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Venue'
-    );
+    const isVenueEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Venue';
 
-    const isEventEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Event'
-    );
+    const isEventEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Event';
 
-    const isPerformanceEventEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#PerformanceEvent'
-    );
+    const isPerformanceEventEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#PerformanceEvent';
 
-    const isInstitutionEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Institution'
-    );
+    const isInstitutionEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Institution';
 
-    const isBibliographyEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Bibliography'
-    );
+    const isBibliographyEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Bibliography';
 
-    const isInstrumentationEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Instrumentation'
-    );
+    const isInstrumentationEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Instrumentation';
 
-    const isWorkEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Work'
-    );
+    const isWorkEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Work';
 
-    const isExpressionEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Expression'
-    );
+    const isExpressionEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Expression';
 
-    const isManifestationEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Manifestation'
-    );
+    const isManifestationEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Manifestation';
 
-    const isItemEntity = json_ld_contents.some(item =>
-        item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Item'
-    );
+    const isItemEntity = subjectEntity['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Item';
 
     if (isPersonEntity) {
         return PersonConverter.toXML(json_ld_contents);
