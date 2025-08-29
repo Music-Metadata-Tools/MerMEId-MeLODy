@@ -100,7 +100,7 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
         </condition>` : ''}
         ${data.physDesc.decoDesc ? `    <decoDesc><p>${data.physDesc.decoDesc}</p></decoDesc>` : ''}
         ${data.physDesc.scriptDesc ? `    <scriptDesc><p>${data.physDesc.scriptDesc}</p></scriptDesc>` : ''}
-        ${data.physDesc.stamp ? `    <stamp>${data.physDesc.stamp}</stamp>` : ''}
+        ${data.physDesc.stamp?.length > 0 ? data.physDesc.stamp?.map(stamp => `<stamp>${stamp}</stamp>`).join('\n') : ''}
     ${!isEffectivelyEmpty(data.physDesc.binding) ? `    <bindingDesc>
             <binding>
                 <condition>

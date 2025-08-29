@@ -279,7 +279,6 @@ melod:PhysDesc
   sh:property   [ sh:description "Stamp" ;
                   sh:name "Stamp" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
                   sh:path melod:hasStamp
                 ] ;
   sh:property   [ sh:description "Inscription" ;

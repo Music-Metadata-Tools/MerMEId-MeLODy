@@ -280,7 +280,7 @@
  * @property {string} [condition]
  * @property {string} [decoDesc]
  * @property {string} [scriptDesc]
- * @property {string} [stamp]
+ * @property {string[]} [stamp]
  * @property {Inscription} [inscription]
  */
 

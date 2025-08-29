@@ -60,7 +60,7 @@ export class ManifestationConverter {
                 condition: '',
                 decoDesc: '',
                 scriptDesc: '',
-                stamp: '',
+                stamp: [],
                 inscription: {
                     description: '',
                     agent: ''
@@ -94,6 +94,10 @@ export class ManifestationConverter {
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
                 manifestationData.physDesc.physicalMedium.push(obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '');
+            }
+
+            if (obj['https://lod.academy/melod/vocab/ontology#hasStamp']) {
+                manifestationData.physDesc.stamp.push(obj['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '');
             }
 
             if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
@@ -207,10 +211,6 @@ export class ManifestationConverter {
 
             if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']) {
                 manifestationData.physDesc.scriptDesc = physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']['@value'] || '';
-            }
-
-            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']) {
-                manifestationData.physDesc.stamp = physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '';
             }
         }
 

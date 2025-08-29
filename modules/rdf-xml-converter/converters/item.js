@@ -73,7 +73,7 @@ export class ItemConverter {
                 condition: '',
                 decoDesc: '',
                 scriptDesc: '',
-                stamp: '',
+                stamp: [],
                 inscription: {
                     description: '',
                     agent: ''
@@ -104,6 +104,10 @@ export class ItemConverter {
             }
             if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
                 itemData.physDesc.physicalMedium.push(obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '');
+            }
+
+            if (obj['https://lod.academy/melod/vocab/ontology#hasStamp']) {
+                itemData.physDesc.stamp.push(obj['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '');
             }
 
             if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
@@ -226,10 +230,6 @@ export class ItemConverter {
 
             if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']) {
                 itemData.physDesc.scriptDesc = physicalDesc['https://lod.academy/melod/vocab/ontology#hasScriptDesc']['@value'] || '';
-            }
-
-            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']) {
-                itemData.physDesc.stamp = physicalDesc['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '';
             }
         }
 
