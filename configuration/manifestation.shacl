@@ -86,6 +86,12 @@ melod:Manifestation
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation
                 ] ;
+  sh:property   [ sh:description "List of the material contained within a resource. " ;
+                  sh:name "Contents" ;
+                  sh:group melod:General ;
+                  sh:path melod:hasContents ;
+                  sh:node melod:Contents
+                ] ;
   sh:property   [ sh:description "Insert ID of the related expression" ;
                   sh:name "Embodies" ;
                   sh:group melod:Relation ;
@@ -177,6 +183,23 @@ melod:Annotation
                 ] ;
   sh:property   [ sh:description "paragraph" ;
                   sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] .
+
+melod:Contents
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "Head of a list of contents" ;
+                  sh:name      "Head" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "Single entry of a content description" ;
+                  sh:name      "Content Item" ;
                   sh:minCount  1 ;
                   sh:datatype  xsd:string ;
                   dash:singleLine false ;

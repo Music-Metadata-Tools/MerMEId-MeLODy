@@ -206,6 +206,16 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
             </inscription>` : ''}
     </physDesc>` : '' ,
 
+    // Contents
+        data.contents?.length > 0 ? `<contents>
+            ${data.contents.map(content => 
+                `   <head>${content.label || ''}</head>
+                        ${content.paragraph?.length > 0 ? 
+                            content.paragraph.map(paragraph => 
+                `<contentItem>${paragraph}</contentItem>`
+            ).join('\n') : ''}`
+            ).join('\n')}</contents>` : '',
+
         // Annotations
         data.annotation?.length > 0 ? `<notesStmt>
             ${data.annotation.map(annotation => 

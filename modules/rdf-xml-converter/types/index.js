@@ -258,6 +258,7 @@
  * @property {TitlePage[]} [titlePages]         // melod:hasTitlePage
  * @property {Publication} [publication]       // schema:publication
  * @property {Annotation[]} [annotation]          // melod:hasAnnotation
+ * @property {Annotation[]} [contents]          // melod:hasContents
  * @property {string[]} [expressions]          // efrbroo:R4_embodies
  * @property {string[]} [isPartOf]               // schema:isPartOf
  * @property {string[]} [hasPart]              // schema:hasPart

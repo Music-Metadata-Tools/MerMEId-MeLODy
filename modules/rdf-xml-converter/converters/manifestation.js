@@ -76,6 +76,7 @@ export class ManifestationConverter {
                 description: ''
             },
             annotation: [],
+            contents: [],
             expressions: [],
             isPartOf: [],
             hasPart: [],
@@ -284,6 +285,15 @@ export class ManifestationConverter {
         if (annotationLinks) {
             if (!Array.isArray(annotationLinks)) annotationLinks = [annotationLinks];
             manifestationData.annotation = annotationLinks
+                .map(link => parseAnnotation(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Contents ---
+        let contentLinks = main['https://lod.academy/melod/vocab/ontology#hasContents'];
+        if (contentLinks) {
+            if (!Array.isArray(contentLinks)) contentLinks = [contentLinks];
+            manifestationData.contents = contentLinks
                 .map(link => parseAnnotation(link['@id'], byId))
                 .filter(Boolean);
         }
