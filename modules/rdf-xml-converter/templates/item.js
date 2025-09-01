@@ -54,23 +54,21 @@ ${data.titlePages?.length > 0 ? data.titlePages.map((titlePage, index) => `     
             <p>${titlePage.paragraph}</p>
         </titlePage>`
             ).join('\n') : '' }
-${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermark => `         <watermark sameas="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
+${data.physDesc?.watermarks?.length > 0 ? data.physDesc?.watermarks.map(watermark => `         <watermark${watermark.sameAs?.length > 0 ? ` sameas="${watermark.sameAs.join(' ')}"` : ''}>
             <title>${watermark.type || ''}</title>
-            <heraldry>${watermark.heraldry || ''}</heraldry>
-            <annot type="content">
-                <p>${watermark.content || ''}</p>
-            </annot>
-            <locus>${watermark.position || ''}</locus>
-            <annot type="creation">
+            ${watermark.heraldry ? `<heraldry>${watermark.heraldry}</heraldry>`: ''}
+            ${watermark.content ? `<annot type="content"><p>${watermark.content}</p></annot>`: ''}
+            ${watermark.position ? `<locus>${watermark.position || ''}</locus>`: ''}
+            ${watermark.creationDate || watermark.creationLocation || watermark.paperMill || watermark.paperMaker ? `<annot type="creation">
                 <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
             watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
             watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
-            watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDat?.dateDescription || ''}</date>
+            watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
                 <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
                 <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
                 <persName role="paper_maker"${watermark.paperMaker ? ` sameas="${watermark.paperMaker}"` : ''}/>
-            </annot>
+            </annot>`: ''}
     ${watermark.dimensions?.length > 0 ? `        <dimensions>
 ${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
             ).join('\n')}
@@ -148,28 +146,26 @@ ${data.physDesc.paperDetail.rastral.dimensions.map(dimension => `               
                 </binding>
                 <p>${data.physDesc.paperDetail.binding.description || ''}</p>
             </bindingDesc>` : ''}
-            ${data.physDesc?.paperDetail.watermarks?.length > 0 ? data.physDesc?.paperDetail.watermarks.map(watermark => `<watermark sameas="${Array.isArray(watermark.sameAs) ? watermark.sameAs.join(' ') : watermark.sameAs}">
-                <title>${watermark.type || ''}</title>
-                <heraldry>${watermark.heraldry || ''}</heraldry>
-                <annot type="content">
-                    <p>${watermark.content || ''}</p>
-                </annot>
-                <locus>${watermark.position || ''}</locus>
-                <annot type="creation">
-                    <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
+            ${data.physDesc?.paperDetail?.watermarks?.length > 0 ? data.physDesc?.paperDetail.watermarks.map(watermark => `         <watermark${watermark.sameAs?.length > 0 ? ` sameas="${watermark.sameAs.join(' ')}"` : ''}>
+            <title>${watermark.type || ''}</title>
+            ${watermark.heraldry ? `<heraldry>${watermark.heraldry}</heraldry>`: ''}
+            ${watermark.content ? `<annot type="content"><p>${watermark.content}</p></annot>`: ''}
+            ${watermark.position ? `<locus>${watermark.position || ''}</locus>`: ''}
+            ${watermark.creationDate || watermark.creationLocation || watermark.paperMill || watermark.paperMaker ? `<annot type="creation">
+                <date${watermark.creationDate?.value ? ` isodate="${watermark.creationDate.value}"` : ''}${watermark.creationDate?.startDate ? ` startdate="${watermark.creationDate.startDate}"` : ''}${
             watermark.creationDate?.endDate ? ` enddate="${watermark.creationDate.endDate}"` : ''}${
             watermark.creationDate?.notAfter ? ` notafter="${watermark.creationDate.notAfter}"` : ''}${
             watermark.creationDate?.notBefore ? ` notbefore="${watermark.creationDate.notBefore}"` : ''}${
             watermark.creationDate?.certainty ? ` cert="${watermark.creationDate.certainty}"` : ''}>${watermark.creationDate?.dateDescription || ''}</date>
-                    <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
-                    <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
-                    <persName role="paper_maker"${watermark.paperMaker ? ` sameas="${watermark.paperMaker}"` : ''}/>
-                </annot>
-        ${watermark.dimensions?.length > 0 ? `        <dimensions>
-    ${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
-                ).join('\n')}
-                </dimensions>` : ''}
-            </watermark>`
+                <geogName type="place"${watermark.creationLocation ? ` sameas="${watermark.creationLocation}"` : ''}/>
+                <geogName type="paper_mill"${watermark.paperMill ? ` sameas="${watermark.paperMill}"` : ''}/>
+                <persName role="paper_maker"${watermark.paperMaker ? ` sameas="${watermark.paperMaker}"` : ''}/>
+            </annot>`: ''}
+    ${watermark.dimensions?.length > 0 ? `        <dimensions>
+${watermark.dimensions.map(dimension => `               <${dimension.type || ''} unit="${dimension.unit.split('#')[1]}" quantity="${dimension.value}"/>`
+            ).join('\n')}
+            </dimensions>` : ''}
+        </watermark>`
             ).join('\n') : '' }
         </physMedium>` : ''}
         ${!isEffectivelyEmpty(data.physDesc.inscription) ? `<inscription>
