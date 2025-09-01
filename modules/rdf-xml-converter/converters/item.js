@@ -196,10 +196,6 @@ export class ItemConverter {
 
         if (physicalDesc) {
 
-            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@type'] === "http://www.w3.org/2001/XMLSchema#string") {
-                itemData.physDesc.physicalMedium = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '';
-            }
-
             if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']) {
                 itemData.physDesc.plateNumber = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']['@value'] || '';
             }

@@ -178,9 +178,6 @@ export class ManifestationConverter {
         manifestationData.subjectUri = main['@id'];
 
         if (physicalDesc) {
-            if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']) {
-                manifestationData.physDesc.physicalMedium = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '';
-            }
 
             if (physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']) {
                 manifestationData.physDesc.plateNumber = physicalDesc['https://lod.academy/melod/vocab/ontology#hasPlateNum']['@value'] || '';

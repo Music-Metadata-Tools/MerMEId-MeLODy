@@ -77,7 +77,7 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
             </dimensions>` : ''}
         </watermark>`
             ).join('\n') : '' }
-    ${data.physDesc.physicalMedium?.length > 0 ?data.physDesc.physicalMedium.map(medium => `    <physMedium><p>${medium}</p></physMedium>`).join('\n') : ''}
+    ${data.physDesc.physicalMedium?.length > 0 ? data.physDesc.physicalMedium.map(medium => `    <physMedium><p>${medium}</p></physMedium>`).join('\n') : ''}
     ${data.physDesc.plateNumber ? `    <plateNum>${data.physDesc.plateNumber}</plateNum>` : ''}
     ${data.physDesc?.addDescAuto || data.physDesc?.addDescForeign ? `    <addDesc>
             <annot type="autograph">
