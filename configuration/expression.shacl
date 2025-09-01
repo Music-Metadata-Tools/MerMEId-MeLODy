@@ -28,10 +28,10 @@ melod:Expression
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassification ;
                   sh:or (
-                    [ sh:class melod:StageMusic ; rdfs:label "Stage music" ]
-                    [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ]
-                    [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ]
-                    [ sh:class melod:Classification; rdfs:label "Classification" ]
+                    [ sh:class melod:StageMusic ; rdfs:label "Stage music" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Classification; rdfs:label "Classification" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification" ]
                   )
                 ] ;
@@ -87,7 +87,8 @@ melod:Expression
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Creation ;
-                  sh:path schema:locationCreated ;
+                  sh:path schema:locationCreated ; 
+                  sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:class melod:Place ;
@@ -100,7 +101,7 @@ melod:Expression
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:or (
-                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ]
+                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ; sh:nodeKind sh:IRI ]
                     [ sh:node melod:Event ; rdfs:label "Event" ]
                   )
                 ] ;
@@ -110,6 +111,7 @@ melod:Expression
                   sh:maxCount 1 ;
                   sh:group melod:Performances ;
                   sh:path schema:firstPerformance ;
+                  sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:class melod:PerformanceEvent
@@ -119,6 +121,7 @@ melod:Expression
                   sh:minCount 0 ;
                   sh:group melod:Performances ;
                   sh:path melod:hasPerformance ;
+                  sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
                   sh:class melod:PerformanceEvent
@@ -172,6 +175,7 @@ melod:Expression
                   sh:maxCount 1;
                   sh:group melod:Music ;
                   sh:class         melod:Instrumentation ;
+                  sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
                   #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;
                   sh:path         melod:hasInstrumentation
@@ -192,7 +196,8 @@ melod:Expression
                     [ rdfs:label "IRI of included Expression" ;
                       #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                       #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
-                      sh:class melod:ExpressionEntity ]
+                      sh:class melod:ExpressionEntity ;
+                      sh:nodeKind sh:IRI ]
                     [ sh:node melod:ExpressionComponent ; rdfs:label "Included Expression" ]
                   )
                 ] ;
@@ -203,6 +208,7 @@ melod:Expression
                   #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                   #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                   sh:class melod:ExpressionEntity ;
+                  sh:nodeKind sh:IRI ;
                   sh:path schema:hasPart
                 ] ;
   sh:property   [ sh:description "Insert ID of the expression" ;
@@ -212,12 +218,14 @@ melod:Expression
                   #sh:defaultValue "https://mei-metadata.org/expressions/" ;
                   #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                   sh:class melod:ExpressionEntity ;
+                  sh:nodeKind sh:IRI ;
                   sh:path schema:isPartOf
                 ] ;
   sh:property   [ sh:name "Relation" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
                   sh:class melod:ExpressionEntity ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
@@ -263,6 +271,7 @@ melod:Expression
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
                   sh:class melod:Bibliography ;
+                  sh:nodeKind sh:IRI ;
                   sh:path schema:citation
                 ] ;
   sh:targetClass  melod:Expression .
@@ -378,7 +387,7 @@ melod:Date
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:targetClass  melod:Date .
+  sh:targetClass  melod:ExactDate .
 
 melod:Contribution
   a               sh:NodeShape ;
@@ -388,6 +397,7 @@ melod:Contribution
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
+                  sh:nodeKind sh:IRI ;
                   sh:path      melod:hasAgent ;
                   sh:or (
                     [ sh:class melod:Person ; rdfs:label "Person" ]
@@ -514,6 +524,7 @@ melod:Event
   sh:property   [ sh:description "Insert ID of the place" ;
                   sh:name "Place" ;
                   sh:maxCount 1;
+                  sh:nodeKind sh:IRI ;
                   sh:class melod:Place ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
