@@ -416,7 +416,8 @@ melod:ExpressionComponent
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path rdfs:label
-                ] .
+                ] ;
+  sh:targetClass  melod:ExpressionComponent .
 
 melod:Key
   a               sh:NodeShape ;
