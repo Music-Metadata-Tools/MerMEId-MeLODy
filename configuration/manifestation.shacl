@@ -206,7 +206,8 @@ melod:Contents
                   sh:datatype  xsd:string ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph
-                ] .
+                ] ;
+  sh:targetClass  melod:Annotation .
 
 melod:PhysDesc
   a               sh:NodeShape ;
