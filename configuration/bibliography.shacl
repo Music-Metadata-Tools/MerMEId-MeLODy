@@ -47,6 +47,7 @@ melod:Bibliography
                   sh:minCount 0 ;
                   sh:path schema:author ;
                   sh:group melod:Authors ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:class melod:Person ; rdfs:label "Person" ]
                     [ sh:class melod:Institution; rdfs:label "Institution" ]
@@ -57,6 +58,7 @@ melod:Bibliography
                   sh:minCount 0 ;
                   sh:path melod:hasEditor ;
                   sh:group melod:Editors ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:class melod:Person ; rdfs:label "Person" ]
                     [ sh:class melod:Institution; rdfs:label "Institution" ]
@@ -186,7 +188,7 @@ melod:PublicationEvent
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
                   sh:or (
-                    [ sh:class melod:TitleType ; rdfs:label "Select from list" ]
+                    [ sh:class melod:TitleType ; rdfs:label "Select from list" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom type" ]
                   )
                   

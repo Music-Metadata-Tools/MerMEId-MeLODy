@@ -31,6 +31,7 @@ melod:PerformanceEvent
                   sh:name "Venue/Place" ;
                   sh:maxCount 1;
                   sh:group melod:General ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:class melod:Venue ; rdfs:label "Venue" ; sh:path melod:hasVenue ]
                     [ sh:class melod:Place ; rdfs:label "Place" ; sh:path schema:location ]
@@ -132,7 +133,7 @@ melod:PerformanceEvent
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:targetClass  melod:Date .
+  sh:targetClass  melod:ExactDate .
 
   melod:Contribution
   a               sh:NodeShape ;
@@ -143,6 +144,7 @@ melod:PerformanceEvent
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:class melod:Person ; rdfs:label "Person" ]
                     [ sh:class melod:Institution; rdfs:label "Institution" ]

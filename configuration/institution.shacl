@@ -110,4 +110,4 @@ melod:Date
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:targetClass  melod:Date .
+  sh:targetClass  melod:ExactDate .

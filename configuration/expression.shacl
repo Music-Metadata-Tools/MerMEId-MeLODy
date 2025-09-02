@@ -319,7 +319,8 @@ melod:Identifier
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
                   sh:path      owl:hasValue
-                ] .
+                ] ;
+  sh:targetClass  melod:Identifier .
 
 melod:Annotation
   a               sh:NodeShape ;
@@ -336,7 +337,8 @@ melod:Annotation
                   sh:datatype  xsd:string ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph
-                ] .
+                ] ;
+  sh:targetClass  melod:Annotation .
 
 melod:Date
   a               sh:NodeShape ;

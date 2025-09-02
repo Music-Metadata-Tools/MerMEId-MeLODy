@@ -35,12 +35,12 @@ melod:Item
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassificationOfManifestation ;
                   sh:or (
-                    [ sh:class melod:Content ; rdfs:label "Content" ]
-                    [ sh:class melod:Presentation; rdfs:label "Presentation" ]
-                    [ sh:class melod:Authority; rdfs:label "Authority" ]
-                    [ sh:class melod:Scoring; rdfs:label "Scoring" ]
-                    [ sh:class melod:State; rdfs:label "State" ]
-                    [ sh:class melod:Completeness; rdfs:label "Completeness" ]
+                    [ sh:class melod:Content ; rdfs:label "Content" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Presentation; rdfs:label "Presentation" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Authority; rdfs:label "Authority" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Scoring; rdfs:label "Scoring" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:State; rdfs:label "State" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Completeness; rdfs:label "Completeness" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification" ]
                   )
                 ] ;
@@ -86,7 +86,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:or (
-                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ]
+                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ; sh:nodeKind sh:IRI ]
                     [ sh:node melod:Event ; rdfs:label "Event" ]
                   ) ;
                   sh:path melod:hasProvenance
@@ -104,7 +104,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:or (
-                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ]
+                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ; sh:nodeKind sh:IRI ]
                     [ sh:node melod:Event ; rdfs:label "Event" ]
                   ) ;
                   sh:path melod:hasHistoricEvent
@@ -155,6 +155,7 @@ melod:Item
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
                   sh:class melod:ItemEntity ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
                     [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
@@ -243,7 +244,7 @@ melod:Item
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:targetClass  melod:Date .
+  sh:targetClass  melod:ExactDate .
 
   melod:TitlePage
   a               sh:NodeShape ;
@@ -563,7 +564,8 @@ melod:Annotation
                   sh:datatype  xsd:string ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph
-                ] .
+                ] ;
+  sh:targetClass  melod:Annotation .
 
 melod:Binding
   a               sh:NodeShape ;
@@ -643,7 +645,7 @@ melod:Binding
                   sh:class cidoc:E58_Measurement_Unit ;
                   sh:path      cidoc:P91_has_unit
                 ] ;
-  sh:targetClass  cidoc:E54_Dimension .
+  sh:targetClass  melod:Format .
 
   melod:Rastral
   a               sh:NodeShape ;
@@ -767,6 +769,7 @@ melod:Relation
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
                     [ sh:class melod:Person ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
                     [ sh:class melod:Institution; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
