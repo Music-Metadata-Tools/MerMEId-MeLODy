@@ -168,10 +168,10 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
         </watermark>`
             ).join('\n') : '' }
         </physMedium>` : ''}
-        ${!isEffectivelyEmpty(data.physDesc.inscription) ? `<inscription>
-                <persName${data.physDesc.inscription.agent ? ` sameas="${data.physDesc.inscription.agent || ''}}"` : ''}/>
-                <annot><p>${data.physDesc.inscription.description || ''}</p></annot>
-            </inscription>` : ''}
+        ${data.physDesc?.inscription?.length > 0 ? data.physDesc?.inscription.map(inscription => `<inscription>
+                ${inscription.agent.length > 0 ? inscription.agent.map(agent => `<persName${agent ? ` sameas="${agent || ''}"` : ''}/>`).join('\n') : '' }
+                <annot>${inscription.description.length > 0 ? inscription.description.map(description => `<p>${description || ''}</p>`).join('\n') : '<p/>' }</annot>
+            </inscription>`).join('\n') : '' }
             ${data.hands?.length > 0 ? `<handList>
 ${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" medium="${hand.medium.split('#')[1]}"><persName sameas="${hand.agent || ''}"/>${hand.description || ''}</hand>`
             ).join('\n')}

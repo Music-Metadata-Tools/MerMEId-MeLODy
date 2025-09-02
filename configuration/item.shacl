@@ -536,14 +536,11 @@ melod:Inscription
   owl:imports dataset:persons.ttl ;
   sh:property   [ sh:description  "Insert ID of the person" ;
                   sh:name         "Person" ;
-                  sh:maxCount  1 ;
-                  sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
                   sh:class melod:Person ;
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name      "Description" ;
-                  sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path      schema:description
                 ] ;

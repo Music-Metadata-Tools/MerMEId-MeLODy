@@ -74,10 +74,7 @@ export class ItemConverter {
                 decoDesc: '',
                 scriptDesc: '',
                 stamp: [],
-                inscription: {
-                    description: '',
-                    agent: ''
-                },
+                inscription: []
             },
             titlePages: [],
             annotation: [],
@@ -168,14 +165,6 @@ export class ItemConverter {
             console.warn('No PaperDetail object found');
         }
 
-        // --- Find inscription manifestation object ---
-        const inscription = Object.values(byId).find(obj =>
-            obj['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Inscription'
-        );
-        if (!inscription) {
-            console.warn('No Inscription object found');
-        }
-
         itemData.subjectUri = main['@id'];
 
         if (main['http://www.w3.org/2000/01/rdf-schema#label']) {
@@ -248,16 +237,6 @@ export class ItemConverter {
 
             if (paperDetail['https://lod.academy/melod/vocab/ontology#hasCondition']) {
                 itemData.physDesc.paperDetail.condition = paperDetail['https://lod.academy/melod/vocab/ontology#hasCondition']['@value'] || '';
-            }
-        }
-
-        if (inscription) {
-            if (inscription['https://schema.org/description']) {
-                itemData.physDesc.inscription.description = inscription['https://schema.org/description']['@value'] || '';
-            }
-
-            if (inscription['https://lod.academy/melod/vocab/ontology#hasAgent']) {
-                itemData.physDesc.inscription.agent = inscription['https://lod.academy/melod/vocab/ontology#hasAgent']['@id'];
             }
         }
 
@@ -339,6 +318,15 @@ export class ItemConverter {
             if (!Array.isArray(watermarksLinks)) watermarksLinks = [watermarksLinks];
             itemData.physDesc.watermarks = watermarksLinks
                 .map(link => parseWatermarks(link['@id'], byId))
+                .filter(Boolean);
+        }
+
+        // --- Phys Desc Inscription ---
+        let inscriptionLinks = physicalDesc?.['https://lod.academy/melod/vocab/ontology#hasInscription'];
+        if (inscriptionLinks) {
+            if (!Array.isArray(inscriptionLinks)) inscriptionLinks = [inscriptionLinks];
+            itemData.physDesc.inscription = inscriptionLinks
+                .map(link => parseInscriptions(link['@id'], byId))
                 .filter(Boolean);
         }
 
@@ -669,6 +657,47 @@ function parseRastral(id, byId) {
     }
 
     return rastral;
+}
+
+// Helper: Parse Inscriptions
+function parseInscriptions(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const inscription = {};
+
+    // Person
+    const person = obj['https://lod.academy/melod/vocab/ontology#hasAgent'];
+    if (person) {
+        inscription.agent = [];
+
+        if (Array.isArray(person)) {
+            for (const item of person) {
+                if (item['@id']) {
+                    inscription.agent.push(item['@id']);
+                }
+            }
+        } else if (person['@id']) {
+            inscription.agent.push(person['@id']);
+        }
+    }
+
+    // description
+    const paragraph = obj['https://schema.org/description'];
+    if (paragraph) {
+        inscription.description = [];
+
+        if (Array.isArray(paragraph)) {
+            for (const item of paragraph) {
+                if (item['@value']) {
+                    inscription.description.push(item['@value']);
+                }
+            }
+        } else if (paragraph['@value']) {
+            inscription.description.push(paragraph['@value']);
+        }
+    }
+    
+    return inscription;
 }
 
 // Helper: Parse Watermarks
