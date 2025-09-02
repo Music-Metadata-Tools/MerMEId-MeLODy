@@ -32,9 +32,10 @@ melod:PerformanceEvent
                   sh:maxCount 1;
                   sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
+                  sh:path melod:hasVenue ;
                   sh:or (
-                    [ sh:class melod:Venue ; rdfs:label "Venue" ; sh:path melod:hasVenue ]
-                    [ sh:class melod:Place ; rdfs:label "Place" ; sh:path schema:location ]
+                    [ sh:class melod:Venue ; rdfs:label "Venue" ]
+                    [ sh:class melod:Place ; rdfs:label "Place" ]
                   ) ;
                   #sh:defaultValue "https://mei-metadata.org/venues/" ;
                   #sh:pattern      "^https://mei-metadata.org/venues/\\d{8}" ;
