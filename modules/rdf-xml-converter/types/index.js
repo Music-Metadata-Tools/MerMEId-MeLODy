@@ -282,7 +282,7 @@
  * @property {string} [decoDesc]
  * @property {string} [scriptDesc]
  * @property {string[]} [stamp]
- * @property {Inscription} [inscription]
+ * @property {Inscription[]} [inscription]
  */
 
 /**
@@ -344,8 +344,8 @@
 
 /**
  * @typedef {Object} Inscription
- * @property {string} [description]
- * @property {string} [agent]
+ * @property {string[]} [description]
+ * @property {string[]} [agent]
  */
 
 /**
