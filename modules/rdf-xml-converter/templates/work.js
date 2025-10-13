@@ -77,8 +77,11 @@ export function generateWorkXML(data) {
         contributorElements.length > 0 ? `<contributor>${contributorElements}</contributor>` : null,
 
         // history description
-        data.historyDescription ? 
-            `    <history><p>${data.historyDescription}</p></history>` : '',
+        data.historyDescription?.length > 0 ? 
+            `    <history>
+                ${data.historyDescription.map(desc => 
+                `    <p>${desc}</p>`
+            ).join('\n')}</history>` : '',
         
         // context
         data.context ? 

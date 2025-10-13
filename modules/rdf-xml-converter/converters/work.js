@@ -17,7 +17,7 @@ export class WorkConverter {
             citations: [],
             annotation: [],
             context: '',
-            historyDescription: '',
+            historyDescription: [],
             expressions: [],
             isPartOf: [],
             hasPart: [],
@@ -49,6 +49,11 @@ export class WorkConverter {
             if (obj['https://lod.academy/melod/vocab/ontology#hasClassification'] && !obj['@id'].startsWith('_:')) {
                 workData.classification.push(obj['https://lod.academy/melod/vocab/ontology#hasClassification']['@id']);
             }
+
+            if (obj['https://lod.academy/melod/vocab/ontology#hasHistoryDesc'] && !obj['@id'].startsWith('_:')) {
+                workData.historyDescription.push(obj['https://lod.academy/melod/vocab/ontology#hasHistoryDesc']['@value'] || '');
+            }
+
             if (obj['@id']) {
                 if (!byId[obj['@id']]) {
                     byId[obj['@id']] = { ...obj };
@@ -84,10 +89,6 @@ export class WorkConverter {
 
         if (main['https://lod.academy/melod/vocab/ontology#hasContext']) {
             workData.context = main['https://lod.academy/melod/vocab/ontology#hasContext']['@value'] || '';
-        }
-
-        if (main['https://lod.academy/melod/vocab/ontology#hasHistoryDesc']) {
-            workData.historyDescription = main['https://lod.academy/melod/vocab/ontology#hasHistoryDesc']['@value'] || '';
         }
 
         // --- Title ---

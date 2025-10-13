@@ -167,7 +167,7 @@
  * @property {string[]} [citations]            // schema:citation
  * @property {Annotation[]} [annotation]       // melod:hasAnnotation
  * @property {string} [context]                // melod:hasContext
- * @property {string} [historyDescription]     // melod:hasHistoryDesc
+ * @property {string[]} [historyDescription]     // melod:hasHistoryDesc
  * @property {string[]} [expressions]          // efrbroo:R9_is_realised_in
  * @property {string[]} [isPartOf]               // schema:isPartOf
  * @property {string[]} [hasPart]              // schema:hasPart
