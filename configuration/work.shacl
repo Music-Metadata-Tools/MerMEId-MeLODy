@@ -73,7 +73,6 @@ melod:Work
   sh:property   [ sh:description "Creation history of the work" ;
                   sh:name "History description" ;
                   sh:minCount 0 ;
-                  sh:maxCount 1 ;
                   sh:group melod:History ;
                   dash:singleLine false ;
                   sh:path melod:hasHistoryDesc

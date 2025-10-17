@@ -199,6 +199,7 @@ export default class ADWLMEntityEditor extends LitElement {
     // Add new helper method to handle entity loading
     async _loadNewEntity(entity_to_edit) {
         let editor = this.renderRoot.querySelector("shacl-form");
+        let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
         
         // Pass the full entity path
@@ -223,15 +224,23 @@ export default class ADWLMEntityEditor extends LitElement {
                 editor.dataset.values = entity_to_edit.contents;
                 editor.dataset.valuesSubject = entity_to_edit.entity_iri;
                 editor.dataset.shapesUrl = modifiedFileUrl;
+
+                shacl_renderer.setAttribute("data-values-subject", entity_to_edit.entity_iri);
+                shacl_renderer.setAttribute("data-values", entity_to_edit.contents);
+                shacl_renderer.setAttribute("data-shapes-url", modifiedFileUrl);
             } catch (error) {
                 console.error('Failed to modify SHACL file:', error);
                 // Fallback to original file
                 editor.dataset.shapesUrl = shacl_file_location;
+                shacl_renderer.setAttribute("data-shapes-url", shacl_file_location);
             }
         } else {
             // Use original file if no config is found
             editor.dataset.shapesUrl = shacl_file_location;
+            shacl_renderer.setAttribute("data-shapes-url", shacl_file_location);
         }
+
+        this.entity_to_edit.shapesUrl = editor.dataset.shapesUrl;
         
         this._entity_path = entity_to_edit.path;
         
@@ -368,9 +377,11 @@ export default class ADWLMEntityEditor extends LitElement {
                 let rdf_output = editor.serialize();
                 let json_ld_output = editor.serialize("application/ld+json");
                 let entity_to_save = {
+                    entity_iri: this.entity_to_edit.entity_iri,
                     rdf_contents: rdf_output,
                     json_ld_contents: json_ld_output,
                     path: this._entity_path,
+                    shapesUrl: this.entity_to_edit.shapesUrl,
                 };
 
                 this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
@@ -437,6 +448,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 path: entity_path,
                 entity_iri,
                 entity_type,
+                shapesUrl: "",
             };
 
             // configure the editor

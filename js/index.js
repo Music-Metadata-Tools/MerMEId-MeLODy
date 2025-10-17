@@ -286,10 +286,15 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     // TODO: replace this with event dispatched to adwlm-entity-renderer
     let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
     let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
     // END TODO
 
     let rdf_contents = entity_to_save.rdf_contents;
     let json_ld_contents = JSON.parse(entity_to_save.json_ld_contents);
+    shacl_renderer.setAttribute("data-values-subject", entity_to_save.entity_iri);
+    shacl_renderer.setAttribute("data-values", entity_to_save.rdf_contents);
+
+    shacl_renderer.setAttribute("data-shapes-url", entity_to_save.shapesUrl);
 
     // Debug logging
     console.log('Full JSON-LD contents:', json_ld_contents);
@@ -456,4 +461,9 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
     entity_to_edit.entity_type = entity_type_statement.type;
 
     entity_editor.entity_to_edit = entity_to_edit;
+
+
+    //shacl_renderer.setAttribute("data-values-subject", _entity_to_edit.entity_iri);
+    //shacl_renderer.setAttribute("data-values", _entity_to_edit.rdf_output);
+    //shacl_renderer.setAttribute("data-shapes-url", _entity_to_edit.shapesUrl);
 });
