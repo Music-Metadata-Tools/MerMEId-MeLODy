@@ -152,7 +152,7 @@ melod:Work
                     [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ; sh:nodeKind sh:IRI ]
                     [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ; sh:nodeKind sh:IRI ]
                     [ sh:class melod:Classification; rdfs:label "Classification" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom classification" ]
+                    [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
   sh:property   [ sh:name "Bibliography" ;

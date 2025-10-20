@@ -7,8 +7,7 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
-@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix melodTerms: <https://lod.academy/melod/vocab/terms#> .
+@prefix terms: <https://lod.academy/melod/vocab/terms#> .
 
 melod:Instrumentation
   sh:targetClass melod:Instrumentation ;
@@ -52,16 +51,16 @@ melod:InstrumentationDetail
                   sh:minCount     1 ;
                   sh:name         "Medium of performance" ;
                   sh:or (
-                    [ sh:class melodTerms:Brass ; rdfs:label "Brass" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Electronic ; rdfs:label "Electronic" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Keyboard ; rdfs:label "Keyboard" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Percussion ; rdfs:label "Percussion" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:BowedStrings ; rdfs:label "Strings, bowed" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:PluckedStrings ; rdfs:label "Strings, plucked" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Voices ; rdfs:label "Voices" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Woodwinds ; rdfs:label "Woodwinds" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melodTerms:Unspecified ; rdfs:label "Unspecified" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom instrument" ]
+                    [ sh:class terms:Brass ; rdfs:label "Brass" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Electronic ; rdfs:label "Electronic" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Keyboard ; rdfs:label "Keyboard" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Percussion ; rdfs:label "Percussion" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:BowedStrings ; rdfs:label "Strings, bowed" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:PluckedStrings ; rdfs:label "Strings, plucked" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Voices ; rdfs:label "Voices" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Woodwinds ; rdfs:label "Woodwinds" ; sh:nodeKind sh:IRI ]
+                    [ sh:class terms:Unspecified ; rdfs:label "Unspecified" ; sh:nodeKind sh:IRI ]
+                    [ rdfs:label "Custom instrument" ; sh:datatype xsd:string ]
                   ) ;
                   sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;

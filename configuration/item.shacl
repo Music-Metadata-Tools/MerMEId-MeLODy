@@ -41,7 +41,7 @@ melod:Item
                     [ sh:class melod:Scoring; rdfs:label "Scoring" ; sh:nodeKind sh:IRI ]
                     [ sh:class melod:State; rdfs:label "State" ; sh:nodeKind sh:IRI ]
                     [ sh:class melod:Completeness; rdfs:label "Completeness" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom classification" ]
+                    [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
   sh:property   [ sh:description "Insert ID of the institution" ;

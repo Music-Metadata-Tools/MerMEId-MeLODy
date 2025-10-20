@@ -189,7 +189,7 @@ melod:PublicationEvent
                   sh:path      melod:hasTitleType ;
                   sh:or (
                     [ sh:class melod:TitleType ; rdfs:label "Select from list" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom type" ]
+                    [ rdfs:label "Custom type" ; sh:datatype xsd:string ]
                   )
                   
                 ] ;
