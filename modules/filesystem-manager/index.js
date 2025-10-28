@@ -273,6 +273,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
+
+                    // Dispatch event with repository path
+                    this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:item-selected', {
+                        detail: { repositoryPath: this._selected_repository_path },
+                        bubbles: true,
+                        composed: true
+                    }));
                 }
 
                 this._generate_folder_tree(target);

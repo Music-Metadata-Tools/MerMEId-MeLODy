@@ -260,6 +260,12 @@ export default class ADWLMEntityEditor extends LitElement {
             // Clear cached config when repository changes
             this._cachedConfig = null;
         });
+
+        document.addEventListener('adwlm-filesystem-manager:item-selected', (event) => {
+            this._selected_repository_path = event.detail.repositoryPath;
+            // Clear cached config when repository changes
+            this._cachedConfig = null;
+        });
     }
 
     render() {
