@@ -194,6 +194,16 @@ export default class ADWLMEntityEditor extends LitElement {
                 composed: true
             }));
         }
+
+        if (changedProperties.has('_cachedConfig')) {
+            if (this._cachedConfig != null) {
+            this.dispatchEvent(new CustomEvent("adwlm-entity-editor:cached-config", {
+                "detail": this._cachedConfig.datasetBaseUrl,
+                "bubbles": true,
+                "composed": true,
+            }));
+        }
+        }
     }
 
     // Add new helper method to handle entity loading
@@ -255,13 +265,15 @@ export default class ADWLMEntityEditor extends LitElement {
         this._init();
         
         // Listen for repository selection events
-        document.addEventListener('adwlm-filesystem-manager:repository-selected', (event) => {
+        document.addEventListener('adwlm-filesystem-manager:repository-selected', async (event) => {
             this._selected_repository_path = event.detail.repositoryPath;
             // Clear cached config when repository changes
+            // Reset cache
             this._cachedConfig = null;
+            const config = await this._getRepoConfig();
         });
 
-        document.addEventListener('adwlm-filesystem-manager:item-selected', (event) => {
+        document.addEventListener('adwlm-filesystem-manager:item-selected', async (event) => {
             this._selected_repository_path = event.detail.repositoryPath;
             // Clear cached config when repository changes
             this._cachedConfig = null;
@@ -503,7 +515,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
     async _getRepoConfig() {
         // Return cached config if available
-        if (this._cachedConfig) {
+        if (this._cachedConfig & this._cachedConfig != null) {
             return this._cachedConfig;
         }
 

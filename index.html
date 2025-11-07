@@ -24,6 +24,7 @@
     </header>
     <main>
         <nav id="filesystem-nav">
+            <adwlm-entity-search></adwlm-entity-search>
             <adwlm-filesystem-manager></adwlm-filesystem-manager>
         </nav>
         <section>
@@ -86,6 +87,7 @@
         </div>
     </div>
 </footer>
+    <script src="https://unpkg.com/rdflib/dist/rdflib.min.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/shoelace.js"></script>
     <script type="module">
         await Promise.allSettled([
@@ -141,11 +143,13 @@
             }
         });
     </script>
-    <!--<script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-default.js"></script>-->
+    <!--<script type="module" src="https://cdn.jsdelivr.net/npm/@ulb-darmstadt/shacl-form/dist/form-material.js"></script>-->
+    
     <script type="module" src="https://mermeid-shacl-form-d8ddf0.pages.gitlab.rlp.net/dist/form-mermeid.js"></script>
     <script type="module" src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
     <script type="module" src="js/index.js"></script>
     <script type="module" src="modules/filesystem-manager/index.js"></script>
+    <script type="module" src="modules/entity-search/index.js"></script>
     <script type="module" src="modules/entity-editor/index.js"></script>
 
 </body>

@@ -837,6 +837,22 @@ export default class ADWLMFilesystemManager extends LitElement {
             return html`<sl-tree-item lazy data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}" data-entry-absolute-path="${entry_path}" data-entry-relative-path="${entry_name}" data-entry-name="${entry_name}">${entry_name}</sl-tree-item>`;
         });
         this._displayed_repository_names = displayed_repository_names;
+        
+        // If there are repositories and no repository is currently selected,
+        // automatically select the first repository so other components
+        // (editor, search) can load the repository config without requiring
+        // an explicit user click.
+        if (repository_names.length > 0 && !this._selected_repository_path) {
+            this._selected_repository_path = `/${repository_names[0]}`;
+
+            // Dispatch the repository-selected event so listeners react as if
+            // the user selected the repository in the UI.
+            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                detail: { repositoryPath: this._selected_repository_path },
+                bubbles: true,
+                composed: true
+            }));
+        }
     }
 
     async _generate_folder_tree(treeItem) {
@@ -898,6 +914,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             //if (await this._shouldPull(this._selected_repository_path)) {
             //    await filesystem.pull(this._selected_repository_path);
             //}
+            //console.log(_file_path)
             let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
             if (!file_contents || file_contents.trim() === "") {
                 const alert = document.createElement('sl-alert');
@@ -926,20 +943,44 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         } catch (error) {
             console.error('Failed to load file:', error);
-            const alert = document.createElement('sl-alert');
-            alert.variant = 'danger';
-            alert.closable = true;
-            alert.duration = 6000;
-            alert.innerHTML = `
-                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                Failed to load file. Please try again.
-                <br><br>
-                <em>${error.message}</em>
-            `;
-            document.body.append(alert);
-            alert.toast();
+            if (error.name == 'TypeError') {
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'danger';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    No repository selected to load file. Please choose the repository.
+                `;
+                document.body.append(alert);
+                alert.toast();
+            }
+            else {
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'danger';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    Failed to load file. Please try again.
+                    <br><br>
+                    <em>${error.message}</em>
+                `;
+                document.body.append(alert);
+                alert.toast();
+            }
         }
     }
+
+    connectedCallback() {
+        super.connectedCallback();
+        window.addEventListener("entity-selected", (event) => {
+            console.log("selected file:", event.detail.filename);
+            this._file_path = event.detail.filename;
+            console.log("path:", this._file_path);
+            this._load_entity_to_edit();
+        });
+        }
 
     async _deselect_files_tree(){
         const treeContainer = this.renderRoot.querySelector('#repositories-tree-container');
