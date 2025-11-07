@@ -251,7 +251,12 @@ class ADWLMEntitySearch extends LitElement {
 
   _onInput(e) {
     this._query = e.target.value.trim().toLowerCase();
-    this._filterResults();
+    // Clear filtered results if input is empty
+    if (!this._query) {
+        this._filtered = [];
+    } else {
+        this._filterResults();
+    }
   }
 
   _onTypeChange(e) {
