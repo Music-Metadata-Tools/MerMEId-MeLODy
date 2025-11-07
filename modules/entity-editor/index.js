@@ -12,7 +12,8 @@ const styles =
         div#container {
             min-height: 82vh;
             background-color:transparent;
-            overflow: auto;
+            display: flex;
+            flex-direction: column;
             margin-left: 0;
         }
         sl-button-group {
@@ -24,6 +25,7 @@ const styles =
             text-align: center;
             color: var(--sl-color-primary-600);
             font-size: 1.5rem;
+            margin: 0;
         }
         sl-button::part(base) {
             --sl-color-neutral-600: var(--sl-color-primary-600);
@@ -48,7 +50,6 @@ const styles =
             justify-content: space-between;
             align-items: center;
             padding: 1rem;
-            background-color: transparent;
         }
         
         .header-container h2 {
@@ -73,6 +74,30 @@ const styles =
 
         .iri-container sl-button::part(suffix) {
             margin-left: 0.5rem;
+        }
+
+        .form-container {
+            flex: 1;
+            min-height: 72vh;
+            height: auto;
+            max-height: 82vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        shacl-form {
+            width: 100%;
+            text-wrap: wrap;
+            white-space: pre-wrap;
+            padding: 1rem;
+            margin: 0;
+            min-height: min-content;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: relative;
+            min-height: 72vh;
+            height: auto;
+            max-height: 82vh;
         }
     `;
 
@@ -283,34 +308,38 @@ export default class ADWLMEntityEditor extends LitElement {
     render() {
         return html`
             <div id="container">
-                <sl-button-group>
-                    <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
-                        <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
-                    </sl-button>
-                    <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
-                        ?disabled="${!this._hasUnsavedChanges}">
-                        ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
-                        Save
-                        <sl-icon name="floppy" slot="suffix"></sl-icon>
-                    </sl-button>
-                    <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
-                        <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
-                    </sl-button>
-                </sl-button-group>
-                ${this.entity_to_edit ? html`
-                    <div class="header-container">
-                        <h2>
-                            ${this._getEntityName(this.entity_to_edit.entity_type)}
-                        </h2>
-                        <div class="iri-container">
-                            <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
-                                ${this.entity_to_edit.entity_iri}
-                                <sl-icon name="clipboard" slot="suffix"></sl-icon>
-                            </sl-button>
+                <div class="header">
+                    <sl-button-group>
+                        <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
+                            <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
+                        </sl-button>
+                        <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
+                            ?disabled="${!this._hasUnsavedChanges}">
+                            ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
+                            Save
+                            <sl-icon name="floppy" slot="suffix"></sl-icon>
+                        </sl-button>
+                        <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
+                            <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
+                        </sl-button>
+                    </sl-button-group>
+                    ${this.entity_to_edit ? html`
+                        <div class="header-container">
+                            <h2>
+                                ${this._getEntityName(this.entity_to_edit.entity_type)}
+                            </h2>
+                            <div class="iri-container">
+                                <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
+                                    ${this.entity_to_edit.entity_iri}
+                                    <sl-icon name="clipboard" slot="suffix"></sl-icon>
+                                </sl-button>
+                            </div>
                         </div>
-                    </div>
-                ` : ''}
-                <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                    ` : ''}
+                </div>
+                <div class="form-container">
+                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                </div>
             </div>
             <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
         `;
