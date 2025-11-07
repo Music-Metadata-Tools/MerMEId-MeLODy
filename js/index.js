@@ -13,38 +13,7 @@ import { ExpressionConverter } from '../modules/rdf-xml-converter/converters/exp
 import { ManifestationConverter } from '../modules/rdf-xml-converter/converters/manifestation.js';
 import { ItemConverter } from '../modules/rdf-xml-converter/converters/item.js';
 
-// configuration
-const classifications = {
-    "https://mei-metadata.org/classification/1": "text",
-    "https://mei-metadata.org/classification/2": "manuscript",
-    "https://mei-metadata.org/classification/3": "autograph",
-    "https://mei-metadata.org/classification/4": "sketch",
-    "https://mei-metadata.org/classification/5": "fragment"
-};
 
-const repositories = {
-    "https://mei-metadata.org/repository/1": "D-B",
-    "https://mei-metadata.org/repository/2": "D-LEm",
-    "https://mei-metadata.org/repository/3": "D-Hs",
-};
-
-const person_names = {
-    "https://mei-metadata.org/persons/1": "Erdmann Neumeister",
-    "https://mei-metadata.org/persons/2": "Georg Michael Telemann",
-    "https://mei-metadata.org/persons/3": "Georg Philipp Telemann",
-};
-
-const roles = {
-    "https://mei-metadata.org/Arranger": "arranger",
-    "https://mei-metadata.org/Author": "author",
-    "https://mei-metadata.org/Composer": "composer",
-    "https://mei-metadata.org/Contributor": "contributor",
-    "https://mei-metadata.org/Editor": "editor",
-    "https://mei-metadata.org/Funder": "funder",
-    "https://mei-metadata.org/Librettist": "librettist",
-    "https://mei-metadata.org/Lyricist": "lyricist",
-    "https://mei-metadata.org/Sponsor": "sponsor",
-};
 
 // templates
 const source_template = (data) =>
@@ -72,26 +41,7 @@ const source_template = (data) =>
         </manifestation>
 `;
 
-const place_template = (data) =>
-    `
-        <geogName type="PlaceOrGeographicName" auth="liszt-portal" auth.uri="https://liszt-portal.de/places/" codedval="1008">
-            <settlement type="city">${data.place_name}</settlement>
-            <name type="variant">${data.alternateName}</name>
-            <country xml:lang="de">${data.country}</country>
-            <creation><date isodate="${data.date}">${data.date}</date></creation>
-            <identifier auth="GND" auth.uri="http://d-nb.info/gnd/" codedval=""/>
-            <desc xml:lang="de">${data.description}</desc>
-        </geogName>
-`;
 
-const person_template = (data) => `<${data.role}>${data.name}</${data.role}>`;
-
-const identifier_template = (data) => `<identifier auth="${data.auth}" auth.uri="${data.uri}" codedval="${data.id}"/>`;
-
-// util functions
-const generate_person_records = (persons) => Object.values(persons).map(item => person_template(item)).join("");
-
-const generate_identifiers = (identifiers) => Object.values(identifiers).map(item => identifier_template(item)).join("");
 /*
 // Initialize isomorphic-git with a file system
 window.fs = new LightningFS("mermeid");
