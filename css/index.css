@@ -55,7 +55,8 @@ section#renderer {
 }
 
 #shacl-xml-output pre,
-#shacl-rdf-output pre {
+#shacl-rdf-output pre, 
+#shacl-html-output shacl-form {
     font-size: 1rem;
     width: 100%;
     text-wrap: wrap;
@@ -206,7 +207,8 @@ body>footer>* {
 }
 
 fieldset#shacl-xml-output,
-fieldset#shacl-rdf-output {
+fieldset#shacl-rdf-output,
+fieldset#shacl-html-output {
     min-height: 72vh;
     height: auto;
     max-height: 82vh;
