@@ -20,9 +20,13 @@ const INDEXES = [
     name: "Place",
     url: "places.ttl",
   },
-    {
+  {
     name: "Institution",
     url: "institutions.ttl",
+  },
+  {
+    name: "RISM Institution",
+    url: "rism.ttl",
   },
   {
     name: "Work",
