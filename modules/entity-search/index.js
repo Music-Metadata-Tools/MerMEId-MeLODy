@@ -278,10 +278,21 @@ class ADWLMEntitySearch extends LitElement {
   }
 
   _onSelect(entry) {
-    const id = entry.subject.split("urn:uuid:").pop();
+    const subject = entry.subject;
+    let id = null;
+
+    // First, extract after urn:uuid:
+    if (subject.includes("urn:uuid:")) {
+      id = subject.split("urn:uuid:").pop();
+    }
+
+    // If id contains //, extract everything after the last /
+    if (id && (id.match(/\//g) || []).length > 1) {
+      id = id.substring(id.indexOf("/") + 1);
+    }
+
     const filename = id + ".ttl";
-    //console.log("Selected file:", filename);
-    // Dispatch event an ADWLMFilesystemManager / editor
+
     window.dispatchEvent(new CustomEvent("entity-selected", {
       detail: { filename }
     }));
