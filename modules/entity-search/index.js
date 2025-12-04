@@ -25,7 +25,7 @@ const INDEXES = [
     url: "institutions.ttl",
   },
   {
-    name: "RISM Institution",
+    name: "RISMInstitution",
     url: "rism.ttl",
   },
   {
@@ -323,7 +323,7 @@ class ADWLMEntitySearch extends LitElement {
 
         <div class="results">
           ${this._loading ? html`
-            <sl-spinner></sl-spinner> Loading indexes...
+            Reload the browser to load indexes.
           ` : this._filtered.map(
             (entry) => html`
               <div @click=${() => this._onSelect(entry)} class="result-item">
