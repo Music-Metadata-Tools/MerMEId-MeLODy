@@ -1,0 +1,146 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/mermeid-sample-data/datasets/> .
+@prefix cs: <https://lod.academy/correspsearch/vocab/terms#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+melod:Letter
+  a sh:NodeShape, rdfs:Class ;
+  sh:property   [ sh:description "Title of the letter" ;
+                  sh:name "Title" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+  sh:property   [ sh:description "Corresp Action Sent" ;
+                  sh:name "Sent" ;
+                  sh:minCount 1;
+                  sh:maxCount 1;
+                  sh:path cs:hasCorrespAction ;
+                  sh:node cs:Sent 
+                ] ;
+  sh:property   [ sh:description "Corresp Action Received" ;
+                    sh:name "Received" ;
+                    sh:minCount 1;
+                    sh:maxCount 1;
+                    sh:path cs:hasCorrespAction ;
+                    sh:node cs:Received ;
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  dash:singleLine false ;
+                  sh:path schema:description
+                ] ;
+  sh:targetClass melod:Letter .
+
+cs:Sent
+  a sh:NodeShape, rdfs:Class ;
+  owl:imports     dataset:places.ttl, dataset:persons.ttl ;
+  sh:property   [ sh:description "Participant" ;
+                  sh:name "Participant" ;
+                  sh:minCount 1 ;
+                  sh:path cs:hasParticipant ;
+                  sh:class melod:Person ;
+                ] ;
+  sh:property   [ sh:description "Took place at" ;
+                  sh:name "Place" ;
+                  sh:maxCount 1;
+                  sh:path cs:tookPlaceAt ;
+                  sh:class melod:Place ; 
+                ] ;
+  sh:property   [ sh:description "Date of the sent action" ;
+                    sh:name "Date" ;
+                    sh:maxCount 1;
+                    sh:path cs:hasTimespan ;
+                    sh:or (
+                        [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
+                        [ sh:node melod:Date ; rdfs:label "Date span" ]
+                    )
+                ] ;
+  sh:targetClass cs:Sent .
+
+  cs:Received
+  a sh:NodeShape, rdfs:Class ;
+  owl:imports     dataset:places.ttl, dataset:persons.ttl ;
+  sh:property   [ sh:description "Participant" ;
+                  sh:name "Participant" ;
+                  sh:minCount 1 ;
+                  sh:path cs:hasParticipant ;
+                  sh:class melod:Person ;
+                ] ;
+  sh:property   [ sh:description "Took place at" ;
+                  sh:name "Place" ;
+                  sh:maxCount 1;
+                  sh:path cs:tookPlaceAt ;
+                  sh:class melod:Place ; 
+                ] ;
+  sh:property   [ sh:description "Date of the received action" ;
+                  sh:name "Date" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path cs:hasTimespan ;
+                  sh:or (
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
+                ] ;
+  sh:targetClass cs:Received .
+
+  melod:Date
+  a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:name      "Start" ;
+                  sh:maxCount  1 ;
+                  sh:or (
+                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
+                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
+                  )
+                ] ;
+  sh:property   [ sh:name      "End" ;
+                  sh:maxCount  1 ;
+                  sh:or (
+                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
+                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
+                  )
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:targetClass  melod:Date .
+
+  melod:ExactDate
+  a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:name      "Date" ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path  melod:isodate
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:targetClass  melod:ExactDate .

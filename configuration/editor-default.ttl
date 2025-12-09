@@ -62,3 +62,7 @@ melod:Work a melod:Entity ;
     rdfs:label "Work"@en ;
     melod_ui:entity_folder_name "works" ;
     melod_ui:shacl_file_location "configuration/work.shacl" .
+melod:Letter a melod:Entity ;
+    rdfs:label "Letter"@en ;
+    melod_ui:entity_folder_name "letters" ;
+    melod_ui:shacl_file_location "configuration/letter.shacl" .

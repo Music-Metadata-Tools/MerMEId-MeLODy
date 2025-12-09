@@ -29,6 +29,10 @@ const INDEXES = [
     url: "rism.ttl",
   },
   {
+    name: "Letter",
+    url: "letters.ttl",
+  },
+  {
     name: "Work",
     url: "works.ttl",
   },
