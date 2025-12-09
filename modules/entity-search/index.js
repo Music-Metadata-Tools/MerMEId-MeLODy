@@ -213,7 +213,7 @@ class ADWLMEntitySearch extends LitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
 
-    if (changedProperties.has("_dataset_url")) {
+    if (changedProperties.has("_dataset_url") && this._dataset_url != null) {
         this._loadAllIndexes(this._dataset_url);
     }
   }
