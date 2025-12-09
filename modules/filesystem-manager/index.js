@@ -439,6 +439,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    // Notify entity-search to reload indexes
+                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
 
                     // Update repository tree
                     if (this._selected_repository_path) {
@@ -593,6 +598,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Clear selections in the staged files tree
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
+                    // Notify entity-search to reload indexes
+                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
                 } else {
                     commit_and_push_error_toast.toast();
                 }

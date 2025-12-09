@@ -188,6 +188,11 @@ class ADWLMEntitySearch extends LitElement {
       }
     });
 
+    // Listen for reload indexes event from filesystem manager
+    document.addEventListener("adwlm-filesystem-manager:reload-indexes", async (event) => {
+      await this.reloadIndexes();
+    });
+
     // Check if there's already a filesystem manager with a selected repository
     const filesystemManager = document.querySelector('adwlm-filesystem-manager');
     if (filesystemManager && filesystemManager._selected_repository_path) {
@@ -225,11 +230,17 @@ class ADWLMEntitySearch extends LitElement {
 
     for (const index of INDEXES) {
       try {
-        const res = await fetch( `${dataset_url}/${index.url}`);
+        // Cache-bust the request: ask browser not to use cache and add a unique timestamp
+        const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          console.warn(`Could not load ${index.url}: HTTP ${res.status}`);
+          continue;
+        }
         const ttlText = await res.text();
         this.store.load(ttlText, { format: "text/turtle" });
       } catch (err) {
-        console.error(`Fehler beim Laden von ${index.url}. Please reload.`);
+        console.error(`Fehler beim Laden von ${index.url}. Please reload.`, err);
       }
     }
 
@@ -300,6 +311,22 @@ class ADWLMEntitySearch extends LitElement {
     window.dispatchEvent(new CustomEvent("entity-selected", {
       detail: { filename }
     }));
+  }
+
+  async reloadIndexes() {
+    if (!this._dataset_url) {
+      console.warn('Cannot reload indexes: dataset URL not set');
+      return;
+    }
+    console.log('Reloading indexes...');
+    // Clear existing data
+    this.store = new oxigraph.Store();
+    this._entries = [];
+    this._filtered = [];
+    this._query = "";
+    
+    // Reload all indexes
+    await this._loadAllIndexes(this._dataset_url);
   }
 
   render() {
