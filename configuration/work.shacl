@@ -6,11 +6,7 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
-@prefix gnd: <https://d-nb.info/standards/elementset/gnd#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix efrbroo: <http://www.cidoc-crm.org/efrbroo/> .
 @prefix mus: <http://data.doremus.org/ontology#> .
@@ -236,16 +232,13 @@ melod:Annotation
 melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  owl:imports     terms:melod-terms.ttl, dataset:persons.ttl , dataset:institutions.ttl ;
+  owl:imports     terms:melod-terms.ttl, dataset:contributors.ttl ;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
-                  sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ]
-                  )
+                  sh:class melod:Agent
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
