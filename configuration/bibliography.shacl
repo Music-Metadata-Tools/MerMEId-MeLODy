@@ -23,7 +23,6 @@ melod:Bibliography
                 ] ;
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasTitle ;
-                  sh:minCount 1 ;
                   sh:node melod:Title ;
                   sh:group melod:Titles ;
                   sh:name "Monograph/Article" ;
