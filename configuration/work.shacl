@@ -47,7 +47,7 @@ melod:Work
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path schema:creativeWorkStatus ;
-                  sh:in ( "authentic" "not authentic" "constructed" )
+                  #sh:in ( "authentic" "not authentic" "constructed" )
                 ] ;
 
   sh:property   [ sh:description "Description, annotations or further information" ;
