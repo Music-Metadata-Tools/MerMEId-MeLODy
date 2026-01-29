@@ -100,6 +100,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             type: Object,
             attribute: false,
         },
+        _repository_url_regex: {
+            type: Object,
+            attribute: false,
+        },
         _credentials_alert: {
             type: Object,
             attribute: false,
@@ -151,6 +155,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this._tab_panel_2_name = "panel_2";
         this._repository_to_clone = new RepositoryToClone();
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
+        this._repository_url_regex = /^https?:\/\/[^\/]+\/(?:[^\/]+\/)*[^\/]+\.git$/;
         this._credentials_alert = null;
     }
 
@@ -161,7 +166,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
-                        <sl-input id="repository-folder-name" placeholder="Example: 'folder_name5'." label="Repository folder name" value="" required="true" autofocus="true" autocomplete="off"></sl-input>
+                        <sl-input id="repository-folder-name" placeholder="Example: 'mermeid-sample-data'." label="Repository folder name" value="" required="true" autofocus="true" autocomplete="off"></sl-input>
                         <sl-input id="repository-url" label="Repository URL" value="" required="true" autocomplete="off"></sl-input>
                         <sl-input id="username" label="Username" value="" required="true" autocomplete="off"></sl-input>
                         <sl-input id="personal-access-token" label="Personal access token" type="password" value="" required="true"></sl-input>
@@ -219,7 +224,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
                 // check if the repository folder name is valid
                 if (!this._repository_folder_name_regex.test(repository_folder_name)) {
-                    repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contains only ASCII letters or digits, and optionally, `-`, or `-`. Example: `folder_name5`.");
+                    repository_folder_name_input.setCustomValidity("The repository folder name is not valid. It has to contain only ASCII letters or digits, and optionally, `-`, or `-`. Example: `mermeid-sample-data`.");
                     repository_folder_name_input.reportValidity();
 
                     return;
@@ -236,6 +241,14 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 }
 
                 let repository_url = render_root.querySelector("sl-input#repository-url").value;
+
+                // check if the repository url is valid
+                if (!this._repository_url_regex.test(repository_url)) {
+                    repository_url_input.setCustomValidity("The repository url is not valid. It has to start with 'http' and hast to end with '.git'. Example: `https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git`.");
+                    repository_url_input.reportValidity();
+
+                    return;
+                }
 
                 // check if repository_url is valid
                 try {
