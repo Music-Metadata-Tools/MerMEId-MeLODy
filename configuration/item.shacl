@@ -760,7 +760,7 @@ melod:Relation
   melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  owl:imports     terms:melod-terms.ttl ;
+  owl:imports     terms:melod-terms.ttl , dataset:persons.ttl, dataset:institutions.ttl;
   sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
@@ -768,8 +768,8 @@ melod:Relation
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:Person ; rdfs:label "Person" ]
+                    [ sh:class melod:Institution; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
