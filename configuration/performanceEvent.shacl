@@ -65,18 +65,25 @@ melod:PerformanceEvent
                   sh:group melod:General ;
                   sh:path melod:hasDuration
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
-                  dash:singleLine false ;
-                  sh:maxCount 1 ;
-                  sh:group melod:General ;
-                  sh:path schema:description
-                ] ;
+  #sh:property   [ sh:description "Description, annotations or further information" ;
+  #                sh:name "Description" ;
+  #                dash:singleLine false ;
+  #                sh:maxCount 1 ;
+  #                sh:group melod:General ;
+  #                sh:path schema:description
+  #              ] ;
   sh:property   [ sh:description "Classification" ;
                   sh:name "Classification" ;
                   sh:maxCount 1 ;
                   sh:group melod:General ;
                   sh:path melod:hasClassification
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
+                  sh:minCount 0 ;
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation ;
+                  sh:group melod:General ;
                 ] ;
   sh:property   [ sh:description "Insert ID of the bibliographic entry" ;
                   sh:name "Bibliography" ;
@@ -164,6 +171,24 @@ melod:PerformanceEvent
                   sh:class melod:Certainty
                 ] ;
   sh:targetClass  melod:Contribution .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph" ;
+                  sh:name      "Paragraph" ;
+                  sh:minCount  1 ;
+                  sh:datatype  xsd:string ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] ;
+  sh:targetClass melod:Annotation .
 
 melod:Bibliography
   a               sh:PropertyGroup ;
