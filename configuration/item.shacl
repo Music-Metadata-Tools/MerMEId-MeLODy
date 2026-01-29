@@ -52,7 +52,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/institutions/" ;
                   #sh:pattern      "^https://mei-metadata.org/institutions/\\d{8}" ;
                   sh:class melod:Institution ;
-                  owl:imports dataset:institutions.ttl
+                  owl:imports dataset:institutions.ttl ;
                   sh:path cidoc:P50_has_current_keeper
                 ] ;
   sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository" ;
