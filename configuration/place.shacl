@@ -18,7 +18,8 @@ melod:Place
   sh:property   [ sh:description "External resource (e.g. geonames)" ;
                   sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
-                  sh:path owl:sameAs
+                  sh:path owl:sameAs ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;

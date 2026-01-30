@@ -29,7 +29,8 @@ melod:Person
                   sh:name "Link" ;
                   sh:nodeKind sh:IRI ;
                   sh:group melod:General ;
-                  sh:path owl:sameAs
+                  sh:path owl:sameAs ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
   sh:property   [ sh:description "Gender of the person" ;
                   sh:name "Gender" ;
