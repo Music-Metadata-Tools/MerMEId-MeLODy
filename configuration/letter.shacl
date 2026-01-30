@@ -46,7 +46,6 @@ cs:Sent
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
-                  sh:minCount 1 ;
                   sh:path cs:hasParticipant ;
                   sh:class melod:Person ;
                 ] ;
@@ -72,7 +71,6 @@ cs:Sent
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
-                  sh:minCount 1 ;
                   sh:path cs:hasParticipant ;
                   sh:class melod:Person ;
                 ] ;
