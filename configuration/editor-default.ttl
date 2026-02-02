@@ -1,6 +1,6 @@
 @prefix melod: <https://lod.academy/melod/vocab/ontology#> .
 @prefix melod_ui: <https://mei-metadata.org/ui/> .
-@prefix schema: <http://schema.org/> .
+@prefix schema: <https://schema.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 # The URL for entity shapes definition. It can be customized.

@@ -274,7 +274,7 @@ let SparqlQueries = {
         `
         prefix melod: <https://lod.academy/melod/vocab/ontology#>
         prefix melod_ui: <https://mei-metadata.org/ui/>
-        prefix schema: <http://schema.org/>
+        prefix schema: <https://schema.org/>
         prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         select ?entity_type ?entity_name ?entity_folder_name ?shacl_file_location
@@ -289,7 +289,7 @@ let SparqlQueries = {
     "entity_type_detection":
         `
         prefix melod: <https://lod.academy/melod/vocab/ontology#>
-        prefix schema: <http://schema.org/>
+        prefix schema: <https://schema.org/>
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
         select ?entity_iri ?entity_type
