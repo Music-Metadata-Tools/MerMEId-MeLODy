@@ -587,7 +587,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 
                 // Cache the default config
                 this._cachedConfig = {
-                    datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/mermeid-sample-data/datasets/',
+                    datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/',
                     projectDomain: 'urn:uuid:'
                 };
             }

@@ -10,7 +10,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/mermeid-sample-data/datasets/> .
+@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
 
 melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
@@ -703,7 +703,8 @@ melod:TitlePage
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
-                  sh:path      melod:paragraph
+                  sh:path      melod:paragraph ;
+                  sh:datatype rdf:HTML
                 ] ;
   sh:targetClass  melod:TitlePage .
 
