@@ -86,8 +86,8 @@ export class ManifestationConverter {
             if (obj['http://www.w3.org/2002/07/owl#sameAs'] && !obj['@id'].startsWith('_:')) {
                 manifestationData.sameAs.push(obj['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
-            if (obj['http://www.cidoc-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
-                manifestationData.expressions.push(obj['http://www.cidoc-crm.org/efrbroo/R4_embodies']['@id']);
+            if (obj['http://erlangen-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.expressions.push(obj['http://erlangen-crm.org/efrbroo/R4_embodies']['@id']);
             }
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
@@ -293,7 +293,7 @@ export class ManifestationConverter {
         }
 
         // --- Phys Desc Dimensions ---
-        let dimensionsLinks = physicalDesc?.['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+        let dimensionsLinks = physicalDesc?.['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
         if (dimensionsLinks) {
             if (!Array.isArray(dimensionsLinks)) dimensionsLinks = [dimensionsLinks];
             manifestationData.physDesc.dimensions = dimensionsLinks
@@ -607,7 +607,7 @@ function parseBinding(id, byId) {
         binding.decoDesc = obj['https://lod.academy/melod/vocab/ontology#hasDecoDesc']['@value'] || '';
     }
 
-    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
     if (dimensions) {
         binding.dimensions = [];
 
@@ -633,7 +633,7 @@ function parseRastral(id, byId) {
     if (!obj) return null;
     const rastral = {};
 
-    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
     if (dimensions) {
         rastral.dimensions = [];
 
@@ -697,7 +697,7 @@ function parseWatermarks(id, byId) {
         watermark.creationDate = parseDate(creationDate['@id'], byId)
     }
 
-    const dimensions = obj['http://www.cidoc-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
     if (dimensions) {
         watermark.dimensions = [];
 

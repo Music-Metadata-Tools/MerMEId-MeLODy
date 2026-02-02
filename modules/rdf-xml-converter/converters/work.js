@@ -34,8 +34,8 @@ export class WorkConverter {
             if (obj['https://schema.org/citation'] && !obj['@id'].startsWith('_:')) {
                 workData.citations.push(obj['https://schema.org/citation']['@id']);
             }
-            if (obj['http://www.cidoc-crm.org/efrbroo/R9_is_realised_in'] && !obj['@id'].startsWith('_:')) {
-                workData.expressions.push(obj['http://www.cidoc-crm.org/efrbroo/R9_is_realised_in']['@id']);
+            if (obj['http://erlangen-crm.org/efrbroo/R9_is_realised_in'] && !obj['@id'].startsWith('_:')) {
+                workData.expressions.push(obj['http://erlangen-crm.org/efrbroo/R9_is_realised_in']['@id']);
             }
 
             if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
