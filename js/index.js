@@ -266,6 +266,12 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     filesystem_manager.entity_to_save = entity_to_save;
 });
 
+// QuickAdd: save new entity without switching the main editor/renderer context
+document.addEventListener("adwlm-quick-add:entity-to-save", (event) => {
+    let entity_to_save = event.detail;
+    filesystem_manager.entity_to_save = entity_to_save;
+});
+
 // TODO: move separately
 // TODO: change "urn:uuid:" to project specific variable
 let ui_language = "en";
@@ -350,6 +356,8 @@ for (const binding of entity_type_definition_bindings) {
 
 const editor_configuration = new EditorConfiguration(entity_type_definitions);
 entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
+// Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
+globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
 
 /*
 let entity_types = graph_store.match(null, oxigraph.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), oxigraph.namedNode("https://mei-metadata.org/Entity"), oxigraph.defaultGraph());

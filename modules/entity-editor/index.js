@@ -364,6 +364,14 @@ export default class ADWLMEntityEditor extends LitElement {
             //console.log(editor.serialize());
         });
 
+        // Catch quick-add events fired from within <shacl-form>'s shadow DOM (see mermeid-shacl-form theme).
+        // Use event delegation on the render root so this keeps working even if <shacl-form> is re-rendered.
+        render_root.addEventListener("shacl-form:quick-add", async (event) => {
+            event.preventDefault?.();
+            event.stopPropagation?.();
+            await this._showQuickAddDialog(event.detail);
+        });
+
         /*
 
       setTimeout(() => {
@@ -525,6 +533,79 @@ export default class ADWLMEntityEditor extends LitElement {
         this._hasUnsavedChanges = false;
         this._skipNextUpdate = false;
         this._cachedConfig = null;
+    }
+
+    async _showQuickAddDialog(detail) {
+        await Promise.all([
+            customElements.whenDefined('sl-dialog'),
+            customElements.whenDefined('shacl-form'),
+        ]);
+
+        const classIri = typeof detail?.classIri === 'string' ? detail.classIri : null;
+        if (!classIri) return;
+
+        const typeDef = this.entity_type_definitions?.find(def => def.type === classIri) || null;
+        if (!typeDef?.folder_name) {
+            console.warn('QuickAdd: missing entity type definition for', classIri);
+            return;
+        }
+
+        const config = await this._getRepoConfig().catch(() => null);
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        const entity_id = this._generate_entity_id();
+        const entity_path = `${typeDef.folder_name}/${entity_id}.ttl`;
+        const entity_iri = `${domain}${typeDef.folder_name}/${entity_id}`;
+
+        const shapesUrl = typeDef?.shacl_file_location || this.entity_to_edit?.shapesUrl || this._get_shacl_file_location();
+
+        const dialog = document.createElement('sl-dialog');
+        dialog.label = 'Quick Add';
+        dialog.style.setProperty('--width', '80vw');
+
+        const form = document.createElement('shacl-form');
+        form.style.maxHeight = '70vh';
+        form.style.overflow = 'auto';
+
+        form.dataset.shapesUrl = shapesUrl;
+        form.dataset.valuesSubject = entity_iri;
+        form.dataset.values = `<${entity_iri}> a <${classIri}> .\n`;
+
+        dialog.append(form);
+
+        const cancelButton = document.createElement('sl-button');
+        cancelButton.variant = 'neutral';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.slot = 'footer';
+        cancelButton.addEventListener('click', () => dialog.hide());
+
+        const saveButton = document.createElement('sl-button');
+        saveButton.variant = 'primary';
+        saveButton.textContent = 'Save';
+        saveButton.slot = 'footer';
+        saveButton.addEventListener('click', () => {
+            const rdf_output = form.serialize();
+            const json_ld_output = form.serialize("application/ld+json");
+            const entity_to_save = {
+                entity_iri,
+                rdf_contents: rdf_output,
+                json_ld_contents: json_ld_output,
+                path: entity_path,
+                shapesUrl,
+            };
+
+            this.dispatchEvent(new CustomEvent("adwlm-quick-add:entity-to-save", {
+                detail: entity_to_save,
+                bubbles: true,
+                composed: true,
+            }));
+
+            dialog.hide();
+        });
+
+        dialog.append(cancelButton, saveButton);
+        dialog.addEventListener('sl-after-hide', () => dialog.remove(), { once: true });
+        document.body.append(dialog);
+        dialog.show();
     }
 
     _generate_entity_id() {
