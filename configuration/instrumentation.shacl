@@ -26,7 +26,7 @@ melod:Instrumentation
                   sh:node melod:InstrumentationDetail ;
                   sh:name "Instruments and Voices" ;
                 ] ;
-  sh:property   [ owl:import dataset:instrumentations.ttl ;
+  sh:property   [ owl:imports dataset:instrumentations.ttl ;
                   sh:minCount 0 ;
                   sh:path melod:hasInstrumentationGroup ;
                   sh:class melod:InstrumentationEntity ;
