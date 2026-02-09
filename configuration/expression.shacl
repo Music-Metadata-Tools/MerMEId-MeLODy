@@ -172,7 +172,7 @@ melod:Expression
                   sh:name         "Instrumentation" ;
                   sh:maxCount 1;
                   sh:group melod:Music ;
-                  sh:class         melod:Instrumentation ;
+                  sh:class         melod:InstrumentationEntity ;
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/instrumentation/" ;
                   #sh:pattern      "^https://mei-metadata.org/instrumentation/\\d{8}" ;

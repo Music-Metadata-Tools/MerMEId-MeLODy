@@ -9,6 +9,7 @@
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix melodTerms: <https://lod.academy/melod/vocab/terms#> .
+@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
 
 
 melod:Instrumentation
@@ -25,26 +26,28 @@ melod:Instrumentation
                   sh:node melod:InstrumentationDetail ;
                   sh:name "Instruments and Voices" ;
                 ] ;
-  sh:property   [ sh:minCount 0 ;
+  sh:property   [ owl:import dataset:instrumentations.ttl ;
+                  sh:minCount 0 ;
                   sh:path melod:hasInstrumentationGroup ;
-                  sh:node melod:InstrumentationGroup ;
+                  sh:class melod:InstrumentationEntity ;
+                  #sh:node melod:InstrumentationGroup ;
                   sh:name "Ensembles" ;
                 ] .
 
-melod:InstrumentationGroup
-  a sh:NodeShape ;
-  sh:property   [ sh:description "Label" ;
-                  sh:name "Label" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1;
-                  sh:path rdfs:label
-                ] ;
-  sh:property   [ sh:minCount 1 ;
-                  sh:path melod:hasInstrumentationDetail ;
-                  sh:node melod:InstrumentationDetail ;
-                  sh:name "Instruments and Voices"
-                ] ;
-  sh:targetClass melod:InstrumentationGroup .
+#melod:InstrumentationGroup
+#  a sh:NodeShape ;
+#  sh:property   [ sh:description "Label" ;
+#                  sh:name "Label" ;
+#                  sh:minCount 0 ;
+#                  sh:maxCount 1;
+#                  sh:path rdfs:label
+#                ] ;
+#  sh:property   [ sh:minCount 1 ;
+#                  sh:path melod:hasInstrumentationDetail ;
+#                  sh:node melod:InstrumentationDetail ;
+#                  sh:name "Instruments and Voices"
+#                ] ;
+#  sh:targetClass melod:InstrumentationGroup .
 
 melod:InstrumentationDetail
   a               sh:NodeShape ;
