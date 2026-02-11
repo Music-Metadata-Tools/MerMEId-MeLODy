@@ -319,6 +319,11 @@ export default class ADWLMEntityEditor extends LitElement {
                             Save
                             <sl-icon name="floppy" slot="suffix"></sl-icon>
                         </sl-button>
+                        <sl-button id="delete-entity" variant="danger" size="small" title="Delete entity"
+                            ?disabled="${!this.entity_to_edit}">
+                            Delete
+                            <sl-icon name="file-earmark-minus" slot="suffix"></sl-icon>
+                        </sl-button>
                         <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
                             <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
                         </sl-button>
@@ -370,6 +375,18 @@ export default class ADWLMEntityEditor extends LitElement {
             event.preventDefault?.();
             event.stopPropagation?.();
             await this._showQuickAddDialog(event.detail);
+        });
+
+        render_root.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const deleteButton = target.closest("sl-button#delete-entity");
+            if (!deleteButton) return;
+
+            this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-delete", {
+                "bubbles": true,
+                "composed": true,
+            }));
         });
 
         /*

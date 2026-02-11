@@ -143,6 +143,17 @@ export default class ADWLMFilesystemManager extends LitElement {
     constructor() {
         super();
 
+        this._onUnsavedChanges = (event) => {
+            this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
+        };
+        this._onEntityDeleteRequested = async () => {
+            await this._removeSelectedEntity();
+        };
+        this._onExternalEntitySelected = (event) => {
+            this._file_path = event.detail.filename;
+            this._load_entity_to_edit();
+        };
+
         this._init();
     }
 
@@ -257,10 +268,6 @@ export default class ADWLMFilesystemManager extends LitElement {
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
         let commit_and_push_done_toast = render_root.querySelector("sl-alert#commit-and-push-done");
         let commit_and_push_error_toast = render_root.querySelector("sl-alert#commit-and-push-error");
-
-        document.addEventListener('adwlm-entity-editor:unsaved-changes', (event) => {
-            this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
-        });
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
@@ -463,58 +470,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#remove-entity")) {
-                // TODO: this button should be active only when a file entry is selected
-                let repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
-                let selected_entry = repositories_tree.querySelector("sl-tree-item[selected]");
-
-                if (selected_entry === null) {
-                    // TODO: Put a sl-alert?
-                    alert("Select a file to be deleted!");
-
-                    return;
-                }
-
-                let entry_type = selected_entry.dataset.entryType;
-
-                if (entry_type !== CONSTANTS.FILE_SCHEME_NAME) {
-                    // TODO: Put a sl-alert?
-                    alert("Select a file to be deleted!");
-
-                    return;
-                }
-
-                let file_relative_path = selected_entry.dataset.entryRelativePath;
-
-                // Be careful, add_file means remove_file
-                await filesystem.add_file(this._selected_repository_path, file_relative_path);
-
-                // Check if the directory is empty after removing the file and remove it if so
-                const directory = file_relative_path.split('/')[0];
-                let entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, directory);
-                if (entries.files.length === 0) {
-                    await filesystem.add_file(this._selected_repository_path, directory);
-                }
-
-                // Clear the entity editor
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
-                    "bubbles": true,
-                    "composed": true,
-                }));
-
-                // Update repository tree
-                if (this._selected_repository_path) {
-                    let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
-                    if (repoTree) {
-                        this._generate_folder_tree(repoTree);
-                    }
-                }
-
-                // Update UI
-                await this._list_staged_files();
-                await this._updateRepositoryTreeStatus();
-
-                // TODO: apply restore_state()
-                //await this._list_repository_names();
+                await this._removeSelectedEntity();
             }
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
@@ -984,13 +940,17 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        window.addEventListener("entity-selected", (event) => {
-            console.log("selected file:", event.detail.filename);
-            this._file_path = event.detail.filename;
-            console.log("path:", this._file_path);
-            this._load_entity_to_edit();
-        });
-        }
+        document.addEventListener("adwlm-entity-editor:unsaved-changes", this._onUnsavedChanges);
+        document.addEventListener("adwlm-entity-editor:entity-to-delete", this._onEntityDeleteRequested);
+        window.addEventListener("entity-selected", this._onExternalEntitySelected);
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener("adwlm-entity-editor:unsaved-changes", this._onUnsavedChanges);
+        document.removeEventListener("adwlm-entity-editor:entity-to-delete", this._onEntityDeleteRequested);
+        window.removeEventListener("entity-selected", this._onExternalEntitySelected);
+        super.disconnectedCallback();
+    }
 
     async _deselect_files_tree(){
         const treeContainer = this.renderRoot.querySelector('#repositories-tree-container');
@@ -1109,6 +1069,107 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
     }
+
+    async _removeSelectedEntity() {
+        const render_root = this.renderRoot;
+        const repositories_tree = render_root.querySelector("sl-tree#repositories-tree");
+        const selected_entry = repositories_tree?.querySelector("sl-tree-item[selected]");
+
+        if (selected_entry === null || selected_entry === undefined) {
+            this._showDeleteSelectionWarning();
+            return;
+        }
+
+        const entry_type = selected_entry.dataset.entryType;
+        if (entry_type !== CONSTANTS.FILE_SCHEME_NAME) {
+            this._showDeleteSelectionWarning();
+            return;
+        }
+
+        if (!(await this._confirmDelete())) {
+            return;
+        }
+
+        const file_relative_path = selected_entry.dataset.entryRelativePath;
+
+        // Be careful, add_file means remove_file
+        await filesystem.add_file(this._selected_repository_path, file_relative_path);
+
+        // Check if the directory is empty after removing the file and remove it if so
+        const directory = file_relative_path.split('/')[0];
+        const entries = await filesystem.list_entries_from_workdir(this._selected_repository_path, directory);
+        if (entries.files.length === 0) {
+            await filesystem.add_file(this._selected_repository_path, directory);
+        }
+
+        // Clear the entity editor
+        this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+            "bubbles": true,
+            "composed": true,
+        }));
+
+        // Update repository tree
+        if (this._selected_repository_path) {
+            const repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+            if (repoTree) {
+                this._generate_folder_tree(repoTree);
+            }
+        }
+
+        // Update UI
+        await this._list_staged_files();
+        await this._updateRepositoryTreeStatus();
+    }
+
+    _showDeleteSelectionWarning() {
+        const alert = document.createElement("sl-alert");
+        alert.variant = "warning";
+        alert.closable = true;
+        alert.duration = 4000;
+        alert.innerHTML = `
+            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+            Select a file to delete.
+        `;
+        document.body.append(alert);
+        alert.toast();
+    }
+
+    async _confirmDelete(message = "Do you really want to delete this entity?") {
+        return new Promise((resolve) => {
+            const dialog = document.createElement("sl-dialog");
+            dialog.label = "Confirm deletion";
+            dialog.innerHTML = `
+            <p>${message}</p>
+            <sl-button slot="footer" variant="default" data-act="cancel">Cancel</sl-button>
+            <sl-button slot="footer" variant="danger" data-act="confirm">Delete</sl-button>
+            `;
+
+            let settled = false;
+            const finish = (confirmed) => {
+                if (settled) return;
+                settled = true;
+                resolve(confirmed);
+            };
+            const cleanup = () => dialog.remove();
+
+            dialog.addEventListener("sl-after-hide", cleanup, { once: true });
+            dialog.addEventListener("sl-hide", () => finish(false), { once: true });
+
+            dialog.querySelector('[data-act="cancel"]').addEventListener("click", () => {
+                finish(false);
+                dialog.hide();
+            });
+
+            dialog.querySelector('[data-act="confirm"]').addEventListener("click", () => {
+                finish(true);
+                dialog.hide();
+            });
+
+            document.body.appendChild(dialog);
+            dialog.show();
+        });
+    }
+
 }
 
 window.customElements.define("adwlm-filesystem-manager", ADWLMFilesystemManager);
