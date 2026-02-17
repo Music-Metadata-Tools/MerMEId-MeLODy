@@ -292,21 +292,26 @@ class ADWLMEntitySearch extends LitElement {
     console.log("Gefilterte Ergebnisse:", this._filtered);
   }
 
-  _onSelect(entry) {
+  async _onSelect(entry) {
     const subject = entry.subject;
-    let id = null;
-
-    // First, extract after urn:uuid:
-    if (subject.includes("urn:uuid:")) {
-      id = subject.split("urn:uuid:").pop();
+    let raw = subject.includes("urn:uuid:") ? subject.split("urn:uuid:").pop() : subject;
+    if (raw.includes("://")) {
+      try {
+        raw = new URL(raw).pathname;
+      } catch {
+        raw = raw.replace(/^[a-z]+:\/\/[^/]+/i, "");
+      }
     }
+    const parts = String(raw).split("/").filter(Boolean);
+    const rel = parts.length >= 2 ? parts.slice(-2).join("/") : (parts[0] || "");
+    const filename = rel.endsWith(".ttl") ? rel : `${rel}.ttl`;
+    if (!filename || filename === ".ttl") return;
 
-    // If id contains //, extract everything after the last /
-    if (id && (id.match(/\//g) || []).length > 1) {
-      id = id.substring(id.indexOf("/") + 1);
+    const filesystemManager = document.querySelector("adwlm-filesystem-manager");
+    if (filesystemManager?.selectEntityInTree) {
+      const selected = await filesystemManager.selectEntityInTree(filename);
+      if (selected) return;
     }
-
-    const filename = id + ".ttl";
 
     window.dispatchEvent(new CustomEvent("entity-selected", {
       detail: { filename }
@@ -334,7 +339,7 @@ class ADWLMEntitySearch extends LitElement {
     <div id="search-container">
       <sl-details id="search-details" summary="Search">
         <div class="search-input">
-          <sl-select @sl-change=${this._onTypeChange} value=${this._typeFilter} size="small">
+          <sl-select @sl-change=${this._onTypeChange} value=${this._typeFilter} size="small" hoist>
             <sl-option value="All">All</sl-option>
             ${INDEXES.map(
               (index) => html`

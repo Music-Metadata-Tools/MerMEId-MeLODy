@@ -149,9 +149,14 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._onEntityDeleteRequested = async () => {
             await this._removeSelectedEntity();
         };
-        this._onExternalEntitySelected = (event) => {
-            this._file_path = event.detail.filename;
-            this._load_entity_to_edit();
+        this._onExternalEntitySelected = async (event) => {
+            const requestedPath = event.detail.filename;
+            const selected = await this.selectEntityInTree(requestedPath);
+            if (selected) return;
+
+            // Fallback to previous behavior if tree sync fails.
+            this._file_path = requestedPath;
+            await this._load_entity_to_edit();
         };
 
         this._init();
@@ -289,7 +294,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     }));
                 }
 
-                this._generate_folder_tree(target);
+                await this._generate_folder_tree(target);
             }
         });
 
@@ -324,8 +329,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (selection && selection.matches(`sl-tree#repositories-tree sl-tree-item[data-entry-type = '${CONSTANTS.FILE_SCHEME_NAME}']`)) {
-                this._file_path = selection.dataset.entryRelativePath;
-                await this._load_entity_to_edit();
+                await this._handleRepositoryFileSelection(selection);
             }
         });
 
@@ -822,6 +826,12 @@ export default class ADWLMFilesystemManager extends LitElement {
     }
 
     async _generate_folder_tree(treeItem) {
+        if (treeItem?.dataset?.loading === "true") {
+            return;
+        }
+        treeItem.dataset.loading = "true";
+
+        try {
         // Collect all expanded items before clearing items
         let expandedItems = [...treeItem.querySelectorAll('sl-tree-item[expanded]')].map(item => ({
             path: item.dataset.entryRelativePath,
@@ -872,6 +882,69 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         // Insert subitems into the input tree
         treeItem.insertAdjacentHTML("beforeend", tree_subitems);
+        treeItem.removeAttribute("lazy");
+        treeItem.dataset.loaded = "true";
+        } finally {
+            delete treeItem.dataset.loading;
+        }
+    }
+
+    async selectEntityInTree(relativePath) {
+        if (!relativePath) return false;
+
+        const repositoriesTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+        if (!repositoriesTree || !this._selected_repository_path) return false;
+
+        const repoItem = repositoriesTree.querySelector(
+            `sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`
+        );
+        if (!repoItem) return false;
+
+        repoItem.setAttribute("expanded", "");
+        await this._generate_folder_tree(repoItem);
+
+        // Open folder chain (folder1/folder2/file.ttl)
+        const segments = String(relativePath).split("/").filter(Boolean);
+        const folderSegments = segments.slice(0, -1);
+        let currentPath = "";
+        for (const segment of folderSegments) {
+            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+            const folderItem = repositoriesTree.querySelector(
+                `sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${currentPath}"]`
+            );
+            if (!folderItem) break;
+            folderItem.setAttribute("expanded", "");
+            await this._generate_folder_tree(folderItem);
+        }
+
+        let fileItem = repositoriesTree.querySelector(
+            `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
+        );
+
+        if (!fileItem) {
+            const fileName = segments[segments.length - 1] || relativePath;
+            fileItem = repositoriesTree.querySelector(
+                `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-name="${fileName}"]`
+            );
+        }
+
+        if (!fileItem) return false;
+
+        repositoriesTree.querySelectorAll("sl-tree-item[selected]").forEach((item) => {
+            item.selected = false;
+            item.removeAttribute("selected");
+        });
+        fileItem.selected = true;
+        fileItem.setAttribute("selected", "");
+        this._repository_buttons_disabled = false;
+        await this._handleRepositoryFileSelection(fileItem);
+
+        return true;
+    }
+
+    async _handleRepositoryFileSelection(fileItem) {
+        this._file_path = fileItem.dataset.entryRelativePath;
+        await this._load_entity_to_edit();
     }
 
     async _load_entity_to_edit() {
