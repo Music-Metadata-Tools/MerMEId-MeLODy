@@ -86,8 +86,8 @@ export class ManifestationConverter {
             if (obj['http://www.w3.org/2002/07/owl#sameAs'] && !obj['@id'].startsWith('_:')) {
                 manifestationData.sameAs.push(obj['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
-            if (obj['http://erlangen-crm.org/efrbroo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
-                manifestationData.expressions.push(obj['http://erlangen-crm.org/efrbroo/R4_embodies']['@id']);
+            if (obj['http://iflastandards.info/ns/lrm/lrmoo/R4_embodies'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.expressions.push(obj['http://iflastandards.info/ns/lrm/lrmoo/R4_embodies']['@id']);
             }
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
@@ -98,12 +98,12 @@ export class ManifestationConverter {
                 manifestationData.physDesc.stamp.push(obj['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '');
             }
 
-            if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
-                manifestationData.isPartOf.push(obj['https://schema.org/isPartOf']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#isManifestationPartOf'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.isPartOf.push(obj['https://lod.academy/melod/vocab/ontology#isManifestationPartOf']['@id']);
             }
 
-            if (obj['https://schema.org/hasPart'] && !obj['@id'].startsWith('_:')) {
-                manifestationData.hasPart.push(obj['https://schema.org/hasPart']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#hasManifestationPart'] && !obj['@id'].startsWith('_:')) {
+                manifestationData.hasPart.push(obj['https://lod.academy/melod/vocab/ontology#hasManifestationPart']['@id']);
             }
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasClassificationOfManifestation'] && !obj['@id'].startsWith('_:')) {
@@ -293,7 +293,7 @@ export class ManifestationConverter {
         }
 
         // --- Phys Desc Dimensions ---
-        let dimensionsLinks = physicalDesc?.['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+        let dimensionsLinks = physicalDesc?.['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
         if (dimensionsLinks) {
             if (!Array.isArray(dimensionsLinks)) dimensionsLinks = [dimensionsLinks];
             manifestationData.physDesc.dimensions = dimensionsLinks
@@ -607,7 +607,7 @@ function parseBinding(id, byId) {
         binding.decoDesc = obj['https://lod.academy/melod/vocab/ontology#hasDecoDesc']['@value'] || '';
     }
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         binding.dimensions = [];
 
@@ -633,7 +633,7 @@ function parseRastral(id, byId) {
     if (!obj) return null;
     const rastral = {};
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         rastral.dimensions = [];
 
@@ -697,7 +697,7 @@ function parseWatermarks(id, byId) {
         watermark.creationDate = parseDate(creationDate['@id'], byId)
     }
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         watermark.dimensions = [];
 

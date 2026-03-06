@@ -1,0 +1,78 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+melod:DataCatalog
+    a sh:NodeShape, rdfs:Class ;
+    sh:targetClass schema:DataCatalog ;
+    sh:property   [ sh:description "Name of the catalog" ;
+                  sh:name "Name" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+    sh:property   [ sh:description "Domain of the project, which will be used for the entity IRIs" ;
+                  sh:name "Domain" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:hasValue "https://mermeid-melod.org/catalog/" ;
+                  sh:path melod:hasDomain ;
+                ] ;
+    sh:property   [ sh:description "Contributors of the Data Catalog" ;
+                  sh:name "Person or Institution" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Contributors ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution
+                ] ;
+    sh:property   [ sh:description "Application used to create the catalog" ;
+                sh:name "Application" ;
+                sh:group melod:General ;
+                sh:minCount 1 ;
+                sh:maxCount 1;
+                sh:hasValue "MerMEId MeLOD" ;
+                sh:path melod:usesApplication ;
+            ] ;
+    sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
+                  sh:group melod:General ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1;
+                  dash:singleLine false ;
+                  sh:path schema:description
+                ] .
+
+melod:Contribution
+  a               sh:NodeShape ;
+  rdfs:label      "Contributors" ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path      melod:hasAgent ;
+                  sh:or (
+                    [ sh:class melod:Person ; rdfs:label "Person" ]
+                    [ sh:class melod:Institution; rdfs:label "Institution" ]
+                  )
+                ] ;
+  sh:property   [ sh:description  "Role of the contribution" ;
+                  sh:name         "Role" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
+                  sh:in  ( "data manager" "data contributor" "editor" "contributor") ;
+                ] ;
+  sh:targetClass  melod:Contribution .
+
+melod:General
+a               sh:PropertyGroup ;
+rdfs:label      "General Information" .
+
+melod:Contributors
+a               sh:PropertyGroup ;
+rdfs:label      "Contributors" .

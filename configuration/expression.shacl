@@ -207,7 +207,7 @@ melod:Expression
                   #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                   sh:class melod:ExpressionEntity ;
                   sh:nodeKind sh:IRI ;
-                  sh:path schema:hasPart
+                  sh:path melod:hasExpressionPart
                 ] ;
   sh:property   [ sh:description "Insert ID of the expression" ;
                   sh:name "is part of" ;
@@ -217,7 +217,7 @@ melod:Expression
                   #sh:pattern      "^https://mei-metadata.org/expressions/\\d{8}" ;
                   sh:class melod:ExpressionEntity ;
                   sh:nodeKind sh:IRI ;
-                  sh:path schema:isPartOf
+                  sh:path melod:isExpressionPartOf
                 ] ;
   sh:property   [ sh:name "Relation" ;
                   sh:group melod:Relation ;
@@ -509,7 +509,7 @@ melod:MusicIncipit
                   sh:datatype     xsd:base64Binary ;
                   sh:minCount     0 ;
                 ] ;        
-  sh:targetClass  schema:MusicIncipit .
+  sh:targetClass  melod:MusicIncipit .
 
 
 melod:Event

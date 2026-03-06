@@ -1,0 +1,53 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+melod:DataFeed
+    a sh:NodeShape, rdfs:Class ;
+    sh:targetClass schema:DataFeed ;
+    sh:property   [ sh:description "Name of the collection" ;
+                  sh:name "Name" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+    sh:property   [ sh:description "Data Catalog" ;
+                  sh:name "Data Catalog" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:includedInDataCatalog ;
+                  sh:nodeKind sh:IRI ;
+                  sh:hasValue "https://mermeid-melod.org/catalog" ;
+                ] ;
+    sh:property   [ sh:description "Elements of the collection" ;
+                  sh:name "Elements" ;
+                  sh:minCount 0 ;
+                  sh:group melod:List ;
+                  sh:node melod:Element ;
+                  sh:path schema:DataFeedElement
+                ]  .
+
+melod:Element
+  a               sh:NodeShape ;
+  sh:property   [ sh:description  "Expression as part of the DataFeed" ;
+                  sh:name         "Expression" ;
+                  sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path         schema:item ;
+                  sh:nodeKind sh:IRI ;
+                ] ;
+  sh:targetClass  schema:DataFeedItem .
+
+melod:General
+a               sh:PropertyGroup ;
+rdfs:label      "General Information" .
+
+melod:List
+a               sh:PropertyGroup ;
+rdfs:label      "Collection Elements" .

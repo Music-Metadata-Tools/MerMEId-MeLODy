@@ -6,7 +6,7 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix efrbroo: <https://erlangen-crm.org/efrbroo/> .
+@prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
 
@@ -77,7 +77,7 @@ melod:Work
                   #sh:defaultValue "https://mei-metadata.org/expression/" ;
                   #sh:pattern      "^https://mei-metadata.org/expression/\\d{8}" ;
                   sh:class melod:ExpressionEntity ;
-                  sh:path efrbroo:R9_is_realised_in
+                  sh:path lrmoo:R3_is_realised_in
                 ] ;
 
   sh:property   [ sh:description "Insert ID of the superior work" ;
@@ -87,7 +87,7 @@ melod:Work
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:class melod:WorkEntity ;
-                  sh:path schema:isPartOf
+                  sh:path melod:isWorkPartOf
                 ] ;
 
   sh:property   [ sh:description "Insert ID of the contained work" ;
@@ -97,7 +97,7 @@ melod:Work
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:class melod:WorkEntity ;
-                  sh:path schema:hasPart
+                  sh:path melod:hasWorkPart
                 ] ;
   sh:property   [ sh:name "Other Relation" ;
                   sh:group melod:Relation ;

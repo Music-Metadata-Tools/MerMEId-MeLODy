@@ -168,9 +168,9 @@
  * @property {Annotation[]} [annotation]       // melod:hasAnnotation
  * @property {string} [context]                // melod:hasContext
  * @property {string[]} [historyDescription]     // melod:hasHistoryDesc
- * @property {string[]} [expressions]          // efrbroo:R9_is_realised_in
- * @property {string[]} [isPartOf]               // schema:isPartOf
- * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [expressions]          // lrmoo:R3_is_realised_in
+ * @property {string[]} [isPartOf]               // melod:isWorkPartOf
+ * @property {string[]} [hasPart]              // melod:hasWorkPart
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
  * @property {string[]} [classification]       // melod:hasClassification
  */
@@ -259,9 +259,9 @@
  * @property {Publication} [publication]       // schema:publication
  * @property {Annotation[]} [annotation]          // melod:hasAnnotation
  * @property {Annotation[]} [contents]          // melod:hasContents
- * @property {string[]} [expressions]          // efrbroo:R4_embodies
- * @property {string[]} [isPartOf]               // schema:isPartOf
- * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [expressions]          // lrmoo:R4_embodies
+ * @property {string[]} [isPartOf]               // melod:isManifestationPartOf
+ * @property {string[]} [hasPart]              // melod:hasManifestationPart
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
  */
 
@@ -376,9 +376,9 @@
  * @property {EventData[]} [historyObj]          // melod:hasHistoricEvent
  * @property {PhysDesc} [physDesc]             // melod:hasPhysicalDescription
  * @property {TitlePage[]} [titlePage]         // melod:hasTitlePage
- * @property {string[]} [manifestations]          // efrbroo:R7_is_materialization_of
- * @property {string[]} [isPartOf]               // schema:isPartOf
- * @property {string[]} [hasPart]              // schema:hasPart
+ * @property {string[]} [manifestations]          // lrmoo:R7_exemplifies
+ * @property {string[]} [isPartOf]               // melod:isItemPartOf
+ * @property {string[]} [hasPart]              // melod:hasItemPart
  * @property {string[]} [otherRelations]       // melod:hasAbridgement, melod:isAbridgementOf, etc.
  * @property {Annotation[]} [annotation]          // melod:hasAnnotation
  */

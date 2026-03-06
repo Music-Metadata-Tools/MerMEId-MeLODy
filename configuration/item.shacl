@@ -7,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix efrbroo: <https://erlangen-crm.org/efrbroo/> .
+@prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
 
@@ -134,7 +134,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/items/" ;
                   #sh:pattern      "^https://mei-metadata.org/items/\\d{8}" ;
                   sh:class melod:ItemEntity ;
-                  sh:path schema:hasPart
+                  sh:path melod:hasItemPart
                 ] ;
   sh:property   [ owl:imports dataset:items.ttl ;
                   sh:description "Insert ID of the item" ;
@@ -144,7 +144,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/items/" ;
                   #sh:pattern      "^https://mei-metadata.org/items/\\d{8}" ;
                   sh:class melod:ItemEntity ;
-                  sh:path schema:isPartOf
+                  sh:path melod:isItemPartOf
                 ] ;
   sh:property   [ owl:imports dataset:manifestations.ttl ;
                   sh:description "Insert ID of the manifestation" ;
@@ -154,7 +154,7 @@ melod:Item
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
                   #sh:pattern      "^https://mei-metadata.org/manifestation/\\d{8}" ;
                   sh:class melod:ManifestationEntity ;
-                  sh:path efrbroo:R7_is_materialization_of
+                  sh:path lrmoo:R7_exemplifies
                 ] ;
   sh:property   [ owl:imports dataset:items.ttl ;
                   sh:name "Relation" ;
@@ -281,7 +281,7 @@ melod:Item
                   sh:description "Height, width or depth of the source" ;
                   sh:minCount  0 ;
                   sh:maxCount  3 ;
-                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Dimension
                 ] ;
   sh:property   [ sh:name      "Inscription" ;
@@ -494,7 +494,7 @@ melod:Watermark
                   sh:description "Height and width of the watermark" ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
-                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Format
                 ] ;
   sh:property   [ sh:description "Date of the creation of the watermark" ;
@@ -581,7 +581,7 @@ melod:Binding
                   sh:description "Height and width of the binding" ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
-                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Format
                 ] ;
   sh:property   [ sh:description "Condition of the binding" ;
@@ -656,7 +656,7 @@ melod:Binding
                   sh:description "Height and width of the rastral" ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
-                  sh:path      efrbroo:CLP_should_have_dimension ;
+                  sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Format
                 ] ;
   sh:targetClass  melod:Rastral .

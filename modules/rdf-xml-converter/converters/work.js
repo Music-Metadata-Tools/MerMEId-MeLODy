@@ -34,16 +34,16 @@ export class WorkConverter {
             if (obj['https://schema.org/citation'] && !obj['@id'].startsWith('_:')) {
                 workData.citations.push(obj['https://schema.org/citation']['@id']);
             }
-            if (obj['http://erlangen-crm.org/efrbroo/R9_is_realised_in'] && !obj['@id'].startsWith('_:')) {
-                workData.expressions.push(obj['http://erlangen-crm.org/efrbroo/R9_is_realised_in']['@id']);
+            if (obj['http://iflastandards.info/ns/lrm/lrmoo/R3_is_realised_in'] && !obj['@id'].startsWith('_:')) {
+                workData.expressions.push(obj['http://iflastandards.info/ns/lrm/lrmoo/R3_is_realised_in']['@id']);
             }
 
-            if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
-                workData.isPartOf.push(obj['https://schema.org/isPartOf']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#isWorkPartOf'] && !obj['@id'].startsWith('_:')) {
+                workData.isPartOf.push(obj['https://lod.academy/melod/vocab/ontology#isWorkPartOf']['@id']);
             }
 
-            if (obj['https://schema.org/hasPart'] && !obj['@id'].startsWith('_:')) {
-                workData.hasPart.push(obj['https://schema.org/hasPart']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#hasWorkPart'] && !obj['@id'].startsWith('_:')) {
+                workData.hasPart.push(obj['https://lod.academy/melod/vocab/ontology#hasWorkPart']['@id']);
             }
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasClassification'] && !obj['@id'].startsWith('_:')) {

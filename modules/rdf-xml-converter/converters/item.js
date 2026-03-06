@@ -96,8 +96,8 @@ export class ItemConverter {
             if (obj['https://lod.academy/melod/vocab/ontology#hasProvenance'] && !obj['@id'].startsWith('_:') && !obj['https://lod.academy/melod/vocab/ontology#hasProvenance']['@id'].startsWith('_:')) {
                 itemData.provenance.push(obj['https://lod.academy/melod/vocab/ontology#hasProvenance']['@id']);
             }
-            if (obj['http://erlangen-crm.org/efrbroo/R7_is_materialization_of'] && !obj['@id'].startsWith('_:')) {
-                itemData.manifestations.push(obj['http://erlangen-crm.org/efrbroo/R7_is_materialization_of']['@id']);
+            if (obj['http://iflastandards.info/ns/lrm/lrmoo/R7_exemplifies'] && !obj['@id'].startsWith('_:')) {
+                itemData.manifestations.push(obj['http://iflastandards.info/ns/lrm/lrmoo/R7_exemplifies']['@id']);
             }
             if (obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium'] && !obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@id']) {
                 itemData.physDesc.physicalMedium.push(obj['https://lod.academy/melod/vocab/ontology#hasPhysMedium']['@value'] || '');
@@ -107,12 +107,12 @@ export class ItemConverter {
                 itemData.physDesc.stamp.push(obj['https://lod.academy/melod/vocab/ontology#hasStamp']['@value'] || '');
             }
 
-            if (obj['https://schema.org/isPartOf'] && !obj['@id'].startsWith('_:')) {
-                itemData.isPartOf.push(obj['https://schema.org/isPartOf']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#isItemPartOf'] && !obj['@id'].startsWith('_:')) {
+                itemData.isPartOf.push(obj['https://lod.academy/melod/vocab/ontology#isItemPartOf']['@id']);
             }
 
-            if (obj['https://schema.org/hasPart'] && !obj['@id'].startsWith('_:')) {
-                itemData.hasPart.push(obj['https://schema.org/hasPart']['@id']);
+            if (obj['https://lod.academy/melod/vocab/ontology#hasItemPart'] && !obj['@id'].startsWith('_:')) {
+                itemData.hasPart.push(obj['https://lod.academy/melod/vocab/ontology#hasItemPart']['@id']);
             }
 
             if (obj['https://lod.academy/melod/vocab/ontology#hasClassificationOfManifestation'] && !obj['@id'].startsWith('_:')) {
@@ -292,7 +292,7 @@ export class ItemConverter {
         }
 
         // --- Phys Desc Dimensions ---
-        let dimensionsLinks = physicalDesc?.['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+        let dimensionsLinks = physicalDesc?.['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
         if (dimensionsLinks) {
             if (!Array.isArray(dimensionsLinks)) dimensionsLinks = [dimensionsLinks];
             itemData.physDesc.dimensions = dimensionsLinks
@@ -613,7 +613,7 @@ function parseBinding(id, byId) {
         binding.decoDesc = obj['https://lod.academy/melod/vocab/ontology#hasDecoDesc']['@value'] || '';
     }
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         binding.dimensions = [];
 
@@ -639,7 +639,7 @@ function parseRastral(id, byId) {
     if (!obj) return null;
     const rastral = {};
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         rastral.dimensions = [];
 
@@ -744,7 +744,7 @@ function parseWatermarks(id, byId) {
         watermark.creationDate = parseDate(creationDate['@id'], byId)
     }
 
-    const dimensions = obj['http://erlangen-crm.org/efrbroo/CLP_should_have_dimension'];
+    const dimensions = obj['http://iflastandards.info/ns/lrm/lrmoo/R70_has_dimension'];
     if (dimensions) {
         watermark.dimensions = [];
 
