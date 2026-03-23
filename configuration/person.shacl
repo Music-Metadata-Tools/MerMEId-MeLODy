@@ -5,6 +5,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
 
 melod:Person
@@ -41,10 +42,14 @@ melod:Person
                 ] ;
   sh:property   [ sh:description "Birth date of the person" ;
                   sh:name "Date" ;
-                  sh:maxCount 1;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
                   sh:group melod:Birth ;
-                  sh:datatype  xsd:date ;
-                  sh:path schema:birthDate
+                  sh:path schema:birthDate ;
+                  sh:or (
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Insert ID of birth place" ;
                   sh:name "Place" ;
@@ -57,10 +62,14 @@ melod:Person
                 ] ;
   sh:property   [ sh:description "Death date of the person" ;
                   sh:name "Date" ;
-                  sh:maxCount 1;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
                   sh:group melod:Death ;
-                  sh:datatype  xsd:date ;
-                  sh:path schema:deathDate
+                  sh:path schema:deathDate ;
+                  sh:or (
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Insert ID of death place" ;
                   sh:name "Place" ;
@@ -71,6 +80,81 @@ melod:Person
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace
                 ] .
+
+melod:Date
+  a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:xone (
+		[
+			sh:property [
+        sh:name      "Start date" ;
+				sh:path schema:startDate ;
+        rdfs:label "Start date" ;
+        sh:datatype  xsd:date ;
+				sh:maxCount  1 ;
+			]
+		]
+		[
+			sh:property [
+        sh:name      "Not Before" ;
+				sh:path melod:notBefore ;
+        rdfs:label "Not Before" ;
+				sh:maxCount  1 ;
+			] ;
+		]
+	) ;
+  sh:xone (
+		[
+			sh:property [
+        sh:name      "End date" ;
+				sh:path schema:endDate ;
+        rdfs:label "End date" ;
+        sh:datatype  xsd:date ;
+				sh:maxCount  1 ;
+			]
+		]
+		[
+			sh:property [
+        sh:name      "Not After" ;
+				sh:path melod:notAfter ;
+        rdfs:label "Not After" ;
+				sh:maxCount  1 ;
+			] ;
+		]
+	) ;
+  sh:property   [ sh:description "e.g. 1800-1850" ;
+                  sh:name      "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:targetClass  melod:Date .
+
+  melod:ExactDate
+  a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:name      "Date" ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:date ;
+                  sh:path  melod:isodate
+                ] ;
+  sh:property   [ sh:name      "Description" ;
+                  sh:description "e.g. 22. Januar 1880" ;
+                  sh:maxCount  1 ;
+                  sh:path      schema:description
+                ] ;
+  sh:property   [ sh:description  "Certainty of the date" ;
+                  sh:name         "Certainty" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasCertainty ;
+                  sh:class melod:Certainty
+                ] ;
+  sh:targetClass  melod:ExactDate .
 
 melod:General
 a               sh:PropertyGroup ;
