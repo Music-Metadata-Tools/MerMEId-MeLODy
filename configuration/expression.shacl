@@ -341,30 +341,54 @@ melod:Annotation
 melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:name      "Start" ;
+  sh:xone (
+		[
+			sh:property [
+        sh:name      "Start date" ;
+				sh:path schema:startDate ;
+        rdfs:label "Start date" ;
+        sh:datatype  xsd:date ;
+				sh:maxCount  1 ;
+			]
+		]
+		[
+			sh:property [
+        sh:name      "Not Before" ;
+				sh:path melod:notBefore ;
+        rdfs:label "Not Before" ;
+				sh:maxCount  1 ;
+			] ;
+		]
+	) ;
+  sh:xone (
+		[
+			sh:property [
+        sh:name      "End date" ;
+				sh:path schema:endDate ;
+        rdfs:label "End date" ;
+        sh:datatype  xsd:date ;
+				sh:maxCount  1 ;
+			]
+		]
+		[
+			sh:property [
+        sh:name      "Not After" ;
+				sh:path melod:notAfter ;
+        rdfs:label "Not After" ;
+				sh:maxCount  1 ;
+			] ;
+		]
+	) ;
+  sh:property   [ sh:description "e.g. 1800-1850" ;
+                  sh:name      "Description" ;
                   sh:maxCount  1 ;
-                  sh:or (
-                    [ sh:path  schema:startDate ; rdfs:label "start date" ; sh:datatype  xsd:date  ]
-                    [ sh:path  melod:notBefore ; rdfs:label "not before" ]
-                  )
-                ] ;
-  sh:property   [ sh:name      "End" ;
-                  sh:maxCount  1 ;
-                  sh:or (
-                    [ sh:path  schema:endDate ; rdfs:label "end date" ; sh:datatype  xsd:date ]
-                    [ sh:path  melod:notAfter ; rdfs:label "not after" ]
-                  )
+                  sh:path      schema:description
                 ] ;
   sh:property   [ sh:description  "Certainty of the date" ;
                   sh:name         "Certainty" ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
-                ] ;
-  sh:property   [ sh:name      "Description" ;
-                  sh:description "Description, annotations or further information" ;
-                  sh:maxCount  1 ;
-                  sh:path      schema:description
                 ] ;
   sh:targetClass  melod:Date .
 
