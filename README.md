@@ -1,8 +1,9 @@
 # MerMEId
 
+
 ## About
 
-This is the new version of MerMEId.
+This is the new version of [MerMEId](https://github.com/Edirom/MerMEId).
 
 ## Getting Started
 
@@ -51,16 +52,10 @@ This is the new version of MerMEId.
 - The editor will warn you if you have unsaved or unshared changes. If this is the case, you need to either share your changes with the remote repository first, or undo your changes before synchronizing with the remote repository.
 
 
-## Description of the web components used for the frontend
+## Funding
 
-* [filesystem-manager](docs/web-components/filesystem-manager.md);
+This tool is being developed as part of the DFG funded project ["MerMEIding to the future"](https://gepris.dfg.de/gepris/projekt/528785591).
 
-* [filesystem-navigator](docs/web-components/filesystem-manager.md);
 
-## Description of the modules used for the frontend
+![DFG-Logo](https://github.com/Music-Metadata-Tools/MerMEId-MeLODy/blob/main/images/dfg_logo_schriftzug_weiss.png)
 
-* [state](docs/modules/state.md);
-
-## Some thoughts
-
-* When the user has to add to a project's entity a reference to an external entity, it will have to add also a metadatum (title, name, date, etc.), which will allow an easy understanding of what external entity is that. That external entity will have to be added to the adequate index, in order to be added later to other project's entities.
