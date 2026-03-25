@@ -1,5 +1,8 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { CredentialsHelper } from '../credentials-helper.js';
+import { filesystemService } from "../../services/filesystem-service.js";
+
+const filesystem = filesystemService.getInstance();
 
 class RepositoryToClone {
     constructor() {
@@ -70,7 +73,10 @@ const styles =
         height: 0;
     }
     sl-tab-panel {
-        height: 40vh;
+        height: 45vh;
+    }
+    sl-input {
+        padding-bottom: 0.5em;
     }
 `;
 
@@ -109,6 +115,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             attribute: false,
         }
     };
+
+    isSupported() {
+        return 'showDirectoryPicker' in window;
+    }
 
     updated(changedProperties) {
         super.updated(changedProperties);
@@ -166,24 +176,35 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     <sl-tab slot="nav" panel="panel_1"></sl-tab>
                     <sl-tab slot="nav" panel="panel_2"></sl-tab>
                     <sl-tab-panel name="panel_1">
-                        <sl-input id="repository-folder-name" placeholder="Example: 'mermeid-sample-data'." label="Repository folder name" value="" required="true" autofocus="true" autocomplete="off"></sl-input>
-                        <sl-input id="repository-url" label="Repository URL" value="" required="true" autocomplete="off"></sl-input>
-                        <sl-input id="username" label="Username" value="" required="true" autocomplete="off"></sl-input>
-                        <sl-input id="personal-access-token" label="Personal access token" type="password" value="" required="true"></sl-input>
+                        <div>
+                            <sl-input id="repository-folder-name" placeholder="Example: 'mermeid-sample-data'." label="Repository folder name" value="" required="true" autofocus="true" autocomplete="off"></sl-input>
+                            <sl-input id="repository-url" label="Repository URL" value="" required="true" autocomplete="off"></sl-input>
+                            <sl-input id="username" label="Username" value="" required="true" autocomplete="off"></sl-input>
+                            <sl-input id="personal-access-token" label="Personal access token" type="password" value="" required="true"></sl-input>
+                        </div>
+                        <div style="margin-top: 1em; border-top: 1px solid var(--sl-color-neutral-200); padding-top: 1em;">
+                            <span style="font-size: 1.1em;">Or add a local folder instead:</span>
+                            <sl-button id="open-repository" size="medium" title="Open repository" style="margin-left: 1em;">
+                                <sl-icon name="folder-plus"></sl-icon>
+                            </sl-button>
+                        </div>
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
-                        <sl-select id="repository-branches" label="${this._get_repositiory_branches_label()}"></sl-select>
+                        <sl-select id="repository-branches" label="${this._get_repository_branches_label()}"></sl-select>
                     </sl-tab-panel>
                 </sl-tab-group>
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
             </sl-dialog>
+            <sl-alert id="not-supported" variant="primary" duration="6000" closable>
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                Unfortunately the File System Access API is not supported on your device.
+            </sl-alert>
         `;
     }
 
     async firstUpdated() {
-        this._credentials_alert = this.shadowRoot.querySelector("sl-alert#credentials");
-        
+
         // Auto-fill last used credentials
         const credentials = await CredentialsHelper.getCredentials();
         console.log('Retrieved credentials:', credentials); // Add this debug line
@@ -292,6 +313,38 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 }
             }
 
+            if (target.matches("sl-button#open-repository")) {
+
+                if(!this.isSupported()) {
+                    this.renderRoot.querySelector('sl-alert#not-supported').toast();
+                    this.renderRoot.querySelector("sl-button#open-repository").disabled = true;
+                    return;
+                }
+                
+                // Close the dialog before opening the file picker to avoid focus conflicts
+                this.hide();
+
+                try {
+                    const dirHandle = await window.showDirectoryPicker();
+
+                    const repoName = dirHandle.name;
+
+                    await filesystem.add_local_repository(repoName, dirHandle);
+                    
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:add-local-repository",
+                        {
+                        detail: { repoName },
+                        bubbles: true,
+                        composed: true
+                    }));
+                    
+
+                } catch (err) {
+                    console.error("Directory selection cancelled or failed", err);
+                    this.reset();
+                }
+            }
+
             if (target.matches("sl-button#clone-repository")) {
                 target.loading = true;
 
@@ -347,7 +400,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this.renderRoot.querySelector("sl-button#next-button").style.display = "inline-block";
     }
 
-    _get_repositiory_branches_label() {
+    _get_repository_branches_label() {
         let repository_branches = this.repository_branches;
 
         if (repository_branches !== undefined) {
