@@ -260,7 +260,7 @@ export class ExpressionConverter {
         }
 
         // Debug logging
-        console.log('Processed work:', expressionData);
+        //console.log('Processed work:', expressionData);
 
         return generateExpressionXML(expressionData);
     }

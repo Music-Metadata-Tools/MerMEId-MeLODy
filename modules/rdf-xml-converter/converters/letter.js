@@ -117,7 +117,7 @@ export class LetterConverter {
         }
 
         // Debug logging
-        console.log('Processed letter:', letterData);
+        //console.log('Processed letter:', letterData);
 
         return generateLetterXML(letterData);
     }

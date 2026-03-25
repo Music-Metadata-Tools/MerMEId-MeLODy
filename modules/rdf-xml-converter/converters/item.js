@@ -367,7 +367,7 @@ export class ItemConverter {
         }
 
         // Debug logging
-        console.log('Processed item:', itemData);
+        //console.log('Processed item:', itemData);
 
         return generateItemXML(itemData);
     }

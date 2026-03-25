@@ -7,6 +7,15 @@ export default class ADWLMVirtualFilesystem {
         this._filesystem_name = "mermeid";
         this.fs = new LightningFS(this._filesystem_name);
         this.pfs = this.fs.promises;
+        this._localRepositories = new Map();
+    }
+
+    async add_local_repository(name, dirHandle) {
+        this._localRepositories.set(name, dirHandle);
+    }
+
+    async remove_local_repository(repository_path) {
+        this._localRepositories.delete(repository_path);
     }
 
     async is_public_repository(repository_metadata) {
@@ -117,10 +126,13 @@ export default class ADWLMVirtualFilesystem {
 
     // list repositories
     async list_repository_names() {
-        let repository_names = await this.pfs.readdir("/");
-        repository_names.sort();
+        let gitRepos = await this.pfs.readdir("/");
+        let localRepos = Array.from(this._localRepositories.keys());
 
-        return repository_names;
+        let allRepos = [...gitRepos, ...localRepos];
+        allRepos.sort();
+
+        return allRepos;
     }
 
     async rename_entry(repository_path, old_entry_absolute_path, new_entry_absolute_path, old_entry_relative_path, new_entry_relative_path) {
@@ -149,6 +161,62 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async list_entries_from_workdir(repository_path, parent_folder_relative_path) {
+        const repoName = repository_path.replace("/", "");
+        
+        if (this._localRepositories.has(repoName)) {
+            const dirHandle = this._localRepositories.get(repoName);
+
+            let currentHandle = dirHandle;
+
+            let relativePath = parent_folder_relative_path;
+
+            if (relativePath.startsWith(repoName)) {
+                relativePath = relativePath.slice(repoName.length);
+                if (relativePath.startsWith("/")) {
+                    relativePath = relativePath.slice(1);
+                }
+            }
+
+            if (relativePath && relativePath !== "") {
+                const parts = relativePath.split("/").filter(Boolean);
+
+                for (const part of parts) {
+                    try {
+                        currentHandle = await currentHandle.getDirectoryHandle(part);
+                    } catch (err) {
+                        console.warn("Directory not found:", part, err);
+                        return { folders: [], files: [] };
+                    }
+                }
+            }
+
+            let folders = [];
+            let files = [];
+
+            for await (const [name, handle] of currentHandle.entries()) {
+                if (name.startsWith(".")) continue;
+
+                if (handle.kind === "directory") {
+                    folders.push(
+                        parent_folder_relative_path
+                            ? `${parent_folder_relative_path}/${name}`
+                            : name
+                    );
+                } else {
+                    files.push(
+                        parent_folder_relative_path
+                            ? `${parent_folder_relative_path}/${name}`
+                            : name
+                    );
+                }
+            }
+
+            folders.sort();
+            files.sort();
+
+            return { folders, files };
+        }
+
         let folders = [];
         let files = [];
 
@@ -195,6 +263,50 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async save_and_stage_file(repository_path, file_contents, file_relative_path) {
+        const repoName = repository_path.replace("/", "");
+
+        if (this._localRepositories.has(repoName)) {
+            const dirHandle = this._localRepositories.get(repoName);
+
+            let relativePath = file_relative_path;
+
+            if (relativePath.startsWith(repoName)) {
+                relativePath = relativePath.slice(repoName.length);
+                if (relativePath.startsWith("/")) {
+                    relativePath = relativePath.slice(1);
+                }
+            }
+
+            const parts = relativePath.split("/").filter(Boolean);
+
+            let currentHandle = dirHandle;
+
+            try {
+                for (let i = 0; i < parts.length - 1; i++) {
+                    currentHandle = await currentHandle.getDirectoryHandle(parts[i], { create: true });
+                }
+
+                const fileHandle = await currentHandle.getFileHandle(parts.at(-1), { create: true });
+
+                const writable = await fileHandle.createWritable();
+                await writable.write(file_contents);
+                await writable.close();
+
+                return {
+                    success: true,
+                    filename: parts.at(-1),
+                    folder: parts[0],
+                    path: relativePath
+                };
+
+            } catch (error) {
+                console.error("Error writing local file:", error);
+                throw new Error(`Failed to save local file: ${error.message}`);
+            }
+        }
+
+
+
         try {
             // Create parent directories recursively
             let parent_folder_path = `${repository_path}/${file_relative_path}`.substring(0, `${repository_path}/${file_relative_path}`.lastIndexOf('/'));
@@ -242,6 +354,46 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async read_file(repository_path, file_path) {
+        const repoName = repository_path.replace("/", "");
+
+        if (this._localRepositories.has(repoName)) {
+            const dirHandle = this._localRepositories.get(repoName);
+
+            let relativePath = file_path;
+
+            if (relativePath.startsWith(repoName)) {
+                relativePath = relativePath.slice(repoName.length);
+                if (relativePath.startsWith("/")) {
+                    relativePath = relativePath.slice(1);
+                }
+            }
+
+            const parts = relativePath.split("/").filter(Boolean);
+
+            let currentHandle = dirHandle;
+
+            try {
+                for (let i = 0; i < parts.length - 1; i++) {
+                    currentHandle = await currentHandle.getDirectoryHandle(parts[i]);
+                }
+
+                const fileHandle = await currentHandle.getFileHandle(parts.at(-1));
+                const file = await fileHandle.getFile();
+
+                return await file.text();
+
+            } catch (err) {
+                console.error("Failed to read local file:", {
+                    repoName,
+                    file_path,
+                    relativePath,
+                    parts
+                });
+                throw err;
+            }
+        }
+
+
         let file_contents = "";
 
         await git.walk({
@@ -477,27 +629,3 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 }
-
-/*
-                                // get remote.origin.url
-                                let remote_origin_url = await git.getConfig({
-                                    fs: gitlab_client.fs,
-                                    dir: this.repository_folder_name,
-                                    path: "remote.origin.url"
-                                });
-                                remote_origin_url = "https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data";
-
-                                // get refs/HEAD
-                                let refs = await git.listServerRefs({
-                                    http,
-                                    corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
-                                    url: remote_origin_url,
-                                    prefix: "HEAD",
-                                });
-                                let head_commit = refs[0].oid;
-
-                                let commitOid = await git.resolveRef({ fs: gitlab_client.fs, dir: this.repository_folder_name, ref: "HEAD" });
-
-                                if (commitOid !== head_commit) {
-                                    await this._git_pull();
-                                }*/

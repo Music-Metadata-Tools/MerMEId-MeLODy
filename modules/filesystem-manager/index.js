@@ -349,6 +349,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
 
                 await filesystem.remove_repository(this._selected_repository_path);
+                await filesystem.remove_local_repository(this._selected_repository_path.split("/")[1]);
                 await this._list_repository_names();
 
                 // Clear staged files details
@@ -673,6 +674,18 @@ export default class ADWLMFilesystemManager extends LitElement {
             add_repository_dialog.reset();
         });
 
+        render_root.addEventListener("adwlm-filesystem-manager:add-local-repository", async (event) => {
+            console.log("Event received: add-local-repository", event.detail);
+            
+            await this._list_repository_names();
+
+            const { repoName } = event.detail;
+            this._selected_repository_path = `/${repoName}`;
+
+            add_repository_dialog.reset();
+
+        });
+
         document.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
             await this._deselect_files_tree();
         });
@@ -853,7 +866,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         let tree_subitems = ""
         // insert subfolders in tree
         for (const folder_relative_path of entries.folders) {
-            let folder_name = folder_relative_path;
+            let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
             let folder_absolute_path = `${repository_path}/${folder_relative_path}`;
 
             tree_subitems += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;

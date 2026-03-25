@@ -128,7 +128,7 @@ export class WorkConverter {
         }
 
         // Debug logging
-        console.log('Processed work:', workData);
+        //console.log('Processed work:', workData);
 
         return generateWorkXML(workData);
     }
