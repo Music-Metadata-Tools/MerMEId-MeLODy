@@ -289,7 +289,7 @@ class ADWLMEntitySearch extends LitElement {
       const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
-    console.log("Gefilterte Ergebnisse:", this._filtered);
+    //console.log("Gefilterte Ergebnisse:", this._filtered);
   }
 
   async _onSelect(entry) {
