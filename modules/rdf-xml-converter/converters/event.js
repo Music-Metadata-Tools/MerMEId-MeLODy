@@ -123,7 +123,7 @@ export class EventConverter {
         });
 
         // Debug logging
-        console.log('Processed contributions:', eventData.contributions);
+        //console.log('Processed contributions:', eventData.contributions);
 
         return generateEventXML(eventData);
     }

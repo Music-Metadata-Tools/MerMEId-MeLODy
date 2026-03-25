@@ -129,7 +129,7 @@ export class PerformanceEventConverter {
         });
 
         // Debug logging
-        console.log('Processed contributions:', performanceEventData.contributions);
+        //console.log('Processed contributions:', performanceEventData.contributions);
 
         return generatePerformanceEventXML(performanceEventData);
     }

@@ -368,7 +368,7 @@ export class ManifestationConverter {
         }
 
         // Debug logging
-        console.log('Processed manifestation:', manifestationData);
+        //console.log('Processed manifestation:', manifestationData);
 
         return generateManifestationXML(manifestationData);
     }
