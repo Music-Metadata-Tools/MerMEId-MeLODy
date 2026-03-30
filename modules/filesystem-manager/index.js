@@ -433,6 +433,15 @@ export default class ADWLMFilesystemManager extends LitElement {
                     if (this._staged_files && this._staged_files.length > 0) {
                         staged_before_pull = await Promise.all(
                             this._staged_files.map(async (path) => {
+                                const isDeleted = path.endsWith('-deleted');
+
+                                if (isDeleted) {
+                                    return {
+                                        path,
+                                        isDeleted: true
+                                    };
+                                }
+
                                 const content = await filesystem.pfs.readFile(
                                     `${this._selected_repository_path}/${path}`,
                                     'utf8'
@@ -440,7 +449,8 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                                 return {
                                     path,
-                                    content
+                                    content,
+                                    isDeleted: false
                                 };
                             })
                         );
@@ -449,11 +459,20 @@ export default class ADWLMFilesystemManager extends LitElement {
                     await filesystem.pull(this._selected_repository_path);
                     for (const file of staged_before_pull) {
                         try {
-                            await filesystem.save_and_stage_file(
-                                this._selected_repository_path,
-                                file.content,
-                                file.path
-                            );
+                            if (file.isDeleted) {
+                                const originalPath = file.path.replace(/-deleted$/, '');
+
+                                await filesystem.add_file(
+                                    this._selected_repository_path,
+                                    originalPath
+                                );
+                            } else {
+                                await filesystem.save_and_stage_file(
+                                    this._selected_repository_path,
+                                    file.content,
+                                    file.path
+                                );
+                            }
                         } catch (e) {
                             console.error("Failed to restore staged file:", file.path, e);
                         }
@@ -537,6 +556,15 @@ export default class ADWLMFilesystemManager extends LitElement {
                     if (this._staged_files && this._staged_files.length > 0) {
                         staged_before_pull = await Promise.all(
                             this._staged_files.map(async (path) => {
+                                const isDeleted = path.endsWith('-deleted');
+
+                                if (isDeleted) {
+                                    return {
+                                        path,
+                                        isDeleted: true
+                                    };
+                                }
+
                                 const content = await filesystem.pfs.readFile(
                                     `${this._selected_repository_path}/${path}`,
                                     'utf8'
@@ -544,7 +572,8 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                                 return {
                                     path,
-                                    content
+                                    content,
+                                    isDeleted: false
                                 };
                             })
                         );
@@ -553,11 +582,20 @@ export default class ADWLMFilesystemManager extends LitElement {
                     await filesystem.pull(this._selected_repository_path);
                     for (const file of staged_before_pull) {
                         try {
-                            await filesystem.save_and_stage_file(
-                                this._selected_repository_path,
-                                file.content,
-                                file.path
-                            );
+                            if (file.isDeleted) {
+                                const originalPath = file.path.replace(/-deleted$/, '');
+
+                                await filesystem.add_file(
+                                    this._selected_repository_path,
+                                    originalPath
+                                );
+                            } else {
+                                await filesystem.save_and_stage_file(
+                                    this._selected_repository_path,
+                                    file.content,
+                                    file.path
+                                );
+                            }
                         } catch (e) {
                             console.error("Failed to restore staged file:", file.path, e);
                         }
@@ -697,6 +735,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                             this._generate_folder_tree(repoTree);
                         }
                     }
+
+                    await this._load_entity_to_edit();
 
                     // Update UI
                     await this._list_staged_files();
@@ -1045,10 +1085,6 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     async _load_entity_to_edit() {
         try {
-            // Only pull if needed
-            //if (await this._shouldPull(this._selected_repository_path)) {
-            //    await filesystem.pull(this._selected_repository_path);
-            //}
             //console.log(_file_path)
             let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
             if (!file_contents || file_contents.trim() === "") {
@@ -1184,22 +1220,6 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
-    }
-
-    // Add this helper method
-    async _shouldPull(repositoryPath) {
-        const now = Date.now();
-        const lastPull = this._lastPullTimestamp?.[repositoryPath] || 0;
-        const PULL_INTERVAL = 5 * 60 * 1000; // 5 minutes
-        
-        if (now - lastPull > PULL_INTERVAL) {
-            this._lastPullTimestamp = {
-                ...this._lastPullTimestamp,
-                [repositoryPath]: now
-            };
-            return true;
-        }
-        return false;
     }
 
     async _updateRepositoryTreeStatus() {

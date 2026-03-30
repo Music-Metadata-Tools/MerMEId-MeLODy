@@ -607,11 +607,17 @@ export default class ADWLMVirtualFilesystem {
             }
             });
 
+            const normalizePath = (path) => path.replace(/-deleted$/, '');
+
             const conflicts = changed_files.filter(f =>
-            remoteChanges.includes(f)
+            remoteChanges.includes(normalizePath(f))
             );
 
+            console.log("Remote changes:", remoteChanges, "Changed files local: ", changed_files, "Conflicts with local changes:", conflicts);
+
+
             return conflicts.length === 0;
+
 
         } catch (e) {
             console.error("Error in canPullSafely: ", e);
