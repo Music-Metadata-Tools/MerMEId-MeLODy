@@ -530,6 +530,95 @@ export default class ADWLMVirtualFilesystem {
         return push_result.ok;
     }
 
+    async canPullSafely(repository_path, changed_files) {
+        let current_branch = await git.currentBranch({
+            fs: this.fs,
+            dir: repository_path,
+            fullname: false
+        });
+        let personal_access_token = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.pat"
+        });
+        let username = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.name"
+        });
+
+        try {
+            await git.fetch({
+            fs: this.fs,
+            http: http,
+            dir: repository_path,
+            corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+            onAuth: () => ({
+                username: username,
+                password: personal_access_token,
+            })
+            });
+
+            const localLog = await git.log({
+                fs: this.fs,
+                dir: repository_path,
+                ref: 'HEAD',
+                depth: 100
+            });
+
+            const remoteLog = await git.log({
+                fs: this.fs,
+                dir: repository_path,
+                ref: `origin/${current_branch}`,
+                depth: 100
+            });
+
+            const remoteOids = new Set(remoteLog.map(c => c.oid));
+
+            const baseCommit = localLog.find(c => remoteOids.has(c.oid));
+
+            if (!baseCommit) {
+                throw new Error('No common ancestor found');
+            }
+
+            const base = baseCommit.oid;
+
+            if (localLog === remoteLog) {
+                console.log("No remote changes");
+                return [];
+            }
+
+            const remoteChanges = [];
+
+            await git.walk({
+            fs: this.fs,
+            dir: repository_path,
+            trees: [
+                git.TREE({ ref: base }),
+                git.TREE({ ref: `origin/${current_branch}` })
+            ],
+            map: async (filepath, [A, B]) => {
+                const oidA = await A?.oid();
+                const oidB = await B?.oid();
+
+                if (oidA !== oidB) {
+                remoteChanges.push(filepath);
+                }
+            }
+            });
+
+            const conflicts = changed_files.filter(f =>
+            remoteChanges.includes(f)
+            );
+
+            return conflicts.length === 0;
+
+        } catch (e) {
+            console.error("Error in canPullSafely: ", e);
+            return false;
+        }
+    }
+
     async pull(repository_path) {
         // get some metadata
         let personal_access_token = await git.getConfigAll({
