@@ -1,6 +1,8 @@
 name: Tests
 
 on:
+  push:
+    branches: [feature/tests-and-ci]
   pull_request:
     branches: [main]
 
