@@ -21,8 +21,8 @@ function createVfs() {
 }
 
 // ─── Credentials from .env ────────────────────────────────────────────────────
-const TOKEN    = process.env.GITHUB_TOKEN
-const USERNAME = process.env.GITHUB_USERNAME
+const TOKEN    = process.env.GIT_TOKEN
+const USERNAME = process.env.GIT_USERNAME
 const REPO_URL = process.env.TEST_REPO_URL
 
 const SKIP = !TOKEN || !USERNAME || !REPO_URL

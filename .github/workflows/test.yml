@@ -26,6 +26,6 @@ jobs:
       - name: Run tests
         run: npm test
         env:
-          GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          GITHUB_USERNAME: ${{ secrets.TEST_GITHUB_USERNAME }}
+          GIT_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
+          GIT_USERNAME: ${{ secrets.TEST_GITHUB_USERNAME }}
           TEST_REPO_URL: ${{ secrets.TEST_REPO_URL }}

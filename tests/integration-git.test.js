@@ -43,8 +43,8 @@ async function cleanupTestFiles(vfs, repoDir, filePaths) {
 }
 
 // ─── Credentials from .env ────────────────────────────────────────────────────
-const TOKEN    = process.env.GITHUB_TOKEN
-const USERNAME = process.env.GITHUB_USERNAME
+const TOKEN    = process.env.GIT_TOKEN
+const USERNAME = process.env.GIT_USERNAME
 const REPO_URL = process.env.TEST_REPO_URL
 
 // Skip all tests when .env is not configured
