@@ -12,7 +12,8 @@ Please note that this project is released with a [Contributor Code of Conduct]. 
 
 ## Questions and discussions
 
-The best way to initially get in touch is via [GitHub Discussions].
+The best way to initially get in touch with the MerMEId community is via the `mermeid` [Slack channel] on music-encoding.slack.com.
+Or you can start a discussion here at [GitHub Discussions].
 
 
 ## Bug reports and feature requests
@@ -55,3 +56,4 @@ Any maintainer is allowed to merge a PR if all of these conditions are met. We u
 [GitHub Discussions]: https://github.com/Music-Metadata-Tools/MerMEId-MeLODy/discussions
 [GitHub issue]: https://github.com/Music-Metadata-Tools/MerMEId-MeLODy/issues/new
 [Pull Request]: https://help.github.com/articles/creating-a-pull-request
+[Slack channel]: https://join.slack.com/t/music-encoding/shared_invite/zt-4zgx6zbq-2jEjDiUT7ym3dygTaY8C0g 
