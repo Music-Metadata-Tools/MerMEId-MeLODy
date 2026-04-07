@@ -5,6 +5,11 @@
 
 This is the new version of [MerMEId](https://github.com/Edirom/MerMEId).
 
+## Setup
+
+To use the tool, you can either click the link provided [here](https://music-metadata-tools.github.io/MerMEId-MeLODy/) in the repository or download the entire repository and use it locally. To work with data, you’ll need a repository where the data can be stored and edited. You can create such a repository using the following [template](https://github.com/Music-Metadata-Tools/MerMEId-MeLODy-Template). Import scripts for various data formats will be added later. The template itself contains some sample data, which you can delete. Once a repository has been created for the data, you can open the editor and get started.
+
+
 ## Getting Started
 
 ### Adding a Repository
