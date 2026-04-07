@@ -3,10 +3,12 @@ import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
 
 export default class ADWLMVirtualFilesystem {
-    constructor() {
+    constructor(fs = null, { httpPlugin = null, corsProxy = FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY } = {}) {
         this._filesystem_name = "mermeid";
-        this.fs = new LightningFS(this._filesystem_name);
+        this.fs = fs ?? new LightningFS(this._filesystem_name);
         this.pfs = this.fs.promises;
+        this._http = httpPlugin ?? http;
+        this._corsProxy = corsProxy;
         this._localRepositories = new Map();
     }
 
@@ -24,8 +26,8 @@ export default class ADWLMVirtualFilesystem {
 
         try {
             await git.getRemoteInfo2({
-                http,
-                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+                http: this._http,
+                corsProxy: this._corsProxy,
                 url: repository_url
             });
 
@@ -64,9 +66,9 @@ export default class ADWLMVirtualFilesystem {
         try {
             await git.clone({
                 fs: this.fs,
-                http,
+                http: this._http,
                 dir: repository_folder_name,
-                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+                corsProxy: this._corsProxy,
                 url: remote_origin_url,
                 ref: repository_branch,
                 singleBranch: true,
@@ -499,7 +501,7 @@ export default class ADWLMVirtualFilesystem {
             // push all the committed files
             push_result = await git.push({
                 fs: this.fs,
-                http,
+                http: this._http,
                 dir: repository_path,
                 remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
                 ref: current_branch,
@@ -530,6 +532,101 @@ export default class ADWLMVirtualFilesystem {
         return push_result.ok;
     }
 
+    async canPullSafely(repository_path, changed_files) {
+        let current_branch = await git.currentBranch({
+            fs: this.fs,
+            dir: repository_path,
+            fullname: false
+        });
+        let personal_access_token = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.pat"
+        });
+        let username = await git.getConfigAll({
+            fs: this.fs,
+            dir: repository_path,
+            path: "user.name"
+        });
+
+        try {
+            await git.fetch({
+            fs: this.fs,
+            http: this._http,
+            dir: repository_path,
+            corsProxy: this._corsProxy,
+            onAuth: () => ({
+                username: username,
+                password: personal_access_token,
+            })
+            });
+
+            const localLog = await git.log({
+                fs: this.fs,
+                dir: repository_path,
+                ref: 'HEAD',
+                depth: 100
+            });
+
+            const remoteLog = await git.log({
+                fs: this.fs,
+                dir: repository_path,
+                ref: `origin/${current_branch}`,
+                depth: 100
+            });
+
+            const remoteOids = new Set(remoteLog.map(c => c.oid));
+
+            const baseCommit = localLog.find(c => remoteOids.has(c.oid));
+
+            if (!baseCommit) {
+                throw new Error('No common ancestor found');
+            }
+
+            const base = baseCommit.oid;
+
+            if (localLog === remoteLog) {
+                console.log("No remote changes");
+                return [];
+            }
+
+            const remoteChanges = [];
+
+            await git.walk({
+            fs: this.fs,
+            dir: repository_path,
+            trees: [
+                git.TREE({ ref: base }),
+                git.TREE({ ref: `origin/${current_branch}` })
+            ],
+            map: async (filepath, [A, B]) => {
+                const oidA = await A?.oid();
+                const oidB = await B?.oid();
+
+                if (oidA !== oidB) {
+                remoteChanges.push(filepath);
+                }
+            }
+            });
+
+            const normalizePath = (path) => path.replace(/-deleted$/, '');
+
+            const conflicts = changed_files.filter(f =>
+            remoteChanges.includes(normalizePath(f))
+            );
+
+            console.log("Remote changes:", remoteChanges, "Changed files local: ", changed_files, "Conflicts with local changes:", conflicts);
+
+
+            return conflicts.length === 0;
+
+
+        } catch (e) {
+            console.error("Error in canPullSafely: ", e);
+            return false;
+        }
+    }
+
     async pull(repository_path) {
         // get some metadata
         let personal_access_token = await git.getConfigAll({
@@ -553,11 +650,11 @@ export default class ADWLMVirtualFilesystem {
         try {
             await git.pull({
                 fs: this.fs,
-                http,
+                http: this._http,
                 dir: repository_path,
                 ref: current_branch,
                 singleBranch: true,
-                corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+                corsProxy: this._corsProxy,
                 onAuth: () => ({
                     username: username,
                     password: personal_access_token,
@@ -604,8 +701,8 @@ export default class ADWLMVirtualFilesystem {
 
     async _list_refs(repository_metadata, refs_type) {
         let refs = await git.listServerRefs({
-            http,
-            corsProxy: FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY,
+            http: this._http,
+            corsProxy: this._corsProxy,
             url: repository_metadata.url,
             prefix: `refs/${refs_type}/`,
             onAuth: () => ({

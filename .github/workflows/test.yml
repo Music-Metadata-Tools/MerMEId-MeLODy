@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+    branches: [feature/tests-and-ci]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          GIT_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
+          GIT_USERNAME: ${{ secrets.TEST_GITHUB_USERNAME }}
+          TEST_REPO_URL: ${{ secrets.TEST_REPO_URL }}

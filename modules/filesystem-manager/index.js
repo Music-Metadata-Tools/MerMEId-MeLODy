@@ -398,7 +398,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     alert.duration = 6000;
                     alert.innerHTML = `
                         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Unsaved changes might be deleted or overwritten during synchronization.
+                        Unsaved changes might be deleted or overwritten during synchronization. 
+                        Please save or undo your changes before synchronizing.
                     `;
                     document.body.append(alert);
                     alert.toast();
@@ -408,22 +409,75 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Alert that staged files might be deleted or overwritten after pull
                 if (this._staged_files && this._staged_files.length > 0) {
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Staged files might be deleted or overwritten during synchronization.
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                    target.loading = false;
-                    return;
+                    const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+
+                    if (!canMerge) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Synchronizing is not possible: Some files have been modified both locally and remotely. 
+                            Please undo your local changes before synchronizing.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        target.loading = false;
+                        return;
+                    }
                 }
 
                 try {
+                    let staged_before_pull = [];
+                    if (this._staged_files && this._staged_files.length > 0) {
+                        staged_before_pull = await Promise.all(
+                            this._staged_files.map(async (path) => {
+                                const isDeleted = path.endsWith('-deleted');
+
+                                if (isDeleted) {
+                                    return {
+                                        path,
+                                        isDeleted: true
+                                    };
+                                }
+
+                                const content = await filesystem.pfs.readFile(
+                                    `${this._selected_repository_path}/${path}`,
+                                    'utf8'
+                                );
+
+                                return {
+                                    path,
+                                    content,
+                                    isDeleted: false
+                                };
+                            })
+                        );
+                    }
+
                     await filesystem.pull(this._selected_repository_path);
+                    for (const file of staged_before_pull) {
+                        try {
+                            if (file.isDeleted) {
+                                const originalPath = file.path.replace(/-deleted$/, '');
+
+                                await filesystem.add_file(
+                                    this._selected_repository_path,
+                                    originalPath
+                                );
+                            } else {
+                                await filesystem.save_and_stage_file(
+                                    this._selected_repository_path,
+                                    file.content,
+                                    file.path
+                                );
+                            }
+                        } catch (e) {
+                            console.error("Failed to restore staged file:", file.path, e);
+                        }
+                    }
+                    
                 } catch (error) {
                     console.error('Failed to synchronize:', error);
                     // Show error notification
@@ -447,7 +501,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     alert.duration = 6000;
                     alert.innerHTML = `
                         <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                        Successfully synchronized with remote repository
+                        Successfully synchronized with remote repository.
                     `;
                     document.body.append(alert);
                     alert.toast();
@@ -480,6 +534,73 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
                 target.loading = true;
+                
+                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+
+                if (!canMerge) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Sharing is not possible: Some files have been modified both locally and remotely. 
+                        Please synchronize before sharing.
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                } else if (canMerge) {
+                    let staged_before_pull = [];
+                    if (this._staged_files && this._staged_files.length > 0) {
+                        staged_before_pull = await Promise.all(
+                            this._staged_files.map(async (path) => {
+                                const isDeleted = path.endsWith('-deleted');
+
+                                if (isDeleted) {
+                                    return {
+                                        path,
+                                        isDeleted: true
+                                    };
+                                }
+
+                                const content = await filesystem.pfs.readFile(
+                                    `${this._selected_repository_path}/${path}`,
+                                    'utf8'
+                                );
+
+                                return {
+                                    path,
+                                    content,
+                                    isDeleted: false
+                                };
+                            })
+                        );
+                    }
+
+                    await filesystem.pull(this._selected_repository_path);
+                    for (const file of staged_before_pull) {
+                        try {
+                            if (file.isDeleted) {
+                                const originalPath = file.path.replace(/-deleted$/, '');
+
+                                await filesystem.add_file(
+                                    this._selected_repository_path,
+                                    originalPath
+                                );
+                            } else {
+                                await filesystem.save_and_stage_file(
+                                    this._selected_repository_path,
+                                    file.content,
+                                    file.path
+                                );
+                            }
+                        } catch (e) {
+                            console.error("Failed to restore staged file:", file.path, e);
+                        }
+                    }
+                }
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
                 let selected_staged_file_paths = staged_file_nodes
@@ -614,6 +735,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                             this._generate_folder_tree(repoTree);
                         }
                     }
+
+                    await this._load_entity_to_edit();
 
                     // Update UI
                     await this._list_staged_files();
@@ -962,10 +1085,6 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     async _load_entity_to_edit() {
         try {
-            // Only pull if needed
-            //if (await this._shouldPull(this._selected_repository_path)) {
-            //    await filesystem.pull(this._selected_repository_path);
-            //}
             //console.log(_file_path)
             let file_contents = await filesystem.read_file(this._selected_repository_path, this._file_path);
             if (!file_contents || file_contents.trim() === "") {
@@ -1101,22 +1220,6 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
-    }
-
-    // Add this helper method
-    async _shouldPull(repositoryPath) {
-        const now = Date.now();
-        const lastPull = this._lastPullTimestamp?.[repositoryPath] || 0;
-        const PULL_INTERVAL = 5 * 60 * 1000; // 5 minutes
-        
-        if (now - lastPull > PULL_INTERVAL) {
-            this._lastPullTimestamp = {
-                ...this._lastPullTimestamp,
-                [repositoryPath]: now
-            };
-            return true;
-        }
-        return false;
     }
 
     async _updateRepositoryTreeStatus() {

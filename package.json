@@ -1,0 +1,32 @@
+{
+  "name": "mermeid-melody",
+  "version": "1.0.0",
+  "description": "This is the new version of [MerMEId](https://github.com/Edirom/MerMEId).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Music-Metadata-Tools/MerMEId-MeLODy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Music-Metadata-Tools/MerMEId-MeLODy/issues"
+  },
+  "homepage": "https://github.com/Music-Metadata-Tools/MerMEId-MeLODy#readme",
+  "devDependencies": {
+    "@isomorphic-git/lightning-fs": "^4.6.2",
+    "dotenv": "^17.3.1",
+    "isomorphic-git": "^1.37.4",
+    "memfs": "^4.57.1",
+    "vitest": "^4.1.2"
+  }
+}
