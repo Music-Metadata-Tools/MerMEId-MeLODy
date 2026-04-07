@@ -99,6 +99,67 @@ const styles =
             height: auto;
             max-height: 82vh;
         }
+        .layout {
+            display: flex;
+            height: 100%;
+        }
+
+        .main {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .entity-window {
+            position: fixed;
+            top: 120px;
+            left: 120px;
+
+            min-width: 300px;
+            max-width: 600px;
+
+            max-height: 80vh;
+            overflow: hidden;
+
+            background: white;
+            border: 1px solid var(--sl-color-neutral-300);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+
+            z-index: 3000;
+
+            display: flex;
+            flex-direction: column;
+
+            resize: both;
+        }
+
+        .entity-window.hidden {
+            display: none;
+        }
+
+        .entity-window-header {
+            padding: 0.5rem 0.75rem;
+            background: var(--sl-color-neutral-100);
+            border-bottom: 1px solid var(--sl-color-neutral-200);
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            cursor: move;
+            user-select: none;
+        }
+
+        .entity-window-content {
+            overflow: auto;
+            padding: 0.5rem;
+        }
+
+        .entity-window shacl-form {
+            min-height: auto;
+            height: auto;
+            max-height: none;
+        }
     `;
 
 export default class ADWLMEntityEditor extends LitElement {
@@ -132,7 +193,15 @@ export default class ADWLMEntityEditor extends LitElement {
         _cachedConfig: {
             type: Object,
             state: true
-        }
+        },
+        _sidePanelOpen: { 
+            type: Boolean, 
+            state: true 
+        },
+        _sidePanelEntity: { 
+            type: Object, 
+            state: true 
+        },
     };
 
     updated(changedProperties) {
@@ -231,6 +300,132 @@ export default class ADWLMEntityEditor extends LitElement {
         }
     }
 
+    _initPreviewLinkHandling() {
+        document.addEventListener("click", async (event) => {
+
+            const path = event.composedPath();
+
+            const link = path.find(el => 
+                el instanceof HTMLAnchorElement && el.classList.contains("uuid")
+            );
+
+            if (!link) return;
+
+            event.preventDefault();
+
+            const href = link.getAttribute("href");
+            console.log("CLICK erkannt:", href);
+
+            if (!href) return;
+
+            // dein # Fix
+            const clean = href.replace(/^#?urn:uuid:/, "");
+
+            await this._openSidePanel(clean);
+        });
+    }
+
+    async _openSidePanel(relativePath) {
+        try {
+            const filesystem = filesystemService.getInstance();
+
+            const ttl = await filesystem.read_file(
+                this._selected_repository_path,
+                `${relativePath}.ttl`
+            );
+
+            const subject = `urn:uuid:${relativePath}`;
+            const shapeUrl = this._getShapeForPath(relativePath);
+            let entity_type = this._detectEntityType(relativePath);
+
+            this._sidePanelEntity = {
+                values: ttl,
+                subject,
+                shapesUrl: shapeUrl,
+                entity_type
+            };
+
+            this._sidePanelOpen = true;
+
+        } catch (err) {
+            console.error("SidePanel load error:", err);
+        }
+    }
+
+    _closeSidePanel() {
+        this._sidePanelOpen = false;
+        this._sidePanelEntity = null;
+    }
+
+    _getShapeForPath(path) {
+        for (const def of this.entity_type_definitions) {
+            if (path.startsWith(def.folder_name)) {
+                return def.shacl_file_location;
+            }
+        }
+
+        console.warn("Kein Shape gefunden für:", path);
+        return "";
+    }
+
+    _openInEditor() {
+        if (!this._sidePanelEntity) return;
+
+        const path = this._sidePanelEntity.subject.replace("urn:uuid:", "");
+
+        const entity = {
+            contents: this._sidePanelEntity.values,
+            path: `${path}.ttl`,
+            entity_iri: this._sidePanelEntity.subject,
+            entity_type: this._sidePanelEntity.entity_type,
+            shapesUrl: this._sidePanelEntity.shapesUrl
+        };
+
+        this.entity_to_edit = entity;
+
+        this._closeSidePanel();
+    }
+
+    _detectEntityType(path) {
+        for (const def of this.entity_type_definitions) {
+            if (path.startsWith(def.folder_name)) {
+                return def.type;
+            }
+        }
+        return null;
+    }
+
+    _initDraggableWindow() {
+        const win = this.renderRoot.querySelector("#entity-window");
+        const header = this.renderRoot.querySelector("#entity-window-header");
+
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        header.addEventListener("mousedown", (e) => {
+            isDragging = true;
+
+            const rect = win.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            document.body.style.userSelect = "none";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+
+            win.style.left = `${e.clientX - offsetX}px`;
+            win.style.top = `${e.clientY - offsetY}px`;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            document.body.style.userSelect = "";
+        });
+    }
+
     // Add new helper method to handle entity loading
     async _loadNewEntity(entity_to_edit) {
         let editor = this.renderRoot.querySelector("shacl-form");
@@ -288,6 +483,8 @@ export default class ADWLMEntityEditor extends LitElement {
     constructor() {
         super();
         this._init();
+        this._sidePanelOpen = false;
+        this._sidePanelEntity = null;
         
         // Listen for repository selection events
         document.addEventListener('adwlm-filesystem-manager:repository-selected', async (event) => {
@@ -307,45 +504,90 @@ export default class ADWLMEntityEditor extends LitElement {
 
     render() {
         return html`
-            <div id="container">
-                <div class="header">
-                    <sl-button-group>
-                        <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
-                            <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
-                        </sl-button>
-                        <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
-                            ?disabled="${!this._hasUnsavedChanges}">
-                            ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
-                            Save
-                            <sl-icon name="floppy" slot="suffix"></sl-icon>
-                        </sl-button>
-                        <sl-button id="delete-entity" variant="danger" size="small" title="Delete entity"
-                            ?disabled="${!this.entity_to_edit}">
-                            Delete
-                            <sl-icon name="file-earmark-minus" slot="suffix"></sl-icon>
-                        </sl-button>
-                        <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
-                            <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
-                        </sl-button>
-                    </sl-button-group>
-                    ${this.entity_to_edit ? html`
-                        <div class="header-container">
-                            <h2>
-                                ${this._getEntityName(this.entity_to_edit.entity_type)}
-                            </h2>
-                            <div class="iri-container">
-                                <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
-                                    ${this.entity_to_edit.entity_iri}
-                                    <sl-icon name="clipboard" slot="suffix"></sl-icon>
+
+            <div class="layout">
+
+                <div class="main">
+                    <div id="container">
+                        <div class="header">
+                            <sl-button-group>
+                                <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
+                                    <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
                                 </sl-button>
-                            </div>
+                                <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
+                                    ?disabled="${!this._hasUnsavedChanges}">
+                                    ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
+                                    Save
+                                    <sl-icon name="floppy" slot="suffix"></sl-icon>
+                                </sl-button>
+                                <sl-button id="delete-entity" variant="danger" size="small" title="Delete entity"
+                                    ?disabled="${!this.entity_to_edit}">
+                                    Delete
+                                    <sl-icon name="file-earmark-minus" slot="suffix"></sl-icon>
+                                </sl-button>
+                                <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
+                                    <sl-icon slot="suffix" name="arrow-counterclockwise"></sl-icon>
+                                </sl-button>
+                            </sl-button-group>
+                            ${this.entity_to_edit ? html`
+                                <div class="header-container">
+                                    <h2>
+                                        ${this._getEntityName(this.entity_to_edit.entity_type)}
+                                    </h2>
+                                    <div class="iri-container">
+                                        <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
+                                            ${this.entity_to_edit.entity_iri}
+                                            <sl-icon name="clipboard" slot="suffix"></sl-icon>
+                                        </sl-button>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
-                    ` : ''}
+                        <div class="form-container">
+                            <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-container">
-                    <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+
+                ${this._sidePanelOpen ? html`
+                    <div class="side-panel-backdrop open" 
+                        @click=${this._closeSidePanel}>
+                    </div>
+                ` : ''}
+
+                <div class="entity-window ${this._sidePanelOpen ? '' : 'hidden'}" id="entity-window">
+    
+                    <div class="entity-window-header" id="entity-window-header">
+                        <span>
+                            ${this._getEntityName(this._sidePanelEntity?.entity_type) || 'Linked Entity'}
+                        </span>
+
+                        <div style="display:flex; gap:0.3rem;">
+                            <sl-button size="small" @click=${this._openInEditor}>
+                                Edit
+                            </sl-button>
+
+                            <sl-button size="small" @click=${this._closeSidePanel}>
+                                ✕
+                            </sl-button>
+                        </div>
+                    </div>
+
+                    <div class="entity-window-content">
+                        ${this._sidePanelEntity ? html`
+                            <shacl-form
+                                data-values=${this._sidePanelEntity.values}
+                                data-values-subject=${this._sidePanelEntity.subject}
+                                data-shapes-url=${this._sidePanelEntity.shapesUrl}
+                                data-view>
+                            </shacl-form>
+                        ` : ''}
+                    </div>
+
                 </div>
+
             </div>
+
             <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
         `;
     }
@@ -541,6 +783,9 @@ export default class ADWLMEntityEditor extends LitElement {
             // Reset unsaved changes state when deleting file
             this._hasUnsavedChanges = false;
         });
+
+        this._initPreviewLinkHandling();
+        this._initDraggableWindow();
     }
 
     _init() {
