@@ -335,8 +335,8 @@ export default class ADWLMEntityEditor extends LitElement {
             );
 
             const subject = `urn:uuid:${relativePath}`;
-            const shapeUrl = this._getShapeForPath(relativePath);
             let entity_type = this._detectEntityType(relativePath);
+            const shapeUrl = await this._getShapeForPath(entity_type);
 
             this._sidePanelEntity = {
                 values: ttl,
@@ -357,12 +357,36 @@ export default class ADWLMEntityEditor extends LitElement {
         this._sidePanelEntity = null;
     }
 
-    _getShapeForPath(path) {
-        for (const def of this.entity_type_definitions) {
-            if (path.startsWith(def.folder_name)) {
-                return def.shacl_file_location;
+    async _getShapeForPath(path) {
+        let shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        if (shacl_file_location) {
+            const config = this._cachedConfig || { datasetBaseUrl: null };
+            console.log("Config in _getShapeForPath:", config);
+    
+            if (config && config.datasetBaseUrl) {
+                try {
+                    //return def.shacl_file_location;
+                    const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+                    
+                    // Replace the dataset namespace
+                    const modifiedShaclContent = shaclContent.replace(
+                        /dataset: <[^>]+>/g,
+                        `dataset: <${config.datasetBaseUrl}>`
+                    );
+                    
+                    // Create a blob URL for the modified content
+                    const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
+                    const modifiedFileUrl = URL.createObjectURL(blob);
+                    return modifiedFileUrl;
+                } catch (error) {
+                    console.error('Failed to modify SHACL file:', error);
+                    // Fallback to original file
+                    return shacl_file_location;
+                }
             }
         }
+
+        
 
         console.warn("Kein Shape gefunden für:", path);
         return "";
