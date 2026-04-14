@@ -19,18 +19,19 @@ The best way to initially get in touch is via [GitHub Discussions].
 
 If you've noticed a bug or have a feature request, please open a [GitHub issue] (well, you might want to look through the open issues before to avoid creating duplicates)! It's generally best if you get confirmation of your bug or approval for your feature request this way before starting to code.
 
-If you're looking for a good place to start, check out the issues labelled [good first issue] — these are tasks that are well-scoped and don't require deep familiarity with the codebase.
+If you're looking for a good place to start, check out the issues labelled [good first issue], these are tasks that are well-scoped and don't require deep familiarity with the codebase.
 
 
 ## Run the tool locally
 
-The tool is a static HTML/JS app that runs directly in the browser — no build step needed. To run it locally, serve the repository root with any local web server, for example:
+The tool is a static HTML/JS app that runs directly in the browser, no build step needed. To run it locally, serve the repository root with any local web server, for example:
 
 ```bash
 python3 -m http.server 8080
 ```
+Alternatively, use the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code.
+Then open `http://localhost:8080` in your browser. 
 
-Then open `http://localhost:8080` in your browser. Alternatively, use the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code.
 
 ### Running the tests
 
@@ -41,7 +42,7 @@ npm install
 npm test
 ```
 
-For integration tests (clone, pull, push against a real repository) you need a test repository and a GitHub personal access token. Create a repository from the [MerMEId-MeLODy-Template] and then create a `.env` file in the project root:
+For integration tests (clone, pull, push against a real repository) you need a test repository and a GitHub personal access token. Create a repository from the [MerMEId-MeLODy-Template] and then create a `.env` file in the MerMEId-MeLODy project root:
 
 ```
 GIT_TOKEN=<your GitHub personal access token>
@@ -49,12 +50,14 @@ GIT_USERNAME=<your GitHub username>
 TEST_REPO_URL=<URL of your test repository>
 ```
 
-Integration tests are automatically skipped if these variables are not set.
+You start all tests with `npm install`. Integration tests are automatically skipped if these variables are not set.
 
 
 ## Create a branch and make your changes
 
-If this is something you think you can fix, create a branch directly on GitHub. A good branch name references the issue you're working on (e.g. `issue-33`).
+**If you have write access to the repository**, create a branch directly on GitHub. A good branch name references the issue you're working on (e.g. `issue-33`).
+
+**If you are an external contributor**, fork the repository first by clicking "Fork" in the top right on GitHub. Then create a branch in your fork. When you open a Pull Request, GitHub will automatically offer to open it against `main` of the original repository.
 
 You can edit files directly in the GitHub web interface on your branch. Please keep in mind that there should be a ticket for the task you want to accomplish before you start.
 
