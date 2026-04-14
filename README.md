@@ -1,9 +1,14 @@
-# MerMEId
+# MerMEId-MeLODy
 
 
 ## About
 
-This is the new version of [MerMEId](https://github.com/Edirom/MerMEId).
+MerMEId-MeLODy is the new version of [MerMEId](https://github.com/Edirom/MerMEId), an open-source metadata editor for creating and editing music-related metadata. Originally developed at the Danish Centre for Music Editing and actively maintained by a growing community, MerMEId is a well-established tool for creating digital catalogues of composers' works. Catalogues for Carl Nielsen, Anton Bruckner, Giuseppe Tartini, Frederick Delius and others have been published using it; further catalogues, including works by Gustav Mahler, Franz Schubert, and Georg Philipp Telemann, are currently in progress.
+
+This new version shifts the focus towards Linked Open Data (LOD), storing metadata as RDF/Turtle rather than MEI/XML. It is designed to connect seamlessly with MEI, so that data from the original MerMEId can be reused without friction. Export scripts for various formats will be provided to ensure interoperability.
+
+MerMEId-MeLODy aims to make it easy to create high-quality, FAIR-compliant music metadata across different levels such as works, sources, and events, and to make that data available as part of a broader Linked Data landscape. The project is developed in close connection with the [MEI community](https://music-encoding.org).
+
 
 ## Setup
 
@@ -55,6 +60,11 @@ To use the tool, you can either click the link provided [here](https://music-met
 ### Repository Synchronization
 - Click the "Synchronize repository" button (arrow-clockwise icon) to pull latest changes
 - The editor will warn you if you have unsaved or unshared changes. If this is the case, you need to either share your changes with the remote repository first, or undo your changes before synchronizing with the remote repository.
+
+
+## Contributing
+
+Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get involved.
 
 
 ## Funding
