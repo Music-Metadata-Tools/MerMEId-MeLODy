@@ -12,9 +12,15 @@ MerMEId-MeLODy aims to make it easy to create high-quality, FAIR-compliant music
 
 ## Setup
 
-To use the tool, you can either click the link provided [here](https://music-metadata-tools.github.io/MerMEId-MeLODy/) in the repository or download the entire repository and use it locally. To work with data, you’ll need a repository where the data can be stored and edited. You can create such a repository using the following [template](https://github.com/Music-Metadata-Tools/MerMEId-MeLODy-Template). Import scripts for various data formats will be added later. The template itself contains some sample data, which you can delete. After creating the data repository, activate GitHub Pages by going to Settings → Pages and setting the source to GitHub Actions. See the documentation for details on why this is required.
+To use the tool, you can either click the link provided [here](https://music-metadata-tools.github.io/MerMEId-MeLODy/) in the repository or download the entire repository and use it locally. To work with data, you’ll need a repository where the data can be stored and edited. You can create such a repository using the following [template](https://github.com/Music-Metadata-Tools/MerMEId-MeLODy-Template). Import scripts for various data formats will be added later. The template itself contains some sample data, which you can delete. After creating the data repository from the template, activate GitHub Pages by going to Settings → Pages and setting the source to GitHub Actions. 
 
-Once a repository has been created for the data, you can open the editor and get started.
+The last step is to modify the url to the datasets in the configuration.json file in the configuration folder of the data repository. To do this, you need to replace the line "datasetBaseUrl": "https://music-metadata-tools.github.io/MerMEId-MeLODy-Template/datasets/", to "datasetBaseUrl": "{your_pages_url}/datasets/",. You can find your GitHub Pages url on the main site of your repository once the workflows for the GitHub Pages are activated. Once a repository has been created for the data, you can open the editor and get started.
+
+Short: 
+1. Open the editor [here](https://music-metadata-tools.github.io/MerMEId-MeLODy/ or run it locally.
+2. Create a data repository from the [template](https://github.com/Music-Metadata-Tools/MerMEId-MeLODy-Template).
+3. In the data repository, go to Settings → Pages and set the source to GitHub Actions.
+4. In configuration/configuration.json in the data repository, update datasetBaseUrl to "{your_pages_url}/datasets/". Your Pages URL is shown on the repository's main page once the Pages workflow has run.
 
 
 ## Getting Started
