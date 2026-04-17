@@ -141,6 +141,14 @@ class ADWLMEntitySearch extends LitElement {
       display: block;
       margin-bottom: 0.5rem;
     }
+    .badge {
+      margin-left: 10px;
+      background-color: #3d97f1;
+      padding: 3px;
+      font-size: 0.7rem;
+      color: #ffffff;
+      border-radius: 4px;
+    }
     @media only screen and (max-width: 900px) {
         div#search-container {
             display: none;
@@ -246,9 +254,19 @@ class ADWLMEntitySearch extends LitElement {
 
     // SPARQL-Abfrage für Labels und Typen
     const query = `
-      SELECT ?subject ?label ?type WHERE {
-        ?subject <http://www.w3.org/2004/02/skos/core#prefLabel> ?label .
+      SELECT ?subject ?label ?type ?classification ?altlabel ?composer WHERE {
+        ?subject <http://www.w3.org/2004/02/skos/core#prefLabel> ?title .
         ?subject a ?type .
+        OPTIONAL {
+          ?subject <https://schema.org/composer> ?composer .
+        }
+        bind(coalesce(concat(?composer, ": ", ?title), ?title) AS ?label) .
+        OPTIONAL {
+          ?subject <http://www.w3.org/2004/02/skos/core#broader> ?classification .
+        }
+        OPTIONAL {
+          ?subject <http://www.w3.org/2004/02/skos/core#altLabel> ?altlabel .
+        }
       }
       ORDER BY ?label
     `;
@@ -258,7 +276,10 @@ class ADWLMEntitySearch extends LitElement {
       allEntries.push({
         subject: binding.get("subject").value,
         label: binding.get("label").value,
-        type: binding.get("type")?.value || "Unknown", // Typ ggf. leer
+        type: binding.get("type")?.value || "Unknown",
+        classification: binding.get("classification")?.value || "",
+        altlabel: binding.get("altlabel")?.value || "",
+        composer: binding.get("composer")?.value || "",
       });
     }
 
@@ -285,11 +306,11 @@ class ADWLMEntitySearch extends LitElement {
 
   _filterResults() {
     this._filtered = this._entries.filter((e) => {
-      const matchesLabel = this._query === "" || e.label?.toLowerCase().includes(this._query);
+      const matchesLabel = this._query === "" || e.label?.toLowerCase().includes(this._query) || e.altlabel?.toLowerCase().includes(this._query) || e.classification?.toLowerCase().includes(this._query) || e.composer?.toLowerCase().includes(this._query);
       const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
-    //console.log("Gefilterte Ergebnisse:", this._filtered);
+    console.log("Gefilterte Ergebnisse:", this._filtered);
   }
 
   async _onSelect(entry) {
@@ -356,14 +377,19 @@ class ADWLMEntitySearch extends LitElement {
             clearable>
           </sl-input>
         </div>
-
+        ${this._filtered.length >= 1 ? html`
+          <div class="results-count">
+            <span>Results: ${this._filtered.length}</span>
+          </div>
+        ` : ''}
         <div class="results">
           ${this._loading ? html`
             Reload the browser to load indexes.
           ` : this._filtered.map(
             (entry) => html`
+              
               <div @click=${() => this._onSelect(entry)} class="result-item">
-                <span>${entry.label}</span>
+                <span>${entry.label}</span><span class="badge">${entry.type.split("https://lod.academy/melod/vocab/ontology#")[1].split("Entity")[0]}</span>
               </div>
             `
           )}
