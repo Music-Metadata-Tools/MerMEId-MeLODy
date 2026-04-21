@@ -1,3 +1,6 @@
+![GitHub release](https://img.shields.io/github/v/release/Music-Metadata-Tools/MerMEId-MeLODy?include_prereleases)
+
+
 # MerMEId-MeLODy
 
 
