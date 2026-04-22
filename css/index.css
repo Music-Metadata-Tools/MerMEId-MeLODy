@@ -93,29 +93,32 @@ h1.title {
     text-align: center;
 }
 
-.beta-badge {
-    background-color: #ff6b6b;
-    color: white;
-    padding: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    width: 3.5rem;
-    height: 3.5rem;
+.logo-header-wrapper {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    line-height: 1;
+    gap: 0.4rem;
     margin-right: auto;
+    cursor: pointer;
     position: relative;
-    aspect-ratio: 1;
-    clip-path: polygon(100.00% 50.00%, 79.54% 55.21%, 96.98% 67.10%, 75.98% 65.00%, 88.30% 82.14%, 69.28% 72.98%, 75.00% 93.30%, 60.26% 78.19%, 58.68% 99.24%, 50.00% 80.00%, 41.32% 99.24%, 39.74% 78.19%, 25.00% 93.30%, 30.72% 72.98%, 11.70% 82.14%, 24.02% 65.00%, 3.02% 67.10%, 20.46% 55.21%, 0.00% 50.00%, 20.46% 44.79%, 3.02% 32.90%, 24.02% 35.00%, 11.70% 17.86%, 30.72% 27.02%, 25.00% 6.70%, 39.74% 21.81%, 41.32% 0.76%, 50.00% 20.00%, 58.68% 0.76%, 60.26% 21.81%, 75.00% 6.70%, 69.28% 27.02%, 88.30% 17.86%, 75.98% 35.00%, 96.98% 32.90%, 79.54% 44.79%);
+    transition: transform 0.2s;
 }
 
-.beta-badge:hover {
-    background-color: #b62222;
-    color: white;
+.logo-header-wrapper:hover {
     transform: scale(1.1);
+}
+
+.logo-header {
+    width: 3.5rem;
+    height: 3.5rem;
+}
+
+.beta-badge {
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    color: #ffffff;
+    opacity: 0.75;
 }
 
 .beta-popup {
