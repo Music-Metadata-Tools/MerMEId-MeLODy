@@ -22,12 +22,6 @@ melod:Bibliography
                   sh:class melod:BibliographicGenre ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
-                  sh:path melod:hasTitle ;
-                  sh:node melod:Title ;
-                  sh:group melod:Titles ;
-                  sh:name "Monograph/Article" ;
-                ] ;
-  sh:property   [ sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation ;
                   sh:group melod:Titles ;
@@ -40,6 +34,12 @@ melod:Bibliography
                   sh:path         owl:sameAs ;
                   sh:nodeKind sh:IRI ;
                   sh:group melod:Titles ;
+                ] ;
+  sh:property   [ sh:minCount 0 ;
+                  sh:path melod:hasTitle ;
+                  sh:node melod:Title ;
+                  sh:group melod:Titles ;
+                  sh:name "Titles of Monograph/Article" ;
                 ] ;
   sh:property   [ sh:name "Person/Institution" ;
                   sh:description "Insert ID of the person or institution" ;
@@ -181,17 +181,17 @@ melod:PublicationEvent
                   sh:path      melod:hasTitleLevel ;
                   sh:class melod:BibliographicLevel
                 ] ;
-  sh:property   [ sh:name      "Type" ;
-                  sh:description "Type, e.g. subtitle" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:hasTitleType ;
-                  sh:or (
-                    [ sh:class melod:TitleType ; rdfs:label "Select from list" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom type" ; sh:datatype xsd:string ]
-                  )
+  #sh:property   [ sh:name      "Type" ;
+   #               sh:description "Type, e.g. subtitle" ;
+   #               sh:minCount  0 ;
+   #               sh:maxCount  1 ;
+   #               sh:path      melod:hasTitleType ;
+   #               sh:or (
+   #                 [ sh:class melod:TitleType ; rdfs:label "Select from list" ; sh:nodeKind sh:IRI ]
+   #                 [ rdfs:label "Custom type" ; sh:datatype xsd:string ]
+   #               )
                   
-                ] ;
+    #            ] ;
   sh:targetClass  melod:Title .
 
   melod:Reference
