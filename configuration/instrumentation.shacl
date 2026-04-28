@@ -52,6 +52,13 @@ melod:Instrumentation
 melod:InstrumentationDetail
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:minCount     0 ;
+                  sh:description "Position of the instrument in the instrumentation" ;
+                  sh:name         "No." ;
+                  sh:maxCount     1 ;
+                  sh:path         schema:position ;
+                  sh:datatype xsd:integer
+                ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
                   sh:name         "Medium of performance" ;

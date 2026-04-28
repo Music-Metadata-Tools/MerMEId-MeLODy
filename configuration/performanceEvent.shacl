@@ -208,6 +208,7 @@ melod:Annotation
   sh:property   [ sh:description "paragraph" ;
                   sh:name      "Paragraph" ;
                   sh:minCount  1 ;
+                  sh:maxCount 1 ;
                   sh:datatype  rdf:HTML ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph

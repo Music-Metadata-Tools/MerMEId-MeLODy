@@ -2,6 +2,7 @@
 @prefix melod: <https://lod.academy/melod/vocab/ontology#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix schema: <https://schema.org/> .
+@prefix dash: <http://datashapes.org/dash#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -21,8 +22,14 @@ melod:Person
                 ] ;
   sh:property   [ sh:description "First name of the person" ;
                   sh:name "First name" ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
+                  sh:group melod:General ;
+                  sh:path schema:givenName
+                ] ;
+  sh:property   [ sh:description "Alternate name of a person" ;
+                  sh:name "Alternate name" ;
+                  sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:path schema:givenName
                 ] ;
@@ -79,6 +86,19 @@ melod:Person
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace
+                ] ;
+  sh:property   [ sh:description "Occupation" ;
+                  sh:name "Occupation" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Biography ;
+                  sh:path schema:hasOccupation
+                ] ;
+  sh:property   [ sh:description "Biographical description" ;
+                  sh:name "Description" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Biography ;
+                  sh:path schema:description ;
+                  dash:singleLine false ;
                 ] .
 
 melod:Date
@@ -167,3 +187,7 @@ rdfs:label      "Birth" .
 melod:Death
 a               sh:PropertyGroup ;
 rdfs:label      "Death" .
+
+melod:Biography
+a               sh:PropertyGroup ;
+rdfs:label      "Biographical Information" .
