@@ -19,13 +19,13 @@ melod:Institution
                 ] ;
   sh:property   [ sh:description "Siglum of the RISM institution" ;
                   sh:name "RISM Siglum" ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasSiglum
                 ] ;
   sh:property   [ sh:description "Abbreviation of the institution" ;
                   sh:name "Abbreviation" ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation
                 ] ;
