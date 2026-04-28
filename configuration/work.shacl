@@ -13,6 +13,13 @@
 melod:Work
   a sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl , dataset:bibliography.ttl , dataset:expressions.ttl , dataset:works.ttl ;
+  sh:property   [ sh:description "Link to external resource, e.g. Wikidata IRI or GND" ;
+                  sh:name "Link" ;
+                  sh:group melod:General ;
+                  sh:minCount 0 ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path owl:sameAs
+                ] ;
   sh:property   [ sh:name "Titles" ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
@@ -24,13 +31,6 @@ melod:Work
                   sh:group melod:General ;
                   sh:node melod:Identifier ;
                   sh:path melod:hasIdentifier
-                ] ;
-  sh:property   [ sh:description "Link to external resource, e.g. Wikidata IRI" ;
-                  sh:name "Link" ;
-                  sh:group melod:General ;
-                  sh:minCount 0 ;
-                  sh:nodeKind sh:IRI ;
-                  sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:name "Contributor" ;
                   sh:minCount 0 ;
@@ -257,13 +257,13 @@ melod:Contribution
 
 melod:Identifier
   a               sh:NodeShape ;
-  sh:property   [ sh:description "e.g. TVWV" ;
-                  sh:name      "Name" ;
+  sh:property   [ sh:description "Name of a list or catalogue, e.g. TVWV" ;
+                  sh:name      "List name" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "e.g. abc" ;
+  sh:property   [ sh:description "Work catalogue number, e.g. abc, 1:355" ;
                   sh:name      "Number" ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
