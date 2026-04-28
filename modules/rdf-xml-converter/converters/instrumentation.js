@@ -88,6 +88,10 @@ function parseDetail(id, byId) {
             detail.link = [sameAs['@id']];
         }
     }
+    // Position
+    if (obj['https://schema.org/position']) {
+        detail.position = parseInt(obj['https://schema.org/position']['@value'], 10);
+    }
     // Name
     if (obj['https://schema.org/description']) {
         detail.name = obj['https://schema.org/description']['@value'] || '';

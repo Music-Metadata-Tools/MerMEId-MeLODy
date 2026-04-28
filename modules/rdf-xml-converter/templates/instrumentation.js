@@ -34,6 +34,7 @@ export function generateInstrumentationXML(data) {
             ? ` sameas="${Array.isArray(detail.link) ? detail.link.join(' ') : detail.link}"`
             : '';
         const count = detail.quantity ? ` count="${detail.quantity}"` : '';
+        const position = detail.position ? ` n="${detail.position}"` : '';
         const solo = typeof detail.solo === 'boolean' ? ` solo="${detail.solo}"` : '';
         const adlib = detail.adLib ? ` adlib="true"` : '';
         // Alternative instrumentation as nested perfRes
@@ -41,7 +42,7 @@ export function generateInstrumentationXML(data) {
         if (detail.alternativeInstrumentation?.length) {
             alt = detail.alternativeInstrumentation.map(a => perfRes(a, true)).join('');
         }
-        return `        <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>`;
+        return `        <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}${position}>${mediumLabel}${alt}</perfRes>`;
     }
 
     // Helper: castItem for each detail with castingDetail
@@ -54,6 +55,7 @@ export function generateInstrumentationXML(data) {
             : '';
         const solo = typeof detail.solo === 'boolean' ? ` solo="${detail.solo}"` : '';
         const count = detail.quantity ? ` count="${detail.quantity}"` : '';
+        const position = detail.position ? ` n="${detail.position}"` : '';
         const adlib = detail.adLib ? ` adlib="true"` : '';
         const roleName = detail.castingDetail.roleName || '';
         const roleDesc = detail.castingDetail.roleDescription || '';
@@ -63,7 +65,7 @@ export function generateInstrumentationXML(data) {
             alt = detail.alternativeInstrumentation.map(a => perfRes(a, true)).join('');
         }
         return `        <castItem>
-            <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}>${mediumLabel}${alt}</perfRes>
+            <perfRes auth.uri="${medium}"${count}${solo}${adlib}${link}${position}>${mediumLabel}${alt}</perfRes>
             <role>
                 <name>${roleName}</name>
             </role>
