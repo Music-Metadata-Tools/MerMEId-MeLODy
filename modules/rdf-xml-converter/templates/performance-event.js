@@ -57,9 +57,13 @@ export function generatePerformanceEventXML(data) {
 
         elements.push(contributorElements);
     }
-    
-    if (data.description) {
-        elements.push(`    <desc>${data.description}</desc>`);
+
+    if (data.annotation.length > 0) {
+        const annotationElements = data.annotation.map(annotation => 
+                `<desc label="${annotation.label || ''}">${annotation.paragraph?.length > 0 ? annotation.paragraph.map(paragraph => `${paragraph}`) : ''}</desc>`
+            ).join('\n');
+
+        elements.push(annotationElements);
     }
 
     // Add bibliography/citations
