@@ -5,6 +5,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 melod:Place
   a sh:NodeShape, rdfs:Class ;
@@ -14,6 +15,12 @@ melod:Place
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:name
+                ] ;
+  sh:property   [ sh:description "Contained in place" ;
+                  sh:name "Country" ;
+                  sh:maxCount 1;
+                  sh:class melod:Country ;
+                  sh:path schema:containedInPlace
                 ] ;
   sh:property   [ sh:description "External resource (e.g. geonames)" ;
                   sh:name "Link" ;
@@ -28,3 +35,1012 @@ melod:Place
                   dash:singleLine false ;
                   sh:path schema:description
                 ] .
+
+<https://www.geonames.org/2921044>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Germany"@en .
+
+<https://www.geonames.org/2635167>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "United Kingdom"@en .
+
+<https://www.geonames.org/3041565>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Andorra"@en .
+
+<https://www.geonames.org/290557>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "United Arab Emirates"@en .
+
+<https://www.geonames.org/1149361>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Afghanistan"@en .
+
+<https://www.geonames.org/3576396>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Antigua and Barbuda"@en .
+
+<https://www.geonames.org/3573511>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Anguilla"@en .
+
+<https://www.geonames.org/783754>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Albania"@en .
+
+<https://www.geonames.org/174982>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Armenia"@en .
+
+<https://www.geonames.org/3351879>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Angola"@en .
+
+<https://www.geonames.org/6697173>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Antarctica"@en .
+
+<https://www.geonames.org/3865483>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Argentina"@en .
+
+<https://www.geonames.org/5880801>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "American Samoa"@en .
+
+<https://www.geonames.org/2782113>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Austria"@en .
+
+<https://www.geonames.org/2077456>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Australia"@en .
+
+<https://www.geonames.org/3577279>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Aruba"@en .
+
+<https://www.geonames.org/661882>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Aland Islands"@en .
+
+<https://www.geonames.org/587116>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Azerbaijan"@en .
+
+<https://www.geonames.org/3277605>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bosnia and Herzegovina"@en .
+
+<https://www.geonames.org/3374084>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Barbados"@en .
+
+<https://www.geonames.org/1210997>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bangladesh"@en .
+
+<https://www.geonames.org/2802361>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Belgium"@en .
+
+<https://www.geonames.org/2361809>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Burkina Faso"@en .
+
+<https://www.geonames.org/732800>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bulgaria"@en .
+
+<https://www.geonames.org/290291>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bahrain"@en .
+
+<https://www.geonames.org/433561>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Burundi"@en .
+
+<https://www.geonames.org/2395170>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Benin"@en .
+
+<https://www.geonames.org/3578476>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Barthelemy"@en .
+
+<https://www.geonames.org/3573345>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bermuda"@en .
+
+<https://www.geonames.org/1820814>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Brunei"@en .
+
+<https://www.geonames.org/3923057>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bolivia"@en .
+
+<https://www.geonames.org/7626844>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bonaire, Saint Eustatius and Saba "@en .
+
+<https://www.geonames.org/3469034>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Brazil"@en .
+
+<https://www.geonames.org/3572887>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bahamas"@en .
+
+<https://www.geonames.org/1252634>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bhutan"@en .
+
+<https://www.geonames.org/3371123>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Bouvet Island"@en .
+
+<https://www.geonames.org/933860>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Botswana"@en .
+
+<https://www.geonames.org/630336>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Belarus"@en .
+
+<https://www.geonames.org/3582678>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Belize"@en .
+
+<https://www.geonames.org/6251999>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Canada"@en .
+
+<https://www.geonames.org/1547376>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cocos Islands"@en .
+
+<https://www.geonames.org/203312>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Democratic Republic of the Congo"@en .
+
+<https://www.geonames.org/239880>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Central African Republic"@en .
+
+<https://www.geonames.org/2260494>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Republic of the Congo"@en .
+
+<https://www.geonames.org/2658434>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Switzerland"@en .
+
+<https://www.geonames.org/2287781>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ivory Coast"@en .
+
+<https://www.geonames.org/1899402>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cook Islands"@en .
+
+<https://www.geonames.org/3895114>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Chile"@en .
+
+<https://www.geonames.org/2233387>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cameroon"@en .
+
+<https://www.geonames.org/1814991>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "China"@en .
+
+<https://www.geonames.org/3686110>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Colombia"@en .
+
+<https://www.geonames.org/3624060>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Costa Rica"@en .
+
+<https://www.geonames.org/3562981>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cuba"@en .
+
+<https://www.geonames.org/3374766>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cabo Verde"@en .
+
+<https://www.geonames.org/7626836>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Curacao"@en .
+
+<https://www.geonames.org/2078138>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Christmas Island"@en .
+
+<https://www.geonames.org/146669>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cyprus"@en .
+
+<https://www.geonames.org/3077311>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Czechia"@en .
+
+
+<https://www.geonames.org/223816>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Djibouti"@en .
+
+<https://www.geonames.org/2623032>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Denmark"@en .
+
+<https://www.geonames.org/3575830>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Dominica"@en .
+
+<https://www.geonames.org/3508796>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Dominican Republic"@en .
+
+<https://www.geonames.org/2589581>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Algeria"@en .
+
+<https://www.geonames.org/3658394>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ecuador"@en .
+
+<https://www.geonames.org/453733>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Estonia"@en .
+
+<https://www.geonames.org/357994>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Egypt"@en .
+
+<https://www.geonames.org/2461445>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Western Sahara"@en .
+
+<https://www.geonames.org/338010>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Eritrea"@en .
+
+<https://www.geonames.org/2510769>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Spain"@en .
+
+<https://www.geonames.org/337996>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ethiopia"@en .
+
+<https://www.geonames.org/660013>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Finland"@en .
+
+<https://www.geonames.org/2205218>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Fiji"@en .
+
+<https://www.geonames.org/3474414>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Falkland Islands"@en .
+
+<https://www.geonames.org/2081918>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Micronesia"@en .
+
+<https://www.geonames.org/2622320>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Faroe Islands"@en .
+
+<https://www.geonames.org/3017382>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "France"@en .
+
+<https://www.geonames.org/2400553>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Gabon"@en .
+
+<https://www.geonames.org/3580239>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Grenada"@en .
+
+<https://www.geonames.org/614540>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Georgia"@en .
+
+<https://www.geonames.org/3381670>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "French Guiana"@en .
+
+<https://www.geonames.org/3042362>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guernsey"@en .
+
+<https://www.geonames.org/2300660>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ghana"@en .
+
+<https://www.geonames.org/2411586>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Gibraltar"@en .
+
+<https://www.geonames.org/3425505>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Greenland"@en .
+
+<https://www.geonames.org/2413451>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Gambia"@en .
+
+<https://www.geonames.org/2420477>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guinea"@en .
+
+<https://www.geonames.org/3579143>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guadeloupe"@en .
+
+<https://www.geonames.org/2309096>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Equatorial Guinea"@en .
+
+<https://www.geonames.org/390903>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Greece"@en .
+
+<https://www.geonames.org/3474415>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "South Georgia and the South Sandwich Islands"@en .
+
+<https://www.geonames.org/3595528>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guatemala"@en .
+
+<https://www.geonames.org/4043988>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guam"@en .
+
+<https://www.geonames.org/2372248>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guinea-Bissau"@en .
+
+<https://www.geonames.org/3378535>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Guyana"@en .
+
+<https://www.geonames.org/1819730>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Hong Kong"@en .
+
+<https://www.geonames.org/1547314>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Heard Island and McDonald Islands"@en .
+
+<https://www.geonames.org/3608932>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Honduras"@en .
+
+<https://www.geonames.org/3202326>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Croatia"@en .
+
+<https://www.geonames.org/3723988>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Haiti"@en .
+
+<https://www.geonames.org/719819>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Hungary"@en .
+
+<https://www.geonames.org/1643084>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Indonesia"@en .
+
+<https://www.geonames.org/2963597>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ireland"@en .
+
+<https://www.geonames.org/294640>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Israel"@en .
+
+<https://www.geonames.org/3042225>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Isle of Man"@en .
+
+<https://www.geonames.org/1269750>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "India"@en .
+
+<https://www.geonames.org/1282588>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "British Indian Ocean Territory"@en .
+
+<https://www.geonames.org/99237>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Iraq"@en .
+
+<https://www.geonames.org/130758>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Iran"@en .
+
+<https://www.geonames.org/2629691>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Iceland"@en .
+
+<https://www.geonames.org/3175395>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Italy"@en .
+
+<https://www.geonames.org/3042142>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Jersey"@en .
+
+<https://www.geonames.org/3489940>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Jamaica"@en .
+
+<https://www.geonames.org/248816>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Jordan"@en .
+
+<https://www.geonames.org/1861060>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Japan"@en .
+
+<https://www.geonames.org/192950>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kenya"@en .
+
+<https://www.geonames.org/1527747>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kyrgyzstan"@en .
+
+<https://www.geonames.org/1831722>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cambodia"@en .
+
+<https://www.geonames.org/4030945>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kiribati"@en .
+
+<https://www.geonames.org/921929>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Comoros"@en .
+
+<https://www.geonames.org/3575174>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Kitts and Nevis"@en .
+
+<https://www.geonames.org/1873107>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "North Korea"@en .
+
+<https://www.geonames.org/1835841>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "South Korea"@en .
+
+<https://www.geonames.org/831053>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kosovo"@en .
+
+<https://www.geonames.org/285570>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kuwait"@en .
+
+<https://www.geonames.org/3580718>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Cayman Islands"@en .
+
+<https://www.geonames.org/1522867>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Kazakhstan"@en .
+
+<https://www.geonames.org/1655842>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Laos"@en .
+
+<https://www.geonames.org/272103>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Lebanon"@en .
+
+<https://www.geonames.org/3576468>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Lucia"@en .
+
+<https://www.geonames.org/3042058>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Liechtenstein"@en .
+
+<https://www.geonames.org/1227603>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sri Lanka"@en .
+
+<https://www.geonames.org/2275384>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Liberia"@en .
+
+<https://www.geonames.org/932692>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Lesotho"@en .
+
+<https://www.geonames.org/597427>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Lithuania"@en .
+
+<https://www.geonames.org/2960313>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Luxembourg"@en .
+
+<https://www.geonames.org/458258>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Latvia"@en .
+
+<https://www.geonames.org/2215636>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Libya"@en .
+
+<https://www.geonames.org/2542007>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Morocco"@en .
+
+<https://www.geonames.org/2993457>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Monaco"@en .
+
+<https://www.geonames.org/617790>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Moldova"@en .
+
+<https://www.geonames.org/3194884>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Montenegro"@en .
+
+<https://www.geonames.org/3578421>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Martin"@en .
+
+<https://www.geonames.org/1062947>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Madagascar"@en .
+
+<https://www.geonames.org/2080185>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Marshall Islands"@en .
+
+<https://www.geonames.org/718075>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "North Macedonia"@en .
+
+<https://www.geonames.org/2453866>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mali"@en .
+
+<https://www.geonames.org/1327865>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Myanmar"@en .
+
+<https://www.geonames.org/2029969>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mongolia"@en .
+
+<https://www.geonames.org/1821275>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Macao"@en .
+
+<https://www.geonames.org/4041468>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Northern Mariana Islands"@en .
+
+<https://www.geonames.org/3570311>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Martinique"@en .
+
+<https://www.geonames.org/2378080>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mauritania"@en .
+
+<https://www.geonames.org/3578097>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Montserrat"@en .
+
+<https://www.geonames.org/2562770>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Malta"@en .
+
+<https://www.geonames.org/934292>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mauritius"@en .
+
+<https://www.geonames.org/1282028>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Maldives"@en .
+
+<https://www.geonames.org/927384>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Malawi"@en .
+
+<https://www.geonames.org/3996063>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mexico"@en .
+
+<https://www.geonames.org/1733045>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Malaysia"@en .
+
+<https://www.geonames.org/1036973>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mozambique"@en .
+
+<https://www.geonames.org/3355338>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Namibia"@en .
+
+<https://www.geonames.org/2139685>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "New Caledonia"@en .
+
+<https://www.geonames.org/2440476>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Niger"@en .
+
+<https://www.geonames.org/2155115>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Norfolk Island"@en .
+
+<https://www.geonames.org/2328926>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Nigeria"@en .
+
+<https://www.geonames.org/3617476>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Nicaragua"@en .
+
+<https://www.geonames.org/2750405>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "The Netherlands"@en .
+
+<https://www.geonames.org/3144096>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Norway"@en .
+
+<https://www.geonames.org/1282988>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Nepal"@en .
+
+<https://www.geonames.org/2110425>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Nauru"@en .
+
+<https://www.geonames.org/4036232>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Niue"@en .
+
+<https://www.geonames.org/2186224>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "New Zealand"@en .
+
+<https://www.geonames.org/286963>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Oman"@en .
+
+<https://www.geonames.org/3703430>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Panama"@en .
+
+<https://www.geonames.org/3932488>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Peru"@en .
+
+<https://www.geonames.org/4030656>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "French Polynesia"@en .
+
+<https://www.geonames.org/2088628>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Papua New Guinea"@en .
+
+<https://www.geonames.org/1694008>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Philippines"@en .
+
+<https://www.geonames.org/1168579>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Pakistan"@en .
+
+<https://www.geonames.org/798544>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Poland"@en .
+
+<https://www.geonames.org/3424932>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Pierre and Miquelon"@en .
+
+<https://www.geonames.org/4030699>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Pitcairn"@en .
+
+<https://www.geonames.org/4566966>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Puerto Rico"@en .
+
+<https://www.geonames.org/6254930>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Palestinian Territory"@en .
+
+<https://www.geonames.org/2264397>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Portugal"@en .
+
+<https://www.geonames.org/1559582>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Palau"@en .
+
+<https://www.geonames.org/3437598>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Paraguay"@en .
+
+<https://www.geonames.org/289688>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Qatar"@en .
+
+<https://www.geonames.org/935317>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Reunion"@en .
+
+<https://www.geonames.org/798549>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Romania"@en .
+
+<https://www.geonames.org/6290252>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Serbia"@en .
+
+<https://www.geonames.org/2017370>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Russia"@en .
+
+<https://www.geonames.org/49518>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Rwanda"@en .
+
+<https://www.geonames.org/102358>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saudi Arabia"@en .
+
+<https://www.geonames.org/2103350>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Solomon Islands"@en .
+
+<https://www.geonames.org/241170>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Seychelles"@en .
+
+<https://www.geonames.org/366755>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sudan"@en .
+
+<https://www.geonames.org/7909807>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "South Sudan"@en .
+
+<https://www.geonames.org/2661886>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sweden"@en .
+
+<https://www.geonames.org/1880251>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Singapore"@en .
+
+<https://www.geonames.org/3370751>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Helena"@en .
+
+<https://www.geonames.org/3190538>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Slovenia"@en .
+
+<https://www.geonames.org/607072>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Svalbard and Jan Mayen"@en .
+
+<https://www.geonames.org/3057568>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Slovakia"@en .
+
+<https://www.geonames.org/2403846>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sierra Leone"@en .
+
+<https://www.geonames.org/3168068>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "San Marino"@en .
+
+<https://www.geonames.org/2245662>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Senegal"@en .
+
+<https://www.geonames.org/51537>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Somalia"@en .
+
+<https://www.geonames.org/3382998>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Suriname"@en .
+
+<https://www.geonames.org/2410758>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sao Tome and Principe"@en .
+
+<https://www.geonames.org/3585968>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "El Salvador"@en .
+
+<https://www.geonames.org/7609695>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Sint Maarten"@en .
+
+<https://www.geonames.org/163843>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Syria"@en .
+
+<https://www.geonames.org/934841>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Eswatini"@en .
+
+<https://www.geonames.org/3576916>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Turks and Caicos Islands"@en .
+
+<https://www.geonames.org/2434508>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Chad"@en .
+
+<https://www.geonames.org/1546748>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "French Southern Territories"@en .
+
+<https://www.geonames.org/2363686>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Togo"@en .
+
+<https://www.geonames.org/1605651>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Thailand"@en .
+
+<https://www.geonames.org/1220409>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tajikistan"@en .
+
+<https://www.geonames.org/4031074>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tokelau"@en .
+
+<https://www.geonames.org/1966436>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Timor Leste"@en .
+
+<https://www.geonames.org/1218197>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Turkmenistan"@en .
+
+<https://www.geonames.org/2464461>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tunisia"@en .
+
+<https://www.geonames.org/4032283>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tonga"@en .
+
+<https://www.geonames.org/298795>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Turkey"@en .
+
+<https://www.geonames.org/3573591>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Trinidad and Tobago"@en .
+
+<https://www.geonames.org/2110297>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tuvalu"@en .
+
+<https://www.geonames.org/1668284>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Taiwan"@en .
+
+<https://www.geonames.org/149590>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Tanzania"@en .
+
+<https://www.geonames.org/690791>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Ukraine"@en .
+
+<https://www.geonames.org/226074>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Uganda"@en .
+
+<https://www.geonames.org/5854968>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "United States Minor Outlying Islands"@en .
+
+<https://www.geonames.org/6252001>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "United States"@en .
+
+<https://www.geonames.org/3439705>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Uruguay"@en .
+
+<https://www.geonames.org/1512440>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Uzbekistan"@en .
+
+<https://www.geonames.org/3164670>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Vatican"@en .
+
+<https://www.geonames.org/3577815>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Saint Vincent and the Grenadines"@en .
+
+<https://www.geonames.org/3625428>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Venezuela"@en .
+
+<https://www.geonames.org/3577718>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "British Virgin Islands"@en .
+
+<https://www.geonames.org/4796775>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "U.S. Virgin Islands"@en .
+
+<https://www.geonames.org/1562822>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Vietnam"@en .
+
+<https://www.geonames.org/2134431>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Vanuatu"@en .
+
+<https://www.geonames.org/4034749>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Wallis and Futuna"@en .
+
+<https://www.geonames.org/4034894>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Samoa"@en .
+
+<https://www.geonames.org/69543>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Yemen"@en .
+
+<https://www.geonames.org/1024031>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Mayotte"@en .
+
+<https://www.geonames.org/953987>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "South Africa"@en .
+
+<https://www.geonames.org/895949>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Zambia"@en .
+
+<https://www.geonames.org/878675>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Zimbabwe"@en .
+
+<https://www.geonames.org/8505033>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Serbia and Montenegro"@en .
+
+<https://www.geonames.org/8505032>
+    a owl:NamedIndividual , melod:Country ;
+    skos:prefLabel "Netherlands Antilles"@en .
