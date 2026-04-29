@@ -1,10 +1,10 @@
+[![MerMEId-MeLODy](https://img.shields.io/badge/Editor-online-green)](https://music-metadata-tools.github.io/MerMEId-MeLODy/)
+[![Documentation](https://img.shields.io/badge/docs-online-blue?logo=github)](https://music-metadata-tools.github.io/MerMEId-Website/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub release](https://img.shields.io/github/v/release/Music-Metadata-Tools/MerMEId-MeLODy?include_prereleases)
-
 
 # MerMEId-MeLODy
 
-
-## About
 
 MerMEId-MeLODy is the new version of [MerMEId](https://github.com/Edirom/MerMEId), an open-source metadata editor for creating and editing music-related metadata. Originally developed at the Danish Centre for Music Editing and actively maintained by a growing community, MerMEId is a well-established tool for creating digital catalogues of composers' works. Catalogues for Carl Nielsen, Anton Bruckner, Giuseppe Tartini, Frederick Delius and others have been published using it; further catalogues, including works by Gustav Mahler, Franz Schubert, and Georg Philipp Telemann, are currently in progress.
 
