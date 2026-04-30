@@ -58,20 +58,7 @@ export class ExpressionConverter {
             citations: [],
             annotation: []
         };
-        // Find the date object ID
-        const dateObjectId = jsonLdData.find(item => 
-            item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Date'
-        )?.['@id'];
 
-        // Find the key object ID
-        const keyObjectId = jsonLdData.find(item => 
-            item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Key'
-        )?.['@id'];
-
-        // Find the meter object ID
-        const meterObjectId = jsonLdData.find(item => 
-            item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']?.['@id'] === 'https://lod.academy/melod/vocab/ontology#Meter'
-        )?.['@id'];
         // --- Merge all objects with the same @id ---
         const byId = {};
         jsonLdData.forEach(obj => {
@@ -85,17 +72,7 @@ export class ExpressionConverter {
             if (obj['https://schema.org/includedComposition'] && !obj['@id'].startsWith('_:') && !obj['https://schema.org/includedComposition']['@id'].startsWith('_:')) {
                 expressionData.movementIris.push(obj['https://schema.org/includedComposition']['@id']);
             }
-            // Check descriptions based on their subject IDs
-            if (obj['https://schema.org/description']) {
-                if (obj['@id'] === keyObjectId) {
-                    // This is the date description
-                    expressionData.key.description = obj['https://schema.org/description']['@value'];
-                }
-                else if (obj['@id'] === meterObjectId) {
-                    // This is the date description
-                    expressionData.meter.description = obj['https://schema.org/description']['@value'];
-                }
-            }
+
             if (obj['https://lod.academy/melod/vocab/ontology#hasClassification'] && !obj['@id'].startsWith('_:')) {
                 expressionData.classification.push(obj['https://lod.academy/melod/vocab/ontology#hasClassification']['@id']);
             }
@@ -107,39 +84,6 @@ export class ExpressionConverter {
             }
             if (obj['https://lod.academy/melod/vocab/ontology#hasPerformance'] && !obj['@id'].startsWith('_:')) {
                 expressionData.performances.push(obj['https://lod.academy/melod/vocab/ontology#hasPerformance']['@id']);
-            }
-            if (obj['https://lod.academy/melod/vocab/ontology#hasIncipitValue']) {
-                expressionData.incipit.value.push(obj['https://lod.academy/melod/vocab/ontology#hasIncipitValue']['@value']);
-            }
-            if (obj['https://lod.academy/melod/vocab/ontology#hasMEIScore']) {
-                expressionData.incipit.mei.push(obj['https://lod.academy/melod/vocab/ontology#hasMEIScore']['@value']);
-            }
-            if (obj['https://lod.academy/melod/vocab/ontology#hasPitch']) {
-                expressionData.key.pitch = obj['https://lod.academy/melod/vocab/ontology#hasPitch']['@id'];
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#hasAccidental']) {
-                expressionData.key.accidental = obj['https://lod.academy/melod/vocab/ontology#hasAccidental']['@id'];
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#isInMode']) {
-                expressionData.key.mode = obj['https://lod.academy/melod/vocab/ontology#isInMode']['@id'];
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#hasMeterCount']) {
-                expressionData.meter.count = obj['https://lod.academy/melod/vocab/ontology#hasMeterCount']['@value'] || '';
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#inMeterUnit']) {
-                expressionData.meter.unit = obj['https://lod.academy/melod/vocab/ontology#inMeterUnit']['@value'] || '';
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#usesMeterSymbol']) {
-                expressionData.meter.symbol = obj['https://lod.academy/melod/vocab/ontology#usesMeterSymbol']['@value'] || '';
-            }
-
-            if (obj['https://lod.academy/melod/vocab/ontology#hasIncipitText']) {
-                expressionData.incipit.text = obj['https://lod.academy/melod/vocab/ontology#hasIncipitText']['@value'] || '';
             }
             if (obj['@id']) {
                 if (!byId[obj['@id']]) {
@@ -206,8 +150,6 @@ export class ExpressionConverter {
             expressionData.instrumentation = main['https://lod.academy/melod/vocab/ontology#hasInstrumentation']['@id'];
         }
 
-        
-
         // --- Identifier ---
         let identifierLinks = main['https://lod.academy/melod/vocab/ontology#hasIdentifier'];
         if (identifierLinks) {
@@ -257,6 +199,24 @@ export class ExpressionConverter {
             expressionData.historicEventObj = eventsLinks
                 .map(link => parseEvents(link['@id'], byId))
                 .filter(Boolean);
+        }
+
+        // --- Key ---
+        let keyLink = main['http://data.doremus.org/ontology#U11_has_key'];
+        if (keyLink) {
+            expressionData.key = parseKey(keyLink['@id'], byId)
+        }
+
+        // --- Meter ---
+        let meterLink = main['https://lod.academy/melod/vocab/ontology#hasMeter'];
+        if (meterLink) {
+            expressionData.meter = parseMeter(meterLink['@id'], byId)
+        }
+
+        // --- Incipit ---
+        let incipitLink = main['https://lod.academy/melod/vocab/ontology#hasIncipit'];
+        if (incipitLink) {
+            expressionData.incipit = parseIncipit(incipitLink['@id'], byId)
         }
 
         // Debug logging
@@ -319,9 +279,40 @@ function parseMovements(id, byId) {
     if (!obj) return null;
     const movement = {};
 
+    // No
+    if (obj['https://schema.org/position']) {
+        movement.no = obj['https://schema.org/position']?.['@value'] || '';
+    }
+
     // Label
     if (obj['http://www.w3.org/2000/01/rdf-schema#label']) {
         movement.label = obj['http://www.w3.org/2000/01/rdf-schema#label']?.['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasTempo']) {
+        movement.tempo = obj['https://lod.academy/melod/vocab/ontology#hasTempo']['@value'] || '';
+    }
+
+    if (obj['https://lod.academy/melod/vocab/ontology#hasInstrumentation']) {
+        movement.instrumentation = obj['https://lod.academy/melod/vocab/ontology#hasInstrumentation']['@id'];
+    }
+
+    // --- Key ---
+    let keyLink = obj['http://data.doremus.org/ontology#U11_has_key'];
+    if (keyLink) {
+        movement.key = parseKey(keyLink['@id'], byId)
+    }
+
+    // --- Meter ---
+    let meterLink = obj['https://lod.academy/melod/vocab/ontology#hasMeter'];
+    if (meterLink) {
+        movement.meter = parseMeter(meterLink['@id'], byId)
+    }
+
+    // --- Incipit ---
+    let incipitLink = obj['https://lod.academy/melod/vocab/ontology#hasIncipit'];
+    if (incipitLink) {
+        movement.incipit = parseIncipit(incipitLink['@id'], byId)
     }
 
     return movement;
@@ -426,4 +417,108 @@ function parseDate(id, byId) {
     }
 
     return date;
+}
+
+// Helper: Parse Key
+function parseKey(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const key = {};
+
+    // pitch
+    if (obj['https://lod.academy/melod/vocab/ontology#hasPitch']) {
+        key.pitch = obj['https://lod.academy/melod/vocab/ontology#hasPitch']['@id'];
+    } 
+
+    // accidental
+    if (obj['https://lod.academy/melod/vocab/ontology#hasAccidental']) {
+        key.accidental = obj['https://lod.academy/melod/vocab/ontology#hasAccidental']['@id'];
+    } 
+
+    // mode
+    if (obj['https://lod.academy/melod/vocab/ontology#isInMode']) {
+        key.mode = obj['https://lod.academy/melod/vocab/ontology#isInMode']['@id'];
+    } 
+
+    // description
+    if (obj['https://schema.org/description']) {
+        key.description = obj['https://schema.org/description']['@value'] || '';
+    }
+
+    return key;
+}
+
+// Helper: Parse Meter
+function parseMeter(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const meter = {};
+
+    // count
+    if (obj['https://lod.academy/melod/vocab/ontology#hasMeterCount']) {
+        meter.count = obj['https://lod.academy/melod/vocab/ontology#hasMeterCount']['@value'] || '';
+    } 
+
+    // unit
+    if (obj['https://lod.academy/melod/vocab/ontology#inMeterUnit']) {
+        meter.unit = obj['https://lod.academy/melod/vocab/ontology#inMeterUnit']['@value'] || '';
+    } 
+
+    // symbol
+    if (obj['https://lod.academy/melod/vocab/ontology#usesMeterSymbol']) {
+        meter.symbol = obj['https://lod.academy/melod/vocab/ontology#usesMeterSymbol']['@id'];
+    } 
+
+    // description
+    if (obj['https://schema.org/description']) {
+        meter.description = obj['https://schema.org/description']['@value'] || '';
+    }
+
+    return meter;
+}
+
+// Helper: Parse Incipit
+function parseIncipit(id, byId) {
+    const obj = byId[id];
+    if (!obj) return null;
+    const incipit = {};
+
+    // value
+    const value = obj['https://lod.academy/melod/vocab/ontology#hasIncipitValue'];
+    if (value) {
+        incipit.value = [];
+
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                if (item['@value']) {
+                    incipit.value.push(item['@value']);
+                }
+            }
+        } else if (value['@value']) {
+            incipit.value.push(value['@value']);
+        }
+    }
+
+    // mei
+    const mei = obj['https://lod.academy/melod/vocab/ontology#hasMEIScore'];
+    if (mei) {
+        incipit.mei = [];
+
+        if (Array.isArray(mei)) {
+            for (const item of mei) {
+                if (item['@value']) {
+                    incipit.mei.push(item['@value']);
+                }
+            }
+        } else if (mei['@value']) {
+            incipit.mei.push(mei['@value']);
+        }
+    }
+
+    // text
+    if (obj['https://lod.academy/melod/vocab/ontology#hasIncipitText']) {
+        incipit.text = obj['https://lod.academy/melod/vocab/ontology#hasIncipitText']['@value'] || '';
+    }
+
+    return incipit;
 }
