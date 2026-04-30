@@ -31,7 +31,7 @@ melod:Person
                   sh:name "Alternate name" ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
-                  sh:path schema:givenName
+                  sh:path schema:alternateName
                 ] ;
   sh:property   [ sh:description "Identifier e.g. GND, VIAF" ;
                   sh:name "Link" ;
