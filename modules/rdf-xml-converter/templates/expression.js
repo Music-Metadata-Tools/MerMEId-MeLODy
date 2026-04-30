@@ -74,14 +74,14 @@ export function generateExpressionXML(data) {
         // key information
         `    <key${data.key?.pitch ? ` pname="${data.key.pitch.split('#')[1]}"` : ''}${
             data.key?.accidental ? ` accid="${data.key.accidental.split('#')[1]}"` : ''}${
-            data.key?.mode ? ` mode="${data.key.mode}"` : ''}>${data.key.description}</key>`,
+            data.key?.mode ? ` mode="${data.key.mode}"` : ''}>${data.key.description || ''}</key>`,
         // mensuration
         data.mensuration ? 
             `    <mensuration>${data.mensuration}</mensuration>` : '',
         // meter information
         `    <meter${data.meter?.count ? ` count="${data.meter.count}"` : ''}${
             data.meter?.unit ? ` unit="${data.meter.unit}"` : ''}${
-            data.meter?.symbol ? ` sym="${data.meter.symbol}"` : ''}>${data.meter.description}</meter>`,
+            data.meter?.symbol ? ` sym="${data.meter.symbol}"` : ''}>${data.meter.description || ''}</meter>`,
         // incipit
         `   <incip>
         ${data.incipit.text ? 
@@ -92,12 +92,12 @@ export function generateExpressionXML(data) {
             ).join('\n') : '' }
         ${data.incipit.value?.length > 0 ? 
             data.incipit.value.map(pae => 
-                `           <incipCode type="PAE">${pae || ''}"</incipCode>`
+                `           <incipCode type="PAE">${pae || ''}</incipCode>`
             ).join('\n') : '' }
     </incip>`,
         // tempo
         data.tempo ? 
-            `    <tempo>${data.tempo}</tempo>` : null,
+            `    <tempo>${data.tempo}</tempo>` : '',
 
         // creation information
         `   <creation>
@@ -193,8 +193,28 @@ ${termElements}
             const label = movement.label || '';
             const iri = movement.expression || '';
             
-            return `        <expression n="${index + 1}">
+            return `        <expression n="${movement.no || index + 1}">
             <title>${label}</title>
+            <key${movement.key?.pitch ? ` pname="${movement.key.pitch.split('#')[1]}"` : ''}${
+            movement.key?.accidental ? ` accid="${movement.key.accidental.split('#')[1]}"` : ''}${
+            movement.key?.mode ? ` mode="${movement.key.mode}"` : ''}>${movement.key.description || ''}</key>
+            <meter${movement.meter?.count ? ` count="${movement.meter?.count}"` : ''}${
+            movement.meter?.unit ? ` unit="${movement.meter?.unit}"` : ''}${
+            movement.meter?.symbol ? ` sym="${movement.meter?.symbol}"` : ''}>${movement.meter?.description || ''}</meter>
+            ${movement.incipit ? `<incip>
+            ${movement.incipit.text ? 
+                `<incipText><p>${movement.incipit.text}</p></incipText>` : ''}
+            ${movement.incipit.mei?.length > 0 ? 
+                movement.incipit.mei.map(score => 
+                    `<score sameas="${score || ''}"/>`
+                ).join('\n') : '' }
+            ${movement.incipit.value?.length > 0 ? 
+                movement.incipit.value.map(pae => 
+                    `<incipCode type="PAE">${pae || ''}</incipCode>`
+                ).join('\n') : '' }
+        </incip>` : ''}
+            ${movement.tempo ? `<tempo>${movement.tempo}</tempo>` : ''}
+            ${movement.instrumentation ? `<perfMedium sameas="${movement.instrumentation}"/>` : ''}
         </expression>`;
         }).join('\n');
 
