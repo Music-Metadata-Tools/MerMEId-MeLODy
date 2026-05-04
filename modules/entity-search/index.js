@@ -252,39 +252,74 @@ class ADWLMEntitySearch extends LitElement {
       }
     }
 
-    // SPARQL-Abfrage für Labels und Typen
-    const query = `
-      SELECT ?subject ?label ?type ?classification ?altlabel ?composer WHERE {
+    
+    // Query 1: main data (subject, label, type)
+    const mainQuery = `
+      SELECT DISTINCT ?subject ?label ?type ?composer WHERE {
         ?subject <http://www.w3.org/2004/02/skos/core#prefLabel> ?title .
         ?subject a ?type .
         OPTIONAL {
           ?subject <https://schema.org/composer> ?composer .
         }
         bind(coalesce(concat(?composer, ": ", ?title), ?title) AS ?label) .
-        OPTIONAL {
-          ?subject <http://www.w3.org/2004/02/skos/core#broader> ?classification .
-        }
-        OPTIONAL {
-          ?subject <http://www.w3.org/2004/02/skos/core#altLabel> ?altlabel .
-        }
       }
       ORDER BY ?label
     `;
-    const results = this.store.query(query);
+    
+    // Query 2: all classifications per subject
+    const classificationsQuery = `
+      SELECT ?subject ?classification WHERE {
+        ?subject <http://www.w3.org/2004/02/skos/core#broader> ?classification .
+      }
+    `;
+    
+    // Query 3: all altLabels per subject
+    const altLabelsQuery = `
+      SELECT ?subject ?altlabel WHERE {
+        ?subject <http://www.w3.org/2004/02/skos/core#altLabel> ?altlabel .
+      }
+    `;
 
-    for (const binding of results) {
+    // Execute all queries
+    const mainResults = this.store.query(mainQuery);
+    const classificationsResults = this.store.query(classificationsQuery);
+    const altLabelsResults = this.store.query(altLabelsQuery);
+
+    // Create a Map for classifications per subject
+    const classificationsMap = new Map();
+    for (const binding of classificationsResults) {
+      const subjectValue = binding.get("subject").value;
+      if (!classificationsMap.has(subjectValue)) {
+        classificationsMap.set(subjectValue, []);
+      }
+      classificationsMap.get(subjectValue).push(binding.get("classification").value);
+    }
+
+    // Create a Map for altLabels per subject
+    const altLabelsMap = new Map();
+    for (const binding of altLabelsResults) {
+      const subjectValue = binding.get("subject").value;
+      if (!altLabelsMap.has(subjectValue)) {
+        altLabelsMap.set(subjectValue, []);
+      }
+      altLabelsMap.get(subjectValue).push(binding.get("altlabel").value);
+    }
+
+    // Combine results
+    for (const binding of mainResults) {
+      const subjectValue = binding.get("subject").value;
       allEntries.push({
-        subject: binding.get("subject").value,
+        subject: subjectValue,
         label: binding.get("label").value,
         type: binding.get("type")?.value || "Unknown",
-        classification: binding.get("classification")?.value || "",
-        altlabel: binding.get("altlabel")?.value || "",
+        classifications: classificationsMap.get(subjectValue) || [],
+        altlabels: altLabelsMap.get(subjectValue) || [],
         composer: binding.get("composer")?.value || "",
       });
     }
 
     this._entries = allEntries;
-    this._filtered = []; // leer, bis Suche eingegeben wird
+    this._filtered = [];
     this._loading = false;
     console.log("Alle Einträge geladen:", allEntries.length);
   }
@@ -306,7 +341,11 @@ class ADWLMEntitySearch extends LitElement {
 
   _filterResults() {
     this._filtered = this._entries.filter((e) => {
-      const matchesLabel = this._query === "" || e.label?.toLowerCase().includes(this._query) || e.altlabel?.toLowerCase().includes(this._query) || e.classification?.toLowerCase().includes(this._query) || e.composer?.toLowerCase().includes(this._query);
+      const matchesLabel = this._query === "" || 
+        e.label?.toLowerCase().includes(this._query) || 
+        e.composer?.toLowerCase().includes(this._query) ||
+        e.altlabels?.some(alt => alt.toLowerCase().includes(this._query)) ||
+        e.classifications?.some(cls => cls.toLowerCase().includes(this._query));
       const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
