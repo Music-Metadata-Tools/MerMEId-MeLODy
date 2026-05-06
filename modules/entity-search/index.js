@@ -182,6 +182,7 @@ class ADWLMEntitySearch extends LitElement {
     this._loading = false;
     this.store = null;
     this._dataset_url = null;
+    this._project_domain = null;
   }
 
   async connectedCallback() {
@@ -192,7 +193,8 @@ class ADWLMEntitySearch extends LitElement {
     document.addEventListener("adwlm-entity-editor:cached-config", (event) => {
       let config = event.detail;
       if (config != null) {
-        this._dataset_url = config;
+        this._dataset_url = config.datasetBaseUrl;
+        this._project_domain = config.projectDomain;
       }
     });
 
@@ -200,27 +202,6 @@ class ADWLMEntitySearch extends LitElement {
     document.addEventListener("adwlm-filesystem-manager:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
-
-    // Check if there's already a filesystem manager with a selected repository
-    const filesystemManager = document.querySelector('adwlm-filesystem-manager');
-    if (filesystemManager && filesystemManager._selected_repository_path) {
-      // Get initial config from filesystem service
-      try {
-        const filesystem = filesystemService.getInstance();
-        const configContent = await filesystem.read_file(
-          filesystemManager._selected_repository_path, 
-          'configuration/config.json'
-        );
-        if (configContent) {
-          const config = JSON.parse(configContent);
-          this._dataset_url = config.datasetBaseUrl;
-        }
-      } catch (error) {
-        console.warn('Could not load initial config:', error);
-        // Use default URL as fallback
-        this._dataset_url = null ;
-      }
-    }
 }
 
   updated(changedProperties) {
@@ -354,14 +335,8 @@ class ADWLMEntitySearch extends LitElement {
 
   async _onSelect(entry) {
     const subject = entry.subject;
-    let raw = subject.includes("urn:uuid:") ? subject.split("urn:uuid:").pop() : subject;
-    if (raw.includes("://")) {
-      try {
-        raw = new URL(raw).pathname;
-      } catch {
-        raw = raw.replace(/^[a-z]+:\/\/[^/]+/i, "");
-      }
-    }
+    let raw = subject.includes(this._project_domain) ? subject.split(this._project_domain).pop() : subject;
+
     const parts = String(raw).split("/").filter(Boolean);
     const rel = parts.length >= 2 ? parts.slice(-2).join("/") : (parts[0] || "");
     const filename = rel.endsWith(".ttl") ? rel : `${rel}.ttl`;

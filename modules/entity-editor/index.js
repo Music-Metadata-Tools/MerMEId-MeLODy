@@ -292,7 +292,7 @@ export default class ADWLMEntityEditor extends LitElement {
         if (changedProperties.has('_cachedConfig')) {
             if (this._cachedConfig != null) {
             this.dispatchEvent(new CustomEvent("adwlm-entity-editor:cached-config", {
-                "detail": this._cachedConfig.datasetBaseUrl,
+                "detail": { datasetBaseUrl: this._cachedConfig.datasetBaseUrl , projectDomain: this._cachedConfig.projectDomain },
                 "bubbles": true,
                 "composed": true,
             }));
