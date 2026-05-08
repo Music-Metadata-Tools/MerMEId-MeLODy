@@ -195,9 +195,9 @@ ${termElements}
             
             return `        <expression n="${movement.no || index + 1}">
             <title>${label}</title>
-            <key${movement.key?.pitch ? ` pname="${movement.key.pitch.split('#')[1]}"` : ''}${
-            movement.key?.accidental ? ` accid="${movement.key.accidental.split('#')[1]}"` : ''}${
-            movement.key?.mode ? ` mode="${movement.key.mode}"` : ''}>${movement.key.description || ''}</key>
+            <key${movement.key?.pitch ? ` pname="${movement.key?.pitch.split('#')[1]}"` : ''}${
+            movement.key?.accidental ? ` accid="${movement.key?.accidental.split('#')[1]}"` : ''}${
+            movement.key?.mode ? ` mode="${movement.key?.mode}"` : ''}>${movement.key?.description || ''}</key>
             <meter${movement.meter?.count ? ` count="${movement.meter?.count}"` : ''}${
             movement.meter?.unit ? ` unit="${movement.meter?.unit}"` : ''}${
             movement.meter?.symbol ? ` sym="${movement.meter?.symbol}"` : ''}>${movement.meter?.description || ''}</meter>
