@@ -18,7 +18,6 @@ const styles =
         }
         sl-button-group {
             background-color: white;
-            width: 100%;
             padding-bottom: 5px;
         }
         h2 {
@@ -535,6 +534,11 @@ export default class ADWLMEntityEditor extends LitElement {
                     <div id="container">
                         <div class="header">
                             <sl-button-group>
+                                <sl-button id="sync-index" variant="primary" size="small">
+                                    <sl-icon slot="suffix" name="arrow-clockwise"></sl-icon>
+                                </sl-button>
+                            </sl-button-group>
+                            <sl-button-group>
                                 <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
                                     <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
                                 </sl-button>
@@ -728,6 +732,57 @@ export default class ADWLMEntityEditor extends LitElement {
                     "composed": true,
                 }));
                 this._hasUnsavedChanges = false;
+            }
+
+            if (target.matches("sl-button#sync-index")) {
+                
+                document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+                if (this._hasUnsavedChanges) {
+                    // Show warning dialog
+                    const dialog = document.createElement('sl-dialog');
+                    dialog.label = 'Unsaved Changes';
+                    dialog.innerHTML = `
+                        <p>You have unsaved changes. Do you want to continue without saving?</p>
+                        <sl-button slot="footer" variant="neutral" id="cancel">Cancel</sl-button>
+                        <sl-button slot="footer" variant="primary" id="continue">Continue</sl-button>
+                    `;
+
+                    // Add event listener for dialog close request (x button or cancel button)
+                    dialog.addEventListener('sl-request-close', (event) => {
+                        dialog.hide();
+                        setTimeout(() => {
+                            dialog.remove();
+                        }, 100);
+                    });
+
+                    // Handle dialog buttons
+                    dialog.querySelector('#cancel').addEventListener('click', () => {
+
+                        dialog.hide();
+                        setTimeout(() => {
+                            dialog.remove();
+                        }, 100);
+                    });
+
+                    dialog.querySelector('#continue').addEventListener('click', () => {
+                        window.dispatchEvent(new Event('refreshOwlImports'));
+                        window.dispatchEvent(new Event('owlImportsReloaded'));
+                        this._hasUnsavedChanges = false;
+                        dialog.hide();
+                        setTimeout(() => dialog.remove(), 100); // Clean up dialog after animation
+                    });
+
+                    document.body.append(dialog);
+                    dialog.show();
+                    return; // Stop further processing until user decides
+                } else {
+                    // No unsaved changes, reload indexes directly
+                    window.dispatchEvent(new Event('refreshOwlImports'));
+                    window.dispatchEvent(new Event('owlImportsReloaded'));
+                }
             }
 
             if (target.matches("sl-button#undo-changes")) {
