@@ -34,12 +34,7 @@ melod:Item
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassificationOfManifestation ;
                   sh:or (
-                    [ sh:class melod:Content ; rdfs:label "Content" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:Presentation; rdfs:label "Presentation" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:Authority; rdfs:label "Authority" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:Scoring; rdfs:label "Scoring" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:State; rdfs:label "State" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:Completeness; rdfs:label "Completeness" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:ClassificationOfManifestation; rdfs:label "MerMEId Classification Vocabulary" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;

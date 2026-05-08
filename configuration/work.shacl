@@ -141,10 +141,7 @@ melod:Work
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassification ;
                   sh:or (
-                    [ sh:class melod:StageMusic ; rdfs:label "Stage music" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:InstrumentalMusic; rdfs:label "Instrumental Music" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:VocalMusic; rdfs:label "Vocal Music" ; sh:nodeKind sh:IRI ]
-                    [ sh:class melod:Classification; rdfs:label "Classification" ; sh:nodeKind sh:IRI ]
+                    [ sh:class melod:Classification; rdfs:label "MerMEId Classification Vocabulary" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
