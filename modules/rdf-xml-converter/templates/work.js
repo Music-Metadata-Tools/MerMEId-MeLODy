@@ -70,7 +70,7 @@ export function generateWorkXML(data) {
         // Titles with type
         data.titles?.length > 0 ? 
             data.titles?.map(title => 
-                `    <title type="${title.titleType.split('#')[1] || ''}" xml:lang="${title.language || ''}">${title.title}</title>`
+                `    <title type="${title.titleType?.split('#')[1] || ''}" xml:lang="${title.language || ''}">${title.title || ''}</title>`
             ).join('\n') : '<title/>',
 
         // Contributors
