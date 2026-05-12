@@ -356,6 +356,8 @@ for (const binding of entity_type_definition_bindings) {
 
 const editor_configuration = new EditorConfiguration(entity_type_definitions);
 entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
+filesystem_manager.entity_type_definitions = editor_configuration.entity_type_definitions;
+
 // Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
 globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
 

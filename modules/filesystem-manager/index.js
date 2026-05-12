@@ -89,6 +89,9 @@ export default class ADWLMFilesystemManager extends LitElement {
         _displayed_repository_names: {
             type: Array,
         },
+        entity_type_definitions: {
+            type: Object,
+        },
         _selected_repository_path: {
             type: String,
         },
@@ -992,7 +995,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
             let folder_absolute_path = `${repository_path}/${folder_relative_path}`;
 
-            tree_subitems += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
+            if (this.entity_type_definitions.filter(definition => definition.folder_name === folder_name)[0]?.folder_name) {
+                tree_subitems += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
+            }
+            
         }
 
         // insert files in tree
@@ -1000,7 +1006,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
             let file_absolute_path = `${repository_path}/${file_relative_path}`;
 
-            tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            if (file_name.endsWith('.ttl') || file_name.endsWith('.rdf')) {
+                tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
+            }
+            
         }
 
         // Re-expand previously expanded items
