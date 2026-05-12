@@ -740,6 +740,19 @@ export default class ADWLMEntityEditor extends LitElement {
                     bubbles: true,
                     composed: true
                 }));
+
+                // Show success notification
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'success';
+                alert.closable = true;
+                alert.duration = 3000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+                    Reloaded indexes successfully
+                `;
+                document.body.append(alert);
+                alert.toast();
+                /*
                 if (this._hasUnsavedChanges) {
                     // Show warning dialog
                     const dialog = document.createElement('sl-dialog');
@@ -783,6 +796,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     window.dispatchEvent(new Event('refreshOwlImports'));
                     window.dispatchEvent(new Event('owlImportsReloaded'));
                 }
+                */
             }
 
             if (target.matches("sl-button#undo-changes")) {
