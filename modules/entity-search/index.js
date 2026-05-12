@@ -398,7 +398,7 @@ class ADWLMEntitySearch extends LitElement {
         ` : ''}
         <div class="results">
           ${this._loading ? html`
-            Reload the browser to load indexes.
+            Refresh the editor to load indexes.
           ` : this._filtered.map(
             (entry) => html`
               
