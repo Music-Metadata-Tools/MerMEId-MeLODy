@@ -124,7 +124,12 @@ export default class ADWLMFilesystemManager extends LitElement {
         _hasSelectedFiles: {
             type: Boolean,
             state: true
+        },
+        _allSelected: {
+            type: Boolean,
+            state: true
         }
+        
     };
 
     updated(changedProperties) {
@@ -162,6 +167,8 @@ export default class ADWLMFilesystemManager extends LitElement {
             await this._load_entity_to_edit();
         };
 
+        this._allSelected = false;
+    
         this._init();
     }
 
@@ -225,6 +232,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
                     <sl-button-group>
+                        
+                        <sl-checkbox id="select_all" style="margin: 4px 4px 0 4px;"></sl-checkbox>
+
+
                         <sl-button 
                             id="commit-and-push-staged-files" 
                             size="small" 
@@ -303,6 +314,13 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("sl-selection-change", async (event) => {
             let target = event.target;
+            if (target.matches("sl-tree#staged-files-tree")) {
+                const allItems = target.querySelectorAll('sl-tree-item');
+                const selectedItems = target.querySelectorAll('sl-tree-item[selected]');
+                this._hasSelectedFiles = selectedItems.length > 0;
+                this._allSelected = allItems.length > 0 && allItems.length === selectedItems.length;
+            }
+
 
             // Add this new condition
             if (target.matches("sl-tree#staged-files-tree")) {
@@ -777,6 +795,17 @@ export default class ADWLMFilesystemManager extends LitElement {
                 } finally {
                     target.loading = false;
                 }
+            }
+        });
+
+        render_root.addEventListener("sl-change", (event) => {
+            let target = event.target;
+            if (target.matches("sl-checkbox#select_all")) {
+                const checked = target.checked;
+                staged_files_tree.querySelectorAll('sl-tree-item')
+                    .forEach(item => item.selected = checked);
+                this._hasSelectedFiles = checked;
+                this._allSelected = checked;
             }
         });
 
