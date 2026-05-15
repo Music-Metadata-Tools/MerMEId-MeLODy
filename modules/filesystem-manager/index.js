@@ -1307,7 +1307,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         await this._updateRepositoryTreeStatus();
 
         // Update unshared files status
-        this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
+        this._hasUnsharedFiles = staged_file_relative_paths.length > 0 && staged_file_relative_paths.map(path => !path.includes('indexes/')).some(Boolean);
         details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
 
         tree.innerHTML = "";
@@ -1315,10 +1315,21 @@ export default class ADWLMFilesystemManager extends LitElement {
         let tree_items = "";
         // process the files
         for (const staged_file of this._staged_files) {
+            
             let file_name = staged_file.split('/')[1];
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
-            tree_items += `
+            if (staged_file.includes("indexes/")) {
+                tree_items += `
+                <sl-tree-item selected style="display:none;"  
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
+                    data-entry-absolute-path="${staged_file_absolute_path}" 
+                    data-entry-relative-path="${staged_file}"
+                    data-entry-name="${file_name}">
+                    ${staged_file}
+                </sl-tree-item>`;
+            } else {
+                tree_items += `
                 <sl-tree-item 
                     data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
                     data-entry-absolute-path="${staged_file_absolute_path}" 
@@ -1326,6 +1337,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     data-entry-name="${file_name}">
                     ${staged_file}
                 </sl-tree-item>`;
+            }
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
