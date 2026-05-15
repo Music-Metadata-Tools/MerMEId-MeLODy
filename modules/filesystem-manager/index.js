@@ -121,7 +121,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             type: Boolean,
             state: false
         },
-        _hasSelectedFiles: {
+        _hasSelectedFiles: {    
             type: Boolean,
             state: true
         },
@@ -410,6 +410,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
+                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                if (canMerge[1] === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                            Synchronizing is not necessary: There are no remote changes.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        target.loading = false;
+                        return;
+                    }
 
                 // Alert unsaved changes might be deleted or overwritten after pull
                 if (this._hasUnsavedChanges) {
@@ -430,9 +445,22 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Alert that staged files might be deleted or overwritten after pull
                 if (this._staged_files && this._staged_files.length > 0) {
-                    const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-
-                    if (!canMerge) {
+                    
+                    if (canMerge[1] === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                            Synchronizing is not necessary: There are no remote changes.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        target.loading = false;
+                        return;
+                    }
+                    else if (canMerge[0] === false) {
                         const alert = document.createElement('sl-alert');
                         alert.variant = 'danger';
                         alert.closable = true;
@@ -557,8 +585,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
                 
                 const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-
-                if (!canMerge) {
+                if (canMerge[0] === false) {
                     const alert = document.createElement('sl-alert');
                     alert.variant = 'danger';
                     alert.closable = true;
@@ -572,7 +599,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     alert.toast();
                     target.loading = false;
                     return;
-                } else if (canMerge) {
+                } else if (canMerge[1] === 0) {
+                } else if (canMerge[0] === true) {
                     let staged_before_pull = [];
                     if (this._staged_files && this._staged_files.length > 0) {
                         staged_before_pull = await Promise.all(
@@ -701,6 +729,49 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Clear selections in the staged files tree
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
+                    
+                    try {
+                        const generatedIndexes = await filesystem.generate_indexes_for_pushed_files(
+                            this._selected_repository_path,
+                            selected_staged_file_paths,
+                            this.entity_type_definitions
+                        );
+
+                        console.log("Generated indexes:", generatedIndexes);
+
+                        // Log which indexes were generated
+                        const successfulIndexes = Object.entries(generatedIndexes)
+                            .filter(([_, result]) => result.success)
+                            .map(([name, _]) => name);
+
+                        if (successfulIndexes.length > 0) {
+                            const alert = document.createElement('sl-alert');
+                            alert.variant = 'success';
+                            alert.closable = true;
+                            alert.duration = 6000;
+                            alert.innerHTML = `
+                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                            `;
+                            document.body.append(alert);
+                            alert.toast();
+                        }
+                    } catch (error) {
+                        console.error('Error generating indexes:', error);
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Failed to generate indexes for pushed files. ${error.message}
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        // Don't fail the push if index generation fails
+                        // Just log the error
+                    }
+
                     // Notify entity-search to reload indexes
                     document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
                         bubbles: true,
