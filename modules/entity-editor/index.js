@@ -366,12 +366,30 @@ export default class ADWLMEntityEditor extends LitElement {
                 try {
                     //return def.shacl_file_location;
                     const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+                    const filesystem = filesystemService.getInstance();
+
+                    // Read all files from indexes directory
+                    const indexFiles = await filesystem.read_directory_files(
+                        this._selected_repository_path, 
+                        'indexes'
+                    );
+                    
+                    console.log("Index files found:", Object.keys(indexFiles));
+                    
+                    // Combine all index file contents
+                    let combinedIndexContent = '';
+                    for (const [filename, content] of Object.entries(indexFiles)) {
+                        console.log(`Adding index file: ${filename}`);
+                        combinedIndexContent += content + '\n';
+                    }
                     
                     // Replace the dataset namespace
                     const modifiedShaclContent = shaclContent.replace(
                         /dataset: <[^>]+>/g,
-                        `dataset: <${config.datasetBaseUrl}>`
+                        `dataset: <${this._selected_repository_path}/indexes/>`
                     );
+
+                    modifiedShaclContent += combinedIndexContent;
                     
                     // Create a blob URL for the modified content
                     const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
@@ -460,14 +478,36 @@ export default class ADWLMEntityEditor extends LitElement {
         
         if (config && config.datasetBaseUrl) {
             try {
+
+                const filesystem = filesystemService.getInstance();
+
+                // Read all files from indexes directory
+                const indexFiles = await filesystem.read_directory_files(
+                    this._selected_repository_path, 
+                    'indexes'
+                );
+                
+                console.log("Index files found:", Object.keys(indexFiles));
+                
+                // Combine all index file contents
+                let combinedIndexContent = '';
+                for (const [filename, content] of Object.entries(indexFiles)) {
+                    console.log(`Adding index file: ${filename}`);
+                    combinedIndexContent += content + '\n';
+                }
+                
                 // Read the SHACL file content
                 const shaclContent = await fetch(shacl_file_location).then(res => res.text());
                 
                 // Replace the dataset namespace
-                const modifiedShaclContent = shaclContent.replace(
+                let modifiedShaclContent = shaclContent.replace(
                     /dataset: <[^>]+>/g,
                     `dataset: <${config.datasetBaseUrl}>`
                 );
+
+                modifiedShaclContent += combinedIndexContent;
+
+                console.log("Modified SHACL content:", modifiedShaclContent);
                 
                 // Create a blob URL for the modified content
                 const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
