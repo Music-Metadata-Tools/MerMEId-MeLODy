@@ -1321,7 +1321,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (staged_file.includes("indexes/")) {
                 tree_items += `
-                <sl-tree-item selected style="display:none;"  
+                <sl-tree-item style="display:none;
                     data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
                     data-entry-absolute-path="${staged_file_absolute_path}" 
                     data-entry-relative-path="${staged_file}"
