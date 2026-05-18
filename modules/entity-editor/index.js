@@ -384,9 +384,9 @@ export default class ADWLMEntityEditor extends LitElement {
                     }
                     
                     // Replace the dataset namespace
-                    const modifiedShaclContent = shaclContent.replace(
+                    let modifiedShaclContent = shaclContent.replace(
                         /dataset: <[^>]+>/g,
-                        `dataset: <${this._selected_repository_path}/indexes/>`
+                        `dataset: <${config.datasetBaseUrl}>`
                     );
 
                     modifiedShaclContent += combinedIndexContent;
