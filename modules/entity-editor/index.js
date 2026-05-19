@@ -900,9 +900,13 @@ export default class ADWLMEntityEditor extends LitElement {
         const classIri = typeof detail?.classIri === 'string' ? detail.classIri : null;
         if (!classIri) return;
 
-        const typeDef = this.entity_type_definitions?.find(def => def.type === classIri) || null;
+        const baseIri = classIri.replace(/Entity$/, '');
+        const typeDef = this.entity_type_definitions?.find(def => def.type === classIri)
+            ?? this.entity_type_definitions?.find(def => def.type === baseIri)
+            ?? null;
         if (!typeDef?.folder_name) {
             console.warn('QuickAdd: missing entity type definition for', classIri);
+            document.dispatchEvent(new CustomEvent('shacl-form:quick-add-closed'));
             return;
         }
 
@@ -924,7 +928,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
         form.dataset.shapesUrl = shapesUrl;
         form.dataset.valuesSubject = entity_iri;
-        form.dataset.values = `<${entity_iri}> a <${classIri}> .\n`;
+        form.dataset.values = `<${entity_iri}> a <${typeDef.type}> .\n`;
 
         dialog.append(form);
 
@@ -959,7 +963,10 @@ export default class ADWLMEntityEditor extends LitElement {
         });
 
         dialog.append(cancelButton, saveButton);
-        dialog.addEventListener('sl-after-hide', () => dialog.remove(), { once: true });
+        dialog.addEventListener('sl-after-hide', () => {
+            dialog.remove();
+            document.dispatchEvent(new CustomEvent('shacl-form:quick-add-closed'));
+        }, { once: true });
         document.body.append(dialog);
         dialog.show();
     }
