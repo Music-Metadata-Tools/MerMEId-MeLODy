@@ -9,6 +9,10 @@ const filesystem = filesystemService.getInstance();
 
 const styles =
     css`
+        #commit-message-field {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
         :host {
             width: 14vw;
             display: inline-block;
@@ -128,7 +132,11 @@ export default class ADWLMFilesystemManager extends LitElement {
         _allSelected: {
             type: Boolean,
             state: true
+        },
+        _commit_message: {
+            type: String
         }
+
         
     };
 
@@ -145,7 +153,6 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         }
     }
-
     static styles = styles;
 
     constructor() {
@@ -171,6 +178,7 @@ export default class ADWLMFilesystemManager extends LitElement {
     
         this._init();
     }
+
 
     _toggleFilesystemNav() {
         const nav = document.querySelector('nav#filesystem-nav');
@@ -232,12 +240,15 @@ export default class ADWLMFilesystemManager extends LitElement {
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
                     <sl-button-group>
-                        
-                        <sl-checkbox id="select_all" style="margin: 4px 4px 0 4px;"></sl-checkbox>
-
-
-                        <sl-button 
-                            id="commit-and-push-staged-files" 
+                        <sl-button
+                            id="select-all-button"
+                            size="small"
+                            title="Select/Deselect all"
+                            variant="${this._allSelected ? 'primary' : 'default'}">
+                            <sl-icon name="check-square"></sl-icon>
+                        </sl-button>
+                        <sl-button
+                            id="commit-and-push-staged-files"
                             size="small" 
                             title="Share files"
                             ?disabled="${!this._hasSelectedFiles}">
@@ -251,9 +262,15 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-icon name="arrow-counterclockwise"></sl-icon>
                         </sl-button>
                     </sl-button-group>
+
+
                     <sl-tree id="staged-files-tree" selection="multiple">
                         ${this._displayed_staged_files}
                     </sl-tree>
+
+                    <sl-input size="small" id="commit-message-field" label="Commit-Message"></sl-input>
+                    
+
                 </sl-details>
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
@@ -278,6 +295,9 @@ export default class ADWLMFilesystemManager extends LitElement {
     }
 
     firstUpdated() {
+
+
+
         let render_root = this.renderRoot;
 
         let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
@@ -359,6 +379,13 @@ export default class ADWLMFilesystemManager extends LitElement {
             // the blur is needed, as the action is repeated every time the browser tab regains focus
             if (target.matches("sl-button")) {
                 target.blur();
+            }
+
+            if (target.matches("sl-button#select-all-button")) {
+                this._allSelected = !this._allSelected;
+                staged_files_tree.querySelectorAll('sl-tree-item')
+                    .forEach(item => item.selected = this._allSelected);
+                this._hasSelectedFiles = this._allSelected;
             }
 
             if (target.matches("sl-button#add-repository")) {
@@ -666,12 +693,15 @@ export default class ADWLMFilesystemManager extends LitElement {
                     ...directories_to_commit
                 ];
 
+                this._commit_message = render_root.querySelector('#commit-message-field')?.value ?? '';
+
                 let push_result = false;
                 try {
                     push_result = await filesystem.commit_and_push_file(
                         this._selected_repository_path,
                         staged_file_paths,
-                        selected_staged_file_paths
+                        selected_staged_file_paths,
+                        this._commit_message
                     );
                 } catch (error) {
                     console.error('Failed to share files:', error);
@@ -695,12 +725,14 @@ export default class ADWLMFilesystemManager extends LitElement {
                     await this._list_staged_files();
                     this._hasUnsharedFiles = false;
                     this._hasSelectedFiles = false;
+                    this._allSelected = false;
                     this._staged_files = [];
                     await this._updateRepositoryTreeStatus();
                     commit_and_push_done_toast.toast();
                     // Clear selections in the staged files tree
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
+                    render_root.querySelector('#commit-message-field').value = '';
                     // Notify entity-search to reload indexes
                     document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
                         bubbles: true,
@@ -798,16 +830,6 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
 
-        render_root.addEventListener("sl-change", (event) => {
-            let target = event.target;
-            if (target.matches("sl-checkbox#select_all")) {
-                const checked = target.checked;
-                staged_files_tree.querySelectorAll('sl-tree-item')
-                    .forEach(item => item.selected = checked);
-                this._hasSelectedFiles = checked;
-                this._allSelected = checked;
-            }
-        });
 
         render_root.addEventListener("adwlm-filesystem-manager:repository-branches", async (event) => {
             let repository_metadata = event.detail;
