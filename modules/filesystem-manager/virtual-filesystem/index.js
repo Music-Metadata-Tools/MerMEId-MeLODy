@@ -452,7 +452,7 @@ export default class ADWLMVirtualFilesystem {
         return changed_files;
     }
 
-    async commit_and_push_file(repository_path, staged_file_paths, selected_staged_file_paths) {
+    async commit_and_push_file(repository_path, staged_file_paths, selected_staged_file_paths, message) {
         // get some metadata
         let current_branch = await git.currentBranch({
             fs: this.fs,
@@ -470,8 +470,9 @@ export default class ADWLMVirtualFilesystem {
             path: "user.name"
         });
 
-        let commit_message = `${(new Date()).toISOString()}, ${username}`;
-
+        if(!message || message.trim().length === 0){
+            message= `${(new Date()).toISOString()}, ${username}`
+        }
         // in case when not all files were selected,
         // unstage the files that were not selected
         if (selected_staged_file_paths.length > 0) {
@@ -493,7 +494,7 @@ export default class ADWLMVirtualFilesystem {
                 name: username,
                 email: username,
             },
-            message: commit_message
+            message: message
         });
 
         let push_result = {};
