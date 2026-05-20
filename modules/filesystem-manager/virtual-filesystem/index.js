@@ -1,7 +1,7 @@
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
-import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
+import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/+esm";
 
 await init_oxigraph();
 
@@ -13,7 +13,9 @@ export default class ADWLMVirtualFilesystem {
         this._http = httpPlugin ?? http;
         this._corsProxy = corsProxy;
         this._localRepositories = new Map();
-        this.store = new oxigraph.Store();
+        this.store = null;
+        this.index_store = null;
+        this.entity_store = null;
     }
 
     async add_local_repository(name, dirHandle) {
@@ -811,13 +813,6 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    /**
-     * Generate indexes for pushed files by executing SPARQL queries
-     * @param {string} repository_path - Path to the repository
-     * @param {Array} pushed_file_paths - Array of pushed file paths (relative)
-     * @param {Array} entity_type_definitions - Entity type definitions with folder names
-     * @returns {Promise<Object>} Object with generated indexes info
-     */
     async generate_indexes_for_pushed_files(repository_path, pushed_file_paths, entity_type_definitions) {
         try {
             // Group pushed files by their folder
@@ -854,7 +849,7 @@ export default class ADWLMVirtualFilesystem {
                     }
 
                     // Load the SPARQL query
-                    const sparqlQuery = await this._loadSparqlQuery(repository_path, folderName);
+                    const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
                     
                     if (!sparqlQuery) {
                         console.warn(`No SPARQL query found for folder: ${folderName}`);
@@ -863,7 +858,7 @@ export default class ADWLMVirtualFilesystem {
                     console.log(`ttl content combined for folder ${folderName}:\n`, combinedRdf);
 
                     // Execute SPARQL query
-                    const indexContent = await this._executeSparqlQuery(combinedRdf, sparqlQuery);
+                    let indexContent = await this._executeSparqlQuery(combinedRdf, sparqlQuery);
 
                     // Save the index file
                     if (!indexContent || indexContent.trim() === '') {
@@ -898,17 +893,82 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    /**
-     * Load SPARQL query from the cloned repository
-     * @param {string} repository_path - Path to the repository
-     * @param {string} folderName - Name of the folder (e.g., "persons")
-     * @returns {Promise<string>} SPARQL query content
-     */
+    async generate_indexes_for_saved_file(repository_path, saved_file_path, entity_type_definitions) {
+        try {
+            
+            const folderName = saved_file_path.split('/')[0];
+            
+            console.log("Folder with saved file:", folderName);
+
+            const generatedIndexes = {};
+
+            // For each folder, execute the corresponding SPARQL query
+            try {
+                console.log(`Generating index for folder: ${folderName}`);
+                
+                // Read all TTL files from the folder
+                const rdf = await this.read_file(repository_path, saved_file_path);
+
+                // Load the SPARQL query
+                const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                
+                if (!sparqlQuery) {
+                    console.warn(`No SPARQL query found for folder: ${folderName}`);
+                    return;
+                }
+                console.log(`ttl content of file in folder ${folderName}:\n`, rdf);
+
+                // Execute SPARQL query
+                let indexContent = await this._executeSparqlQuery(rdf, sparqlQuery);
+
+                console.log(`Index generated successfully for file in ${folderName}`);
+                // Save the index file
+                if (!indexContent || indexContent.trim() === '') {
+                    console.warn(`Generated index content is empty for folder: ${folderName}`);
+                    return;
+                }
+
+                let indexFile = await this.read_file(repository_path, `indexes/${folderName}.ttl`);
+
+                if (indexContent !== '' && indexFile !== '') {
+                    indexContent = await this._executeSparqlUpdate(indexFile, indexContent);
+                    const indexPath = `indexes/${folderName}.ttl`;
+                    console.log(`Updated index content for ${folderName}:\n`, indexContent);
+                    await this.save_and_stage_file(repository_path, indexContent, indexPath);
+
+                    generatedIndexes[folderName] = {
+                        path: indexPath,
+                        filesProcessed: saved_file_path,
+                        success: true
+                    };
+
+                    console.log(`Index updated successfully for ${folderName}`);
+                } else {
+                    console.warn(`No existing index file found for folder: ${folderName}.`);
+                }
+                
+
+            } catch (error) {
+                console.error(`Failed to generate index for folder ${folderName}:`, error);
+                generatedIndexes[folderName] = {
+                    success: false,
+                    error: error.message
+                };
+            }
+
+            return generatedIndexes;
+
+        } catch (error) {
+            console.error('Error in generate_indexes_for_pushed_files:', error);
+            throw error;
+        }
+    }
+
     async _loadSparqlQuery(repository_path, folderName) {
         try {
             // Load SPARQL query from the virtual filesystem
-            // Path: modules/datasets-generator/{folderName}.sparql
-            const sparqlQueryPath = `modules/datasets-generator/${folderName}.sparql`;
+            // Path: {folderName}.sparql
+            const sparqlQueryPath = `${folderName}.sparql`;
             
             console.log(`Loading SPARQL query from: ${repository_path}/${sparqlQueryPath}`);
             
@@ -931,9 +991,11 @@ export default class ADWLMVirtualFilesystem {
 
             console.log("Executing SPARQL query with Oxygraph");
 
-            this.store.load(rdfContent, { format: 'text/turtle' });
+            this.store = new oxigraph.Store();
 
-            let result = this.store.query(sparqlQuery, { type: 'construct' });
+            await this.store.load(rdfContent, { format: 'text/turtle' });
+
+            let result = await this.store.query(sparqlQuery, { type: 'construct', format: 'text/turtle' });
 
             result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
 
@@ -945,11 +1007,53 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
+    async _executeSparqlUpdate(existingIndexContent, updateContent) {
+        try {
+            console.log("Executing SPARQL update with Oxygraph");
+
+            this.entity_store = new oxigraph.Store();
+            this.index_store = new oxigraph.Store();
+
+            await this.entity_store.load(updateContent, { format: 'text/turtle' });
+            await this.index_store.load(existingIndexContent, { format: 'text/turtle' });
+
+            let deleteIris = new Set();
+            let insertClauses = '';
+            for (let binding of this.entity_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
+                console.log(binding.get("s").value);
+                deleteIris.add(binding.get("s").value);
+                insertClauses += `${binding.get("s")} ${binding.get("p")} ${binding.get("o")} .`;
+            }
+
+            console.log("Existing index content loaded into Oxygraph:");
+            for (let binding of this.index_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
+                console.log(binding.get("s").value);
+            }
+
+            const deleteWhereClauses = Array.from(deleteIris).map(iri => `DELETE WHERE { <${iri}> ?p ?o }`).join('\n');
+
+            const updateQuery = `${deleteWhereClauses}`
+
+            await this.index_store.update(updateQuery);
+
+            let result = this.index_store.query("CONSTRUCT { ?s ?p ?o . } WHERE { ?s ?p ?o . }", { format: 'text/turtle' });
+            result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
+
+            result += updateContent;
+
+            return result || existingIndexContent;
+
+
+        } catch (error) {
+            console.error('Error executing SPARQL update with Oxygraph:', error);
+            return existingIndexContent; 
+        }
+    }
+
     _triplesToTurtle(triples) {
-        // Ersetze Kommas durch Zeilenumbrüche und füge Punkte hinzu
         let turtle = triples
             .replace(/>,/g, '> .\n')
-            .replace(/<http/g, '\n<http')
+            .replace(/<http/g, '<http')
             .replace(/,<urn/g, '.\n<urn')
             .replace(/,<http/g, '.\n<http')
             .trim();
@@ -957,41 +1061,5 @@ export default class ADWLMVirtualFilesystem {
         turtle = turtle + `.`;
 
         return turtle;
-    }
-
-    /**
-     * Format RDF term for Turtle output
-     * @param {Object} term - RDF term object
-     * @returns {string} Formatted term
-     */
-    _formatTerm(term) {
-        if (!term) return "";
-
-        // Named node (IRI)
-        if (term.type === "NamedNode" || term.termType === "NamedNode") {
-            return `<${term.value}>`;
-        }
-
-        // Blank node
-        if (term.type === "BlankNode" || term.termType === "BlankNode") {
-            return `_:${term.value}`;
-        }
-
-        // Literal
-        if (term.type === "Literal" || term.termType === "Literal") {
-            const value = term.value.replace(/"/g, '\\"');
-            
-            if (term.language) {
-                return `"${value}"@${term.language}`;
-            }
-
-            if (term.datatype && term.datatype.value !== "http://www.w3.org/2001/XMLSchema#string") {
-                return `"${value}"^^<${term.datatype.value}>`;
-            }
-
-            return `"${value}"`;
-        }
-
-        return "";
     }
 }

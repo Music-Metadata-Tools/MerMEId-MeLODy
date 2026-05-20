@@ -987,6 +987,50 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Update staged files list and tree status
                 await this._list_staged_files();
+
+
+                try {
+                        const generatedIndexes = await filesystem.generate_indexes_for_saved_file(
+                            this._selected_repository_path,
+                            entity_to_save.path,
+                            this.entity_type_definitions
+                        );
+
+                        console.log("Generated indexes:", generatedIndexes);
+
+                        // Log which indexes were generated
+                        const successfulIndexes = Object.entries(generatedIndexes)
+                            .filter(([_, result]) => result.success)
+                            .map(([name, _]) => name);
+
+                        if (successfulIndexes.length > 0) {
+                            const alert = document.createElement('sl-alert');
+                            alert.variant = 'success';
+                            alert.closable = true;
+                            alert.duration = 6000;
+                            alert.innerHTML = `
+                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                            `;
+                            document.body.append(alert);
+                            alert.toast();
+                        }
+                    } catch (error) {
+                        console.error('Error generating indexes:', error);
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Failed to generate indexes for pushed files. ${error.message}
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        // Don't fail the push if index generation fails
+                        // Just log the error
+                    }
+
             } catch (error) {
                 console.error('Failed to save entity:', error);
                 // Show error message to user
