@@ -946,9 +946,13 @@ export default class ADWLMEntityEditor extends LitElement {
         cancelButton.addEventListener('click', () => dialog.hide());
 
         const saveButton = document.createElement('sl-button');
+        saveButton.disabled = true;
         saveButton.variant = 'primary';
         saveButton.textContent = 'Save';
         saveButton.slot = 'footer';
+        form.addEventListener('change', (ev) => {
+            saveButton.disabled = !ev.detail.valid;
+        });
         saveButton.addEventListener('click', () => {
             const rdf_output = form.serialize();
             const json_ld_output = form.serialize("application/ld+json");
