@@ -901,7 +901,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async generate_indexes_for_saved_file(repository_path, saved_file_path) {
+    async generate_indexes_for_saved_file(repository_path, saved_file_path, is_deleted=false) {
         try {
             
             const folderName = saved_file_path.split('/')[0];
@@ -944,7 +944,12 @@ export default class ADWLMVirtualFilesystem {
                 let indexFile = await this.read_file(repository_path, `indexes/${folderName}.ttl`);
 
                 if (indexContent !== '' && indexFile !== '') {
-                    indexContent = await this._executeSparqlUpdate(indexFile, indexContent);
+
+                    if (is_deleted===true) {
+                        indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=true);
+                    } else {
+                        indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=false);
+                    }
                     const indexPath = `indexes/${folderName}.ttl`;
                     console.log(`Updated index content for ${folderName}:\n`, indexContent);
                     await this.save_and_stage_file(repository_path, indexContent, indexPath);
@@ -1024,7 +1029,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async _executeSparqlUpdate(existingIndexContent, updateContent) {
+    async _executeSparqlUpdate(existingIndexContent, updateContent, is_deleted=false) {
         try {
             console.log("Executing SPARQL update with Oxygraph");
 
@@ -1035,14 +1040,14 @@ export default class ADWLMVirtualFilesystem {
             await this.index_store.load(existingIndexContent, { format: 'text/turtle' });
 
             let deleteIris = new Set();
-            let insertClauses = '';
             for (let binding of this.entity_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
                 deleteIris.add(binding.get("s").value);
-                insertClauses += `${binding.get("s")} ${binding.get("p")} ${binding.get("o")} .`;
             }
 
             const deleteWhereClauses = Array.from(deleteIris).map(iri => `DELETE WHERE { <${iri}> ?p ?o }`).join('\n');
 
+            console.log("SPARQL Update - delete clauses:\n", deleteWhereClauses);
+            
             const updateQuery = `${deleteWhereClauses}`
 
             await this.index_store.update(updateQuery);
@@ -1050,7 +1055,9 @@ export default class ADWLMVirtualFilesystem {
             let result = this.index_store.query("CONSTRUCT { ?s ?p ?o . } WHERE { ?s ?p ?o . }", { format: 'text/turtle' });
             result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
 
-            result += updateContent;
+            if (is_deleted===false) {
+                result += `\n${updateContent}`;
+            }
 
             return result || existingIndexContent;
 
