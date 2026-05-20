@@ -1,4 +1,67 @@
+@font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-400-normal.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-400-normal.woff') format('woff');
+    unicode-range: U+0100-024F;
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-400-normal.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-400-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 400;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-400-italic.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-400-italic.woff') format('woff');
+    unicode-range: U+0100-024F;
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 400;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-400-italic.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-400-italic.woff') format('woff');
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-700-normal.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-700-normal.woff') format('woff');
+    unicode-range: U+0100-024F;
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-700-normal.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-700-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 700;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-700-italic.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-ext-700-italic.woff') format('woff');
+    unicode-range: U+0100-024F;
+}
+@font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 700;
+    src: url('../font/carlito_5.2.8/webfonts/carlito-latin-700-italic.woff2') format('woff2'),
+         url('../font/carlito_5.2.8/webfonts/carlito-latin-700-italic.woff') format('woff');
+}
+
 :root {
+    --app-font: 'Carlito', sans-serif;
+    --sl-font-sans: var(--app-font);
     --step--1: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
     --step-0: clamp(1.125rem, 1.0815rem + 0.2174vw, 1.25rem);
     --step-1: clamp(1.35rem, 1.2761rem + 0.3696vw, 1.5625rem);
@@ -25,7 +88,7 @@ html {
 }
 
 body {
-    font-family: 'Palatino Linotype', sans-serif !important;
+    font-family: var(--app-font);
     font-size: var(--step-0);
     display: flex;
     flex-direction: column;
@@ -160,7 +223,7 @@ h1.title {
 span.footer {
     margin-right: auto;
     font-size: var(--step-0);
-    font-family: 'Palatino Linotype', sans-serif;
+    font-family: var(--app-font);
     flex: 1;
     text-align: left;
 }
@@ -268,10 +331,12 @@ section#editor-toolbar button {
 
 sl-button::part(base):hover {
     background-color: var(--sl-color-primary-500);
+    font-weight: bold;
 }
 
 sl-button::part(base) {
     --sl-color-neutral-600: var(--sl-color-primary-600);
+    font-weight: bold
 }
 sl-button[disabled]::part(base) {
     background-color: var(--sl-color-neutral-200);
@@ -427,7 +492,7 @@ body > footer > * {
 
 .footer-center span.footer,
 .dfg-container span {
-    font-family: 'Palatino Linotype', sans-serif;
+    font-family: var(--app-font);
     font-size: 0.9rem;
 }
 
@@ -477,7 +542,7 @@ img.new-logo-1, img.new-logo-2 {
 span.footer {
     margin: 0;
     font-size: var(--step-0);
-    font-family: 'Palatino Linotype', sans-serif;
+    font-family: var(--app-font);
 }
 
 /* Adjust responsive design */
