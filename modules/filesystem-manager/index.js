@@ -1389,6 +1389,9 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
+        // Remove indexes from the list of staged files, as they are generated automatically and should not be shared
+        staged_file_relative_paths = staged_file_relative_paths.filter(path => !path.includes('indexes'));
+
         // Reset arrays
         this._staged_files = [];
         this._staged_directories = [];
@@ -1406,7 +1409,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         await this._updateRepositoryTreeStatus();
 
         // Update unshared files status
-        this._hasUnsharedFiles = staged_file_relative_paths.length > 0 && staged_file_relative_paths.map(path => !path.includes('indexes/')).some(Boolean);
+        this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
         details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
 
         tree.innerHTML = "";
@@ -1418,17 +1421,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = staged_file.split('/')[1];
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
-            if (staged_file.includes("indexes/")) {
-                tree_items += `
-                <sl-tree-item style="display:none;
-                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
-                    data-entry-absolute-path="${staged_file_absolute_path}" 
-                    data-entry-relative-path="${staged_file}"
-                    data-entry-name="${file_name}">
-                    ${staged_file}
-                </sl-tree-item>`;
-            } else {
-                tree_items += `
+            tree_items += `
                 <sl-tree-item 
                     data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
                     data-entry-absolute-path="${staged_file_absolute_path}" 
@@ -1436,7 +1429,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                     data-entry-name="${file_name}">
                     ${staged_file}
                 </sl-tree-item>`;
-            }
         }
 
         tree.insertAdjacentHTML("beforeend", tree_items);
