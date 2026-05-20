@@ -30,7 +30,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p site
-          cp -r index.html css js modules images configuration docs README.md site/
+          cp -r index.html css js modules images configuration docs README.md font site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
