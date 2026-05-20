@@ -555,7 +555,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
                     // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                         bubbles: true,
                         composed: true
                     }));
@@ -729,54 +729,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Clear selections in the staged files tree
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
-                    
-                    try {
-                        const generatedIndexes = await filesystem.generate_indexes_for_pushed_files(
-                            this._selected_repository_path,
-                            selected_staged_file_paths,
-                            this.entity_type_definitions
-                        );
 
-                        console.log("Generated indexes:", generatedIndexes);
-
-                        // Log which indexes were generated
-                        const successfulIndexes = Object.entries(generatedIndexes)
-                            .filter(([_, result]) => result.success)
-                            .map(([name, _]) => name);
-
-                        if (successfulIndexes.length > 0) {
-                            const alert = document.createElement('sl-alert');
-                            alert.variant = 'success';
-                            alert.closable = true;
-                            alert.duration = 6000;
-                            alert.innerHTML = `
-                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
-                            `;
-                            document.body.append(alert);
-                            alert.toast();
-                        }
-                    } catch (error) {
-                        console.error('Error generating indexes:', error);
-                        const alert = document.createElement('sl-alert');
-                        alert.variant = 'danger';
-                        alert.closable = true;
-                        alert.duration = 6000;
-                        alert.innerHTML = `
-                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                            Failed to generate indexes for pushed files. ${error.message}
-                        `;
-                        document.body.append(alert);
-                        alert.toast();
-                        // Don't fail the push if index generation fails
-                        // Just log the error
-                    }
-
-                    // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
                 } else {
                     commit_and_push_error_toast.toast();
                 }
@@ -898,6 +851,11 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
+
+            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                bubbles: true,
+                composed: true
+            }));
         });
 
         render_root.addEventListener("adwlm-filesystem-manager:add-local-repository", async (event) => {
@@ -985,15 +943,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     newfolderTree.setAttribute('expanded', '');
                 }
 
-                // Update staged files list and tree status
-                await this._list_staged_files();
-
 
                 try {
                         const generatedIndexes = await filesystem.generate_indexes_for_saved_file(
                             this._selected_repository_path,
-                            entity_to_save.path,
-                            this.entity_type_definitions
+                            entity_to_save.path
                         );
 
                         console.log("Generated indexes:", generatedIndexes);
@@ -1031,6 +985,18 @@ export default class ADWLMFilesystemManager extends LitElement {
                         // Just log the error
                     }
 
+                    // Update repository tree
+                    if (this._selected_repository_path) {
+                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                        if (repoTree) {
+                            this._generate_folder_tree(repoTree);
+                        }
+                    }
+
+                    // Update UI
+                    await this._list_staged_files();
+                    await this._updateRepositoryTreeStatus();
+
             } catch (error) {
                 console.error('Failed to save entity:', error);
                 // Show error message to user
@@ -1060,6 +1026,59 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (target.matches("sl-tree-item") && target.closest("sl-tree#repositories-tree")) {
                 await this._list_staged_files();
             }
+        });
+
+        document.addEventListener("adwlm-filesystem-manager:build-indexes", async (event) => {
+            try {
+                const generatedIndexes = await filesystem.generate_indexes_for_all_files(
+                    this._selected_repository_path,
+                    this.entity_type_definitions.map(def => def.folder_name)
+                );
+
+                console.log("Generated indexes:", generatedIndexes);
+
+                // Log which indexes were generated
+                const successfulIndexes = Object.entries(generatedIndexes)
+                    .filter(([_, result]) => result.success)
+                    .map(([name, _]) => name);
+
+                if (successfulIndexes.length > 0) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                        Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
+            } catch (error) {
+                console.error('Error generating indexes:', error);
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'danger';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    Failed to generate indexes for cloned files. ${error.message}
+                `;
+                document.body.append(alert);
+                alert.toast();
+            }
+            // Update repository tree
+            if (this._selected_repository_path) {
+                let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                if (repoTree) {
+                    this._generate_folder_tree(repoTree);
+                }
+            }
+            await this._load_entity_to_edit();
+
+            // Update UI
+            await this._list_staged_files();
+            await this._updateRepositoryTreeStatus();
         });
     }
 

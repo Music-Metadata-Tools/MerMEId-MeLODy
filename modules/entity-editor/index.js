@@ -374,22 +374,19 @@ export default class ADWLMEntityEditor extends LitElement {
                         'indexes'
                     );
                     
-                    console.log("Index files found:", Object.keys(indexFiles));
-                    
                     // Combine all index file contents
                     let combinedIndexContent = '';
                     for (const [filename, content] of Object.entries(indexFiles)) {
-                        console.log(`Adding index file: ${filename}`);
                         combinedIndexContent += content + '\n';
                     }
                     
                     // Replace the dataset namespace
-                    let modifiedShaclContent = shaclContent.replace(
-                        /dataset: <[^>]+>/g,
-                        `dataset: <${config.datasetBaseUrl}>`
-                    );
+                    //let modifiedShaclContent = shaclContent.replace(
+                    //    /dataset: <[^>]+>/g,
+                    //    `dataset: <${config.projectDomain}>`
+                    //);
 
-                    modifiedShaclContent += combinedIndexContent;
+                    let modifiedShaclContent = shaclContent + combinedIndexContent;
                     
                     // Create a blob URL for the modified content
                     const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
@@ -486,13 +483,10 @@ export default class ADWLMEntityEditor extends LitElement {
                     this._selected_repository_path, 
                     'indexes'
                 );
-                
-                console.log("Index files found:", Object.keys(indexFiles));
-                
+
                 // Combine all index file contents
                 let combinedIndexContent = '';
                 for (const [filename, content] of Object.entries(indexFiles)) {
-                    console.log(`Adding index file: ${filename}`);
                     combinedIndexContent += content + '\n';
                 }
                 
@@ -500,12 +494,12 @@ export default class ADWLMEntityEditor extends LitElement {
                 const shaclContent = await fetch(shacl_file_location).then(res => res.text());
                 
                 // Replace the dataset namespace
-                let modifiedShaclContent = shaclContent.replace(
-                    /dataset: <[^>]+>/g,
-                    `dataset: <${config.datasetBaseUrl}>`
-                );
+                //let modifiedShaclContent = shaclContent.replace(
+                //    /dataset: <[^>]+>/g,
+                //    `dataset: <${config.datasetBaseUrl}>`
+                //);
 
-                modifiedShaclContent += combinedIndexContent;
+                let modifiedShaclContent = shaclContent + combinedIndexContent;
 
                 console.log("Modified SHACL content:", modifiedShaclContent);
                 
@@ -776,7 +770,12 @@ export default class ADWLMEntityEditor extends LitElement {
 
             if (target.matches("sl-button#sync-index")) {
                 
-                document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
                     bubbles: true,
                     composed: true
                 }));

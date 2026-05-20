@@ -510,7 +510,7 @@ export default class ADWLMVirtualFilesystem {
             trees: [git.TREE(), git.STAGE()],
             map: async (entry_path, [tree_entry, stage_entry]) => {
                 if (tree_entry === null) {
-                    console.log(`${JSON.stringify(tree_entry)} ${JSON.stringify(stage_entry)}`);
+                    //console.log(`${JSON.stringify(tree_entry)} ${JSON.stringify(stage_entry)}`);
                     let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
                     console.log(status);
                     return entry_path;
@@ -813,7 +813,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async generate_indexes_for_pushed_files(repository_path, pushed_file_paths, entity_type_definitions) {
+    async generate_indexes_for_all_files(repository_path, pushed_file_paths) {
         try {
             // Group pushed files by their folder
             const folderMap = new Map();
@@ -857,24 +857,31 @@ export default class ADWLMVirtualFilesystem {
                     }
                     console.log(`ttl content combined for folder ${folderName}:\n`, combinedRdf);
 
+                    if (!combinedRdf || combinedRdf.trim() === '') {
+                        console.warn(`Combined RDF content is empty for folder: ${folderName}`);
+                        continue;
+                    }
+
                     // Execute SPARQL query
                     let indexContent = await this._executeSparqlQuery(combinedRdf, sparqlQuery);
 
                     // Save the index file
-                    if (!indexContent || indexContent.trim() === '') {
+                    if (!indexContent || indexContent.trim() === '' || indexContent.length === 0) {
                         console.warn(`Generated index content is empty for folder: ${folderName}`);
                         continue;
+                    } else {
+                        const indexPath = `indexes/${folderName}.ttl`;
+                        await this.save_and_stage_file(repository_path, indexContent, indexPath);
+
+                        generatedIndexes[folderName] = {
+                            path: indexPath,
+                            filesProcessed: Object.keys(folderContent).length,
+                            success: true
+                        };
+
+                        console.log(`Index generated successfully for ${folderName}`);
                     }
-                    const indexPath = `indexes/${folderName}.ttl`;
-                    await this.save_and_stage_file(repository_path, indexContent, indexPath);
-
-                    generatedIndexes[folderName] = {
-                        path: indexPath,
-                        filesProcessed: Object.keys(folderContent).length,
-                        success: true
-                    };
-
-                    console.log(`Index generated successfully for ${folderName}`);
+                    
 
                 } catch (error) {
                     console.error(`Failed to generate index for folder ${folderName}:`, error);
@@ -893,7 +900,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async generate_indexes_for_saved_file(repository_path, saved_file_path, entity_type_definitions) {
+    async generate_indexes_for_saved_file(repository_path, saved_file_path) {
         try {
             
             const folderName = saved_file_path.split('/')[0];
@@ -908,6 +915,11 @@ export default class ADWLMVirtualFilesystem {
                 
                 // Read all TTL files from the folder
                 const rdf = await this.read_file(repository_path, saved_file_path);
+
+                if (!rdf || rdf.trim() === '') {
+                    console.warn(`RDF content is empty for file: ${saved_file_path}`);
+                    return;
+                }
 
                 // Load the SPARQL query
                 const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
@@ -997,6 +1009,10 @@ export default class ADWLMVirtualFilesystem {
 
             let result = await this.store.query(sparqlQuery, { type: 'construct', format: 'text/turtle' });
 
+            if (result === null) {
+                console.warn("SPARQL query returned null result");
+                return '';
+            }
             result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
 
             return result || '';
@@ -1020,14 +1036,8 @@ export default class ADWLMVirtualFilesystem {
             let deleteIris = new Set();
             let insertClauses = '';
             for (let binding of this.entity_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
-                console.log(binding.get("s").value);
                 deleteIris.add(binding.get("s").value);
                 insertClauses += `${binding.get("s")} ${binding.get("p")} ${binding.get("o")} .`;
-            }
-
-            console.log("Existing index content loaded into Oxygraph:");
-            for (let binding of this.index_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
-                console.log(binding.get("s").value);
             }
 
             const deleteWhereClauses = Array.from(deleteIris).map(iri => `DELETE WHERE { <${iri}> ?p ?o }`).join('\n');
@@ -1058,7 +1068,9 @@ export default class ADWLMVirtualFilesystem {
             .replace(/,<http/g, '.\n<http')
             .trim();
 
-        turtle = turtle + `.`;
+        if (turtle.length > 0 && !turtle.endsWith('.')) {
+            turtle = turtle + `.`;
+        }
 
         return turtle;
     }
