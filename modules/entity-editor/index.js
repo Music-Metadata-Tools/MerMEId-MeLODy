@@ -4,6 +4,13 @@ import { filesystemService } from "../services/filesystem-service.js";
 
 const styles =
     css`
+        #add-entity::part(label),
+        #save-entity::part(label),
+        #delete-entity::part(label),
+        #undo-changes::part(label) {
+            font-size: 0.9rem;
+        }
+
         :host {
             height: 82vh;
             background-color: #bee2f7;
