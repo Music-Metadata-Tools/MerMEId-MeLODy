@@ -85,6 +85,20 @@ const styles =
             color: var(--sl-color-warning-500);
             font-style: italic;
         }
+
+        sl-tree#staged-files-tree {
+            --indent-size: 0;
+            --indent-guide-width: 0;
+            margin-top: var(--sl-spacing-small);
+        }
+
+        sl-tree#staged-files-tree sl-tree-item::part(expand-button) {
+            display: none;
+        }
+
+        sl-tree#staged-files-tree sl-tree-item::part(item) {
+            padding-inline-start: var(--sl-spacing-x-small);
+        }
     `;
 
 export default class ADWLMFilesystemManager extends LitElement {
