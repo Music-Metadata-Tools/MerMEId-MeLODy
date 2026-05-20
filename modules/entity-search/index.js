@@ -198,8 +198,8 @@ class ADWLMEntitySearch extends LitElement {
       }
     });
 
-    // Listen for reload indexes event from filesystem manager
-    document.addEventListener("adwlm-filesystem-manager:reload-indexes", async (event) => {
+    // Listen for reload indexes event from filesystem manager and entity editor
+    document.addEventListener("adwlm-entity-search:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
 }
