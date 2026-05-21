@@ -322,7 +322,7 @@ class ADWLMEntitySearch extends LitElement {
       const subjectValue = binding.get("subject").value;
       allEntries.push({
         subject: subjectValue,
-        label: labelsMap.get(subjectValue)[0] || [],
+        label: labelsMap.get(subjectValue) || [],
         type: binding.get("type")?.value || "Unknown",
         classifications: classificationsMap.get(subjectValue) || [],
         altlabels: altLabelsMap.get(subjectValue) || [],
@@ -330,10 +330,12 @@ class ADWLMEntitySearch extends LitElement {
       });
     }
 
+    allEntries.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
+
     this._entries = allEntries;
     this._filtered = [];
     this._loading = false;
-    console.log("Alle Einträge geladen:", allEntries.length);
+    console.log("Alle Einträge geladen:", allEntries);
   }
 
   _onInput(e) {
@@ -361,6 +363,8 @@ class ADWLMEntitySearch extends LitElement {
       const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
+
+    this._filtered.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
     console.log("Gefilterte Ergebnisse:", this._filtered.length);
   }
 
@@ -434,7 +438,7 @@ class ADWLMEntitySearch extends LitElement {
             (entry) => html`
               
               <div @click=${() => this._onSelect(entry)} class="result-item">
-                <span>${entry.label}</span><span class="badge">${entry.type.split("https://lod.academy/melod/vocab/ontology#")[1].split("Entity")[0]}</span>
+                <span>${entry.label[0]}</span><span class="badge">${entry.type.split("https://lod.academy/melod/vocab/ontology#")[1].split("Entity")[0]}</span>
               </div>
             `
           )}
