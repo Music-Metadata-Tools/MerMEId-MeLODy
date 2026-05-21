@@ -614,11 +614,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                         }
                     }
 
-                    // reload the previously selected file, if any
-                    if (this._selected_repository_path && this._file_path) {
-                        await this._load_entity_to_edit();
-                    }
-
                     target.loading = false;
                 }
             }
@@ -874,7 +869,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                         }
                     }
 
-                    await this._load_entity_to_edit();
+                    // reload the previously selected file, if any
+                    if (this._selected_repository_path && this._file_path) {
+                        
+                        await this._load_entity_to_edit();
+
+                        await this.selectEntityInTree(this._file_path);
+                    }
 
                     // Update UI
                     await this._list_staged_files();
@@ -991,6 +992,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     entity_to_save.path
                 );
 
+                this._file_path = entity_to_save.path;
+
                 // Show success notification
                 const alert = document.createElement('sl-alert');
                 alert.variant = 'success';
@@ -1066,12 +1069,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         // Just log the error
                     }
 
-                    // Update repository tree
-                    if (this._selected_repository_path) {
-                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
-                        if (repoTree) {
-                            this._generate_folder_tree(repoTree);
-                        }
+                    // reload the previously selected file, if any
+                    if (this._selected_repository_path && this._file_path) {
+                        await this.selectEntityInTree(this._file_path);
                     }
 
                     // Update UI
@@ -1158,7 +1158,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                     this._generate_folder_tree(repoTree);
                 }
             }
-            await this._load_entity_to_edit();
+            // reload the previously selected file, if any
+            if (this._selected_repository_path && this._file_path) {
+                
+                await this._load_entity_to_edit();
+
+                await this.selectEntityInTree(this._file_path);
+            }
 
             // Update UI
             await this._list_staged_files();
