@@ -825,7 +825,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             selected_staged_files.map(file => file.path.split('/')[0]),
                         );
 
-                        console.log("Generated indexes:", generatedIndexes);
+                        console.log("Generated indexes:", generatedIndexes.length);
 
                         // Log which indexes were generated
                         const successfulIndexes = Object.entries(generatedIndexes)
@@ -1030,7 +1030,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             entity_to_save.path, false
                         );
 
-                        console.log("Generated indexes:", generatedIndexes);
+                        console.log("Generated indexes:", generatedIndexes.length);
 
                         // Log which indexes were generated
                         const successfulIndexes = Object.entries(generatedIndexes)
@@ -1120,7 +1120,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     this.entity_type_definitions.map(def => def.folder_name)
                 );
 
-                console.log("Generated indexes:", generatedIndexes);
+                console.log("Generated indexes:", generatedIndexes.length);
 
                 // Log which indexes were generated
                 const successfulIndexes = Object.entries(generatedIndexes)
@@ -1549,7 +1549,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 file_relative_path, true
             );
 
-            console.log("Generated indexes:", generatedIndexes);
+            console.log("Generated indexes:", generatedIndexes.length);
 
             // Log which indexes were generated
             const successfulIndexes = Object.entries(generatedIndexes)

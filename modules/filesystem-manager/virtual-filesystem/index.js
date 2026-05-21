@@ -856,7 +856,6 @@ export default class ADWLMVirtualFilesystem {
                         console.warn(`No SPARQL query found for folder: ${folderName}`);
                         continue;
                     }
-                    console.log(`ttl content combined for folder ${folderName}:\n`, combinedRdf);
 
                     if (!combinedRdf || combinedRdf.trim() === '') {
                         console.warn(`Combined RDF content is empty for folder: ${folderName}`);
@@ -905,8 +904,6 @@ export default class ADWLMVirtualFilesystem {
         try {
             
             const folderName = saved_file_path.split('/')[0];
-            
-            console.log("Folder with saved file:", folderName);
 
             const generatedIndexes = {};
 
@@ -929,7 +926,6 @@ export default class ADWLMVirtualFilesystem {
                     console.warn(`No SPARQL query found for folder: ${folderName}`);
                     return;
                 }
-                console.log(`ttl content of file in folder ${folderName}:\n`, rdf);
 
                 // Execute SPARQL query
                 let indexContent = await this._executeSparqlQuery(rdf, sparqlQuery);
@@ -951,7 +947,6 @@ export default class ADWLMVirtualFilesystem {
                         indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=false);
                     }
                     const indexPath = `indexes/${folderName}.ttl`;
-                    console.log(`Updated index content for ${folderName}:\n`, indexContent);
                     await this.save_and_stage_file(repository_path, indexContent, indexPath);
 
                     generatedIndexes[folderName] = {
@@ -1045,8 +1040,6 @@ export default class ADWLMVirtualFilesystem {
             }
 
             const deleteWhereClauses = Array.from(deleteIris).map(iri => `DELETE WHERE { <${iri}> ?p ?o }`).join('\n');
-
-            console.log("SPARQL Update - delete clauses:\n", deleteWhereClauses);
             
             const updateQuery = `${deleteWhereClauses}`
 
