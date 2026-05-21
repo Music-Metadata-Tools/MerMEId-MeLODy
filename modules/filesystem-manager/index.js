@@ -1576,6 +1576,11 @@ export default class ADWLMFilesystemManager extends LitElement {
             // Just log the error
         }
 
+        document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+            bubbles: true,
+            composed: true
+        }));
+
         // Be careful, add_file means remove_file
         await filesystem.add_file(this._selected_repository_path, file_relative_path);
 
