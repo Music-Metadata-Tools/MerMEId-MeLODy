@@ -595,6 +595,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
                     // Notify entity-search to reload indexes
                     document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                         bubbles: true,

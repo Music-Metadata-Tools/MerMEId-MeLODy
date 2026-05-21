@@ -565,7 +565,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     <div id="container">
                         <div class="header">
                             <sl-button-group>
-                                <sl-button id="sync-index" variant="primary" size="small">
+                                <sl-button id="sync-index" variant="primary" size="small" title="Reload indexes">
                                     <sl-icon slot="suffix" name="arrow-clockwise"></sl-icon>
                                 </sl-button>
                             </sl-button-group>
@@ -766,6 +766,8 @@ export default class ADWLMEntityEditor extends LitElement {
             }
 
             if (target.matches("sl-button#sync-index")) {
+
+                target.loading = true;
                 
                 this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
                     bubbles: true,
@@ -776,6 +778,8 @@ export default class ADWLMEntityEditor extends LitElement {
                     bubbles: true,
                     composed: true
                 }));
+
+                
 
                 // Show success notification
                 const alert = document.createElement('sl-alert');
@@ -788,6 +792,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 `;
                 document.body.append(alert);
                 alert.toast();
+                target.loading = false;
                 /*
                 if (this._hasUnsavedChanges) {
                     // Show warning dialog
