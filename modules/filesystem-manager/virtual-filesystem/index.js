@@ -829,14 +829,13 @@ export default class ADWLMVirtualFilesystem {
                 folderMap.get(folderName).push(filePath);
             });
 
-            console.log("Folders with pushed files:", Array.from(folderMap.keys()));
+            console.log("Folders with queried files:", Array.from(folderMap.keys()));
 
             const generatedIndexes = {};
 
             // For each folder, execute the corresponding SPARQL query
             for (const [folderName, files] of folderMap.entries()) {
                 try {
-                    console.log(`Generating index for folder: ${folderName}`);
                     
                     // Read all TTL files from the folder
                     const folderContent = await this.read_directory_files(repository_path, folderName);
@@ -909,7 +908,6 @@ export default class ADWLMVirtualFilesystem {
 
             // For each folder, execute the corresponding SPARQL query
             try {
-                console.log(`Generating index for folder: ${folderName}`);
                 
                 // Read all TTL files from the folder
                 const rdf = await this.read_file(repository_path, saved_file_path);
@@ -930,7 +928,6 @@ export default class ADWLMVirtualFilesystem {
                 // Execute SPARQL query
                 let indexContent = await this._executeSparqlQuery(rdf, sparqlQuery);
 
-                console.log(`Index generated successfully for file in ${folderName}`);
                 // Save the index file
                 if (!indexContent || indexContent.trim() === '') {
                     console.warn(`Generated index content is empty for folder: ${folderName}`);
@@ -983,8 +980,6 @@ export default class ADWLMVirtualFilesystem {
             // Path: {folderName}.sparql
             const sparqlQueryPath = `${folderName}.sparql`;
             
-            console.log(`Loading SPARQL query from: ${repository_path}/${sparqlQueryPath}`);
-            
             const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
             
             if (!sparqlContent || sparqlContent.trim() === '') {
@@ -1001,8 +996,6 @@ export default class ADWLMVirtualFilesystem {
 
     async _executeSparqlQuery(rdfContent, sparqlQuery) {
         try {
-
-            console.log("Executing SPARQL query with Oxygraph");
 
             this.store = new oxigraph.Store();
 
@@ -1026,7 +1019,6 @@ export default class ADWLMVirtualFilesystem {
 
     async _executeSparqlUpdate(existingIndexContent, updateContent, is_deleted=false) {
         try {
-            console.log("Executing SPARQL update with Oxygraph");
 
             this.entity_store = new oxigraph.Store();
             this.index_store = new oxigraph.Store();

@@ -313,7 +313,6 @@ export default class ADWLMEntityEditor extends LitElement {
             event.preventDefault();
 
             const href = link.getAttribute("href");
-            console.log("CLICK erkannt:", href);
 
             if (!href) return;
 
@@ -500,8 +499,6 @@ export default class ADWLMEntityEditor extends LitElement {
                 //);
 
                 let modifiedShaclContent = shaclContent + combinedIndexContent;
-
-                console.log("Modified SHACL content:", modifiedShaclContent);
                 
                 // Create a blob URL for the modified content
                 const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
