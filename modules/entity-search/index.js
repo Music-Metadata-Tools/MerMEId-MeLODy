@@ -335,7 +335,7 @@ class ADWLMEntitySearch extends LitElement {
     this._entries = allEntries;
     this._filtered = [];
     this._loading = false;
-    console.log("Alle Einträge geladen:", allEntries);
+    console.log("Alle Einträge geladen:", allEntries.length);
   }
 
   _onInput(e) {
