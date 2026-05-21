@@ -819,6 +819,50 @@ export default class ADWLMFilesystemManager extends LitElement {
                         }
                     }
 
+                    try {
+                        const generatedIndexes = await filesystem.generate_indexes_for_all_files(
+                            this._selected_repository_path,
+                            selected_staged_files.map(file => file.path.split('/')[0]),
+                        );
+
+                        console.log("Generated indexes:", generatedIndexes);
+
+                        // Log which indexes were generated
+                        const successfulIndexes = Object.entries(generatedIndexes)
+                            .filter(([_, result]) => result.success)
+                            .map(([name, _]) => name);
+
+                        if (successfulIndexes.length > 0) {
+                            const alert = document.createElement('sl-alert');
+                            alert.variant = 'success';
+                            alert.closable = true;
+                            alert.duration = 6000;
+                            alert.innerHTML = `
+                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                            `;
+                            document.body.append(alert);
+                            alert.toast();
+                        }
+                    } catch (error) {
+                        console.error('Error generating indexes:', error);
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Failed to generate indexes for cloned files. ${error.message}
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                    }
+
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+
                     // Update repository tree
                     if (this._selected_repository_path) {
                         let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
@@ -1032,6 +1076,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     // Update UI
                     await this._list_staged_files();
                     await this._updateRepositoryTreeStatus();
+
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
 
             } catch (error) {
                 console.error('Failed to save entity:', error);

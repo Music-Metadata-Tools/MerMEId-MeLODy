@@ -770,12 +770,12 @@ export default class ADWLMEntityEditor extends LitElement {
 
             if (target.matches("sl-button#sync-index")) {
                 
-                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
                     bubbles: true,
                     composed: true
                 }));
 
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                     bubbles: true,
                     composed: true
                 }));
