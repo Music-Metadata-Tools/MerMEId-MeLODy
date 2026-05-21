@@ -410,6 +410,8 @@ export default class ADWLMEntityEditor extends LitElement {
 
         const path = this._sidePanelEntity.subject.replace("urn:uuid:", "");
 
+        let filename = `${path}.ttl`;
+
         const entity = {
             contents: this._sidePanelEntity.values,
             path: `${path}.ttl`,
@@ -419,6 +421,10 @@ export default class ADWLMEntityEditor extends LitElement {
         };
 
         this.entity_to_edit = entity;
+
+        window.dispatchEvent(new CustomEvent("entity-selected", {
+            detail: { filename }
+        }));
 
         this._closeSidePanel();
     }
