@@ -29,6 +29,12 @@ melod:Manifestation
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs
                 ] ;
+  sh:property   [ sh:name "Identifier" ;
+                  sh:minCount 0 ;
+                  sh:group melod:General ;
+                  sh:node melod:Identifier ;
+                  sh:path melod:hasIdentifier
+                ] ;
   sh:property   [ sh:description "Keywords for searching, grouping and indexing" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
@@ -230,7 +236,7 @@ melod:PhysDesc
                   sh:minCount 0 ;
                   sh:or (
                     [ rdfs:label "paper" ; sh:node melod:PaperDetail]
-                    [ rdfs:label "other physical mediums" ; dash:singleLine false ]
+                    [ rdfs:label "other physical mediums" ; sh:datatype xsd:string ; dash:singleLine false ]
                   ) ;
                   sh:path melod:hasPhysMedium
                 ] ;
@@ -753,6 +759,23 @@ melod:TitlePage
                   sh:class melod:Certainty
                 ] ;
   sh:targetClass  melod:Contribution .
+
+  melod:Identifier
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Name of a list or catalogue, e.g. TVWV" ;
+                  sh:name      "List name" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "Work catalogue number, e.g. abc, 1:355" ;
+                  sh:name      "Number" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:datatype  xsd:string ;
+                  sh:path      owl:hasValue
+                ] ;
+  sh:targetClass melod:Identifier .
 
   melod:Relation
   a               sh:PropertyGroup ;
