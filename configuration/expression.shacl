@@ -109,7 +109,11 @@ melod:Expression
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
-                  sh:class melod:PerformanceEvent
+                  #sh:class melod:PerformanceEvent
+                  sh:or (
+                    [ sh:class melod:PerformanceEventEntity ; rdfs:label "IRI of Performance Event" ; sh:nodeKind sh:IRI ]
+                    [ sh:node melod:PerformanceEvent ; rdfs:label "Performance Event" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Insert ID of the performance event" ;
                   sh:name "Performance" ;
@@ -119,7 +123,11 @@ melod:Expression
                   sh:nodeKind sh:IRI ;
                   #sh:defaultValue "https://mei-metadata.org/performanceEvents/" ;
                   #sh:pattern      "^https://mei-metadata.org/performanceEvents/\\d{8}" ;
-                  sh:class melod:PerformanceEvent
+                  #sh:class melod:PerformanceEvent
+                  sh:or (
+                    [ sh:class melod:PerformanceEventEntity ; rdfs:label "IRI of Performance Event" ; sh:nodeKind sh:IRI ]
+                    [ sh:node melod:PerformanceEvent ; rdfs:label "Performance Event" ]
+                  )
                 ] ;
   sh:property   [ sh:description "Extent of the written music e.g. 50 T." ;
                   sh:name "Extent" ;
@@ -607,3 +615,40 @@ melod:Event
                   sh:path schema:description
                 ] ;
   sh:targetClass melod:Event .
+
+  melod:PerformanceEvent
+  a sh:NodeShape, rdfs:Class ;
+  owl:imports     dataset:places.ttl ;
+  sh:property   [ sh:description "Name of the Performance Event" ;
+                  sh:name "Name" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+  sh:property   [ sh:description "Insert ID of the place" ;
+                  sh:name "Place" ;
+                  sh:maxCount 1;
+                  sh:nodeKind sh:IRI ;
+                  sh:class melod:Place ;
+                  #sh:defaultValue "https://mei-metadata.org/places/" ;
+                  #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
+                  sh:path schema:location
+                ] ;
+  sh:property   [ sh:description "Date of the Performance Event" ;
+                  sh:name "Date" ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:path melod:hasEventDate ;
+                  sh:or (
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
+                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                  )
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name "Description" ;
+                  dash:singleLine false ;
+                  sh:group melod:General ;
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation ;
+                ] ;
+  sh:targetClass melod:PerformanceEvent .
