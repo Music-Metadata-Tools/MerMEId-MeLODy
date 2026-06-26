@@ -33,6 +33,7 @@ melod:Bibliography
                   sh:description         "External resource, e.g. Zotero" ;
                   sh:path         owl:sameAs ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:group melod:Titles ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
@@ -75,7 +76,7 @@ melod:Bibliography
                   sh:maxCount 1 ;
                   sh:group melod:Publication ;
                   sh:path schema:inLanguage ;
-                  sh:datatype rdf:langString
+                  sh:class melod:Language
                 ] ;
   sh:property   [ sh:name "Pages" ;
                   sh:description "Scope of the article, chapter, ..." ;

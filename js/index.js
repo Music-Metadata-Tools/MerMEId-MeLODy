@@ -254,7 +254,7 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     shacl_renderer.setAttribute("data-shapes-url", entity_to_save.shapesUrl);
 
     // Debug logging
-    console.log('Full JSON-LD contents:', json_ld_contents);
+    //console.log('Full JSON-LD contents:', json_ld_contents);
 
     let xml = convertJsonLdToXml(json_ld_contents);
 

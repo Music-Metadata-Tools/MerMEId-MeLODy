@@ -80,6 +80,7 @@ melod:InstrumentationDetail
                   sh:description "Identifier (external resource, e.g. MARC)" ;
                   sh:name         "Link" ;
                   sh:path         owl:sameAs ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;

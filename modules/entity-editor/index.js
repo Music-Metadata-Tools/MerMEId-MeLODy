@@ -320,7 +320,6 @@ export default class ADWLMEntityEditor extends LitElement {
             event.preventDefault();
 
             const href = link.getAttribute("href");
-            console.log("CLICK erkannt:", href);
 
             if (!href) return;
 
@@ -373,12 +372,27 @@ export default class ADWLMEntityEditor extends LitElement {
                 try {
                     //return def.shacl_file_location;
                     const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+                    const filesystem = filesystemService.getInstance();
+
+                    // Read all files from indexes directory
+                    const indexFiles = await filesystem.read_directory_files(
+                        this._selected_repository_path, 
+                        'indexes'
+                    );
+                    
+                    // Combine all index file contents
+                    let combinedIndexContent = '';
+                    for (const [filename, content] of Object.entries(indexFiles)) {
+                        combinedIndexContent += content + '\n';
+                    }
                     
                     // Replace the dataset namespace
-                    const modifiedShaclContent = shaclContent.replace(
-                        /dataset: <[^>]+>/g,
-                        `dataset: <${config.datasetBaseUrl}>`
-                    );
+                    //let modifiedShaclContent = shaclContent.replace(
+                    //    /dataset: <[^>]+>/g,
+                    //    `dataset: <${config.projectDomain}>`
+                    //);
+
+                    let modifiedShaclContent = shaclContent + combinedIndexContent;
                     
                     // Create a blob URL for the modified content
                     const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
@@ -403,6 +417,8 @@ export default class ADWLMEntityEditor extends LitElement {
 
         const path = this._sidePanelEntity.subject.replace("urn:uuid:", "");
 
+        let filename = `${path}.ttl`;
+
         const entity = {
             contents: this._sidePanelEntity.values,
             path: `${path}.ttl`,
@@ -412,6 +428,10 @@ export default class ADWLMEntityEditor extends LitElement {
         };
 
         this.entity_to_edit = entity;
+
+        window.dispatchEvent(new CustomEvent("entity-selected", {
+            detail: { filename }
+        }));
 
         this._closeSidePanel();
     }
@@ -467,14 +487,31 @@ export default class ADWLMEntityEditor extends LitElement {
         
         if (config && config.datasetBaseUrl) {
             try {
+
+                const filesystem = filesystemService.getInstance();
+
+                // Read all files from indexes directory
+                const indexFiles = await filesystem.read_directory_files(
+                    this._selected_repository_path, 
+                    'indexes'
+                );
+
+                // Combine all index file contents
+                let combinedIndexContent = '';
+                for (const [filename, content] of Object.entries(indexFiles)) {
+                    combinedIndexContent += content + '\n';
+                }
+                
                 // Read the SHACL file content
                 const shaclContent = await fetch(shacl_file_location).then(res => res.text());
                 
                 // Replace the dataset namespace
-                const modifiedShaclContent = shaclContent.replace(
-                    /dataset: <[^>]+>/g,
-                    `dataset: <${config.datasetBaseUrl}>`
-                );
+                //let modifiedShaclContent = shaclContent.replace(
+                //    /dataset: <[^>]+>/g,
+                //    `dataset: <${config.datasetBaseUrl}>`
+                //);
+
+                let modifiedShaclContent = shaclContent + combinedIndexContent;
                 
                 // Create a blob URL for the modified content
                 const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
@@ -541,7 +578,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     <div id="container">
                         <div class="header">
                             <sl-button-group>
-                                <sl-button id="sync-index" variant="primary" size="small">
+                                <sl-button id="sync-index" variant="primary" size="small" title="Reload indexes">
                                     <sl-icon slot="suffix" name="arrow-clockwise"></sl-icon>
                                 </sl-button>
                             </sl-button-group>
@@ -742,11 +779,20 @@ export default class ADWLMEntityEditor extends LitElement {
             }
 
             if (target.matches("sl-button#sync-index")) {
+
+                target.loading = true;
                 
-                document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
                     bubbles: true,
                     composed: true
                 }));
+
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+
+                
 
                 // Show success notification
                 const alert = document.createElement('sl-alert');
@@ -759,6 +805,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 `;
                 document.body.append(alert);
                 alert.toast();
+                target.loading = false;
                 /*
                 if (this._hasUnsavedChanges) {
                     // Show warning dialog
@@ -854,8 +901,8 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_id = this._generate_entity_id();
             const config = await this._getRepoConfig();
             const domain = config?.projectDomain ?? 'urn:uuid:';
-            let entity_path = `${entity_folder_name}/${entity_id}.ttl`;
             let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
+            let entity_path = `${entity_folder_name}/${entity_id_prefix}${entity_id}.ttl`;
             let entity_iri = `${domain}${entity_folder_name}/${entity_id_prefix}${entity_id}`;
 
             let entity_to_edit = {

@@ -27,6 +27,7 @@ melod:Manifestation
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:name "Identifier" ;
@@ -159,17 +160,17 @@ melod:Manifestation
 
 melod:Title
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Title of the manifestation" ;
-                  sh:name      "Source title" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      rdfs:label
-                ] ;
   sh:property   [ sh:name      "Source label" ;
                   sh:description "Label, such as a letter, number or short description" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
+                ] ;
+  sh:property   [ sh:description "Title of the manifestation" ;
+                  sh:name      "Source title" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
                 ] ;
   sh:targetClass  melod:Title .
 
@@ -415,6 +416,7 @@ melod:Watermark
                   sh:name      "Link" ;
                   sh:minCount  0 ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path      owl:sameAs
                 ] ;
   sh:property   [ sh:name      "Heraldry" ;
@@ -473,6 +475,7 @@ melod:Watermark
                   sh:name         "Paper mill" ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPaperMill ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:description  "Insert link or name of the twin mark" ;
@@ -480,6 +483,7 @@ melod:Watermark
                   sh:maxCount  1 ;
                   sh:path      melod:hasTwinMark ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
   sh:targetClass  melod:Watermark .
 
