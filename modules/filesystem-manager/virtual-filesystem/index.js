@@ -1,6 +1,9 @@
 import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
 import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
+import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/+esm";
+
+await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
     constructor(fs = null, { httpPlugin = null, corsProxy = FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY } = {}) {
@@ -10,6 +13,9 @@ export default class ADWLMVirtualFilesystem {
         this._http = httpPlugin ?? http;
         this._corsProxy = corsProxy;
         this._localRepositories = new Map();
+        this.store = null;
+        this.index_store = null;
+        this.entity_store = null;
     }
 
     async add_local_repository(name, dirHandle) {
@@ -415,6 +421,87 @@ export default class ADWLMVirtualFilesystem {
         return file_contents;
     }
 
+    async read_directory_files(repository_path, directory_path) {
+        const repoName = repository_path.replace("/", "");
+        const fileContents = {};
+
+        // Handle local repositories
+        if (this._localRepositories.has(repoName)) {
+            const dirHandle = this._localRepositories.get(repoName);
+
+            let relativePath = directory_path;
+
+            if (relativePath.startsWith(repoName)) {
+                relativePath = relativePath.slice(repoName.length);
+                if (relativePath.startsWith("/")) {
+                    relativePath = relativePath.slice(1);
+                }
+            }
+
+            const parts = relativePath.split("/").filter(Boolean);
+
+            let currentHandle = dirHandle;
+
+            try {
+                for (let i = 0; i < parts.length; i++) {
+                    currentHandle = await currentHandle.getDirectoryHandle(parts[i]);
+                }
+
+                for await (const [name, handle] of currentHandle.entries()) {
+                    if (name.startsWith(".")) continue;
+
+                    if (handle.kind === "file") {
+                        const fileHandle = handle;
+                        const file = await fileHandle.getFile();
+                        fileContents[name] = await file.text();
+                    }
+                }
+
+                return fileContents;
+
+            } catch (err) {
+                console.error("Failed to read local directory:", {
+                    repoName,
+                    directory_path,
+                    relativePath,
+                    parts
+                });
+                throw err;
+            }
+        }
+
+        // Handle git repositories
+        await git.walk({
+            fs: this.fs,
+            dir: repository_path,
+            trees: [git.WORKDIR()],
+            map: async (entry_path, [entry]) => {
+                // Check if entry is in the target directory
+                if (!entry_path.startsWith(directory_path)) {
+                    return;
+                }
+
+                const entry_type = await entry.type();
+
+                // Only read files (blobs) in the top level of the directory
+                if (entry_type === "blob" && !entry_path.startsWith(".")) {
+                    const relative_file_path = entry_path.substring(directory_path.length + 1);
+
+                    // Only include files directly in the directory (no subdirectories)
+                    if (!relative_file_path.includes("/")) {
+                        let content = await entry.content();
+                        if (content) {
+                            content = new TextDecoder().decode(content);
+                        }
+                        fileContents[relative_file_path] = content;
+                    }
+                }
+            },
+        });
+
+        return fileContents;
+    }
+
     async list_staged_files(repository_path) {
         let start = performance.now();
         let changed_files = await git.walk({
@@ -423,7 +510,7 @@ export default class ADWLMVirtualFilesystem {
             trees: [git.TREE(), git.STAGE()],
             map: async (entry_path, [tree_entry, stage_entry]) => {
                 if (tree_entry === null) {
-                    console.log(`${JSON.stringify(tree_entry)} ${JSON.stringify(stage_entry)}`);
+                    //console.log(`${JSON.stringify(tree_entry)} ${JSON.stringify(stage_entry)}`);
                     let status = await git.status({ fs: this.fs, dir: repository_path, filepath: entry_path });
                     console.log(status);
                     return entry_path;
@@ -619,7 +706,7 @@ export default class ADWLMVirtualFilesystem {
             console.log("Remote changes:", remoteChanges, "Changed files local: ", changed_files, "Conflicts with local changes:", conflicts);
 
 
-            return conflicts.length === 0;
+            return [conflicts.length===0, remoteChanges.length];
 
 
         } catch (e) {
@@ -725,5 +812,259 @@ export default class ADWLMVirtualFilesystem {
                 await this.pfs.rmdir(item_path);
             }
         }
+    }
+
+    async generate_indexes_for_all_files(repository_path, pushed_file_paths) {
+        try {
+            // Group pushed files by their folder
+            const folderMap = new Map();
+            
+            pushed_file_paths.forEach(filePath => {
+                // Extract folder name (e.g., "persons" from "persons/123456.ttl")
+                const folderName = filePath.split('/')[0];
+                
+                if (!folderMap.has(folderName)) {
+                    folderMap.set(folderName, []);
+                }
+                folderMap.get(folderName).push(filePath);
+            });
+
+            console.log("Folders with queried files:", Array.from(folderMap.keys()));
+
+            const generatedIndexes = {};
+
+            // For each folder, execute the corresponding SPARQL query
+            for (const [folderName, files] of folderMap.entries()) {
+                try {
+                    
+                    // Read all TTL files from the folder
+                    const folderContent = await this.read_directory_files(repository_path, folderName);
+                    
+                    // Combine all RDF content
+                    let combinedRdf = '';
+                    for (const [filename, content] of Object.entries(folderContent)) {
+                        if (filename.endsWith('.ttl')) {
+                            combinedRdf += content + '\n';
+                        }
+                    }
+
+                    // Load the SPARQL query
+                    const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                    
+                    if (!sparqlQuery) {
+                        console.warn(`No SPARQL query found for folder: ${folderName}`);
+                        continue;
+                    }
+
+                    if (!combinedRdf || combinedRdf.trim() === '') {
+                        console.warn(`Combined RDF content is empty for folder: ${folderName}`);
+                        continue;
+                    }
+
+                    // Execute SPARQL query
+                    let indexContent = await this._executeSparqlQuery(combinedRdf, sparqlQuery);
+
+                    // Save the index file
+                    if (!indexContent || indexContent.trim() === '' || indexContent.length === 0) {
+                        console.warn(`Generated index content is empty for folder: ${folderName}`);
+                        continue;
+                    } else {
+                        const indexPath = `indexes/${folderName}.ttl`;
+                        await this.save_and_stage_file(repository_path, indexContent, indexPath);
+
+                        generatedIndexes[folderName] = {
+                            path: indexPath,
+                            filesProcessed: Object.keys(folderContent).length,
+                            success: true
+                        };
+
+                        console.log(`Index generated successfully for ${folderName}`);
+                    }
+                    
+
+                } catch (error) {
+                    console.error(`Failed to generate index for folder ${folderName}:`, error);
+                    generatedIndexes[folderName] = {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+
+            return generatedIndexes;
+
+        } catch (error) {
+            console.error('Error in generate_indexes_for_pushed_files:', error);
+            throw error;
+        }
+    }
+
+    async generate_indexes_for_saved_file(repository_path, saved_file_path, is_deleted=false) {
+        try {
+            
+            const folderName = saved_file_path.split('/')[0];
+
+            const generatedIndexes = {};
+
+            // For each folder, execute the corresponding SPARQL query
+            try {
+                
+                // Read all TTL files from the folder
+                const rdf = await this.read_file(repository_path, saved_file_path);
+
+                if (!rdf || rdf.trim() === '') {
+                    console.warn(`RDF content is empty for file: ${saved_file_path}`);
+                    return;
+                }
+
+                // Load the SPARQL query
+                const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                
+                if (!sparqlQuery) {
+                    console.warn(`No SPARQL query found for folder: ${folderName}`);
+                    return;
+                }
+
+                // Execute SPARQL query
+                let indexContent = await this._executeSparqlQuery(rdf, sparqlQuery);
+
+                // Save the index file
+                if (!indexContent || indexContent.trim() === '') {
+                    console.warn(`Generated index content is empty for folder: ${folderName}`);
+                    return;
+                }
+
+                let indexFile = await this.read_file(repository_path, `indexes/${folderName}.ttl`);
+
+                if (indexContent !== '' && indexFile !== '') {
+
+                    if (is_deleted===true) {
+                        indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=true);
+                    } else {
+                        indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=false);
+                    }
+                    const indexPath = `indexes/${folderName}.ttl`;
+                    await this.save_and_stage_file(repository_path, indexContent, indexPath);
+
+                    generatedIndexes[folderName] = {
+                        path: indexPath,
+                        filesProcessed: saved_file_path,
+                        success: true
+                    };
+
+                    console.log(`Index updated successfully for ${folderName}`);
+                } else {
+                    console.warn(`No existing index file found for folder: ${folderName}.`);
+                }
+                
+
+            } catch (error) {
+                console.error(`Failed to generate index for folder ${folderName}:`, error);
+                generatedIndexes[folderName] = {
+                    success: false,
+                    error: error.message
+                };
+            }
+
+            return generatedIndexes;
+
+        } catch (error) {
+            console.error('Error in generate_indexes_for_pushed_files:', error);
+            throw error;
+        }
+    }
+
+    async _loadSparqlQuery(repository_path, folderName) {
+        try {
+            // Load SPARQL query from the virtual filesystem
+            // Path: {folderName}.sparql
+            const sparqlQueryPath = `${folderName}.sparql`;
+            
+            const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
+            
+            if (!sparqlContent || sparqlContent.trim() === '') {
+                console.warn(`SPARQL query file is empty for folder: ${folderName}`);
+                return null;
+            }
+
+            return sparqlContent;
+        } catch (error) {
+            console.error(`Failed to load SPARQL query for ${folderName}:`, error);
+            return null;
+        }
+    }
+
+    async _executeSparqlQuery(rdfContent, sparqlQuery) {
+        try {
+
+            this.store = new oxigraph.Store();
+
+            await this.store.load(rdfContent, { format: 'text/turtle' });
+
+            let result = await this.store.query(sparqlQuery, { type: 'construct', format: 'text/turtle' });
+
+            if (result === null) {
+                console.warn("SPARQL query returned null result");
+                return '';
+            }
+            result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
+
+            return result || '';
+
+        } catch (error) {
+            console.error('Error executing SPARQL query with Oxygraph:', error);
+            return '';
+        }
+    }
+
+    async _executeSparqlUpdate(existingIndexContent, updateContent, is_deleted=false) {
+        try {
+
+            this.entity_store = new oxigraph.Store();
+            this.index_store = new oxigraph.Store();
+
+            await this.entity_store.load(updateContent, { format: 'text/turtle' });
+            await this.index_store.load(existingIndexContent, { format: 'text/turtle' });
+
+            let deleteIris = new Set();
+            for (let binding of this.entity_store.query("SELECT DISTINCT ?s ?p ?o WHERE { ?s ?p ?o }")) {
+                deleteIris.add(binding.get("s").value);
+            }
+
+            const deleteWhereClauses = Array.from(deleteIris).map(iri => `DELETE WHERE { <${iri}> ?p ?o }`).join('\n');
+            
+            const updateQuery = `${deleteWhereClauses}`
+
+            await this.index_store.update(updateQuery);
+
+            let result = this.index_store.query("CONSTRUCT { ?s ?p ?o . } WHERE { ?s ?p ?o . }", { format: 'text/turtle' });
+            result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
+
+            if (is_deleted===false) {
+                result += `\n${updateContent}`;
+            }
+
+            return result || existingIndexContent;
+
+
+        } catch (error) {
+            console.error('Error executing SPARQL update with Oxygraph:', error);
+            return existingIndexContent; 
+        }
+    }
+
+    _triplesToTurtle(triples) {
+        let turtle = triples
+            .replace(/>,/g, '> .\n')
+            .replace(/<http/g, '<http')
+            .replace(/,<urn/g, '.\n<urn')
+            .replace(/,<http/g, '.\n<http')
+            .trim();
+
+        if (turtle.length > 0 && !turtle.endsWith('.')) {
+            turtle = turtle + `.`;
+        }
+
+        return turtle;
     }
 }

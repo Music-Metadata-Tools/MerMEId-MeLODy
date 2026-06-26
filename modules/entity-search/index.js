@@ -110,6 +110,10 @@ class ADWLMEntitySearch extends LitElement {
     _typeFilter: { state: true },
     _loading: { state: true },
     _dataset_url: { type: String, state: true },
+    _selected_repository_path: {
+    type: String,
+    state: true
+    }
   };
 
   constructor() {
@@ -121,6 +125,11 @@ class ADWLMEntitySearch extends LitElement {
     this._loading = false;
     this._dataset_url = null;
     this._project_domain = null;
+
+    // Listen for repository selection events
+    document.addEventListener('adwlm-filesystem-manager:repository-selected', async (event) => {
+        this._selected_repository_path = event.detail.repositoryPath;
+    });
   }
 
   async connectedCallback() {
@@ -140,8 +149,8 @@ class ADWLMEntitySearch extends LitElement {
       await this._buildEntries();
     });
 
-    // Listen for reload indexes event from filesystem manager
-    document.addEventListener("adwlm-filesystem-manager:reload-indexes", async () => {
+    // Listen for reload indexes event from filesystem manager and entity editor
+    document.addEventListener("adwlm-entity-search:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
   }
@@ -162,25 +171,31 @@ class ADWLMEntitySearch extends LitElement {
     
     // Query 1: main data (subject, label, type)
     const mainQuery = `
-      SELECT DISTINCT ?subject ?label ?type ?composer WHERE {
-        ?subject <http://www.w3.org/2004/02/skos/core#prefLabel> ?title .
+      SELECT DISTINCT ?subject ?type WHERE {
         ?subject a ?type .
+      }
+      ORDER BY ?subject
+    `;
+
+    // Query 2: main data (subject, label, type)
+    const labelQuery = `
+      SELECT ?subject ?label ?type ?composer WHERE {
+        ?subject <http://www.w3.org/2004/02/skos/core#prefLabel> ?title .
         OPTIONAL {
           ?subject <https://schema.org/composer> ?composer .
         }
         bind(coalesce(concat(?composer, ": ", ?title), ?title) AS ?label) .
       }
-      ORDER BY ?label
     `;
     
-    // Query 2: all classifications per subject
+    // Query 3: all classifications per subject
     const classificationsQuery = `
       SELECT ?subject ?classification WHERE {
         ?subject <http://www.w3.org/2004/02/skos/core#broader> ?classification .
       }
     `;
     
-    // Query 3: all altLabels per subject
+    // Query 4: all altLabels per subject
     const altLabelsQuery = `
       SELECT ?subject ?altlabel WHERE {
         ?subject <http://www.w3.org/2004/02/skos/core#altLabel> ?altlabel .
@@ -217,13 +232,15 @@ class ADWLMEntitySearch extends LitElement {
       const subjectValue = binding.get("subject").value;
       allEntries.push({
         subject: subjectValue,
-        label: binding.get("label").value,
+        label: labelsMap.get(subjectValue) || [],
         type: binding.get("type")?.value || "Unknown",
         classifications: classificationsMap.get(subjectValue) || [],
         altlabels: altLabelsMap.get(subjectValue) || [],
-        composer: binding.get("composer")?.value || "",
+        composer: labelsMap.get(subjectValue) || [],
       });
     }
+
+    allEntries.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
 
     this._entries = allEntries;
     this._filtered = [];
@@ -249,14 +266,16 @@ class ADWLMEntitySearch extends LitElement {
   _filterResults() {
     this._filtered = this._entries.filter((e) => {
       const matchesLabel = this._query === "" || 
-        e.label?.toLowerCase().includes(this._query) || 
-        e.composer?.toLowerCase().includes(this._query) ||
+        e.label?.some(label => label.toLowerCase().includes(this._query)) || 
+        e.composer?.some(composer => composer.toLowerCase().includes(this._query)) ||
         e.altlabels?.some(alt => alt.toLowerCase().includes(this._query)) ||
         e.classifications?.some(cls => cls.toLowerCase().includes(this._query));
       const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
-    console.log("Gefilterte Ergebnisse:", this._filtered);
+
+    this._filtered.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
+    console.log("Gefilterte Ergebnisse:", this._filtered.length);
   }
 
   async _onSelect(entry) {
@@ -326,7 +345,7 @@ class ADWLMEntitySearch extends LitElement {
             (entry) => html`
               
               <div @click=${() => this._onSelect(entry)} class="result-item">
-                <span>${entry.label}</span><span class="badge">${entry.type.split("https://lod.academy/melod/vocab/ontology#")[1].split("Entity")[0]}</span>
+                <span>${entry.label[0]}</span><span class="badge">${entry.type.split("https://lod.academy/melod/vocab/ontology#")[1].split("Entity")[0]}</span>
               </div>
             `
           )}

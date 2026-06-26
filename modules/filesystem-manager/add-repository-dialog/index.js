@@ -207,7 +207,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
         // Auto-fill last used credentials
         const credentials = await CredentialsHelper.getCredentials();
-        console.log('Retrieved credentials:', credentials); // Add this debug line
+        //console.log('Retrieved credentials:', credentials); // Add this debug line
         if (credentials) {
             this.renderRoot.querySelector("sl-input#repository-folder-name").value = credentials.folder;
             this.renderRoot.querySelector("sl-input#repository-url").value = credentials.url;
