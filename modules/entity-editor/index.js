@@ -4,6 +4,13 @@ import { filesystemService } from "../services/filesystem-service.js";
 
 const styles =
     css`
+        #add-entity::part(label),
+        #save-entity::part(label),
+        #delete-entity::part(label),
+        #undo-changes::part(label) {
+            font-size: 0.9rem;
+        }
+
         :host {
             height: 82vh;
             background-color: #bee2f7;
@@ -986,9 +993,13 @@ export default class ADWLMEntityEditor extends LitElement {
         cancelButton.addEventListener('click', () => dialog.hide());
 
         const saveButton = document.createElement('sl-button');
+        saveButton.disabled = true;
         saveButton.variant = 'primary';
         saveButton.textContent = 'Save';
         saveButton.slot = 'footer';
+        form.addEventListener('change', (ev) => {
+            saveButton.disabled = !ev.detail.valid;
+        });
         saveButton.addEventListener('click', () => {
             const rdf_output = form.serialize();
             const json_ld_output = form.serialize("application/ld+json");
