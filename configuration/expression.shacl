@@ -35,6 +35,7 @@ melod:Expression
                   sh:minCount 0 ;
                   sh:path owl:sameAs ;
                   sh:group melod:General ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI
                 ] ;
   sh:property   [ sh:description "Index identifiers" ;

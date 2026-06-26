@@ -488,6 +488,7 @@ melod:Watermark
                   sh:name      "Link" ;
                   sh:minCount  0 ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path      owl:sameAs
                 ] ;
   sh:property   [ sh:name      "Heraldry" ;
@@ -547,12 +548,14 @@ melod:Watermark
                   sh:maxCount  1 ;
                   sh:path      melod:hasPaperMill ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
   sh:property   [ sh:description  "Insert link or name of the twin mark" ;
                   sh:name         "Twin mark" ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTwinMark ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
   sh:targetClass  melod:Watermark .
 
