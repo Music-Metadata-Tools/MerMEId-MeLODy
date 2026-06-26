@@ -1,8 +1,6 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
-import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
 import { filesystemService } from "../services/filesystem-service.js";
-
-await init_oxigraph();
+import { indexStoreService, INDEXES } from "../services/index-store-service.js";
 
 function endsWithOrBeforeEntity(str, variable) {
   if (str.endsWith("Entity")) {
@@ -10,65 +8,6 @@ function endsWithOrBeforeEntity(str, variable) {
   }
   return str.endsWith(variable);
 }
-
-const INDEXES = [
-  {
-    name: "Person",
-    url: "persons.ttl",
-  },
-  {
-    name: "Place",
-    url: "places.ttl",
-  },
-  {
-    name: "Institution",
-    url: "institutions.ttl",
-  },
-  {
-    name: "RISMInstitution",
-    url: "rism.ttl",
-  },
-  {
-    name: "Letter",
-    url: "letters.ttl",
-  },
-  {
-    name: "Work",
-    url: "works.ttl",
-  },
-  {
-    name: "Venue",
-    url: "venues.ttl",
-  },
-  {
-    name: "Event",
-    url: "events.ttl",
-  },
-  {
-    name: "Expression",
-    url: "expressions.ttl",
-  },
-  {
-    name: "Instrumentation",
-    url: "instrumentations.ttl",
-  },
-  {
-    name: "Item",
-    url: "items.ttl",
-  },
-  {
-    name: "Manifestation",
-    url: "manifestations.ttl",
-  },
-  {
-    name: "PerformanceEvent",
-    url: "performanceEvents.ttl",
-  },
-  {
-    name: "Bibliography",
-    url: "bibliography.ttl",
-  },
-];
 
 class ADWLMEntitySearch extends LitElement {
   static styles = css`
@@ -180,14 +119,12 @@ class ADWLMEntitySearch extends LitElement {
     this._query = "";
     this._typeFilter = "All";
     this._loading = false;
-    this.store = null;
     this._dataset_url = null;
     this._project_domain = null;
   }
 
   async connectedCallback() {
     super.connectedCallback();
-    this.store = new oxigraph.Store();
 
     // Listen for future config updates
     document.addEventListener("adwlm-entity-editor:cached-config", (event) => {
@@ -198,40 +135,29 @@ class ADWLMEntitySearch extends LitElement {
       }
     });
 
+    // Rebuild entries whenever the shared store finishes (re-)loading
+    document.addEventListener("adwlm-index-store:loaded", async () => {
+      await this._buildEntries();
+    });
+
     // Listen for reload indexes event from filesystem manager
-    document.addEventListener("adwlm-filesystem-manager:reload-indexes", async (event) => {
+    document.addEventListener("adwlm-filesystem-manager:reload-indexes", async () => {
       await this.reloadIndexes();
     });
-}
+  }
 
   updated(changedProperties) {
     super.updated(changedProperties);
 
     if (changedProperties.has("_dataset_url") && this._dataset_url != null) {
-        this._loadAllIndexes(this._dataset_url);
+      indexStoreService.loadIndexes(this._dataset_url);
     }
   }
 
-  async _loadAllIndexes(dataset_url) {
-    
+  async _buildEntries() {
     this._loading = true;
     const allEntries = [];
-
-    for (const index of INDEXES) {
-      try {
-        // Cache-bust the request: ask browser not to use cache and add a unique timestamp
-        const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) {
-          console.warn(`Could not load ${index.url}: HTTP ${res.status}`);
-          continue;
-        }
-        const ttlText = await res.text();
-        this.store.load(ttlText, { format: "text/turtle" });
-      } catch (err) {
-        console.error(`Fehler beim Laden von ${index.url}. Please reload.`, err);
-      }
-    }
+    const store = indexStoreService.store;
 
     
     // Query 1: main data (subject, label, type)
@@ -262,9 +188,9 @@ class ADWLMEntitySearch extends LitElement {
     `;
 
     // Execute all queries
-    const mainResults = this.store.query(mainQuery);
-    const classificationsResults = this.store.query(classificationsQuery);
-    const altLabelsResults = this.store.query(altLabelsQuery);
+    const mainResults = store.query(mainQuery);
+    const classificationsResults = store.query(classificationsQuery);
+    const altLabelsResults = store.query(altLabelsQuery);
 
     // Create a Map for classifications per subject
     const classificationsMap = new Map();
@@ -359,14 +285,11 @@ class ADWLMEntitySearch extends LitElement {
       return;
     }
     console.log('Reloading indexes...');
-    // Clear existing data
-    this.store = new oxigraph.Store();
     this._entries = [];
     this._filtered = [];
     this._query = "";
-    
-    // Reload all indexes
-    await this._loadAllIndexes(this._dataset_url);
+    // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
+    await indexStoreService.reloadIndexes(this._dataset_url);
   }
 
   render() {
