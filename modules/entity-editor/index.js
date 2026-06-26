@@ -894,8 +894,8 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_id = this._generate_entity_id();
             const config = await this._getRepoConfig();
             const domain = config?.projectDomain ?? 'urn:uuid:';
-            let entity_path = `${entity_folder_name}/${entity_id}.ttl`;
             let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
+            let entity_path = `${entity_folder_name}/${entity_id_prefix}${entity_id}.ttl`;
             let entity_iri = `${domain}${entity_folder_name}/${entity_id_prefix}${entity_id}`;
 
             let entity_to_edit = {
