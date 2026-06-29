@@ -35,16 +35,6 @@ export class PerformanceEventConverter {
         // Extract other data from JSON-LD
         jsonLdData.forEach(item => {
 
-            // Check descriptions based on their subject IDs
-            if (item['https://schema.org/description']) {
-                if (item['@id'] === dateObjectId) {
-                    // This is the date description
-                    performanceEventData.date.dateDescription = item['https://schema.org/description']['@value'];
-                } else if (item['@id'] === performanceEventData.subjectUri) {
-                    // This is the event description
-                    performanceEventData.description = item['https://schema.org/description']['@value'];
-                }
-            }
             if (item['http://www.w3.org/2002/07/owl#sameAs']) {
                 performanceEventData.sameAs.push(item['http://www.w3.org/2002/07/owl#sameAs']['@id']);
             }
