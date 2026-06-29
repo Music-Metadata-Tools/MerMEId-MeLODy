@@ -94,12 +94,7 @@ function convertJsonLdToXml(json_ld_contents) {
             }}
     );
 
-    if (subjectEntity) {
-        console.log('Subject entity found:', subjectEntity);
-    }
-
     if (!subjectEntity) {
-        console.error('No subject entity with urn:uuid found');
         return;
     }
 

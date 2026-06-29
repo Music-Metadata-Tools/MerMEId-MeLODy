@@ -159,7 +159,6 @@ class ADWLMEntitySearch extends LitElement {
     super.updated(changedProperties);
 
     if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
-      console.log(`Dataset URL set to: ${this._dataset_url}, Selected repository path: ${this._selected_repository_path}`);
       indexStoreService.loadIndexes(this._dataset_url, this._selected_repository_path);
     }
   }
@@ -257,7 +256,7 @@ class ADWLMEntitySearch extends LitElement {
     this._entries = allEntries;
     this._filtered = [];
     this._loading = false;
-    console.log("Alle Einträge geladen:", allEntries.length);
+    console.log("Loaded entries:", allEntries.length);
   }
 
   _onInput(e) {
@@ -287,7 +286,7 @@ class ADWLMEntitySearch extends LitElement {
     });
 
     this._filtered.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
-    console.log("Gefilterte Ergebnisse:", this._filtered.length);
+    console.log("Filtered results:", this._filtered.length);
   }
 
   async _onSelect(entry) {

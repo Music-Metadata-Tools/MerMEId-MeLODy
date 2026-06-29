@@ -37,25 +37,25 @@ class IndexStoreService {
 
     for (const index of INDEXES) {
       try {
-        const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) {
-          console.warn(`Could not load ${index.url}: HTTP ${res.status}`);
-          continue;
-        }
-        let ttlText = await res.text();
-        // Lokalen Index mergen – fehlendes File ist kein Fehler
-        try {
-          const localIndex = await filesystem.read_file(
+        const localIndex = await filesystem.read_file(
             this._selected_repository_path,
             `indexes/${index.url}`
           );
-          if (localIndex && localIndex.length > 0) {
-            ttlText = localIndex + "\n" + ttlText;
-            console.log(`Merged local index for ${index.url}`);
+          let ttlText = localIndex;
+        // Merge local index – missing file is not an error
+        try {
+          if (!localIndex || localIndex.trim() === '') {
+            continue;
           }
+          const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            continue;
+          }
+          let remote = await res.text();
+          let ttlText = remote + "\n" + localIndex;
         } catch (_localErr) {
-          // Lokale Datei nicht vorhanden – nur Remote-Daten verwenden
+          // no local index found, ignore
           
         }
         this.store.load(ttlText, { format: "text/turtle" });
@@ -72,7 +72,7 @@ class IndexStoreService {
   async reloadIndexes(dataset_url) {
     this.store = new oxigraph.Store();
     this._loaded = false;
-    await this.loadIndexes(dataset_url ?? this._dataset_url);
+    await this.loadIndexes(dataset_url ?? this._dataset_url, this._selected_repository_path);
   }
 }
 

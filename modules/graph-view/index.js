@@ -1,7 +1,7 @@
 import { LitElement, html, css, svg } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { indexStoreService } from "../services/index-store-service.js";
 
-// Entity type → display colour mapping
+// Entity type, display colour mapping
 const TYPE_COLORS = {
   Work: "#4CAF50",
   Expression: "#2196F3",
@@ -171,6 +171,10 @@ class ADWLMGraphView extends LitElement {
     document.addEventListener("adwlm-index-store:loaded", () => {
       if (this.entity_to_edit) this._queryRelated();
     });
+
+    document.addEventListener("adwlm-entity-search:reload-indexes", () => {
+      indexStoreService.reloadIndexes();
+    });
   }
 
   updated(changedProperties) {
@@ -187,8 +191,6 @@ class ADWLMGraphView extends LitElement {
     // (the zoom-layer <g> is recreated on each re-render)
     this._applyTransform();
   }
-
-  // ── Pan / Zoom ────────────────────────────────────────────────────────────
 
   _applyTransform() {
     const g = this.renderRoot?.querySelector("#gv-zoom-layer");
@@ -266,21 +268,15 @@ class ADWLMGraphView extends LitElement {
 
   async _queryRelated() {
     if (!this.entity_to_edit?.entity_iri) {
-      console.log("[GraphView] Kein entity_iri vorhanden – Query abgebrochen.");
       this._related = [];
       return;
     }
 
     this._loading = true;
     const subject = this.entity_to_edit.entity_iri;
-    console.log("[GraphView] _queryRelated() für Subject:", subject);
-    console.log(
-      "[GraphView] Store geladen:", indexStoreService._loaded,
-      "| Store-Größe:", indexStoreService.store.size
-    );
 
     const incomingQuery = `
-      SELECT DISTINCT ?related ?label ?type WHERE {
+      SELECT ?related ?label ?type WHERE {
         ?related <${SKOS_RELATED}> <${subject}> .
         OPTIONAL { ?related <${SKOS_LABEL}> ?label . }
         OPTIONAL {
@@ -291,7 +287,7 @@ class ADWLMGraphView extends LitElement {
     `;
 
     const outgoingQuery = `
-      SELECT DISTINCT ?related ?label ?type WHERE {
+      SELECT ?related ?label ?type WHERE {
         <${subject}> <${SKOS_RELATED}> ?related .
         OPTIONAL { ?related <${SKOS_LABEL}> ?label . }
         OPTIONAL {
@@ -300,9 +296,6 @@ class ADWLMGraphView extends LitElement {
         }
       }
     `;
-
-    console.log("[GraphView] Incoming Query:", incomingQuery);
-    console.log("[GraphView] Outgoing Query:", outgoingQuery);
 
     try {
       const nodeMap = new Map();
@@ -332,12 +325,6 @@ class ADWLMGraphView extends LitElement {
       }
 
       const nodes = [...nodeMap.values()];
-      console.log(
-        `[GraphView] ${nodes.length} verwandte Entitäten gefunden (incoming + outgoing).`
-      );
-      nodes.forEach((n) =>
-        console.log("[GraphView] Knoten:", n.direction, n.subject, "→", n.label)
-      );
       this._related = nodes;
     } catch (err) {
       console.error("[GraphView] Query-Fehler:", err);
