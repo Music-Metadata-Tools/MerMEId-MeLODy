@@ -48,16 +48,55 @@ class ADWLMGraphView extends LitElement {
       flex-direction: column;
       align-items: center;
       width: 100%;
-      min-width: 360px;
-      overflow: visible;
-      padding: 1rem 0;
+    }
+
+    /* Relative container so zoom-controls can sit on top of the SVG */
+    .svg-container {
+      position: relative;
+      width: 100%;
     }
 
     svg {
+      display: block;
       width: 100%;
-      height: auto;
-      overflow: visible;
+      height: 60vh;
+      min-height: 400px;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      border: 1px solid var(--sl-color-neutral-200);
+      border-radius: 6px;
+      background: #fafafa;
     }
+
+    svg.dragging { cursor: grabbing; }
+
+    .zoom-controls {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      z-index: 10;
+    }
+
+    .zoom-btn {
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid var(--sl-color-neutral-300);
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sl-color-neutral-700);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .zoom-btn:hover { background: var(--sl-color-neutral-100); }
 
     .empty-state {
       text-align: center;
@@ -125,12 +164,12 @@ class ADWLMGraphView extends LitElement {
     super();
     this._related = [];
     this._loading = false;
+    // Non-reactive pan/zoom state – mutated directly to avoid re-renders on every event
+    this._transform = { scale: 1, tx: 0, ty: 0 };
+    this._drag = null;
 
-    // Re-query when the shared store finishes (re-)loading
     document.addEventListener("adwlm-index-store:loaded", () => {
-      if (this.entity_to_edit) {
-        this._queryRelated();
-      }
+      if (this.entity_to_edit) this._queryRelated();
     });
   }
 
@@ -138,11 +177,91 @@ class ADWLMGraphView extends LitElement {
     super.updated(changedProperties);
     if (changedProperties.has("entity_to_edit")) {
       if (this.entity_to_edit && indexStoreService._loaded) {
+        this._transform = { scale: 1, tx: 0, ty: 0 };
         this._queryRelated();
       } else {
         this._related = [];
       }
     }
+    // Re-apply current transform after every Lit render
+    // (the zoom-layer <g> is recreated on each re-render)
+    this._applyTransform();
+  }
+
+  // ── Pan / Zoom ────────────────────────────────────────────────────────────
+
+  _applyTransform() {
+    const g = this.renderRoot?.querySelector("#gv-zoom-layer");
+    if (!g) return;
+    const { scale, tx, ty } = this._transform;
+    g.setAttribute("transform", `translate(${tx},${ty}) scale(${scale})`);
+  }
+
+  _onWheel(e) {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const svgEl = e.currentTarget;
+    const rect  = svgEl.getBoundingClientRect();
+    const vb    = svgEl.viewBox.baseVal;
+    // Cursor in viewBox coordinates
+    const mx = (e.clientX - rect.left)  * (vb.width  / rect.width);
+    const my = (e.clientY - rect.top)   * (vb.height / rect.height);
+    const { scale, tx, ty } = this._transform;
+    this._transform = {
+      scale: scale * factor,
+      tx: mx - (mx - tx) * factor,
+      ty: my - (my - ty) * factor,
+    };
+    this._applyTransform();
+  }
+
+  _onMouseDown(e) {
+    if (e.button !== 0) return;
+    this._drag = {
+      startX: e.clientX, startY: e.clientY,
+      startTx: this._transform.tx, startTy: this._transform.ty,
+    };
+    e.currentTarget.classList.add("dragging");
+  }
+
+  _onMouseMove(e) {
+    if (!this._drag) return;
+    const svgEl = this.renderRoot?.querySelector("svg");
+    if (!svgEl) return;
+    const rect = svgEl.getBoundingClientRect();
+    const vb   = svgEl.viewBox.baseVal;
+    const sx   = vb.width  / rect.width;
+    const sy   = vb.height / rect.height;
+    this._transform.tx = this._drag.startTx + (e.clientX - this._drag.startX) * sx;
+    this._transform.ty = this._drag.startTy + (e.clientY - this._drag.startY) * sy;
+    this._applyTransform();
+  }
+
+  _onMouseUp() {
+    if (!this._drag) return;
+    this._drag = null;
+    this.renderRoot?.querySelector("svg")?.classList.remove("dragging");
+  }
+
+  _zoomBy(factor) {
+    const svgEl = this.renderRoot?.querySelector("svg");
+    if (!svgEl) return;
+    const vb = svgEl.viewBox.baseVal;
+    // Zoom around the centre of the visible SVG area
+    const mx = vb.width  / 2;
+    const my = vb.height / 2;
+    const { scale, tx, ty } = this._transform;
+    this._transform = {
+      scale: scale * factor,
+      tx: mx - (mx - tx) * factor,
+      ty: my - (my - ty) * factor,
+    };
+    this._applyTransform();
+  }
+
+  _resetZoom() {
+    this._transform = { scale: 1, tx: 0, ty: 0 };
+    this._applyTransform();
   }
 
   async _queryRelated() {
@@ -280,10 +399,8 @@ class ADWLMGraphView extends LitElement {
     const FS_NODE_TYPE    = Math.round(R_NODE * 0.3);
     const FS_NODE_LABEL   = Math.round(R_NODE * 0.4);
 
-    // Canvas: orbit + one node-diameter each side + label space
-    const LABEL_OFFSET      = Math.round(FS_NODE_LABEL * 1.1);
-    const APPROX_LABEL_WIDTH = Math.round(17 * FS_NODE_LABEL * 0.65);
-    const LABEL_PAD          = LABEL_OFFSET + APPROX_LABEL_WIDTH;
+    // Compact padding – just enough for the label offset; users zoom in for full labels
+    const LABEL_PAD = R_NODE + Math.round(FS_NODE_LABEL * 1.1);
 
     const W = ORBIT * 2 + R_NODE * 2 + LABEL_PAD * 2;
     const H = W;
@@ -311,16 +428,28 @@ class ADWLMGraphView extends LitElement {
     const markerSz = Math.round(R_NODE * 0.12);
 
     return html`
-      <svg
-        viewBox="0 0 ${W} ${H}"
-        xmlns="http://www.w3.org/2000/svg"
-        style="width:100%;max-width:${W}px;height:auto;overflow:visible;"
-      >
+      <div class="svg-container">
+        <div class="zoom-controls">
+          <button class="zoom-btn" title="Zoom in"  @click="${() => this._zoomBy(1.2)}">+</button>
+          <button class="zoom-btn" title="Reset"    @click="${() => this._resetZoom()}">⟳</button>
+          <button class="zoom-btn" title="Zoom out" @click="${() => this._zoomBy(1 / 1.2)}">−</button>
+        </div>
+        <svg
+          viewBox="0 0 ${W} ${H}"
+          xmlns="http://www.w3.org/2000/svg"
+          @wheel="${this._onWheel}"
+          @mousedown="${this._onMouseDown}"
+          @mousemove="${this._onMouseMove}"
+          @mouseup="${this._onMouseUp}"
+          @mouseleave="${this._onMouseUp}"
+        >
         <defs>
           <filter id="gv-shadow" x="-30%" y="-30%" width="160%" height="160%">
             <feDropShadow dx="0" dy="2" stdDeviation="3"
                           flood-color="rgba(0,0,0,0.2)" />
           </filter>
+          <!-- All zoomable/pannable content -->
+          <!-- (the <g> transform is set imperatively via _applyTransform) -->
           <!-- Outgoing: center → node -->
           <marker id="arrow-out" viewBox="0 0 10 10" refX="8" refY="5"
                   markerWidth="${markerSz}" markerHeight="${markerSz}" orient="auto">
@@ -343,6 +472,7 @@ class ADWLMGraphView extends LitElement {
           </marker>
         </defs>
 
+          <g id="gv-zoom-layer">
         <!-- Directed edges -->
         ${nodes.map((node, i) => {
           const angle = (2 * Math.PI * i) / N - Math.PI / 2;
@@ -428,9 +558,11 @@ class ADWLMGraphView extends LitElement {
             </g>
           `;
         })}
-      </svg>
+          </g><!-- #gv-zoom-layer -->
+        </svg>
+      </div><!-- .svg-container -->
 
-      <!-- Legend -->
+      <!-- Legend (outside the zoomable area) -->
       <div class="legend">
         <div class="legend-section">
           <span class="legend-title">Current:</span>
