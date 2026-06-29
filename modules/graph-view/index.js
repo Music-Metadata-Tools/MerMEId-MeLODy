@@ -49,7 +49,7 @@ class ADWLMGraphView extends LitElement {
       align-items: center;
       width: 100%;
       min-width: 360px;
-      overflow-x: auto;
+      overflow: visible;
       padding: 1rem 0;
     }
 
@@ -262,8 +262,8 @@ class ADWLMGraphView extends LitElement {
     const nodes = this._related;
     const N = nodes.length;
 
-    const R_NODE = 88;
-    const R_CENTER = 102;
+    const R_NODE = 60;
+    const R_CENTER = 90;
 
     // Minimum orbit: always leave at least 80 units between node edges for arrows
     const ORBIT_GAP = 80;
@@ -275,13 +275,16 @@ class ADWLMGraphView extends LitElement {
     const ORBIT = Math.max(ORBIT_MIN_FOR_GAP, ORBIT_MIN_FOR_SPREAD);
 
     // Font sizes scale with node radii so they stay readable at any node size
-    const FS_CENTER_TYPE  = Math.round(R_CENTER * 0.3);
+    const FS_CENTER_TYPE  = Math.round(R_CENTER * 0.21);
     const FS_CENTER_LABEL = Math.round(R_CENTER * 0.21);
     const FS_NODE_TYPE    = Math.round(R_NODE * 0.3);
     const FS_NODE_LABEL   = Math.round(R_NODE * 0.4);
 
     // Canvas: orbit + one node-diameter each side + label space
-    const LABEL_PAD = Math.round(R_NODE * 1.6);
+    const LABEL_OFFSET      = Math.round(FS_NODE_LABEL * 1.1);
+    const APPROX_LABEL_WIDTH = Math.round(17 * FS_NODE_LABEL * 0.65);
+    const LABEL_PAD          = LABEL_OFFSET + APPROX_LABEL_WIDTH;
+
     const W = ORBIT * 2 + R_NODE * 2 + LABEL_PAD * 2;
     const H = W;
     const cx = W / 2;
@@ -294,8 +297,7 @@ class ADWLMGraphView extends LitElement {
     const currentTypeName = this._getTypeName(currentType);
 
     // Collect unique entity types for the legend
-    const legendTypes = [
-      ...(currentType ? [{ type: currentType, name: currentTypeName }] : []),
+    let legendTypes = [
       ...nodes
         .filter((n) => n.type)
         .map((n) => ({ type: n.type, name: this._getTypeName(n.type) })),
@@ -374,6 +376,7 @@ class ADWLMGraphView extends LitElement {
 
         <!-- Center node (current entity) -->
         <g>
+          <title>${this.entity_to_edit.entity_iri}${currentTypeName ? ` (${this._getTypeName(currentTypeName)})` : ''}</title>
           <circle cx="${cx}" cy="${cy}" r="${R_CENTER}"
                   fill="${currentColor}" filter="url(#gv-shadow)" />
           <text x="${cx}" y="${cy - FS_CENTER_TYPE * 0.3}" text-anchor="middle" fill="white"
@@ -406,7 +409,8 @@ class ADWLMGraphView extends LitElement {
             <g class="node-group"
                @click="${() => this._onNodeClick(node)}"
                role="button"
-               aria-label="Vorschau ${node.label}">
+               aria-label="Preview ${node.label}">
+              <title>${node.label}${node.type ? ` (${this._getTypeName(node.type)})` : ''}</title>
               <circle cx="${nx}" cy="${ny}" r="${R_NODE}"
                       fill="${color}" filter="url(#gv-shadow)" opacity="0.93" />
               <!-- Type name inside node -->
@@ -418,6 +422,7 @@ class ADWLMGraphView extends LitElement {
               <text x="${lx}" y="${ly}" text-anchor="${anchor}"
                     fill="#263238" font-size="${FS_NODE_LABEL}" font-family="sans-serif"
                     font-weight="500">
+                <title>${node.label}</title>
                 ${this._truncate(node.label, 26)}
               </text>
             </g>
@@ -428,7 +433,17 @@ class ADWLMGraphView extends LitElement {
       <!-- Legend -->
       <div class="legend">
         <div class="legend-section">
-          <span class="legend-title">Types:</span>
+          <span class="legend-title">Current:</span>
+          ${currentTypeName ? html`
+            <span class="legend-item">
+              <span class="legend-swatch"
+                    style="background:${currentColor}"></span>
+              ${currentTypeName}
+            </span>
+          ` : html`<span class="legend-item">No type</span>`}
+        </div>
+        <div class="legend-section">
+          <span class="legend-title">Related:</span>
           ${legendTypes.map(
             ({ type, name }) => html`
               <span class="legend-item">
