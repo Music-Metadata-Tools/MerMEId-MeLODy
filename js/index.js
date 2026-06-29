@@ -272,6 +272,21 @@ document.addEventListener("adwlm-quick-add:entity-to-save", (event) => {
     filesystem_manager.entity_to_save = entity_to_save;
 });
 
+// Clear XML and RDF renderers when a new (unsaved) entity is being created
+document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
+    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+
+    if (xml_renderer) xml_renderer.innerText = '';
+    if (rdf_renderer) rdf_renderer.innerText = '';
+    if (shacl_renderer) {
+        shacl_renderer.removeAttribute("data-values-subject");
+        shacl_renderer.removeAttribute("data-values");
+        shacl_renderer.removeAttribute("data-shapes-url");
+    }
+});
+
 // TODO: move separately
 // TODO: change "urn:uuid:" to project specific variable
 let ui_language = "en";
