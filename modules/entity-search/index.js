@@ -158,8 +158,9 @@ class ADWLMEntitySearch extends LitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
 
-    if (changedProperties.has("_dataset_url") && this._dataset_url != null) {
-      indexStoreService.loadIndexes(this._dataset_url);
+    if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
+      console.log(`Dataset URL set to: ${this._dataset_url}, Selected repository path: ${this._selected_repository_path}`);
+      indexStoreService.loadIndexes(this._dataset_url, this._selected_repository_path);
     }
   }
 
@@ -204,8 +205,19 @@ class ADWLMEntitySearch extends LitElement {
 
     // Execute all queries
     const mainResults = store.query(mainQuery);
+    const labelResults = store.query(labelQuery);
     const classificationsResults = store.query(classificationsQuery);
     const altLabelsResults = store.query(altLabelsQuery);
+
+    // Create a Map for classifications per subject
+    const labelsMap = new Map();
+    for (const binding of labelResults) {
+      const subjectValue = binding.get("subject").value;
+      if (!labelsMap.has(subjectValue)) {
+        labelsMap.set(subjectValue, []);
+      }
+      labelsMap.get(subjectValue).push(binding.get("label").value);
+    }
 
     // Create a Map for classifications per subject
     const classificationsMap = new Map();
@@ -308,7 +320,7 @@ class ADWLMEntitySearch extends LitElement {
     this._filtered = [];
     this._query = "";
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
-    await indexStoreService.reloadIndexes(this._dataset_url);
+    await indexStoreService.reloadIndexes(this._dataset_url, this._selected_repository_path);
   }
 
   render() {

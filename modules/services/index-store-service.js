@@ -1,4 +1,5 @@
 import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.4.5/+esm";
+import { filesystemService } from "../services/filesystem-service.js";
 
 await init_oxigraph();
 
@@ -27,10 +28,12 @@ class IndexStoreService {
     this._dataset_url = null;
   }
 
-  async loadIndexes(dataset_url) {
+  async loadIndexes(dataset_url, selected_repository_path) {
     if (this._loading) return;
     this._loading = true;
     this._dataset_url = dataset_url;
+    this._selected_repository_path = selected_repository_path;
+    const filesystem = filesystemService.getInstance();
 
     for (const index of INDEXES) {
       try {
@@ -40,7 +43,21 @@ class IndexStoreService {
           console.warn(`Could not load ${index.url}: HTTP ${res.status}`);
           continue;
         }
-        const ttlText = await res.text();
+        let ttlText = await res.text();
+        // Lokalen Index mergen – fehlendes File ist kein Fehler
+        try {
+          const localIndex = await filesystem.read_file(
+            this._selected_repository_path,
+            `indexes/${index.url}`
+          );
+          if (localIndex && localIndex.length > 0) {
+            ttlText = localIndex + "\n" + ttlText;
+            console.log(`Merged local index for ${index.url}`);
+          }
+        } catch (_localErr) {
+          // Lokale Datei nicht vorhanden – nur Remote-Daten verwenden
+          
+        }
         this.store.load(ttlText, { format: "text/turtle" });
       } catch (err) {
         console.error(`Error loading ${index.url}. Please reload.`, err);
