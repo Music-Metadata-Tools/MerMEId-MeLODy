@@ -325,7 +325,7 @@ class ADWLMEntitySearch extends LitElement {
   render() {
     return html`
     <div id="search-container">
-      <sl-details id="search-details" summary="Search">
+      <sl-details id="search-details" summary="Search" open>
         <div class="search-input">
           <sl-select @sl-change=${this._onTypeChange} value=${this._typeFilter} size="small" hoist>
             <sl-option value="All">All</sl-option>
