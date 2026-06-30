@@ -934,6 +934,11 @@ export default class ADWLMEntityEditor extends LitElement {
 
         this._initPreviewLinkHandling();
         this._initDraggableWindow();
+
+        // Open the side-panel preview when the graph-view requests it
+        document.addEventListener("adwlm-graph-view:preview-entity", async (event) => {
+            await this._openSidePanel(event.detail.relativePath);
+        });
     }
 
     _init() {

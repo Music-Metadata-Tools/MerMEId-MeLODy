@@ -94,12 +94,7 @@ function convertJsonLdToXml(json_ld_contents) {
             }}
     );
 
-    if (subjectEntity) {
-        console.log('Subject entity found:', subjectEntity);
-    }
-
     if (!subjectEntity) {
-        console.error('No subject entity with urn:uuid found');
         return;
     }
 
@@ -373,6 +368,12 @@ const editor_configuration = new EditorConfiguration(entity_type_definitions);
 entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
 filesystem_manager.entity_type_definitions = editor_configuration.entity_type_definitions;
 
+// Pass entity type definitions to the graph view
+const graph_view = document.querySelector("adwlm-graph-view");
+if (graph_view) {
+    graph_view.entity_type_definitions = editor_configuration.entity_type_definitions;
+}
+
 // Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
 globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
 
@@ -508,6 +509,12 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
     entity_to_edit.entity_type = entity_type_statement.type;
 
     entity_editor.entity_to_edit = entity_to_edit;
+
+    // Mirror the currently edited entity to the graph view
+    const graph_view = document.querySelector("adwlm-graph-view");
+    if (graph_view) {
+        graph_view.entity_to_edit = entity_to_edit;
+    }
 
 
     //shacl_renderer.setAttribute("data-values-subject", _entity_to_edit.entity_iri);

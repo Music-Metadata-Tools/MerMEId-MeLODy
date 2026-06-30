@@ -829,8 +829,6 @@ export default class ADWLMVirtualFilesystem {
                 folderMap.get(folderName).push(filePath);
             });
 
-            console.log("Folders with queried files:", Array.from(folderMap.keys()));
-
             const generatedIndexes = {};
 
             // For each folder, execute the corresponding SPARQL query
@@ -852,12 +850,12 @@ export default class ADWLMVirtualFilesystem {
                     const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
                     
                     if (!sparqlQuery) {
-                        console.warn(`No SPARQL query found for folder: ${folderName}`);
+                        //console.warn(`No SPARQL query found for folder: ${folderName}`);
                         continue;
                     }
 
                     if (!combinedRdf || combinedRdf.trim() === '') {
-                        console.warn(`Combined RDF content is empty for folder: ${folderName}`);
+                        //console.warn(`Combined RDF content is empty for folder: ${folderName}`);
                         continue;
                     }
 
@@ -866,7 +864,7 @@ export default class ADWLMVirtualFilesystem {
 
                     // Save the index file
                     if (!indexContent || indexContent.trim() === '' || indexContent.length === 0) {
-                        console.warn(`Generated index content is empty for folder: ${folderName}`);
+                        //console.warn(`Generated index content is empty for folder: ${folderName}`);
                         continue;
                     } else {
                         const indexPath = `indexes/${folderName}.ttl`;
@@ -921,7 +919,7 @@ export default class ADWLMVirtualFilesystem {
                 const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
                 
                 if (!sparqlQuery) {
-                    console.warn(`No SPARQL query found for folder: ${folderName}`);
+                    //console.warn(`No SPARQL query found for folder: ${folderName}`);
                     return;
                 }
 
@@ -930,7 +928,7 @@ export default class ADWLMVirtualFilesystem {
 
                 // Save the index file
                 if (!indexContent || indexContent.trim() === '') {
-                    console.warn(`Generated index content is empty for folder: ${folderName}`);
+                    //console.warn(`Generated index content is empty for folder: ${folderName}`);
                     return;
                 }
 
@@ -983,7 +981,7 @@ export default class ADWLMVirtualFilesystem {
             const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
             
             if (!sparqlContent || sparqlContent.trim() === '') {
-                console.warn(`SPARQL query file is empty for folder: ${folderName}`);
+                //console.warn(`SPARQL query file is empty for folder: ${folderName}`);
                 return null;
             }
 
