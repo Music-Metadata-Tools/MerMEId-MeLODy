@@ -9,7 +9,7 @@
 @prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/> .
+@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
@@ -52,6 +52,13 @@ melod:Manifestation
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution ;
                 ] ;
+  sh:property   [ sh:description "Title page of the manifestation" ;
+                  sh:name "Title page" ;
+                  sh:minCount 0 ;
+                  sh:group melod:PhysicalDescription ;
+                  sh:path melod:hasTitlePage ;
+                  sh:node melod:TitlePage
+                ] ;
   sh:property   [ sh:description "Physical Description" ;
                   sh:name "Physical Description" ;
                   sh:minCount 0 ;
@@ -59,13 +66,6 @@ melod:Manifestation
                   sh:path melod:hasPhysicalDescription ;
                   sh:group melod:PhysicalDescription ;
                   sh:node melod:PhysDesc
-                ] ;
-  sh:property   [ sh:description "Title page of the manifestation" ;
-                  sh:name "Title page" ;
-                  sh:minCount 0 ;
-                  sh:group melod:PhysicalDescription ;
-                  sh:path melod:hasTitlePage ;
-                  sh:node melod:TitlePage
                 ] ;
 #  sh:property   [ sh:description "Series Statement" ;
 #                  sh:name "Series Statement" ;
@@ -213,23 +213,28 @@ melod:Contents
 melod:PhysDesc
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:name      "Extent" ;
+  sh:property   [ sh:name      "Orientation" ;
+                  sh:description "Page orientation, e.g. landscape or portrait" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
+                  sh:in ( "landscape" "portrait" "oblong" "square" "other" ) ;
+                  sh:group melod:Dimensions ;
+                  sh:path      melod:hasOrientation
+                ] ;
+  sh:property   [ sh:name      "Extent" ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
                   sh:path      melod:hasExtent ;
-                  sh:node      melod:Extent
+                  sh:node      melod:Extent ;
+                  sh:group melod:Dimensions
                 ] ;
   sh:property   [ sh:name      "Dimension" ;
                   sh:description "Height, width or depth of the source" ;
                   sh:minCount  0 ;
                   sh:maxCount  3 ;
                   sh:path      lrmoo:R70_has_dimension ;
-                  sh:node melod:Dimension
-                ] ;
-  sh:property   [ sh:name      "Watermark" ;
-                  sh:minCount  0 ;
-                  sh:path      melod:hasWatermark ;
-                  sh:node melod:Watermark
+                  sh:node melod:Dimension ;
+                  sh:group melod:Dimensions
                 ] ;
   sh:property   [ sh:description "Physical medium of the manifestation" ;
                   sh:name "Physical medium" ;
@@ -243,12 +248,22 @@ melod:PhysDesc
                 ] ;
   sh:property   [ sh:description "Plate number of the manifestation" ;
                   sh:name "Plate number" ;
+                  sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasPlateNum
                 ] ;
+  sh:property   [ sh:description "Script description" ;
+                  sh:name "Script description" ;
+                  sh:group melod:WrittenContent ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  dash:singleLine false ;
+                  sh:path melod:hasScriptDesc
+                ] ;
   sh:property   [ sh:description "Additions autograph" ;
                   sh:name "Additions autograph" ;
+                  sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAddDescAutograph ;
@@ -256,6 +271,7 @@ melod:PhysDesc
                 ] ;
   sh:property   [ sh:description "Additions foreign" ;
                   sh:name "Additions foreign" ;
+                  sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
@@ -263,6 +279,7 @@ melod:PhysDesc
                 ] ;
   sh:property   [ sh:description "Foliation autograph" ;
                   sh:name "Foliation autograph" ;
+                  sh:group melod:Foliation ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
@@ -270,20 +287,15 @@ melod:PhysDesc
                 ] ;
   sh:property   [ sh:description "Foliation foreign" ;
                   sh:name "Foliation foreign" ;
+                  sh:group melod:Foliation ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasSupportDescForeign
                 ] ;
-  sh:property   [ sh:description "Binding" ;
-                  sh:name "Binding" ;
-                  sh:minCount 0 ;
-                  sh:maxCount 1 ;
-                  sh:path melod:hasBinding ;
-                  sh:node melod:Binding
-                ] ;
   sh:property   [ sh:description "Condition" ;
                   sh:name "Condition" ;
+                  sh:group melod:Condition ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
@@ -291,28 +303,38 @@ melod:PhysDesc
                 ] ;
   sh:property   [ sh:description "Decoration description" ;
                   sh:name "Decoration description" ;
+                  sh:group melod:Decoration ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasDecoDesc
                 ] ;
-  sh:property   [ sh:description "Script description" ;
-                  sh:name "Script description" ;
+  sh:property   [ sh:description "Binding" ;
+                  sh:name "Binding" ;
+                  sh:group melod:Binding ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
-                  dash:singleLine false ;
-                  sh:path melod:hasScriptDesc
+                  sh:path melod:hasBinding ;
+                  sh:node melod:Binding
                 ] ;
   sh:property   [ sh:description "Stamp" ;
                   sh:name "Stamp" ;
+                  sh:group melod:Markings ;
                   sh:minCount 0 ;
                   sh:path melod:hasStamp
                 ] ;
   sh:property   [ sh:description "Inscription" ;
                   sh:name "Inscription" ;
+                  sh:group melod:Markings ;
                   sh:minCount 0 ;
                   sh:path melod:hasInscription ;
                   sh:node melod:Inscription
+                ] ;
+  sh:property   [ sh:name      "Watermark" ;
+                  sh:group melod:Markings ;
+                  sh:minCount  0 ;
+                  sh:path      melod:hasWatermark ;
+                  sh:node melod:Watermark
                 ] ;
   sh:targetClass  melod:PhysicalDescription .
 
@@ -322,25 +344,24 @@ melod:PaperDetail
   owl:imports     terms:melod-terms.ttl ;
   rdfs:label      "Paper" ;
   sh:property   [ sh:name      "Name" ;
+                  sh:description "Name or short label for this paper type" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
+                  sh:group melod:PaperIdentification ;
                   sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:name      "Page range" ;
                   sh:description "Page range of the given paper type" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
+                  sh:group melod:PaperIdentification ;
                   sh:path      schema:pagination
                 ] ;
-  sh:property   [ sh:name      "Orientation" ;
-                  sh:description "Page orientation, e.g. landscape or portrait" ;
-                  sh:minCount  0 ;
-                  sh:maxCount  1 ;
-                  sh:path      melod:hasOrientation
-                ] ;
   sh:property   [ sh:name      "Extent" ;
+                  sh:description "Number of pages or folios of this paper type" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
+                  sh:group melod:PaperDimensions ;
                   sh:path      melod:hasExtent ;
                   sh:node      melod:Extent
                 ] ;
@@ -348,6 +369,7 @@ melod:PaperDetail
                   sh:description "Height or width of the format" ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
+                  sh:group melod:PaperDimensions ;
                   sh:path      melod:hasFormat ;
                   sh:node melod:Format
                 ] ;
@@ -355,18 +377,15 @@ melod:PaperDetail
                   sh:description "Height or width of the rastral mirror" ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
+                  sh:group melod:PaperDimensions ;
                   sh:path      melod:hasRastral ;
                   sh:node melod:Rastral
-                ] ;
-  sh:property   [ sh:name      "Watermark" ;
-                  sh:minCount  0 ;
-                  sh:path      melod:hasWatermark ;
-                  sh:node melod:Watermark
                 ] ;
   sh:property   [ sh:description "Paper quality" ;
                   sh:name "Paper quality" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:PaperQuality ;
                   dash:singleLine false ;
                   sh:path melod:hasPaperQuality
                 ] ;
@@ -374,16 +393,10 @@ melod:PaperDetail
                   sh:name "Condition" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
+                  sh:group melod:PaperQuality ;
                   dash:singleLine false ;
                   sh:path melod:hasCondition
                 ] ;
-#  sh:property   [ sh:description "General description of binding" ;
-#                 sh:name "Binding" ;
-#                  sh:minCount 0 ;
-#                  sh:maxCount 1 ;
-#                 sh:path melod:hasBinding ;
-#                  sh:node melod:Binding
-#                ] ;
   sh:targetClass  melod:PaperDetail .
 
 melod:Extent
@@ -391,7 +404,7 @@ melod:Extent
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Number of pages or folios" ;
                   sh:name      "Value" ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P90_has_value
                 ] ;
@@ -783,24 +796,85 @@ melod:TitlePage
 
   melod:Relation
   a               sh:PropertyGroup ;
+  sh:order        5 ;
   rdfs:label      "Relations" .
 
   melod:General
   a               sh:PropertyGroup ;
+  sh:order        1 ;
   rdfs:label      "General Information" .
+
+  melod:Keywords
+  a               sh:PropertyGroup ;
+  sh:order        2 ;
+  rdfs:label      "Classification and Keywords" .
 
   melod:Publication
   a               sh:PropertyGroup ;
+  sh:order        4 ;
   rdfs:label      "Publication" .
 
   melod:PhysicalDescription
   a               sh:PropertyGroup ;
+  sh:order        3 ;
   rdfs:label      "Physical Properties" .
+
+  melod:Dimensions
+  a               sh:PropertyGroup ;
+  sh:order        10 ;
+  rdfs:label      "Dimensions and Extent" .
 
   melod:PaperPhysMedium
   a               sh:PropertyGroup ;
-  rdfs:label      "Paper Details and Physical Medium" .
+  sh:order        20 ;
+  rdfs:label      "Physical Medium" .
 
-  melod:Keywords
+  melod:WrittenContent
   a               sh:PropertyGroup ;
-  rdfs:label      "Classification and Keywords" .
+  sh:order        30 ;
+  rdfs:label      "Written Content" .
+
+  melod:Foliation
+  a               sh:PropertyGroup ;
+  sh:order        40 ;
+  rdfs:label      "Foliation" .
+
+  melod:Markings
+  a               sh:PropertyGroup ;
+  sh:order        80 ;
+  rdfs:label      "Markings" .
+
+  melod:Condition
+  a               sh:PropertyGroup ;
+  sh:order        50 ;
+  rdfs:label      "Condition" .
+
+  melod:Decoration
+  a               sh:PropertyGroup ;
+  sh:order        60 ;
+  rdfs:label      "Decoration" .
+
+  melod:Binding
+  a               sh:PropertyGroup ;
+  sh:order        70 ;
+  rdfs:label      "Binding" .
+
+  # PaperDetail sub-groups
+  melod:PaperIdentification
+  a               sh:PropertyGroup ;
+  sh:order        10 ;
+  rdfs:label      "Identification" .
+
+  melod:PaperDimensions
+  a               sh:PropertyGroup ;
+  sh:order        20 ;
+  rdfs:label      "Dimensions" .
+
+  melod:PaperQuality
+  a               sh:PropertyGroup ;
+  sh:order        30 ;
+  rdfs:label      "Quality and Condition" .
+
+  melod:PhysDesc
+  a               sh:PropertyGroup ;
+  rdfs:label      "Physical Description" .
