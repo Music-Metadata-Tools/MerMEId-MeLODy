@@ -23,6 +23,7 @@ melod:PerformanceEvent
                   sh:name "Link" ;
                   sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
+                  sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:description "Insert ID of the venue or place" ;

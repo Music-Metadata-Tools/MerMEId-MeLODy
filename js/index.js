@@ -94,12 +94,7 @@ function convertJsonLdToXml(json_ld_contents) {
             }}
     );
 
-    if (subjectEntity) {
-        console.log('Subject entity found:', subjectEntity);
-    }
-
     if (!subjectEntity) {
-        console.error('No subject entity with urn:uuid found');
         return;
     }
 
@@ -254,7 +249,7 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
     shacl_renderer.setAttribute("data-shapes-url", entity_to_save.shapesUrl);
 
     // Debug logging
-    console.log('Full JSON-LD contents:', json_ld_contents);
+    //console.log('Full JSON-LD contents:', json_ld_contents);
 
     let xml = convertJsonLdToXml(json_ld_contents);
 
@@ -270,6 +265,21 @@ document.addEventListener("adwlm-entity-editor:entity-to-save", (event) => {
 document.addEventListener("adwlm-quick-add:entity-to-save", (event) => {
     let entity_to_save = event.detail;
     filesystem_manager.entity_to_save = entity_to_save;
+});
+
+// Clear XML and RDF renderers when a new (unsaved) entity is being created
+document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
+    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+    let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+
+    if (xml_renderer) xml_renderer.innerText = '';
+    if (rdf_renderer) rdf_renderer.innerText = '';
+    if (shacl_renderer) {
+        shacl_renderer.removeAttribute("data-values-subject");
+        shacl_renderer.removeAttribute("data-values");
+        shacl_renderer.removeAttribute("data-shapes-url");
+    }
 });
 
 // TODO: move separately
@@ -358,6 +368,12 @@ const editor_configuration = new EditorConfiguration(entity_type_definitions);
 entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
 filesystem_manager.entity_type_definitions = editor_configuration.entity_type_definitions;
 
+// Pass entity type definitions to the graph view
+const graph_view = document.querySelector("adwlm-graph-view");
+if (graph_view) {
+    graph_view.entity_type_definitions = editor_configuration.entity_type_definitions;
+}
+
 // Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
 globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
 
@@ -372,6 +388,59 @@ graph_store.free();
 
 // END TODO
 
+/**
+ * Builds the flat JSON-LD format expected by the converter modules from
+ * an iterable of Oxigraph Quad objects (result of a CONSTRUCT query).
+ * Multi-valued properties are split into separate items with the same @id,
+ * matching the output format of shacl-form.serialize("application/ld+json").
+ */
+function constructJsonLdFromQuads(quads) {
+    const items = {};
+    const itemOrder = [];
+
+    for (const quad of quads) {
+        const subjectId = quad.subject.termType === 'BlankNode'
+            ? `_:${quad.subject.value}`
+            : quad.subject.value;
+
+        if (!items[subjectId]) {
+            items[subjectId] = { '@id': subjectId };
+            itemOrder.push(subjectId);
+        }
+
+        const predicateIri = quad.predicate.value;
+        const obj = quad.object;
+
+        let value;
+        if (obj.termType === 'NamedNode') {
+            value = { '@id': obj.value };
+        } else if (obj.termType === 'BlankNode') {
+            value = { '@id': `_:${obj.value}` };
+        } else if (obj.termType === 'Literal') {
+            if (obj.language) {
+                value = { '@value': obj.value, '@language': obj.language };
+            } else if (obj.datatype && obj.datatype.value !== 'http://www.w3.org/2001/XMLSchema#string') {
+                value = { '@value': obj.value, '@type': obj.datatype.value };
+            } else {
+                value = { '@value': obj.value };
+            }
+        }
+
+        if (items[subjectId][predicateIri] !== undefined) {
+            // Multi-valued property: create a new item with the same @id
+            const newKey = `${subjectId}__${predicateIri}__${obj.value}`;
+            if (!items[newKey]) {
+                items[newKey] = { '@id': subjectId, [predicateIri]: value };
+                itemOrder.push(newKey);
+            }
+        } else {
+            items[subjectId][predicateIri] = value;
+        }
+    }
+
+    return itemOrder.map(key => items[key]);
+}
+
 document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => {
     let entity_to_edit = event.detail;
     let file_contents = entity_to_edit.contents;
@@ -379,10 +448,7 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
     // Update the XML and RDF renderers
     let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
     let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
-    
-    if (xml_renderer) {
-        xml_renderer.innerText = entity_to_edit.xml_output || '';
-    }
+
     if (rdf_renderer) {
         rdf_renderer.innerText = entity_to_edit.rdf_output || file_contents;
     }
@@ -411,6 +477,15 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
         entity_type_statements.push(entity_type_statement);
     }
 
+    // Generate JSON-LD from all triples before freeing the store
+    let json_ld_from_turtle = null;
+    try {
+        const allTriples = graph_store.query("CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }");
+        json_ld_from_turtle = constructJsonLdFromQuads(allTriples);
+    } catch (e) {
+        console.error('Failed to construct JSON-LD from triples:', e);
+    }
+
     graph_store.free();
 
     if (entity_type_statements.length !== 1) {
@@ -422,12 +497,24 @@ document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => 
     let end = performance.now();
     console.log("elapsed time for extracting entity type statement = " + (end - start) + "ms");
 
+    // Generate and display XML from the Turtle content
+    if (json_ld_from_turtle && xml_renderer) {
+        let xml = convertJsonLdToXml(json_ld_from_turtle);
+        if (xml) xml_renderer.innerText = xml;
+    }
+
     // set the entity_iri and entity_type
     let entity_type_statement = entity_type_statements[0];
     entity_to_edit.entity_iri = entity_type_statement.iri;
     entity_to_edit.entity_type = entity_type_statement.type;
 
     entity_editor.entity_to_edit = entity_to_edit;
+
+    // Mirror the currently edited entity to the graph view
+    const graph_view = document.querySelector("adwlm-graph-view");
+    if (graph_view) {
+        graph_view.entity_to_edit = entity_to_edit;
+    }
 
 
     //shacl_renderer.setAttribute("data-values-subject", _entity_to_edit.entity_iri);

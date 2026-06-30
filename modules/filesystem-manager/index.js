@@ -139,7 +139,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             type: Boolean,
             state: false
         },
-        _hasSelectedFiles: {
+        _hasSelectedFiles: {    
             type: Boolean,
             state: true
         },
@@ -451,6 +451,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
+                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                if (canMerge[1] === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                            Synchronizing is not necessary: There are no remote changes.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        target.loading = false;
+                        return;
+                    }
 
                 // Alert unsaved changes might be deleted or overwritten after pull
                 if (this._hasUnsavedChanges) {
@@ -471,9 +486,22 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Alert that staged files might be deleted or overwritten after pull
                 if (this._staged_files && this._staged_files.length > 0) {
-                    const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-
-                    if (!canMerge) {
+                    
+                    if (canMerge[1] === 0) {
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                            Synchronizing is not necessary: There are no remote changes.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        target.loading = false;
+                        return;
+                    }
+                    else if (canMerge[0] === false) {
                         const alert = document.createElement('sl-alert');
                         alert.variant = 'danger';
                         alert.closable = true;
@@ -567,8 +595,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
                     // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                         bubbles: true,
                         composed: true
                     }));
@@ -579,11 +612,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                         if (repoTree) {
                             this._generate_folder_tree(repoTree);
                         }
-                    }
-
-                    // reload the previously selected file, if any
-                    if (this._selected_repository_path && this._file_path) {
-                        await this._load_entity_to_edit();
                     }
 
                     target.loading = false;
@@ -598,8 +626,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
                 
                 const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-
-                if (!canMerge) {
+                if (canMerge[0] === false) {
                     const alert = document.createElement('sl-alert');
                     alert.variant = 'danger';
                     alert.closable = true;
@@ -613,7 +640,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     alert.toast();
                     target.loading = false;
                     return;
-                } else if (canMerge) {
+                } else if (canMerge[1] === 0) {
+                } else if (canMerge[0] === true) {
                     let staged_before_pull = [];
                     if (this._staged_files && this._staged_files.length > 0) {
                         staged_before_pull = await Promise.all(
@@ -747,11 +775,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     staged_files_tree.querySelectorAll('sl-tree-item[selected]')
                         .forEach(item => item.selected = false);
                     render_root.querySelector('#commit-message-field').value = '';
-                    // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:reload-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
+
                 } else {
                     commit_and_push_error_toast.toast();
                 }
@@ -795,6 +819,48 @@ export default class ADWLMFilesystemManager extends LitElement {
                         }
                     }
 
+                    try {
+                        const generatedIndexes = await filesystem.generate_indexes_for_all_files(
+                            this._selected_repository_path,
+                            selected_staged_files.map(file => file.path.split('/')[0]),
+                        );
+
+                        // Log which indexes were generated
+                        const successfulIndexes = Object.entries(generatedIndexes)
+                            .filter(([_, result]) => result.success)
+                            .map(([name, _]) => name);
+
+                        if (successfulIndexes.length > 0) {
+                            const alert = document.createElement('sl-alert');
+                            alert.variant = 'success';
+                            alert.closable = true;
+                            alert.duration = 6000;
+                            alert.innerHTML = `
+                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                            `;
+                            document.body.append(alert);
+                            alert.toast();
+                        }
+                    } catch (error) {
+                        console.error('Error generating indexes:', error);
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Failed to generate indexes for cloned files. ${error.message}
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                    }
+
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+
                     // Update repository tree
                     if (this._selected_repository_path) {
                         let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
@@ -803,7 +869,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                         }
                     }
 
-                    await this._load_entity_to_edit();
+                    // reload the previously selected file, if any
+                    if (this._selected_repository_path && this._file_path) {
+                        
+                        await this._load_entity_to_edit();
+
+                        await this.selectEntityInTree(this._file_path);
+                    }
 
                     // Update UI
                     await this._list_staged_files();
@@ -863,6 +935,11 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
+
+            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                bubbles: true,
+                composed: true
+            }));
         });
 
         render_root.addEventListener("adwlm-filesystem-manager:add-local-repository", async (event) => {
@@ -915,6 +992,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                     entity_to_save.path
                 );
 
+                this._file_path = entity_to_save.path;
+
                 // Show success notification
                 const alert = document.createElement('sl-alert');
                 alert.variant = 'success';
@@ -950,8 +1029,60 @@ export default class ADWLMFilesystemManager extends LitElement {
                     newfolderTree.setAttribute('expanded', '');
                 }
 
-                // Update staged files list and tree status
-                await this._list_staged_files();
+
+                try {
+                        const generatedIndexes = await filesystem.generate_indexes_for_saved_file(
+                            this._selected_repository_path,
+                            entity_to_save.path, false
+                        );
+
+                        // Log which indexes were generated
+                        const successfulIndexes = Object.entries(generatedIndexes)
+                            .filter(([_, result]) => result.success)
+                            .map(([name, _]) => name);
+
+                        if (successfulIndexes.length > 0) {
+                            const alert = document.createElement('sl-alert');
+                            alert.variant = 'success';
+                            alert.closable = true;
+                            alert.duration = 6000;
+                            alert.innerHTML = `
+                                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                                Successfully generated index for: ${successfulIndexes.join(', ')}
+                            `;
+                            document.body.append(alert);
+                            alert.toast();
+                        }
+                    } catch (error) {
+                        console.error('Error generating indexes:', error);
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Failed to generate indexes for saved file. ${error.message}
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                        // Don't fail the push if index generation fails
+                        // Just log the error
+                    }
+
+                    // reload the previously selected file, if any
+                    if (this._selected_repository_path && this._file_path) {
+                        await this.selectEntityInTree(this._file_path);
+                    }
+
+                    // Update UI
+                    await this._list_staged_files();
+                    await this._updateRepositoryTreeStatus();
+
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+
             } catch (error) {
                 console.error('Failed to save entity:', error);
                 // Show error message to user
@@ -981,6 +1112,63 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (target.matches("sl-tree-item") && target.closest("sl-tree#repositories-tree")) {
                 await this._list_staged_files();
             }
+        });
+
+        document.addEventListener("adwlm-filesystem-manager:build-indexes", async (event) => {
+            try {
+                const generatedIndexes = await filesystem.generate_indexes_for_all_files(
+                    this._selected_repository_path,
+                    this.entity_type_definitions.map(def => def.folder_name)
+                );
+
+                // Log which indexes were generated
+                const successfulIndexes = Object.entries(generatedIndexes)
+                    .filter(([_, result]) => result.success)
+                    .map(([name, _]) => name);
+
+                if (successfulIndexes.length > 0) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'success';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                        Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                }
+            } catch (error) {
+                console.error('Error generating indexes:', error);
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'danger';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                    Failed to generate indexes for cloned files. ${error.message}
+                `;
+                document.body.append(alert);
+                alert.toast();
+            }
+            // Update repository tree
+            if (this._selected_repository_path) {
+                let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                if (repoTree) {
+                    this._generate_folder_tree(repoTree);
+                }
+            }
+            // reload the previously selected file, if any
+            if (this._selected_repository_path && this._file_path) {
+                
+                await this._load_entity_to_edit();
+
+                await this.selectEntityInTree(this._file_path);
+            }
+
+            // Update UI
+            await this._list_staged_files();
+            await this._updateRepositoryTreeStatus();
         });
     }
 
@@ -1255,6 +1443,9 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
+        // Remove indexes from the list of staged files, as they are generated automatically and should not be shared
+        staged_file_relative_paths = staged_file_relative_paths.filter(path => !path.includes('indexes'));
+
         // Reset arrays
         this._staged_files = [];
         this._staged_directories = [];
@@ -1280,6 +1471,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         let tree_items = "";
         // process the files
         for (const staged_file of this._staged_files) {
+            
             let file_name = staged_file.split('/')[1];
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
@@ -1354,6 +1546,51 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
 
         const file_relative_path = selected_entry.dataset.entryRelativePath;
+
+        // Generate indexes for removed file
+        try {
+            const generatedIndexes = await filesystem.generate_indexes_for_saved_file(
+                this._selected_repository_path,
+                file_relative_path, true
+            );
+
+            // Log which indexes were generated
+            const successfulIndexes = Object.entries(generatedIndexes)
+                .filter(([_, result]) => result.success)
+                .map(([name, _]) => name);
+
+            if (successfulIndexes.length > 0) {
+                const alert = document.createElement('sl-alert');
+                alert.variant = 'success';
+                alert.closable = true;
+                alert.duration = 6000;
+                alert.innerHTML = `
+                    <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                    Successfully generated index for: ${successfulIndexes.join(', ')}
+                `;
+                document.body.append(alert);
+                alert.toast();
+            }
+        } catch (error) {
+            console.error('Error generating indexes:', error);
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'danger';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to generate index for changed file. ${error.message}
+            `;
+            document.body.append(alert);
+            alert.toast();
+            // Don't fail the push if index generation fails
+            // Just log the error
+        }
+
+        document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+            bubbles: true,
+            composed: true
+        }));
 
         // Be careful, add_file means remove_file
         await filesystem.add_file(this._selected_repository_path, file_relative_path);
