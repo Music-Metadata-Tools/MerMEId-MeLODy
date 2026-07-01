@@ -21,7 +21,7 @@ melod:Bibliography
                   sh:path schema:genre ;
                   sh:class melod:BibliographicGenre ;
                 ] ;
-  sh:property   [ sh:minCount 0 ;
+  sh:property   [ sh:minCount 1 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation ;
                   sh:group melod:Titles ;
@@ -99,9 +99,7 @@ melod:Bibliography
                   sh:maxCount 1 ;
                   sh:group melod:Titles ;
                   sh:path schema:isPartOf ;
-                  #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
-                  #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:class melod:Bibliography ;
+                  sh:class melod:BibliographyEntity ;
                 ] ;
   sh:property   [ sh:description "Position in the series, volume number" ;
                   sh:name "Volume number" ;
@@ -143,7 +141,7 @@ melod:PublicationEvent
                   sh:datatype  xsd:date
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:name         "Publisher" ;
                   sh:path         schema:publishedBy ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
@@ -151,7 +149,7 @@ melod:PublicationEvent
                   sh:class melod:Person ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:name         "Place" ;
                   sh:path         schema:location ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;

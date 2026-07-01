@@ -8,6 +8,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
+@prefix melodTerms: <https://lod.academy/melod/vocab/terms#> .
 @prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Work
@@ -22,7 +23,6 @@ melod:Work
                   sh:path owl:sameAs
                 ] ;
   sh:property   [ sh:name "Titles" ;
-                  sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:node melod:Title ;
                   sh:path melod:hasTitle
@@ -100,42 +100,42 @@ melod:Work
                   sh:class melod:WorkEntity ;
                   sh:path melod:hasWorkPart
                 ] ;
-  sh:property   [ sh:name "Other Relation" ;
-                  sh:group melod:Relation ;
-                  sh:minCount 0 ;
-                  sh:nodeKind sh:IRI ;
-                  sh:class melod:WorkEntity ;
-                  sh:or (
-                    [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
-                    [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
-                    [ sh:name "has adaptation" ; sh:description "has adaptation" ; sh:path  melod:hasAdaptation ; rdfs:label "has adaptation" ]
-                    [ sh:name "is adaptation of" ; sh:description "is adaptation of" ; sh:path melod:isAdaptationOf ; rdfs:label "is adaptation of" ]
-                    [ sh:name "has alternate" ; sh:description "has alternate" ; sh:path  melod:hasAlternate ; rdfs:label "has alternate" ]
-                    [ sh:name "is alternate of" ; sh:description "is alternate of" ; sh:path melod:isAlternateOf ; rdfs:label "is alternate of" ]
-                    [ sh:name "has arrangement" ; sh:description "has arrangement" ; sh:path  melod:hasArrangement ; rdfs:label "has arrangement" ]
-                    [ sh:name "is arrangement of" ; sh:description "is arrangement of" ; sh:path melod:isArrangementOf ; rdfs:label "is arrangement of" ]
-                    [ sh:name "has complement" ; sh:description "has complement" ; sh:path  melod:hasComplement ; rdfs:label "has complement" ]
-                    [ sh:name "is complement of" ; sh:description "is complement of" ; sh:path melod:isComplementOf ; rdfs:label "is complement of" ]
-                    [ sh:name "has imitation" ; sh:description "has imitation" ; sh:path  melod:hasImitation ; rdfs:label "has imitation" ]
-                    [ sh:name "is imitation of" ; sh:description "is imitation of" ; sh:path melod:isImitationOf ; rdfs:label "is imitation of" ]
-                    [ sh:name "has reconfiguration" ; sh:description "has reconfiguration" ; sh:path  melod:hasReconfiguration ; rdfs:label "has reconfiguration" ]
-                    [ sh:name "is reconfiguration of" ; sh:description "is reconfiguration of" ; sh:path melod:isReconfigurationOf ; rdfs:label "is reconfiguration of" ]
-                    [ sh:name "has reproduction" ; sh:description "has reproduction" ; sh:path  melod:hasReproduction ; rdfs:label "has reproduction" ]
-                    [ sh:name "is reproduction of" ; sh:description "is reproduction of" ; sh:path melod:isReproductionOf ; rdfs:label "is reproduction of" ]
-                    [ sh:name "has revision" ; sh:description "has revision" ; sh:path  melod:hasRevision ; rdfs:label "has revision" ]
-                    [ sh:name "is revision of" ; sh:description "is revision of" ; sh:path melod:isRevisionOf ; rdfs:label "is revision of" ]
-                    [ sh:name "has successor" ; sh:description "has successor" ; sh:path  melod:hasSuccessor ; rdfs:label "has successor" ]
-                    [ sh:name "is successor of" ; sh:description "is successor of" ; sh:path melod:isSuccessorOf ; rdfs:label "is successor of" ]
-                    [ sh:name "has summerization" ; sh:description "has summerization" ; sh:path  melod:hasSummerization ; rdfs:label "has summerization" ]
-                    [ sh:name "is summerization of" ; sh:description "is summerization of" ; sh:path melod:isSummerizationOf ; rdfs:label "is summerization of" ]
-                    [ sh:name "has supplement" ; sh:description "has supplement" ; sh:path  melod:hasSupplement ; rdfs:label "has supplement" ]
-                    [ sh:name "is supplement of" ; sh:description "is supplement of" ; sh:path melod:isSupplementOf ; rdfs:label "is supplement of" ]
-                    [ sh:name "has transformation" ; sh:description "has transformation" ; sh:path  melod:hasTransformation ; rdfs:label "has transformation" ]
-                    [ sh:name "is transformation of" ; sh:description "is transformation of" ; sh:path melod:isTransformationOf ; rdfs:label "is transformation of" ]
-                    [ sh:name "has translation" ; sh:description "has translation" ; sh:path  melod:hasTranslation ; rdfs:label "has translation" ]
-                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
-                  )
-                ] ;
+#  sh:property   [ sh:name "Other Relation" ;
+ #                 sh:group melod:Relation ;
+ #                 sh:minCount 0 ;
+#                  sh:nodeKind sh:IRI ;
+#                  sh:class melod:WorkEntity ;
+#                  sh:or (
+#                    [ sh:name "has abridgement" ; sh:description "has abridgement" ; sh:path  melod:hasAbridgement ; rdfs:label "has abridgement" ]
+#                    [ sh:name "is abridgement of" ; sh:description "is abridgement of" ; sh:path melod:isAbridgementOf ; rdfs:label "is abridgement of" ]
+#                    [ sh:name "has adaptation" ; sh:description "has adaptation" ; sh:path  melod:hasAdaptation ; rdfs:label "has adaptation" ]
+#                    [ sh:name "is adaptation of" ; sh:description "is adaptation of" ; sh:path melod:isAdaptationOf ; rdfs:label "is adaptation of" ]
+#                    [ sh:name "has alternate" ; sh:description "has alternate" ; sh:path  melod:hasAlternate ; rdfs:label "has alternate" ]
+#                    [ sh:name "is alternate of" ; sh:description "is alternate of" ; sh:path melod:isAlternateOf ; rdfs:label "is alternate of" ]
+#                    [ sh:name "has arrangement" ; sh:description "has arrangement" ; sh:path  melod:hasArrangement ; rdfs:label "has arrangement" ]
+#                    [ sh:name "is arrangement of" ; sh:description "is arrangement of" ; sh:path melod:isArrangementOf ; rdfs:label "is arrangement of" ]
+#                    [ sh:name "has complement" ; sh:description "has complement" ; sh:path  melod:hasComplement ; rdfs:label "has complement" ]
+#                    [ sh:name "is complement of" ; sh:description "is complement of" ; sh:path melod:isComplementOf ; rdfs:label "is complement of" ]
+#                    [ sh:name "has imitation" ; sh:description "has imitation" ; sh:path  melod:hasImitation ; rdfs:label "has imitation" ]
+#                    [ sh:name "is imitation of" ; sh:description "is imitation of" ; sh:path melod:isImitationOf ; rdfs:label "is imitation of" ]
+#                    [ sh:name "has reconfiguration" ; sh:description "has reconfiguration" ; sh:path  melod:hasReconfiguration ; rdfs:label "has reconfiguration" ]
+#                   [ sh:name "is reconfiguration of" ; sh:description "is reconfiguration of" ; sh:path melod:isReconfigurationOf ; rdfs:label "is reconfiguration of" ]
+#                    [ sh:name "has reproduction" ; sh:description "has reproduction" ; sh:path  melod:hasReproduction ; rdfs:label "has reproduction" ]
+#                    [ sh:name "is reproduction of" ; sh:description "is reproduction of" ; sh:path melod:isReproductionOf ; rdfs:label "is reproduction of" ]
+#                    [ sh:name "has revision" ; sh:description "has revision" ; sh:path  melod:hasRevision ; rdfs:label "has revision" ]
+#                    [ sh:name "is revision of" ; sh:description "is revision of" ; sh:path melod:isRevisionOf ; rdfs:label "is revision of" ]
+#                    [ sh:name "has successor" ; sh:description "has successor" ; sh:path  melod:hasSuccessor ; rdfs:label "has successor" ]
+#                    [ sh:name "is successor of" ; sh:description "is successor of" ; sh:path melod:isSuccessorOf ; rdfs:label "is successor of" ]
+#                    [ sh:name "has summerization" ; sh:description "has summerization" ; sh:path  melod:hasSummerization ; rdfs:label "has summerization" ]
+#                    [ sh:name "is summerization of" ; sh:description "is summerization of" ; sh:path melod:isSummerizationOf ; rdfs:label "is summerization of" ]
+#                    [ sh:name "has supplement" ; sh:description "has supplement" ; sh:path  melod:hasSupplement ; rdfs:label "has supplement" ]
+#                    [ sh:name "is supplement of" ; sh:description "is supplement of" ; sh:path melod:isSupplementOf ; rdfs:label "is supplement of" ]
+#                    [ sh:name "has transformation" ; sh:description "has transformation" ; sh:path  melod:hasTransformation ; rdfs:label "has transformation" ]
+#                    [ sh:name "is transformation of" ; sh:description "is transformation of" ; sh:path melod:isTransformationOf ; rdfs:label "is transformation of" ]
+#                    [ sh:name "has translation" ; sh:description "has translation" ; sh:path  melod:hasTranslation ; rdfs:label "has translation" ]
+#                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
+#                  )
+#               ] ;
   sh:property   [ sh:description "Genre or classification" ;
                   sh:name "Classification" ;
                   sh:minCount 0 ;
@@ -199,10 +199,13 @@ melod:Title
                   sh:path      rdfs:label
                 ] ;
   sh:property   [ sh:name      "Type" ;
-                  sh:minCount  0 ;
+                  sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
+                  sh:nodeKind sh:IRI ;
                   sh:class melod:TitleType ;
+                  sh:path      melod:hasTitleType ;
+                  sh:defaultValue melodTerms:MainTitle ;
                 ] ;
   sh:targetClass melod:Title .
 
