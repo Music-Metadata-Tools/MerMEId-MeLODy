@@ -1014,6 +1014,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 json_ld_contents: json_ld_output,
                 path: entity_path,
                 shapesUrl,
+                isQuickAdd: true,
             };
 
             this.dispatchEvent(new CustomEvent("adwlm-quick-add:entity-to-save", {
