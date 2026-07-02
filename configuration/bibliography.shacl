@@ -49,8 +49,8 @@ melod:Bibliography
                   sh:group melod:Authors ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:name "Person/Institution" ;
@@ -60,8 +60,8 @@ melod:Bibliography
                   sh:group melod:Editors ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:name "Imprint" ;
@@ -146,7 +146,7 @@ melod:PublicationEvent
                   sh:path         schema:publishedBy ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
-                  sh:class melod:Person ;
+                  sh:class melod:PersonEntity ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
@@ -154,7 +154,7 @@ melod:PublicationEvent
                   sh:path         schema:location ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
-                  sh:class melod:Place ;
+                  sh:class melod:PlaceEntity ;
                 ] ;
   sh:property   [ sh:description "Description of the publication event" ;
                   sh:name      "Description" ;

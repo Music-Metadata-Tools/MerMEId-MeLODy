@@ -184,6 +184,10 @@ export default class ADWLMEntityEditor extends LitElement {
             type: Boolean,
             state: true
         },
+        _isInvalid: {
+            type: Boolean,
+            state: true
+        },
         _skipNextUpdate: {
             type: Boolean,
             state: true
@@ -680,6 +684,12 @@ export default class ADWLMEntityEditor extends LitElement {
         editor.addEventListener("change", (event) => {
             let target = event.target;
             this._hasUnsavedChanges = true;
+            if (event.detail.valid) {
+                this._isInvalid = false;
+            }
+            else {
+                this._isInvalid = true;
+            }
             //console.log(editor.serialize());
         });
 
@@ -760,22 +770,38 @@ export default class ADWLMEntityEditor extends LitElement {
             }
 
             if (target.matches("sl-button#save-entity")) {
-                let rdf_output = editor.serialize();
-                let json_ld_output = editor.serialize("application/ld+json");
-                let entity_to_save = {
-                    entity_iri: this.entity_to_edit.entity_iri,
-                    rdf_contents: rdf_output,
-                    json_ld_contents: json_ld_output,
-                    path: this._entity_path,
-                    shapesUrl: this.entity_to_edit.shapesUrl,
-                };
 
-                this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
-                    "detail": entity_to_save,
-                    "bubbles": true,
-                    "composed": true,
-                }));
-                this._hasUnsavedChanges = false;
+                if (this._isInvalid) {
+                        // Show error notification
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            Cannot save entity. Please fill out all required fields or correct invalid fields.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                }
+                else {
+                    let rdf_output = editor.serialize();
+                    let json_ld_output = editor.serialize("application/ld+json");
+                    let entity_to_save = {
+                        entity_iri: this.entity_to_edit.entity_iri,
+                        rdf_contents: rdf_output,
+                        json_ld_contents: json_ld_output,
+                        path: this._entity_path,
+                        shapesUrl: this.entity_to_edit.shapesUrl,
+                    };
+
+                    this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
+                        "detail": entity_to_save,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+                    this._hasUnsavedChanges = false;
+                }
             }
 
             if (target.matches("sl-button#sync-index")) {

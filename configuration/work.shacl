@@ -151,7 +151,7 @@ melod:Work
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:class melod:Bibliography ;
+                  sh:class melod:BibliographyEntity ;
                   sh:path schema:citation ;
                   sh:group melod:Evidence
                 ] ;
@@ -238,8 +238,8 @@ melod:Contribution
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;

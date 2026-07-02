@@ -42,7 +42,7 @@ melod:Institution
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location ;
                   owl:imports     dataset:places.ttl ;
-                  sh:class melod:Place ;
+                  sh:class melod:PlaceEntity ;
                 ] ;
   sh:property   [ sh:description "Address of the institution" ;
                   sh:name "Address" ;
