@@ -11,25 +11,22 @@
 
 melod:Person
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
-  sh:targetClass melod:Person ;
-  sh:property   [ sh:description "Surname of the person" ;
+  sh:property   [ sh:datatype     xsd:string ;
+                  sh:description "Surname of the person" ;
                   sh:name "Surname" ;
-                  sh:minCount 1 ;
                   sh:maxCount 1;
+                  sh:minCount 1 ;
                   sh:group melod:General ;
                   sh:path schema:familyName
                 ] ;
   sh:property   [ sh:description "First name of the person" ;
                   sh:name "First name" ;
-                  sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:group melod:General ;
                   sh:path schema:givenName
                 ] ;
   sh:property   [ sh:description "Alternate name of a person" ;
                   sh:name "Alternate name" ;
-                  sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:path schema:alternateName
                 ] ;
@@ -49,7 +46,6 @@ melod:Person
                 ] ;
   sh:property   [ sh:description "Birth date of the person" ;
                   sh:name "Date" ;
-                  sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Birth ;
                   sh:path schema:birthDate ;
@@ -62,14 +58,13 @@ melod:Person
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:group melod:Birth ;
-                  sh:class melod:Place ;
+                  sh:class melod:PlaceEntity ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:birthPlace
                 ] ;
   sh:property   [ sh:description "Death date of the person" ;
                   sh:name "Date" ;
-                  sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Death ;
                   sh:path schema:deathDate ;
@@ -82,24 +77,23 @@ melod:Person
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:group melod:Death ;
-                  sh:class melod:Place ;
+                  sh:class melod:PlaceEntity ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace
                 ] ;
   sh:property   [ sh:description "Occupation" ;
                   sh:name "Occupation" ;
-                  sh:minCount 0 ;
                   sh:group melod:Biography ;
                   sh:path schema:hasOccupation
                 ] ;
   sh:property   [ sh:description "Biographical description" ;
                   sh:name "Description" ;
-                  sh:minCount 0 ;
                   sh:group melod:Biography ;
                   sh:path schema:description ;
                   dash:singleLine false ;
-                ] .
+                ] ;
+  sh:targetClass melod:Person .
 
 melod:Date
   a               sh:NodeShape ;

@@ -20,14 +20,14 @@ melod:Letter
                 ] ;
   sh:property   [ sh:description "Corresp Action Sent" ;
                   sh:name "Sent" ;
-                  sh:minCount 1;
+                  sh:minCount 0;
                   sh:maxCount 1;
                   sh:path cs:hasCorrespAction ;
                   sh:node cs:Sent 
                 ] ;
   sh:property   [ sh:description "Corresp Action Received" ;
                     sh:name "Received" ;
-                    sh:minCount 1;
+                    sh:minCount 0;
                     sh:maxCount 1;
                     sh:path cs:hasCorrespAction ;
                     sh:node cs:Received ;
@@ -47,13 +47,13 @@ cs:Sent
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
                   sh:path cs:hasParticipant ;
-                  sh:class melod:Person ;
+                  sh:class melod:PersonEntity ;
                 ] ;
   sh:property   [ sh:description "Took place at" ;
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:path cs:tookPlaceAt ;
-                  sh:class melod:Place ; 
+                  sh:class melod:PlaceEntity ;
                 ] ;
   sh:property   [ sh:description "Date of the sent action" ;
                     sh:name "Date" ;
@@ -72,13 +72,13 @@ cs:Sent
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
                   sh:path cs:hasParticipant ;
-                  sh:class melod:Person ;
+                  sh:class melod:PersonEntity ;
                 ] ;
   sh:property   [ sh:description "Took place at" ;
                   sh:name "Place" ;
                   sh:maxCount 1;
                   sh:path cs:tookPlaceAt ;
-                  sh:class melod:Place ; 
+                  sh:class melod:PlaceEntity ;
                 ] ;
   sh:property   [ sh:description "Date of the received action" ;
                   sh:name "Date" ;

@@ -986,13 +986,16 @@ export default class ADWLMFilesystemManager extends LitElement {
         this.addEventListener("_save-entity", async (event) => {
             try {
                 let entity_to_save = event.detail;
+                const isQuickAdd = entity_to_save?.isQuickAdd === true;
                 const result = await filesystem.save_and_stage_file(
                     this._selected_repository_path, 
                     entity_to_save.rdf_contents, 
                     entity_to_save.path
                 );
 
-                this._file_path = entity_to_save.path;
+                if (!isQuickAdd) {
+                    this._file_path = entity_to_save.path;
+                }
 
                 // Show success notification
                 const alert = document.createElement('sl-alert');
@@ -1069,8 +1072,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         // Just log the error
                     }
 
-                    // reload the previously selected file, if any
-                    if (this._selected_repository_path && this._file_path) {
+                    // For regular saves, keep selection aligned with saved file.
+                    // For Quick Add, keep the current editor context unchanged.
+                    if (!isQuickAdd && this._selected_repository_path && this._file_path) {
                         await this.selectEntityInTree(this._file_path);
                     }
 

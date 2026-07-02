@@ -18,7 +18,7 @@ melod:Instrumentation
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:description "Label of the instrumentation, e.g. Orchestra" ;
                   sh:name "Label" ;
-                  sh:minCount 0 ;
+                  sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
@@ -53,7 +53,7 @@ melod:Instrumentation
 melod:InstrumentationDetail
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:minCount     0 ;
+  sh:property   [ sh:minCount     1 ;
                   sh:description "Position of the instrument in the instrumentation" ;
                   sh:name         "No." ;
                   sh:maxCount     1 ;
@@ -61,7 +61,7 @@ melod:InstrumentationDetail
                   sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:name         "Medium of performance" ;
                   sh:or (
                     [ sh:class melod:Instrument ; rdfs:label "MerMEId Instruments Vocabulary" ; sh:nodeKind sh:IRI ]
@@ -70,11 +70,17 @@ melod:InstrumentationDetail
                   ) ;
                   sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;
-  sh:property   [ sh:minCount     0 ;
+  sh:property   [ sh:minCount     1 ;
                   sh:description "Name of the medium of performance" ;
                   sh:name         "Name" ;
                   sh:maxCount     1 ;
                   sh:path         schema:description
+                ] ;
+  sh:property   [ sh:maxCount     1 ;
+                  sh:minCount     1 ;
+                  sh:name         "Quantity" ;
+                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance ;
+                  sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:minCount     0 ;
                   sh:description "Identifier (external resource, e.g. MARC)" ;
@@ -82,12 +88,6 @@ melod:InstrumentationDetail
                   sh:path         owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI ;
-                ] ;
-  sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     0 ;
-                  sh:name         "Quantity" ;
-                  sh:path         mus:U30_foresees_quantity_of_medium_of_performance ;
-                  sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
