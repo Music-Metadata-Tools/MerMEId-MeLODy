@@ -1345,8 +1345,14 @@ export default class ADWLMFilesystemManager extends LitElement {
     }
 
     async _handleRepositoryFileSelection(fileItem) {
-        this._file_path = fileItem.dataset.entryRelativePath;
-        await this._load_entity_to_edit();
+        if (fileItem.dataset.entryRelativePath === this._file_path) {
+            this._file_path = fileItem.dataset.entryRelativePath;
+        }
+        else {
+            this._file_path = fileItem.dataset.entryRelativePath;
+            await this._load_entity_to_edit();
+        }
+        
     }
 
     async _load_entity_to_edit() {
