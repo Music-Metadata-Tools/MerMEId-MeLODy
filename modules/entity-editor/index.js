@@ -997,11 +997,15 @@ export default class ADWLMEntityEditor extends LitElement {
 
         const config = await this._getRepoConfig().catch(() => null);
         const domain = config?.projectDomain ?? 'urn:uuid:';
+        let entity_folder_name = typeDef?.folder_name;
+        let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
         const entity_id = this._generate_entity_id();
-        const entity_path = `${typeDef.folder_name}/${entity_id}.ttl`;
-        const entity_iri = `${domain}${typeDef.folder_name}/${entity_id}`;
+        const entity_path = `${entity_folder_name}/${entity_id_prefix}${entity_id}.ttl`;
+        const entity_iri = `${domain}${entity_folder_name}/${entity_id_prefix}${entity_id}`;
 
-        const shapesUrl = typeDef?.shacl_file_location || this.entity_to_edit?.shapesUrl || this._get_shacl_file_location();
+        let entity_type = this._detectEntityType(entity_folder_name);
+
+        const shapesUrl = await this._getShapeForPath(entity_type);
 
         const dialog = document.createElement('sl-dialog');
         dialog.label = 'Quick Add';
