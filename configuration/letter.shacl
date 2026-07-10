@@ -18,19 +18,21 @@ melod:Letter
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "Corresp Action Sent" ;
-                  sh:name "Sent" ;
-                  sh:minCount 0;
-                  sh:maxCount 1;
+  sh:property  [  sh:name "Sent" ;
+                  sh:description "Corresp Action Sent" ;
                   sh:path cs:hasCorrespAction ;
-                  sh:node cs:Sent 
+                  sh:qualifiedValueShape cs:Sent ;
+                  sh:qualifiedMinCount 0 ;
+                  sh:qualifiedMaxCount 1 ;
+                  sh:qualifiedValueShapesDisjoint true ;
                 ] ;
-  sh:property   [ sh:description "Corresp Action Received" ;
-                    sh:name "Received" ;
-                    sh:minCount 0;
-                    sh:maxCount 1;
-                    sh:path cs:hasCorrespAction ;
-                    sh:node cs:Received ;
+  sh:property   [ sh:name "Received" ;
+                  sh:description "Corresp Action Received" ;
+                  sh:path cs:hasCorrespAction ;
+                  sh:qualifiedValueShape cs:Received ;
+                  sh:qualifiedMinCount 0 ;
+                  sh:qualifiedMaxCount 1 ;
+                  sh:qualifiedValueShapesDisjoint true ;
                 ] ;
   sh:property   [ sh:description "Description, annotations or further information" ;
                   sh:name "Description" ;
@@ -44,6 +46,8 @@ melod:Letter
 cs:Sent
   a sh:NodeShape, rdfs:Class ;
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
+  sh:class cs:Sent ;
+  sh:targetClass cs:Sent ;
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
                   sh:path cs:hasParticipant ;
@@ -63,12 +67,13 @@ cs:Sent
                         [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
                         [ sh:node melod:Date ; rdfs:label "Date span" ]
                     )
-                ] ;
-  sh:targetClass cs:Sent .
+                ] .
 
   cs:Received
   a sh:NodeShape, rdfs:Class ;
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
+  sh:targetClass cs:Received ;
+  sh:class cs:Received ;
   sh:property   [ sh:description "Participant" ;
                   sh:name "Participant" ;
                   sh:path cs:hasParticipant ;
@@ -89,12 +94,12 @@ cs:Sent
                     [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
-                ] ;
-  sh:targetClass cs:Received .
+                ] .
 
 melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
+  rdfs:label     "Date span" ;
   sh:xone (
 		[
 			sh:property [
@@ -103,34 +108,28 @@ melod:Date
         rdfs:label "Start date" ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
-			]
-		]
-		[
-			sh:property [
-        sh:name      "Not Before" ;
-				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
-				sh:maxCount  1 ;
 			] ;
-		]
-	) ;
-  sh:xone (
-		[
-			sh:property [
+      sh:property [
         sh:name      "End date" ;
 				sh:path schema:endDate ;
         rdfs:label "End date" ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
-			]
+			];
 		]
-		[
+	  [
+			sh:property [
+        sh:name      "Not Before" ;
+				sh:path melod:notBefore ;
+        rdfs:label "Not Before" ;
+				sh:maxCount  1 ;
+			];
 			sh:property [
         sh:name      "Not After" ;
 				sh:path melod:notAfter ;
         rdfs:label "Not After" ;
 				sh:maxCount  1 ;
-			] ;
+			];
 		]
 	) ;
   sh:property   [ sh:description "e.g. 1800-1850" ;
@@ -149,6 +148,7 @@ melod:Date
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
+  rdfs:label     "Single date" ;
   sh:property   [ sh:name      "Date" ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;

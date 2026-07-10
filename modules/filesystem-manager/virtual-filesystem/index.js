@@ -967,7 +967,7 @@ export default class ADWLMVirtualFilesystem {
             return generatedIndexes;
 
         } catch (error) {
-            console.error('Error in generate_indexes_for_pushed_files:', error);
+            console.error('Error in generate_indexes_for_saved_file:', error);
             throw error;
         }
     }
@@ -1039,7 +1039,7 @@ export default class ADWLMVirtualFilesystem {
             result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
 
             if (is_deleted===false) {
-                result += `\n${updateContent}`;
+                result = updateContent + '\n' + result;
             }
 
             return result || existingIndexContent;

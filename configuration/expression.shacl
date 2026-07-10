@@ -347,6 +347,7 @@ melod:Annotation
 melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
+  rdfs:label     "Date span" ;
   sh:xone (
 		[
 			sh:property [
@@ -355,34 +356,28 @@ melod:Date
         rdfs:label "Start date" ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
-			]
-		]
-		[
-			sh:property [
-        sh:name      "Not Before" ;
-				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
-				sh:maxCount  1 ;
 			] ;
-		]
-	) ;
-  sh:xone (
-		[
-			sh:property [
+      sh:property [
         sh:name      "End date" ;
 				sh:path schema:endDate ;
         rdfs:label "End date" ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
-			]
+			];
 		]
-		[
+	  [
+			sh:property [
+        sh:name      "Not Before" ;
+				sh:path melod:notBefore ;
+        rdfs:label "Not Before" ;
+				sh:maxCount  1 ;
+			];
 			sh:property [
         sh:name      "Not After" ;
 				sh:path melod:notAfter ;
         rdfs:label "Not After" ;
 				sh:maxCount  1 ;
-			] ;
+			];
 		]
 	) ;
   sh:property   [ sh:description "e.g. 1800-1850" ;
@@ -401,6 +396,7 @@ melod:Date
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
+  rdfs:label     "Single date" ;
   sh:property   [ sh:name      "Date" ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
@@ -412,8 +408,8 @@ melod:Date
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:name      "Description" ;
-                  sh:description "Description, annotations or further information" ;
+  sh:property   [ sh:description "Description, annotations or further information" ;
+                  sh:name      "Description" ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
