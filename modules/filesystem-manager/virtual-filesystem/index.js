@@ -1,8 +1,7 @@
-import git from "https://cdn.jsdelivr.net/npm/isomorphic-git@1.27.1/+esm";
-import http from "https://unpkg.com/isomorphic-git@beta/http/web/index.js";
 import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
-import init_oxigraph, * as oxigraph from "https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/+esm";
-
+import git from "#isomorphic-git";
+import http from "#isomorphic-git-http";
+import init_oxigraph, * as oxigraph from "#oxigraph";
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
