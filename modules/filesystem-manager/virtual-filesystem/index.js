@@ -2,6 +2,7 @@ import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
 import git from "#isomorphic-git";
 import http from "#isomorphic-git-http";
 import init_oxigraph, * as oxigraph from "#oxigraph";
+import { createProvider, ensureDir } from "../api-provider.js";
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
@@ -68,23 +69,84 @@ export default class ADWLMVirtualFilesystem {
         }
 
         let start = performance.now();
+
+        // ---------------------------------------------------------------------
+        // OLD IMPLEMENTATION
+        // try {
+        //     await git.clone({
+        //         fs: this.fs,
+        //         http: this._http,
+        //         dir: repository_folder_name,
+        //         corsProxy: this._corsProxy,
+        //         url: remote_origin_url,
+        //         ref: repository_branch,
+        //         singleBranch: true,
+        //         noTags: true,
+        //         cache: {},
+        //         depth: 1,
+        //         onAuth: () => ({
+        //             username: username,
+        //             password: personal_acces_token,
+        //         }),
+        //     });
+        // } catch (error) {
+        //     console.error(error);
+        // }
+        // ---------------------------------------------------------------------
+
         try {
-            await git.clone({
-                fs: this.fs,
-                http: this._http,
-                dir: repository_folder_name,
-                corsProxy: this._corsProxy,
-                url: remote_origin_url,
-                ref: repository_branch,
-                singleBranch: true,
-                noTags: true,
-                cache: {},
-                depth: 1,
-                onAuth: () => ({
-                    username: username,
-                    password: personal_acces_token,
-                }),
+            // Replaces git.clone(): loads all files via the GitHub/GitLab API instead
+            // of the Git network protocol - this eliminates the CORS proxy entirely.
+            const provider = createProvider(remote_origin_url, personal_acces_token, {
+                onLog: (message) => console.log(message),
+                onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
             });
+            const files = await provider.fetchAllFiles(repository_branch);
+
+            const snapshot = {};
+
+            for (const file of files) {
+                const full_path = `${repository_folder_name}/${file.path}`;
+                const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+
+                if (parent_folder_path !== repository_folder_name) {
+                    // ensureDir() creates intermediate directories level by level, since
+                    // Lightning-FS does not reliably create all missing directories at
+                    // once with { recursive: true } (unlike Node.js) - see api-provider.js.
+                    await ensureDir(this.fs, parent_folder_path);
+                }
+
+                await this.pfs.writeFile(full_path, file.content, "utf8");
+
+                // Needed by list_staged_files()/unstageFile() to later detect which
+                // files have changed since the last sync.
+                snapshot[file.path] = file.content;
+            }
+
+            await this.pfs.writeFile(
+                `${repository_folder_name}/.snapshot.json`,
+                JSON.stringify(snapshot),
+                "utf8"
+            );
+
+            // Sets up a local (empty) Git repo, so other, untouched methods (e.g.
+            // list_entries_from_workdir(), which uses git.walk(WORKDIR())) keep
+            // working. Deliberately WITHOUT git.add()/git.commit() - the Git object
+            // model is no longer used for diffing here (see list_staged_files()).
+            //
+            // IMPORTANT for later: once commit_and_push_file() is touched, a local
+            // commit with the correct parent commit (= current remote HEAD) needs to
+            // be added here, otherwise a non-forced git.push() will fail as "not a
+            // fast-forward" because the local history doesn't descend from the remote.
+            await git.init({ fs: this.fs, dir: repository_folder_name });
+
+            await git.addRemote({
+                fs: this.fs,
+                dir: repository_folder_name,
+                remote: FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME,
+                url: remote_origin_url,
+            });
+
         } catch (error) {
             console.error(error);
         }
@@ -105,6 +167,15 @@ export default class ADWLMVirtualFilesystem {
             dir: repository_folder_name,
             path: "user.name",
             value: username
+        });
+
+        // store the branch name, so pull() can rebuild the API provider later
+        // without needing the user to re-select it
+        await git.setConfig({
+            fs: this.fs,
+            dir: repository_folder_name,
+            path: "branch.name",
+            value: repository_branch
         });
     }
 
