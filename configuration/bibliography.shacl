@@ -7,12 +7,11 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Bibliography
   sh:targetClass melod:Bibliography ;
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl, dataset:persons.ttl , dataset:bibliography.ttl;
+  owl:imports     terms:melod-terms.ttl;
   sh:property   [ sh:description "Genre of the bibliographic entry" ;
                   sh:name "Genre" ;
                   sh:minCount 0 ;
@@ -123,7 +122,6 @@ melod:Bibliography
 
 melod:PublicationEvent
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Label of the publication event" ;
                   sh:name      "Label" ;
                   sh:minCount  0 ;
