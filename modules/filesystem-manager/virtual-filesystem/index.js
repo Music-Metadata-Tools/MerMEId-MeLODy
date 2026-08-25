@@ -3,6 +3,8 @@ import git from "#isomorphic-git";
 import http from "#isomorphic-git-http";
 import init_oxigraph, * as oxigraph from "#oxigraph";
 import { createProvider, ensureDir, pushViaApi } from "../api-provider.js";
+import FSADirectoryFilesystem from "./fsa-directory-filesystem.js";
+import LocalRepositoryStore from "./local-repository-store.js";
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
@@ -13,17 +15,207 @@ export default class ADWLMVirtualFilesystem {
         this._http = httpPlugin ?? http;
         this._corsProxy = corsProxy;
         this._localRepositories = new Map();
+        // All local repos ever added, whether or not read/write permission is
+        // currently granted for their handle - lets list_repository_names()
+        // show repos added in a previous browser session, even before the
+        // user has re-granted permission for them.
+        this._localRepositoryHandles = new Map();
+        this._localRepositoryStore = new LocalRepositoryStore();
+        // FileSystemDirectoryHandle permission can survive a page reload but
+        // not a fresh browser session, so restore what's possible (silently,
+        // via queryPermission()) on startup; anything left over is reconnected
+        // on demand through ensure_local_repository_access().
+        this._localRepositoriesReady = this._restore_local_repositories();
         this.store = null;
         this.index_store = null;
         this.entity_store = null;
     }
 
-    async add_local_repository(name, dirHandle) {
-        this._localRepositories.set(name, dirHandle);
+    // .dirty.json/.snapshot.json bookkeeping (_readDirtySet/_writeDirtySet
+    // and friends) always lives on the shared `this.pfs`, keyed by
+    // repository name, regardless of whether the repo's actual content is on
+    // that same shared fs or a local folder via the File System Access API -
+    // so this directory has to exist there too, mirroring what
+    // add_repository() does for API-cloned repos. Idempotent: swallows the
+    // "already exists" error so it's safe to call every time a local repo
+    // becomes accessible (added, or reconnected after a reload).
+    async _ensure_repository_metadata_dir(name) {
+        try {
+            await this.pfs.mkdir(name);
+        } catch (error) {
+            // already exists - fine
+        }
+    }
+
+    async _restore_local_repositories() {
+        const stored = await this._localRepositoryStore.getAll();
+
+        for (const [name, dirHandle] of stored) {
+            this._localRepositoryHandles.set(name, dirHandle);
+
+            try {
+                const permission = await dirHandle.queryPermission({ mode: "readwrite" });
+                if (permission === "granted") {
+                    this._localRepositories.set(name, { dirHandle, fs: new FSADirectoryFilesystem(dirHandle) });
+                    await this._ensure_repository_metadata_dir(name);
+                }
+            } catch (error) {
+                console.warn(`Could not restore local repository '${name}':`, error);
+            }
+        }
+    }
+
+    // Re-grants access to a previously added local repository whose handle
+    // survived a reload/restart but whose permission did not. Must be called
+    // from a user-gesture handler (e.g. a click), since requestPermission()
+    // silently no-ops otherwise. Returns true for non-local repositories too,
+    // since they need no reconnection.
+    async ensure_local_repository_access(name) {
+        await this._localRepositoriesReady;
+
+        if (this._localRepositories.has(name)) {
+            return true;
+        }
+
+        const dirHandle = this._localRepositoryHandles.get(name);
+        if (!dirHandle) {
+            return true;
+        }
+
+        let permission = await dirHandle.queryPermission({ mode: "readwrite" });
+        if (permission !== "granted") {
+            permission = await dirHandle.requestPermission({ mode: "readwrite" });
+        }
+        if (permission !== "granted") {
+            return false;
+        }
+
+        this._localRepositories.set(name, { dirHandle, fs: new FSADirectoryFilesystem(dirHandle) });
+        await this._ensure_repository_metadata_dir(name);
+
+        return true;
+    }
+
+    async add_local_repository(name, dirHandle, { username, token } = {}) {
+        let permission = await dirHandle.queryPermission({ mode: "readwrite" });
+        if (permission !== "granted") {
+            permission = await dirHandle.requestPermission({ mode: "readwrite" });
+        }
+        if (permission !== "granted") {
+            throw new Error(`Read/write permission for the folder '${name}' was not granted.`);
+        }
+
+        const fs = new FSADirectoryFilesystem(dirHandle);
+
+        let hasGit = true;
+        try {
+            await dirHandle.getDirectoryHandle(".git");
+        } catch (error) {
+            hasGit = false;
+        }
+
+        if (!hasGit) {
+            // Write a real, git-CLI-compatible .git directly into the picked folder.
+            await git.init({ fs, dir: "/" });
+        }
+
+        // Store credentials the same way add_repository() does for cloned
+        // repos, so commit_and_push_file/pull/canPullSafely can authenticate
+        // pushes/pulls for locally-loaded repos too (e.g. cloned via SSH,
+        // where isomorphic-git can still push/pull over the HTTPS remote).
+        // Writing them into .git/config means they also survive a reload
+        // together with the folder itself - no separate credential storage
+        // needed.
+        if (username || token) {
+            await git.setConfig({ fs, dir: "/", path: "user.pat", value: token });
+            await git.setConfig({ fs, dir: "/", path: "user.name", value: username });
+        }
+
+        await this._ensure_repository_metadata_dir(name);
+
+        this._localRepositories.set(name, { dirHandle, fs });
+        this._localRepositoryHandles.set(name, dirHandle);
+        await this._localRepositoryStore.put(name, dirHandle);
     }
 
     async remove_local_repository(repository_path) {
         this._localRepositories.delete(repository_path);
+        this._localRepositoryHandles.delete(repository_path);
+        await this._localRepositoryStore.delete(repository_path);
+    }
+
+    _get_fs_for_repository(repository_path) {
+        const repoName = repository_path.replace(/^\//, "");
+        const local = this._localRepositories.get(repoName);
+
+        return local ? local.fs : this.fs;
+    }
+
+    _get_dir_for_repository(repository_path) {
+        const repoName = repository_path.replace(/^\//, "");
+
+        return this._localRepositories.has(repoName) ? "/" : repository_path;
+    }
+
+    // Resolves a repo-relative path to an absolute path inside the repo's own `fs`.
+    _get_path_for_repository(repository_path, relative_path) {
+        const dir = this._get_dir_for_repository(repository_path);
+
+        return `${dir}/${relative_path}`.replace(/\/{2,}/g, "/");
+    }
+
+    // isomorphic-git only speaks HTTP(S) - a repo cloned via `git@host:path.git`
+    // or `ssh://git@host/path.git` (e.g. by a local git CLI, then opened here via
+    // the File System Access API) would otherwise fail with UnknownTransportError.
+    // Most hosts serve the same repository over HTTPS too, so the SSH remote URL
+    // is converted at call-time and passed explicitly to push/pull/fetch - the
+    // stored remote in .git/config is left untouched, so a local git CLI can keep
+    // using it over SSH.
+    _to_https_url(url) {
+        if (!url || /^https?:\/\//i.test(url)) {
+            return url;
+        }
+
+        // ssh://[user@]host[:port]/path
+        let match = url.match(/^ssh:\/\/(?:[^@/]+@)?([^/:]+)(?::\d+)?\/(.+)$/i);
+        if (match) {
+            return `https://${match[1]}/${match[2]}`;
+        }
+
+        // scp-like syntax, e.g. git@gitlab.example.org:group/repo.git
+        match = url.match(/^(?:[^@/]+@)?([^:/]+):(.+)$/);
+        if (match) {
+            return `https://${match[1]}/${match[2]}`;
+        }
+
+        return url;
+    }
+
+    async _get_push_pull_url(fs, dir) {
+        const remote_url = await git.getConfig({
+            fs,
+            dir,
+            path: `remote.${FILESYSTEM_MANAGER_CONSTANTS.REMOTE_NAME}.url`
+        });
+
+        return this._to_https_url(remote_url);
+    }
+
+    // git.getConfigAll() always returns an array - even when nothing is stored
+    // ([] is truthy in JS - so `onAuth: () => ({ username, password })` would
+    // silently send an *empty* Basic-Auth header instead of no header at all,
+    // which reads to the server exactly like a wrong password: 401, no matter
+    // what was typed in the dialog). git.getConfig() returns the raw value (or
+    // undefined), so missing credentials are actually falsy and easy to spot.
+    async _get_credentials_for_repository(fs, dir) {
+        const token = await git.getConfig({ fs, dir, path: "user.pat" });
+        const username = await git.getConfig({ fs, dir, path: "user.name" });
+
+        if (!token || !username) {
+            console.warn(`No stored credentials found for repository at '${dir}' - requests will be sent without authentication.`);
+        }
+
+        return { username, token };
     }
 
     async is_public_repository(repository_metadata) {
@@ -219,8 +411,10 @@ export default class ADWLMVirtualFilesystem {
 
     // list repositories
     async list_repository_names() {
+        await this._localRepositoriesReady;
+
         let gitRepos = await this.pfs.readdir("/");
-        let localRepos = Array.from(this._localRepositories.keys());
+        let localRepos = Array.from(this._localRepositoryHandles.keys());
 
         let allRepos = [...gitRepos, ...localRepos];
         allRepos.sort();
@@ -295,62 +489,6 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async list_entries_from_workdir(repository_path, parent_folder_relative_path) {
-        const repoName = repository_path.replace("/", "");
-        
-        if (this._localRepositories.has(repoName)) {
-            const dirHandle = this._localRepositories.get(repoName);
-
-            let currentHandle = dirHandle;
-
-            let relativePath = parent_folder_relative_path;
-
-            if (relativePath.startsWith(repoName)) {
-                relativePath = relativePath.slice(repoName.length);
-                if (relativePath.startsWith("/")) {
-                    relativePath = relativePath.slice(1);
-                }
-            }
-
-            if (relativePath && relativePath !== "") {
-                const parts = relativePath.split("/").filter(Boolean);
-
-                for (const part of parts) {
-                    try {
-                        currentHandle = await currentHandle.getDirectoryHandle(part);
-                    } catch (err) {
-                        console.warn("Directory not found:", part, err);
-                        return { folders: [], files: [] };
-                    }
-                }
-            }
-
-            let folders = [];
-            let files = [];
-
-            for await (const [name, handle] of currentHandle.entries()) {
-                if (name.startsWith(".")) continue;
-
-                if (handle.kind === "directory") {
-                    folders.push(
-                        parent_folder_relative_path
-                            ? `${parent_folder_relative_path}/${name}`
-                            : name
-                    );
-                } else {
-                    files.push(
-                        parent_folder_relative_path
-                            ? `${parent_folder_relative_path}/${name}`
-                            : name
-                    );
-                }
-            }
-
-            folders.sort();
-            files.sort();
-
-            return { folders, files };
-        }
-
         let folders = [];
         let files = [];
 
@@ -360,8 +498,8 @@ export default class ADWLMVirtualFilesystem {
             parent_folder_relative_path = `${parent_folder_relative_path}/`;
         }
         await git.walk({
-            fs: this.fs,
-            dir: repository_path,
+            fs: this._get_fs_for_repository(repository_path),
+            dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
                 if (!entry_path.startsWith(parent_folder_relative_path)) {
@@ -391,9 +529,12 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async add_file(repository_path, file_relative_path) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
         // remove the file from the git index
-        await git.remove({ fs: this.fs, dir: repository_path, filepath: file_relative_path });
-        await this.pfs.unlink(`${repository_path}/${file_relative_path}`);
+        await git.remove({ fs, dir, filepath: file_relative_path });
+        await fs.promises.unlink(this._get_path_for_repository(repository_path, file_relative_path));
 
         // Keep .dirty.json in sync (see list_staged_files()). filesystem-
         // manager/index.js also calls this with a bare directory name (to
@@ -427,55 +568,15 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async save_and_stage_file(repository_path, file_contents, file_relative_path) {
-        const repoName = repository_path.replace("/", "");
-
-        if (this._localRepositories.has(repoName)) {
-            const dirHandle = this._localRepositories.get(repoName);
-
-            let relativePath = file_relative_path;
-
-            if (relativePath.startsWith(repoName)) {
-                relativePath = relativePath.slice(repoName.length);
-                if (relativePath.startsWith("/")) {
-                    relativePath = relativePath.slice(1);
-                }
-            }
-
-            const parts = relativePath.split("/").filter(Boolean);
-
-            let currentHandle = dirHandle;
-
-            try {
-                for (let i = 0; i < parts.length - 1; i++) {
-                    currentHandle = await currentHandle.getDirectoryHandle(parts[i], { create: true });
-                }
-
-                const fileHandle = await currentHandle.getFileHandle(parts.at(-1), { create: true });
-
-                const writable = await fileHandle.createWritable();
-                await writable.write(file_contents);
-                await writable.close();
-
-                return {
-                    success: true,
-                    filename: parts.at(-1),
-                    folder: parts[0],
-                    path: relativePath
-                };
-
-            } catch (error) {
-                console.error("Error writing local file:", error);
-                throw new Error(`Failed to save local file: ${error.message}`);
-            }
-        }
-
-
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        const absolute_path = this._get_path_for_repository(repository_path, file_relative_path);
 
         try {
             // Create parent directories recursively
-            let parent_folder_path = `${repository_path}/${file_relative_path}`.substring(0, `${repository_path}/${file_relative_path}`.lastIndexOf('/'));
+            let parent_folder_path = absolute_path.substring(0, absolute_path.lastIndexOf('/'));
             try {
-                await this.pfs.mkdir(parent_folder_path, { recursive: true });
+                await fs.promises.mkdir(parent_folder_path, { recursive: true });
             } catch (err) {
                 // Ignore directory exists error
                 if (err.code !== 'EEXIST') {
@@ -484,22 +585,22 @@ export default class ADWLMVirtualFilesystem {
             }
 
             // Write file with overwrite
-            await this.pfs.writeFile(`${repository_path}/${file_relative_path}`, file_contents, { 
+            await fs.promises.writeFile(absolute_path, file_contents, {
                 encoding: 'utf8',
                 flag: 'w'  // This will overwrite existing files
             });
-            
+
             // Stage the file
-            await git.add({ 
-                fs: this.fs, 
-                dir: repository_path, 
-                filepath: file_relative_path 
+            await git.add({
+                fs,
+                dir,
+                filepath: file_relative_path
             });
 
             // Update the Git index
             await git.updateIndex({
-                fs: this.fs,
-                dir: repository_path,
+                fs,
+                dir,
                 add: true,
                 filepath: file_relative_path
             });
@@ -543,51 +644,11 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async read_file(repository_path, file_path) {
-        const repoName = repository_path.replace("/", "");
-
-        if (this._localRepositories.has(repoName)) {
-            const dirHandle = this._localRepositories.get(repoName);
-
-            let relativePath = file_path;
-
-            if (relativePath.startsWith(repoName)) {
-                relativePath = relativePath.slice(repoName.length);
-                if (relativePath.startsWith("/")) {
-                    relativePath = relativePath.slice(1);
-                }
-            }
-
-            const parts = relativePath.split("/").filter(Boolean);
-
-            let currentHandle = dirHandle;
-
-            try {
-                for (let i = 0; i < parts.length - 1; i++) {
-                    currentHandle = await currentHandle.getDirectoryHandle(parts[i]);
-                }
-
-                const fileHandle = await currentHandle.getFileHandle(parts.at(-1));
-                const file = await fileHandle.getFile();
-
-                return await file.text();
-
-            } catch (err) {
-                console.error("Failed to read local file:", {
-                    repoName,
-                    file_path,
-                    relativePath,
-                    parts
-                });
-                throw err;
-            }
-        }
-
-
         let file_contents = "";
 
         await git.walk({
-            fs: this.fs,
-            dir: repository_path,
+            fs: this._get_fs_for_repository(repository_path),
+            dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
                 if (entry_path === file_path) {
@@ -603,58 +664,11 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async read_directory_files(repository_path, directory_path) {
-        const repoName = repository_path.replace("/", "");
         const fileContents = {};
 
-        // Handle local repositories
-        if (this._localRepositories.has(repoName)) {
-            const dirHandle = this._localRepositories.get(repoName);
-
-            let relativePath = directory_path;
-
-            if (relativePath.startsWith(repoName)) {
-                relativePath = relativePath.slice(repoName.length);
-                if (relativePath.startsWith("/")) {
-                    relativePath = relativePath.slice(1);
-                }
-            }
-
-            const parts = relativePath.split("/").filter(Boolean);
-
-            let currentHandle = dirHandle;
-
-            try {
-                for (let i = 0; i < parts.length; i++) {
-                    currentHandle = await currentHandle.getDirectoryHandle(parts[i]);
-                }
-
-                for await (const [name, handle] of currentHandle.entries()) {
-                    if (name.startsWith(".")) continue;
-
-                    if (handle.kind === "file") {
-                        const fileHandle = handle;
-                        const file = await fileHandle.getFile();
-                        fileContents[name] = await file.text();
-                    }
-                }
-
-                return fileContents;
-
-            } catch (err) {
-                console.error("Failed to read local directory:", {
-                    repoName,
-                    directory_path,
-                    relativePath,
-                    parts
-                });
-                throw err;
-            }
-        }
-
-        // Handle git repositories
         await git.walk({
-            fs: this.fs,
-            dir: repository_path,
+            fs: this._get_fs_for_repository(repository_path),
+            dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
             map: async (entry_path, [entry]) => {
                 // Check if entry is in the target directory
@@ -897,24 +911,26 @@ export default class ADWLMVirtualFilesystem {
         // provider.pushFiles() (see api-provider.js) - "-deleted" entries are
         // skipped below instead of failing the whole push. Both are planned
         // as separate follow-ups.
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
         let personal_access_token = await git.getConfigAll({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "user.pat"
         });
         let username = await git.getConfigAll({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "user.name"
         });
         let remote_origin_url = await git.getConfig({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "remote.origin.url"
         });
         let repository_branch = await git.getConfig({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "branch.name"
         });
 
@@ -996,8 +1012,8 @@ export default class ADWLMVirtualFilesystem {
                 changedPaths: new Set(changed_paths),
                 deletedPaths: new Set(deleted_paths),
                 newPaths: new_paths,
-                fs: this.fs,
-                dir: repository_path,
+                fs,
+                dir,
                 message,
             });
         } catch (error) {
@@ -1042,7 +1058,9 @@ export default class ADWLMVirtualFilesystem {
         // Real conflict detection for these repos is a planned follow-up
         // (see pull()/commit_and_push_file() above) - this only avoids the
         // pointless failed attempt in the meantime.
-        const has_commit = await git.resolveRef({ fs: this.fs, dir: repository_path, ref: "HEAD" })
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        const has_commit = await git.resolveRef({ fs, dir, ref: "HEAD" })
             .then(() => true, () => false);
         if (!has_commit) {
             // Same "nothing to report" sentinel the untouched logic below
@@ -1055,43 +1073,34 @@ export default class ADWLMVirtualFilesystem {
         }
 
         let current_branch = await git.currentBranch({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             fullname: false
         });
-        let personal_access_token = await git.getConfigAll({
-            fs: this.fs,
-            dir: repository_path,
-            path: "user.pat"
-        });
-        let username = await git.getConfigAll({
-            fs: this.fs,
-            dir: repository_path,
-            path: "user.name"
-        });
+        let { username, token: personal_access_token } = await this._get_credentials_for_repository(fs, dir);
 
         try {
             await git.fetch({
-            fs: this.fs,
+            fs,
             http: this._http,
-            dir: repository_path,
+            dir,
+            url: await this._get_push_pull_url(fs, dir),
             corsProxy: this._corsProxy,
-            onAuth: () => ({
-                username: username,
-                password: personal_access_token,
-            })
+            onAuth: () => (username && personal_access_token
+                ? { username, password: personal_access_token }
+                : {})
             });
 
             const localLog = await git.log({
-                fs: this.fs,
-                dir: repository_path,
+                fs,
+                dir,
                 ref: 'HEAD',
                 depth: 100
             });
 
             const remoteLog = await git.log({
-                fs: this.fs,
-                dir: repository_path,
+                fs,
+                dir,
                 ref: `origin/${current_branch}`,
                 depth: 100
             });
@@ -1114,8 +1123,8 @@ export default class ADWLMVirtualFilesystem {
             const remoteChanges = [];
 
             await git.walk({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             trees: [
                 git.TREE({ ref: base }),
                 git.TREE({ ref: `origin/${current_branch}` })
@@ -1195,19 +1204,21 @@ export default class ADWLMVirtualFilesystem {
         // Deliberately minimal for now: no conflict detection with local
         // unsaved changes (canPullSafely() still uses the old Git-based
         // approach, untouched here) - that's a planned separate follow-up.
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
         let personal_access_token = await git.getConfigAll({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "user.pat"
         });
         let remote_origin_url = await git.getConfig({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "remote.origin.url"
         });
         let repository_branch = await git.getConfig({
-            fs: this.fs,
-            dir: repository_path,
+            fs,
+            dir,
             path: "branch.name"
         });
 
@@ -1285,6 +1296,15 @@ export default class ADWLMVirtualFilesystem {
         console.log("elapsed time for pull() via API = " + (end - start) + "ms");
     }
 
+    async has_remote(repository_path) {
+        const remotes = await git.listRemotes({
+            fs: this._get_fs_for_repository(repository_path),
+            dir: this._get_dir_for_repository(repository_path)
+        });
+
+        return remotes.length > 0;
+    }
+
     async unstageFile(repository_path, file_relative_path) {
         // ---------------------------------------------------------------------
         // OLD IMPLEMENTATION
@@ -1331,6 +1351,8 @@ export default class ADWLMVirtualFilesystem {
         // (see the "unstage-files" button handler there) - that's not a
         // tracked file and has no snapshot entry, so just no-op instead of
         // trying to "restore" a folder.
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
         let plain_path = file_relative_path.replace(/-deleted$/, "");
         if (!plain_path.includes("/") || !plain_path.endsWith(".ttl")) {
             return true;

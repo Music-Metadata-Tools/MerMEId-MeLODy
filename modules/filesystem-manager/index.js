@@ -149,9 +149,13 @@ export default class ADWLMFilesystemManager extends LitElement {
         },
         _commit_message: {
             type: String
+        },
+        _hasRemote: {
+            type: Boolean,
+            state: true
         }
 
-        
+
     };
 
     updated(changedProperties) {
@@ -232,7 +236,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button class="rename-entry" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled || !this._hasRemote}">
                                 <sl-icon name="arrow-clockwise"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -263,9 +267,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         </sl-button>
                         <sl-button
                             id="commit-and-push-staged-files"
-                            size="small" 
+                            size="small"
                             title="Share files"
-                            ?disabled="${!this._hasSelectedFiles}">
+                            ?disabled="${!this._hasSelectedFiles || !this._hasRemote}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
                         <sl-button
@@ -331,8 +335,13 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // If loading a repo folder: store repo path and enable staged files details
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
+                    if (!(await this._ensureRepositoryAccess(entry_absolute_path))) {
+                        return;
+                    }
+
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
+                    await this._updateHasRemote();
 
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:item-selected', {
@@ -371,9 +380,16 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let entry_type = selected_tree_item.dataset.entryType;
 
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
-                    this._selected_repository_path = selected_tree_item.dataset.entryAbsolutePath;
+                    let entry_absolute_path = selected_tree_item.dataset.entryAbsolutePath;
+
+                    if (!(await this._ensureRepositoryAccess(entry_absolute_path))) {
+                        return;
+                    }
+
+                    this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
-                    
+                    await this._updateHasRemote();
+
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
                         detail: { repositoryPath: this._selected_repository_path },
@@ -422,6 +438,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Disable buttons and details
                 this._repository_buttons_disabled = true;
+                this._hasRemote = false;
                 staged_files_details.disabled = true;
 
                 // Clear the entity editor
@@ -532,9 +549,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                                     };
                                 }
 
-                                const content = await filesystem.pfs.readFile(
-                                    `${this._selected_repository_path}/${path}`,
-                                    'utf8'
+                                const content = await filesystem.read_file(
+                                    this._selected_repository_path,
+                                    path
                                 );
 
                                 return {
@@ -655,9 +672,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                                     };
                                 }
 
-                                const content = await filesystem.pfs.readFile(
-                                    `${this._selected_repository_path}/${path}`,
-                                    'utf8'
+                                const content = await filesystem.read_file(
+                                    this._selected_repository_path,
+                                    path
                                 );
 
                                 return {
@@ -953,6 +970,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             const { repoName } = event.detail;
             this._selected_repository_path = `/${repoName}`;
+            await this._updateHasRemote();
 
             add_repository_dialog.reset();
 
@@ -1187,6 +1205,37 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._displayed_staged_files = [];
         this._repository_buttons_disabled = true;
         this._hasSelectedFiles = false;
+        this._hasRemote = false;
+    }
+
+    // Re-grants access to a local (File System Access API) repository whose
+    // directory handle survived a reload but whose permission did not - a
+    // browser restart resets permission to "prompt", and only a user gesture
+    // (this is called from click/selection handlers) can re-request it.
+    async _ensureRepositoryAccess(repository_absolute_path) {
+        let repository_name = repository_absolute_path.replace(/^\//, "");
+        let access_granted = await filesystem.ensure_local_repository_access(repository_name);
+
+        if (!access_granted) {
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'warning';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Access to the local folder '${repository_name}' was not granted. Please try again and allow access.
+            `;
+            document.body.append(alert);
+            alert.toast();
+        }
+
+        return access_granted;
+    }
+
+    async _updateHasRemote() {
+        this._hasRemote = this._selected_repository_path
+            ? await filesystem.has_remote(this._selected_repository_path)
+            : false;
     }
 
     // initialize the filesystem
@@ -1213,15 +1262,24 @@ export default class ADWLMFilesystemManager extends LitElement {
         // (editor, search) can load the repository config without requiring
         // an explicit user click.
         if (repository_names.length > 0 && !this._selected_repository_path) {
-            this._selected_repository_path = `/${repository_names[0]}`;
+            let first_repository_name = repository_names[0];
 
-            // Dispatch the repository-selected event so listeners react as if
-            // the user selected the repository in the UI.
-            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
-                detail: { repositoryPath: this._selected_repository_path },
-                bubbles: true,
-                composed: true
-            }));
+            // No user gesture is available here (this runs on load), so a local
+            // repository whose permission reset to "prompt" over a browser
+            // restart can't be silently reconnected - leave it unselected and
+            // let the user pick it explicitly, which does carry a gesture.
+            if (await filesystem.ensure_local_repository_access(first_repository_name)) {
+                this._selected_repository_path = `/${first_repository_name}`;
+                await this._updateHasRemote();
+
+                // Dispatch the repository-selected event so listeners react as if
+                // the user selected the repository in the UI.
+                this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                    detail: { repositoryPath: this._selected_repository_path },
+                    bubbles: true,
+                    composed: true
+                }));
+            }
         }
     }
 

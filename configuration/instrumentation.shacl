@@ -10,7 +10,6 @@
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix melodTerms: <https://lod.academy/melod/vocab/terms#> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 
 melod:Instrumentation
@@ -27,8 +26,7 @@ melod:Instrumentation
                   sh:node melod:InstrumentationDetail ;
                   sh:name "Instruments and Voices" ;
                 ] ;
-  sh:property   [ owl:imports dataset:instrumentations.ttl ;
-                  sh:minCount 0 ;
+  sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasInstrumentationGroup ;
                   sh:class melod:InstrumentationEntity ;
                   #sh:node melod:InstrumentationGroup ;

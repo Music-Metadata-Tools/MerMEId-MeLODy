@@ -8,11 +8,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl , dataset:instrumentations.ttl , dataset:events.ttl , dataset:performanceEvents.ttl , dataset:expressions.ttl , dataset:bibliography.ttl;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name "Label" ;
                   sh:description "Expression title, e.g. 'Version 1'" ;
                   sh:minCount 1 ;
@@ -426,8 +425,8 @@ melod:Contribution
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
@@ -579,7 +578,6 @@ melod:MusicIncipit
 
 melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
@@ -615,7 +613,6 @@ melod:Event
 
   melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
   sh:property   [ sh:description "Name of the Performance Event" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;

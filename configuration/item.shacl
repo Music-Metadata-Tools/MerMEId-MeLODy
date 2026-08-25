@@ -9,7 +9,6 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Item
   a               sh:NodeShape, rdfs:Class ;
@@ -44,8 +43,7 @@ melod:Item
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
-  sh:property   [ owl:imports dataset:institutions.ttl ;
-                  sh:description "Insert ID of the institution" ;
+  sh:property   [ sh:description "Insert ID of the institution" ;
                   sh:name "Repository" ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
@@ -80,8 +78,7 @@ melod:Item
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ owl:imports dataset:events.ttl ;
-                  sh:description "Insert ID of the provenance event" ;
+  sh:property   [ sh:description "Insert ID of the provenance event" ;
                   sh:name "Event" ;
                   sh:minCount 0 ;
                   sh:group melod:Provenance ;
@@ -106,8 +103,7 @@ melod:Item
                   sh:path      melod:hasHand ;
                   sh:node melod:Hand
                 ] ;
-  sh:property   [ owl:imports dataset:events.ttl ;
-                  sh:description "Insert ID of the event related to the history and creation of the item" ;
+  sh:property   [ sh:description "Insert ID of the event related to the history and creation of the item" ;
                   sh:name "History" ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
@@ -127,8 +123,7 @@ melod:Item
                   sh:path melod:hasPhysicalDescription ;
                   sh:node melod:PhysDesc
                 ] ;
-  sh:property   [ owl:imports dataset:items.ttl ;
-                  sh:description "Insert ID of the item" ;
+  sh:property   [ sh:description "Insert ID of the item" ;
                   sh:name "has part" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -137,8 +132,7 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:hasItemPart
                 ] ;
-  sh:property   [ owl:imports dataset:items.ttl ;
-                  sh:description "Insert ID of the item" ;
+  sh:property   [ sh:description "Insert ID of the item" ;
                   sh:name "is part of" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -147,8 +141,7 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:isItemPartOf
                 ] ;
-  sh:property   [ owl:imports dataset:manifestations.ttl ;
-                  sh:description "Insert ID of the manifestation" ;
+  sh:property   [ sh:description "Insert ID of the manifestation" ;
                   sh:name "is materialization of" ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -157,8 +150,7 @@ melod:Item
                   sh:class melod:ManifestationEntity ;
                   sh:path lrmoo:R7_exemplifies
                 ] ;
-#  sh:property   [ owl:imports dataset:items.ttl ;
-#                 sh:name "Relation" ;
+#  sh:property   [ sh:name "Relation" ;
  #                 sh:group melod:Relation ;
  #                 sh:minCount 0 ;
  #                 sh:class melod:ItemEntity ;
@@ -493,7 +485,6 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Type of the watermark" ;
                   sh:name      "Type" ;
                   sh:minCount  0 ;
@@ -577,7 +568,6 @@ melod:Watermark
 
 melod:Inscription
   a               sh:NodeShape ;
-  owl:imports dataset:persons.ttl ;
   sh:property   [ sh:description  "Insert ID of the person" ;
                   sh:name         "Person" ;
                   sh:path      melod:hasAgent ;
@@ -702,7 +692,7 @@ melod:Binding
   melod:Hand
   a               sh:NodeShape ;
   rdfs:label      "Hand" ;
-  owl:imports     terms:melod-terms.ttl , dataset:persons.ttl ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:maxCount  1 ;
                   sh:description "Insert ID of the person" ;
                   sh:name "Name" ;
@@ -820,7 +810,7 @@ melod:Relation
 
   melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl, dataset:bibliography.ttl ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
@@ -871,8 +861,8 @@ melod:Relation
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution" ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;

@@ -331,7 +331,29 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     this.renderRoot.querySelector("sl-button#open-repository").disabled = true;
                     return;
                 }
-                
+
+                // Username/personal access token are optional here, just like for
+                // cloning: only required together, so private local repos (e.g.
+                // cloned via SSH but with an HTTPS remote) can still be pushed to.
+                let username_input = render_root.querySelector("sl-input#username");
+                let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
+                let username = username_input.value;
+                let personal_access_token = personal_access_token_input.value;
+
+                if (username !== "" && personal_access_token === "") {
+                    personal_access_token_input.setCustomValidity("The personal access token is not set.");
+                    personal_access_token_input.reportValidity();
+
+                    return;
+                }
+
+                if (personal_access_token !== "" && username === "") {
+                    username_input.setCustomValidity("The username is not set.");
+                    username_input.reportValidity();
+
+                    return;
+                }
+
                 // Close the dialog before opening the file picker to avoid focus conflicts
                 this.hide();
 
@@ -340,15 +362,18 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
                     const repoName = dirHandle.name;
 
-                    await filesystem.add_local_repository(repoName, dirHandle);
-                    
+                    await filesystem.add_local_repository(repoName, dirHandle, {
+                        username: username || undefined,
+                        token: personal_access_token || undefined,
+                    });
+
                     this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:add-local-repository",
                         {
                         detail: { repoName },
                         bubbles: true,
                         composed: true
                     }));
-                    
+
 
                 } catch (err) {
                     console.error("Directory selection cancelled or failed", err);

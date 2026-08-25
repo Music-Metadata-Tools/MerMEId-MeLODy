@@ -5,11 +5,9 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Venue
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
   sh:property   [ sh:description "Name of the venue" ;
                   sh:name "Name" ;
                   sh:minCount 1 ;
