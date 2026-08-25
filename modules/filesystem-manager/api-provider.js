@@ -215,6 +215,30 @@ function createGithubProvider({ owner, repo }, token, {
         platform: "github",
         repoLabel: `${owner}/${repo}`,
 
+        // Lists branch names - used to populate the "add repository" dialog's
+        // branch dropdown without needing the Git protocol/CORS proxy at all.
+        // GitHub paginates via the "Link" header rather than a total-count
+        // header, so - unlike fetchAllFiles()'s tree pagination - this just
+        // keeps requesting pages sequentially until a short page confirms
+        // there's nothing left; branch lists are normally small enough that
+        // this is not worth parallelizing like the file tree is.
+        async listBranches() {
+            const branches = [];
+            let page = 1;
+
+            while (true) {
+                const pageBranches = await githubRest(`/repos/${owner}/${repo}/branches?per_page=100&page=${page}`);
+                branches.push(...pageBranches.map((b) => b.name));
+
+                if (pageBranches.length < 100) {
+                    break;
+                }
+                page += 1;
+            }
+
+            return branches;
+        },
+
         async fetchAllFiles(branch) {
 
             const treeData = await githubRest(`/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
@@ -291,10 +315,20 @@ function createGithubProvider({ owner, repo }, token, {
 
             const expectedHeadOid = headResult.repository.ref.target.oid;
 
-            const additions = files.map((f) => ({
-                path: f.path,
-                contents: toBase64(f.content),
-            }));
+            // f.isDeleted is set by the caller (see pushViaApi() below),
+            // which knows which paths were removed locally from its own
+            // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
+            // file itself has no such concept and stays generic.
+            const additions = files
+                .filter((f) => !f.isDeleted)
+                .map((f) => ({
+                    path: f.path,
+                    contents: toBase64(f.content),
+                }));
+
+            const deletions = files
+                .filter((f) => f.isDeleted)
+                .map((f) => ({ path: f.path }));
 
             const mutation = `
                 mutation($input: CreateCommitOnBranchInput!) {
@@ -311,7 +345,7 @@ function createGithubProvider({ owner, repo }, token, {
                         branchName: branch,
                     },
                     message: { headline: message },
-                    fileChanges: { additions },
+                    fileChanges: { additions, deletions },
                     expectedHeadOid,
                 },
             });
@@ -377,12 +411,24 @@ function createGitlabProvider({ host, projectPath }, token, {
         return result.data;
     }
 
-    // Experimental fast path: GitLab's GraphQL API has a "blobs(paths: [...])"
-    // field that returns multiple file contents in ONE request (analogous to
-    // GitHub's alias batching). Not necessarily available / named identically
-    // on every GitLab version - which is why this is only attempted ONCE (see
+    // Fast path: GitLab's GraphQL API has a "blobs(paths: [...])" field that
+    // returns multiple file contents in ONE request (analogous to GitHub's
+    // alias batching). Not necessarily available / named identically on
+    // every GitLab version - which is why this is only attempted ONCE (see
     // fetchAllFiles), falling back completely to the proven REST approach on
     // any error, instead of retrying it for every chunk.
+    //
+    // Field choice: RepositoryBlob has both "plainData" (syntax-HIGHLIGHTED
+    // HTML, meant for the web UI - do not use, produces broken Turtle/JSON)
+    // and "rawTextBlob" ("Raw content of the blob, if the blob is text
+    // data.") - verified directly against GitLab's GraphQL schema
+    // (__schema introspection on Repository/RepositoryBlob). rawTextBlob is
+    // the one that actually matches what fetchAllFiles() needs.
+    //
+    // GitLab caps the total size of a single "paths" batch at 20 MiB (also
+    // from the schema) - not enforced here explicitly, since a batch that's
+    // too large simply fails the request, which withRetry()/the fallback
+    // below already handle without special-casing the size.
     async function fetchContentViaGraphQLBatch(paths, branch) {
         const chunks = chunkArray(paths, DEFAULT_CHUNK_SIZE);
         const files = [];
@@ -395,7 +441,7 @@ function createGitlabProvider({ host, projectPath }, token, {
                     project(fullPath: $projectPath) {
                         repository {
                             blobs(paths: $paths, ref: $ref) {
-                                nodes { path plainData }
+                                nodes { path rawTextBlob }
                             }
                         }
                     }
@@ -407,7 +453,7 @@ function createGitlabProvider({ host, projectPath }, token, {
             if (!nodes) throw new Error("Unexpected response structure for GitLab GraphQL blobs - the field probably doesn't exist on this instance.");
 
             for (const node of nodes) {
-                files.push({ path: node.path, content: node.plainData });
+                files.push({ path: node.path, content: node.rawTextBlob });
             }
 
             loadedCount += chunk.length;
@@ -420,6 +466,37 @@ function createGitlabProvider({ host, projectPath }, token, {
     return {
         platform: "gitlab",
         repoLabel: `${host}/${projectPath}`,
+
+        // Lists branch names - used to populate the "add repository" dialog's
+        // branch dropdown without needing the Git protocol/CORS proxy at all.
+        // Same "x-total-pages" pagination pattern as fetchAllFiles() below.
+        async listBranches() {
+            const baseUrl = `${apiBase}/projects/${projectId}/repository/branches?per_page=100`;
+
+            const firstPage = await withRetry(
+                () => gitlabRequest(`${baseUrl}&page=1`),
+                { label: "Loading branches page 1", onLog }
+            );
+
+            const branches = firstPage.data.map((b) => b.name);
+            const totalPages = Number(firstPage.headers.get("x-total-pages") || "1");
+
+            if (totalPages > 1) {
+                const remainingPageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+
+                const remainingResults = await mapWithConcurrency(remainingPageNumbers, pageConcurrency, async (pageNumber) => {
+                    const { data: entries } = await withRetry(
+                        () => gitlabRequest(`${baseUrl}&page=${pageNumber}`),
+                        { label: `Loading branches page ${pageNumber}`, onLog }
+                    );
+                    return entries.map((b) => b.name);
+                });
+
+                remainingResults.forEach((names) => branches.push(...names));
+            }
+
+            return branches;
+        },
 
         async fetchAllFiles(branch) {
 
@@ -457,17 +534,24 @@ function createGitlabProvider({ host, projectPath }, token, {
 
             // 2. Load content.
             //
-            // WARNING: the experimental GraphQL batch path (fetchContentViaGraphQLBatch,
-            // field "plainData") is DELIBERATELY DISABLED here. It ran without error, but
-            // presumably returned HTML-highlighted content instead of plain text (Turtle/
-            // JSON parsers failed repeatedly with "Invalid IRI code point" or JSON parse
-            // errors - the content WAS wrong, even though the request itself didn't
-            // fail). Before re-enabling this, the exact field name for unformatted plain
-            // text needs to be verified against the actual GitLab GraphQL reference
-            // (<instance>/-/graphql-explorer) - not just guessed again.
-            //
-            // So here we go straight to the proven REST approach: many individual
-            // requests, but with limited concurrency + retry.
+            // Fast path first: fetchContentViaGraphQLBatch() loads many files
+            // per request instead of one request per file (see there for the
+            // field choice/details). Attempted ONCE for the whole file set -
+            // on any failure (e.g. an older GitLab instance without this
+            // field, or a batch exceeding GitLab's 20 MiB per-request cap),
+            // abandon it entirely and fall back to the proven REST loop
+            // below instead of retrying per chunk.
+            try {
+                const paths = blobEntries.map((entry) => entry.path);
+                const files = await fetchContentViaGraphQLBatch(paths, branch);
+                onLog(`Loaded ${files.length} files via GraphQL batch.`);
+                return files;
+            } catch (error) {
+                onLog(`⚠️ GraphQL batch loading failed (${error.message}), falling back to per-file REST loading...`);
+            }
+
+            // Fallback: one REST request per file, but with limited
+            // concurrency + retry.
             let loadedCount = 0;
 
             const files = await mapWithConcurrency(blobEntries, fileConcurrency, async (entry) => {
@@ -492,11 +576,23 @@ function createGitlabProvider({ host, projectPath }, token, {
 
         async pushFiles(branch, files, message) {
 
-            const actions = files.map((f) => ({
-                action: "update",
-                file_path: f.path,
-                content: f.content,
-            }));
+            // GitLab's commit API rejects action "update" for a path that
+            // doesn't exist yet ("A file with this name doesn't exist") - it
+            // needs "create" instead, and a plain "delete" for removed
+            // files (no content). f.isNew/f.isDeleted are set by the caller
+            // (see pushViaApi() below), which knows this from its own
+            // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
+            // file itself has no such concept and stays generic.
+            const actions = files.map((f) => {
+                if (f.isDeleted) {
+                    return { action: "delete", file_path: f.path };
+                }
+                return {
+                    action: f.isNew ? "create" : "update",
+                    file_path: f.path,
+                    content: f.content,
+                };
+            });
 
             const commitUrl = `${apiBase}/projects/${projectId}/repository/commits`;
 
@@ -555,9 +651,9 @@ export async function cloneViaApi({ provider, branch, fs, dir }) {
     return writtenPaths;
 }
 
-export async function pushViaApi({ provider, branch, changedPaths, fs, dir, message }) {
+export async function pushViaApi({ provider, branch, changedPaths, deletedPaths = new Set(), fs, dir, message, newPaths = new Set() }) {
 
-    if (changedPaths.size === 0) {
+    if (changedPaths.size === 0 && deletedPaths.size === 0) {
         return null;
     }
 
@@ -565,12 +661,19 @@ export async function pushViaApi({ provider, branch, changedPaths, fs, dir, mess
 
     for (const relativePath of changedPaths) {
         const content = await fs.promises.readFile(`${dir}/${relativePath}`, "utf8");
-        files.push({ path: relativePath, content });
+        files.push({ path: relativePath, content, isNew: newPaths.has(relativePath) });
+    }
+
+    // deleted paths don't exist on disk anymore - nothing to read, the
+    // provider only needs the path itself (see pushFiles() above).
+    for (const relativePath of deletedPaths) {
+        files.push({ path: relativePath, isDeleted: true });
     }
 
     const commit = await provider.pushFiles(branch, files, message);
 
     changedPaths.clear();
+    deletedPaths.clear();
 
     return commit;
 }

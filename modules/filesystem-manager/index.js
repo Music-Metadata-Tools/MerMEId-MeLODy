@@ -920,9 +920,13 @@ export default class ADWLMFilesystemManager extends LitElement {
         render_root.addEventListener("adwlm-filesystem-manager:repository-branches", async (event) => {
             let repository_metadata = event.detail;
 
-            let branches = await filesystem.list_branches(repository_metadata);
-
-            add_repository_dialog.repository_branches = branches;
+            try {
+                let branches = await filesystem.list_branches(repository_metadata);
+                add_repository_dialog.repository_branches = branches;
+            } catch (error) {
+                console.error("Failed to list branches:", error);
+                add_repository_dialog.reportBranchLoadError();
+            }
         });
 
         render_root.addEventListener("adwlm-filesystem-manager:repository-to-add", async (event) => {
@@ -1446,10 +1450,12 @@ export default class ADWLMFilesystemManager extends LitElement {
         // Maybe load the files asynchronously, as they are discovered?
         // The current approach implies 0.5-1.5 seconds for listing the files, for
         // a repo with 4K+ files, so async loading is not needed.
-        const tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
         const details = this.renderRoot.querySelector("sl-details#staged-files-details");
-        tree.innerHTML = "";
-        tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
+
+        // Loading placeholder - goes through the reactive _displayed_staged_files
+        // property (see below), not direct DOM manipulation, so it doesn't get
+        // wiped by the next unrelated re-render.
+        this._displayed_staged_files = [html`<sl-tree-item>Loading files...</sl-tree-item>`];
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
@@ -1476,26 +1482,27 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
         details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
 
-        tree.innerHTML = "";
-
-        let tree_items = "";
-        // process the files
-        for (const staged_file of this._staged_files) {
-            
+        // Build the tree items through Lit's reactive rendering (same pattern
+        // as _list_repository_names()/_displayed_repository_names above)
+        // instead of tree.innerHTML/insertAdjacentHTML. The direct-DOM version
+        // got silently overwritten by the very next unrelated re-render (e.g.
+        // triggered by _hasUnsharedFiles just above, itself a reactive
+        // property) - the <sl-tree> element is declaratively bound to
+        // ${this._displayed_staged_files} in the template, and that binding
+        // always wins on the next render pass.
+        this._displayed_staged_files = this._staged_files.map(staged_file => {
             let file_name = staged_file.split('/')[1];
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
-            tree_items += `
-                <sl-tree-item 
-                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
-                    data-entry-absolute-path="${staged_file_absolute_path}" 
+            return html`
+                <sl-tree-item
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"
+                    data-entry-absolute-path="${staged_file_absolute_path}"
                     data-entry-relative-path="${staged_file}"
                     data-entry-name="${file_name}">
                     ${staged_file}
                 </sl-tree-item>`;
-        }
-
-        tree.insertAdjacentHTML("beforeend", tree_items);
+        });
     }
 
     async _updateRepositoryTreeStatus() {
