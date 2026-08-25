@@ -150,8 +150,19 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 next_button.style.display = "none";
             } else {
                 clone_button.style.display = "inline-block";
-                clone_button.disabled = true;
                 next_button.style.display = "none";
+
+                // Default to "main" if it exists, so the user doesn't have
+                // to manually pick the most common default branch name every
+                // time - they can still change the selection via the
+                // dropdown afterwards, same as before.
+                if (this.repository_branches.includes("main")) {
+                    repository_branches_select.value = "main";
+                    this._repository_to_clone.branch = "main";
+                    clone_button.disabled = false;
+                } else {
+                    clone_button.disabled = true;
+                }
             }
         }
     }
@@ -379,6 +390,33 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
     show() {
         this.renderRoot.querySelector("sl-dialog").show();
+    }
+
+    // Called by filesystem-manager/index.js when filesystem.list_branches()
+    // fails (e.g. wrong/missing token, wrong URL) - stops the "Next" button's
+    // spinner so the dialog is usable again and shows why, instead of the
+    // button just staying stuck loading with an error only visible in the
+    // console.
+    reportBranchLoadError() {
+        let next_button = this.renderRoot.querySelector("sl-button#next-button");
+        next_button.loading = false;
+
+        // A static <sl-alert> in the template only toasts correctly once -
+        // Shoelace moves it into a shared toast stack and removes it from
+        // the DOM entirely once it hides, so a second .toast() call finds
+        // nothing there anymore. Creating a fresh element every time (same
+        // pattern already used elsewhere in filesystem-manager/index.js for
+        // error alerts) avoids that.
+        const alert = document.createElement('sl-alert');
+        alert.variant = 'danger';
+        alert.closable = true;
+        alert.duration = 8000;
+        alert.innerHTML = `
+            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+            Failed to load branches. Please check the repository URL, username and personal access token, then press "Next" again.
+        `;
+        document.body.append(alert);
+        alert.toast();
     }
 
     hide() {
