@@ -4,13 +4,14 @@ import http from "#isomorphic-git-http";
 import init_oxigraph, * as oxigraph from "#oxigraph";
 import { createProvider, ensureDir, pushViaApi } from "../api-provider.js";
 import FSADirectoryFilesystem from "./fsa-directory-filesystem.js";
+import OPFSDirectoryFilesystem from "./opfs-directory-filesystem.js";
 import LocalRepositoryStore from "./local-repository-store.js";
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
     constructor(fs = null, { httpPlugin = null, corsProxy = FILESYSTEM_MANAGER_CONSTANTS.CORS_PROXY } = {}) {
         this._filesystem_name = "mermeid";
-        this.fs = fs ?? new LightningFS(this._filesystem_name);
+        this.fs = fs ?? new OPFSDirectoryFilesystem();
         this.pfs = this.fs.promises;
         this._http = httpPlugin ?? http;
         this._corsProxy = corsProxy;
@@ -444,7 +445,11 @@ export default class ADWLMVirtualFilesystem {
         let gitRepos = await this.pfs.readdir("/");
         let localRepos = Array.from(this._localRepositoryHandles.keys());
 
-        let allRepos = [...gitRepos, ...localRepos];
+        // Local repos also get a metadata-only directory on the shared fs
+        // (see _ensure_repository_metadata_dir()), so their name would
+        // otherwise show up in both gitRepos and localRepos.
+        let localRepoNames = new Set(localRepos);
+        let allRepos = [...gitRepos.filter(name => !localRepoNames.has(name)), ...localRepos];
         allRepos.sort();
 
         return allRepos;
