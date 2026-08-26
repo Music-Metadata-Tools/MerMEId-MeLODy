@@ -104,7 +104,7 @@ export default class ADWLMVirtualFilesystem {
         if (permission !== "granted") {
             throw new Error(`Read/write permission for the folder '${name}' was not granted.`);
         }
-
+        
         const fs = new FSADirectoryFilesystem(dirHandle);
 
         let hasGit = true;
@@ -118,7 +118,7 @@ export default class ADWLMVirtualFilesystem {
             // Write a real, git-CLI-compatible .git directly into the picked folder.
             await git.init({ fs, dir: "/" });
         }
-
+        
         // Store credentials the same way add_repository() does for cloned
         // repos, so commit_and_push_file/pull/canPullSafely can authenticate
         // pushes/pulls for locally-loaded repos too (e.g. cloned via SSH,
@@ -129,6 +129,34 @@ export default class ADWLMVirtualFilesystem {
         if (username || token) {
             await git.setConfig({ fs, dir: "/", path: "user.pat", value: token });
             await git.setConfig({ fs, dir: "/", path: "user.name", value: username });
+        }
+
+        let branch_name = await git.getConfig({
+                fs,
+                dir: "/",
+                path: "branch.name"
+            });
+
+        await git.setConfig({
+            fs,
+            dir: "/",
+            path: "branch.name",
+            value: branch_name
+        });
+
+        try {
+
+            let remote_origin_url = await git.getConfig({
+                fs,
+                dir: "/",
+                path: "remote.origin.url"
+            });
+            const provider = createProvider(remote_origin_url, token, {
+                onLog: (message) => console.log(message),
+                onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
+            });
+        } catch (error) {
+            console.error(error);
         }
 
         await this._ensure_repository_metadata_dir(name);
