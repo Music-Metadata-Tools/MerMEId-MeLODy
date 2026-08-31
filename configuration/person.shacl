@@ -12,50 +12,50 @@
 melod:Person
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:datatype     xsd:string ;
-                  sh:description "Surname of the person" ;
-                  sh:name "Surname" ;
+                  sh:description "Surname of the person"@en, "Nachname der Person"@de ;
+                  sh:name "Surname"@en, "Nachname"@de ;
                   sh:maxCount 1;
                   sh:minCount 1 ;
                   sh:group melod:General ;
                   sh:path schema:familyName
                 ] ;
-  sh:property   [ sh:description "First name of the person" ;
-                  sh:name "First name" ;
+  sh:property   [ sh:description "First name of the person"@en, "Vorname der Person"@de ;
+                  sh:name "First name"@en, "Vorname"@de ;
                   sh:maxCount 1;
                   sh:group melod:General ;
                   sh:path schema:givenName
                 ] ;
-  sh:property   [ sh:description "Alternate name of a person" ;
-                  sh:name "Alternate name" ;
+  sh:property   [ sh:description "Alternate name of a person"@en, "Alternativer Name der Person"@de ;
+                  sh:name "Alternate name"@en, "Alternativer Name"@de ;
                   sh:group melod:General ;
                   sh:path schema:alternateName
                 ] ;
-  sh:property   [ sh:description "Identifier e.g. GND, VIAF" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "Identifier e.g. GND, VIAF"@en, "Identifier z.B. GND, VIAF"@de ;
+                  sh:name "Link"@en, "Link"@de ;
                   sh:nodeKind sh:IRI ;
                   sh:group melod:General ;
                   sh:path owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
-  sh:property   [ sh:description "Gender of the person" ;
-                  sh:name "Gender" ;
+  sh:property   [ sh:description "Gender of the person"@en, "Geschlecht der Person"@de ;
+                  sh:name "Gender"@en, "Geschlecht"@de ;
                   sh:maxCount 1 ;
                   sh:path schema:gender ;
                   sh:group melod:General ;
                   sh:in ( "female" "male" "diverse")
                 ] ;
-  sh:property   [ sh:description "Birth date of the person" ;
-                  sh:name "Date" ;
+  sh:property   [ sh:description "Birth date of the person"@en, "Geburtsdatum der Person"@de ;
+                  sh:name "Date"@en, "Datum"@de ;
                   sh:maxCount 1 ;
                   sh:group melod:Birth ;
                   sh:path schema:birthDate ;
                   sh:or (
-                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
-                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date"@en, "Exaktes Datum"@de ]
+                    [ sh:node melod:Date ; rdfs:label "Date span"@en, "Datumsspanne"@de ]
                   )
                 ] ;
-  sh:property   [ sh:description "Insert ID of birth place" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Choose birth place..."@en, "Wähle Geburtsort..."@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:group melod:Birth ;
                   sh:class melod:PlaceEntity ;
@@ -63,18 +63,18 @@ melod:Person
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:birthPlace
                 ] ;
-  sh:property   [ sh:description "Death date of the person" ;
-                  sh:name "Date" ;
+  sh:property   [ sh:description "Choose death date..."@en, "Wähle Sterbedatum..."@de ;
+                  sh:name "Date"@en, "Datum"@de ;
                   sh:maxCount 1 ;
                   sh:group melod:Death ;
                   sh:path schema:deathDate ;
                   sh:or (
-                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
-                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date"@en, "Exaktes Datum"@de ]
+                    [ sh:node melod:Date ; rdfs:label "Date span"@en, "Datumsspanne"@de ]
                   )
                 ] ;
-  sh:property   [ sh:description "Insert ID of death place" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Choose death place..."@en, "Wähle Sterbeort..."@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:group melod:Death ;
                   sh:class melod:PlaceEntity ;
@@ -82,13 +82,13 @@ melod:Person
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:deathPlace
                 ] ;
-  sh:property   [ sh:description "Occupation" ;
-                  sh:name "Occupation" ;
+  sh:property   [ sh:description "Occupation"@en, "Beruf"@de ;
+                  sh:name "Occupation"@en, "Beruf"@de ;
                   sh:group melod:Biography ;
                   sh:path schema:hasOccupation
                 ] ;
-  sh:property   [ sh:description "Biographical description" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Biographical description"@en, "Biografische Beschreibung"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:group melod:Biography ;
                   sh:path schema:description ;
                   dash:singleLine false ;
@@ -97,47 +97,47 @@ melod:Person
 
 melod:Date
   a               sh:NodeShape ;
-  rdfs:label      "Date span" ;
+  rdfs:label      "Date span"@en, "Datumsspanne"@de ;
   owl:imports     terms:melod-terms.ttl ;
   sh:xone (
 		[
 			sh:property [
-        sh:name      "Start date" ;
+        sh:name      "Start date"@en, "Startdatum"@de ;
 				sh:path schema:startDate ;
-        rdfs:label "Start date" ;
+        rdfs:label "Start date"@en, "Startdatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			] ;
       sh:property [
-        sh:name      "End date" ;
+        sh:name      "End date"@en, "Enddatum"@de ;
 				sh:path schema:endDate ;
-        rdfs:label "End date" ;
+        rdfs:label "End date"@en, "Enddatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			];
 		]
 	  [
 			sh:property [
-        sh:name      "Not Before" ;
+        sh:name      "Not Before"@en, "Nicht vor"@de ;
 				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
+        rdfs:label "Not Before"@en, "Nicht vor"@de ;
 				sh:maxCount  1 ;
 			];
 			sh:property [
-        sh:name      "Not After" ;
+        sh:name      "Not After"@en, "Nicht nach"@de ;
 				sh:path melod:notAfter ;
-        rdfs:label "Not After" ;
+        rdfs:label "Not After"@en, "Nicht nach"@de ;
 				sh:maxCount  1 ;
 			];
 		]
 	) ;
-  sh:property   [ sh:description "e.g. 1800-1850" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1800-1850"@en, "z.B. 1800-1850"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -146,20 +146,20 @@ melod:Date
 
   melod:ExactDate
   a               sh:NodeShape ;
-  rdfs:label      "Single date" ;
+  rdfs:label      "Single date"@en, "Exaktes Datum"@de ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:name      "Date" ;
+  sh:property   [ sh:name      "Date"@en, "Datum"@de ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
                 ] ;
-  sh:property   [ sh:name      "Description" ;
-                  sh:description "e.g. 22. Januar 1880" ;
+  sh:property   [ sh:name      "Description"@en, "Beschreibung"@de ;
+                  sh:description "e.g. 22 January 1880"@en, "z.B. 22. Januar 1880"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -168,16 +168,16 @@ melod:Date
 
 melod:General
 a               sh:PropertyGroup ;
-rdfs:label      "General Information" .
+rdfs:label      "General Information"@en, "Allgemeine Informationen"@de .
 
 melod:Birth
 a               sh:PropertyGroup ;
-rdfs:label      "Birth" .
+rdfs:label      "Birth"@en, "Geburt"@de .
 
 melod:Death
 a               sh:PropertyGroup ;
-rdfs:label      "Death" .
+rdfs:label      "Death"@en, "Tod"@de .
 
 melod:Biography
 a               sh:PropertyGroup ;
-rdfs:label      "Biographical Information" .
+rdfs:label      "Biographical Information"@en, "Biografische Informationen"@de .

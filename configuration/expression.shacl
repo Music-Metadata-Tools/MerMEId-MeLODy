@@ -317,7 +317,7 @@ melod:Identifier
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "The expressions's number or signature in the list identifying it."@en, "Die Nummer oder Signatur der Expression in der Liste, in der sie identifiziert wird."@de ;
+  sh:property   [ sh:description "The expressions' number or signature in the list identifying it."@en, "Die Nummer oder Signatur der Expression in der Liste, in der sie identifiziert wird."@de ;
                   sh:name      "Number"@en, "Nummer"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
@@ -408,8 +408,8 @@ melod:Date
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
-                  sh:name      "Description"@en, "Beschreibung"@de ;
+  sh:property   [ sh:description "e.g. 1 January 1800"@en,"z.B. 01. Januar 1800"@de ;
+                  sh:name      "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;

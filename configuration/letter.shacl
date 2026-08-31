@@ -12,30 +12,30 @@
 
 melod:Letter
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Title of the letter" ;
-                  sh:name "Title" ;
+  sh:property   [ sh:description "Title of the letter"@en, "Titel des Briefes"@de ;
+                  sh:name "Title"@en, "Titel"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property  [  sh:name "Sent" ;
-                  sh:description "Corresp Action Sent" ;
+  sh:property  [  sh:name "Sent"@en, "Gesendet"@de ;
+                  sh:description "Corresp Action Sent"@en, "Korrespondenzaktion Gesendet"@de ;
                   sh:path cs:hasCorrespAction ;
                   sh:qualifiedValueShape cs:Sent ;
                   sh:qualifiedMinCount 0 ;
                   sh:qualifiedMaxCount 1 ;
                   sh:qualifiedValueShapesDisjoint true ;
                 ] ;
-  sh:property   [ sh:name "Received" ;
-                  sh:description "Corresp Action Received" ;
+  sh:property   [ sh:name "Received"@en, "Erhalten"@de ;
+                  sh:description "Corresp Action Received"@en, "Korrespondenzaktion Erhalten"@de ;
                   sh:path cs:hasCorrespAction ;
                   sh:qualifiedValueShape cs:Received ;
                   sh:qualifiedMinCount 0 ;
                   sh:qualifiedMaxCount 1 ;
                   sh:qualifiedValueShapesDisjoint true ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
                   dash:singleLine false ;
@@ -48,19 +48,19 @@ cs:Sent
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:class cs:Sent ;
   sh:targetClass cs:Sent ;
-  sh:property   [ sh:description "Participant" ;
-                  sh:name "Participant" ;
+  sh:property   [ sh:description "Participant"@en, "Teilnehmende"@de ;
+                  sh:name "Participant"@en, "Teilnehmende"@de ;
                   sh:path cs:hasParticipant ;
                   sh:class melod:PersonEntity ;
                 ] ;
-  sh:property   [ sh:description "Took place at" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Took place at"@en, "Fand statt in"@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:path cs:tookPlaceAt ;
                   sh:class melod:PlaceEntity ;
                 ] ;
-  sh:property   [ sh:description "Date of the sent action" ;
-                    sh:name "Date" ;
+  sh:property   [ sh:description "Date of the sent action"@en, "Datum der gesendeten Aktion"@de ;
+                    sh:name "Date"@en, "Datum"@de ;
                     sh:maxCount 1;
                     sh:path cs:hasTimespan ;
                     sh:or (
@@ -74,19 +74,19 @@ cs:Sent
   owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:targetClass cs:Received ;
   sh:class cs:Received ;
-  sh:property   [ sh:description "Participant" ;
-                  sh:name "Participant" ;
+  sh:property   [ sh:description "Participant"@en, "Teilnehmende"@de ;
+                  sh:name "Participant"@en, "Teilnehmende"@de ;
                   sh:path cs:hasParticipant ;
                   sh:class melod:PersonEntity ;
                 ] ;
-  sh:property   [ sh:description "Took place at" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Took place at"@en, "Fand statt in"@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:path cs:tookPlaceAt ;
                   sh:class melod:PlaceEntity ;
                 ] ;
-  sh:property   [ sh:description "Date of the received action" ;
-                  sh:name "Date" ;
+  sh:property   [ sh:description "Date of the received action"@en, "Datum der empfangenen Aktion"@de ;
+                  sh:name "Date"@en, "Datum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path cs:hasTimespan ;
@@ -99,46 +99,46 @@ cs:Sent
 melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Date span" ;
+  rdfs:label     "Date span"@en, "Datumsspanne"@de ;
   sh:xone (
 		[
 			sh:property [
-        sh:name      "Start date" ;
+        sh:name      "Start date"@en, "Startdatum"@de ;
 				sh:path schema:startDate ;
-        rdfs:label "Start date" ;
+        rdfs:label "Start date"@en, "Startdatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			] ;
       sh:property [
-        sh:name      "End date" ;
+        sh:name      "End date"@en, "Enddatum"@de ;
 				sh:path schema:endDate ;
-        rdfs:label "End date" ;
+        rdfs:label "End date"@en, "Enddatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			];
 		]
 	  [
 			sh:property [
-        sh:name      "Not Before" ;
+        sh:name      "Not Before"@en, "Nicht vor"@de ;
 				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
+        rdfs:label "Not Before"@en, "Nicht vor"@de ;
 				sh:maxCount  1 ;
 			];
 			sh:property [
-        sh:name      "Not After" ;
+        sh:name      "Not After"@en, "Nicht nach"@de ;
 				sh:path melod:notAfter ;
-        rdfs:label "Not After" ;
+        rdfs:label "Not After"@en, "Nicht nach"@de ;
 				sh:maxCount  1 ;
 			];
 		]
 	) ;
-  sh:property   [ sh:description "e.g. 1800-1850" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1800-1850"@en, "z.B. 1800-1850"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -148,20 +148,20 @@ melod:Date
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Single date" ;
-  sh:property   [ sh:name      "Date" ;
+  rdfs:label     "Single date"@en, "Exaktes Datum"@de ;
+  sh:property   [ sh:name      "Date"@en, "Datum"@de ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1 January 1800"@en,"z.B. 01. Januar 1800"@de ;
+                  sh:name      "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
