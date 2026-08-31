@@ -247,6 +247,22 @@ export default class ADWLMVirtualFilesystem {
         return { username, token };
     }
 
+    // get credentials for repository settings
+    async get_credentials(repository_path) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
+        return this._get_credentials_for_repository(fs, dir);
+    }
+
+    async update_credentials(repository_path, { username, token } = {}) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
+        await git.setConfig({ fs, dir, path: "user.pat", value: token });
+        await git.setConfig({ fs, dir, path: "user.name", value: username });
+    }
+
     async is_public_repository(repository_metadata) {
         let is_public = true;
         let repository_url = repository_metadata.url;
@@ -276,7 +292,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async add_repository(repository_metadata) {
+    async add_repository(repository_metadata, { onProgress } = {}) {
         let repository_folder_name = repository_metadata.folder;
         let personal_acces_token = repository_metadata.token;
         let username = repository_metadata.username;
@@ -320,7 +336,10 @@ export default class ADWLMVirtualFilesystem {
             // of the Git network protocol - this eliminates the CORS proxy entirely.
             const provider = createProvider(remote_origin_url, personal_acces_token, {
                 onLog: (message) => console.log(message),
-                onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
+                onProgress: (current, total, label) => {
+                    console.log(`${label}: ${current}/${total}`);
+                    onProgress?.(current, total, label);
+                },
             });
             const files = await provider.fetchAllFiles(repository_branch);
 
@@ -1336,6 +1355,18 @@ export default class ADWLMVirtualFilesystem {
         });
 
         return remotes.length > 0;
+    }
+
+    async has_token(repository_path) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        let personal_access_token = await git.getConfigAll({
+            fs,
+            dir,
+            path: "user.pat"
+        });
+
+        return personal_access_token != '' ;
     }
 
     async unstageFile(repository_path, file_relative_path) {

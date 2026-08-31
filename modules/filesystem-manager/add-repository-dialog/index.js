@@ -78,6 +78,12 @@ const styles =
     sl-input {
         padding-bottom: 0.5em;
     }
+    #clone-progress {
+        align-self: center;
+        margin-right: auto;
+        font-size: var(--sl-font-size-small);
+        color: var(--sl-color-neutral-600);
+    }
 `;
 
 export default class ADWLMAddRepositoryDialog extends LitElement {
@@ -111,6 +117,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             attribute: false,
         },
         _credentials_alert: {
+            type: Object,
+            attribute: false,
+        },
+        clone_progress: {
             type: Object,
             attribute: false,
         }
@@ -178,6 +188,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
         this._repository_url_regex = /^https?:\/\/[^\/]+\/(?:[^\/]+\/)*[^\/]+\.git$/;
         this._credentials_alert = null;
+        this.clone_progress = null;
     }
 
     render() {
@@ -204,6 +215,9 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                         <sl-select id="repository-branches" label="${this._get_repository_branches_label()}"></sl-select>
                     </sl-tab-panel>
                 </sl-tab-group>
+                ${this.clone_progress
+                    ? html`<span id="clone-progress" slot="footer">${this.clone_progress.current}/${this.clone_progress.total}</span>`
+                    : ""}
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
             </sl-dialog>
@@ -339,21 +353,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
                 let username = username_input.value;
                 let personal_access_token = personal_access_token_input.value;
-
-                if (username !== "" && personal_access_token === "") {
-                    personal_access_token_input.setCustomValidity("The personal access token is not set.");
-                    personal_access_token_input.reportValidity();
-
-                    return;
-                }
-
-                if (personal_access_token !== "" && username === "") {
-                    username_input.setCustomValidity("The username is not set.");
-                    username_input.reportValidity();
-
-                    return;
-                }
-
+                
                 // Close the dialog before opening the file picker to avoid focus conflicts
                 this.hide();
 
@@ -451,6 +451,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
     reset() {
         this._repository_to_clone = new RepositoryToClone();
+        this.clone_progress = null;
         this.renderRoot.querySelector("sl-tab-group").show(this._tab_panel_1_name);
         //this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
         //this.renderRoot.querySelector("sl-input#repository-url").value = "";
