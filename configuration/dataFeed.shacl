@@ -5,10 +5,11 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 melod:DataFeed
     a sh:NodeShape, rdfs:Class ;
-    sh:targetClass schema:DataFeed ;
+    sh:targetClass melod:DataFeed ;
     sh:property   [ sh:description "Name of the collection" ;
                   sh:name "Name" ;
                   sh:group melod:General ;
@@ -22,32 +23,92 @@ melod:DataFeed
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:includedInDataCatalog ;
-                  sh:nodeKind sh:IRI ;
-                  sh:hasValue "https://mermeid-melod.org/catalog" ;
-                ] ;
-    sh:property   [ sh:description "Elements of the collection" ;
-                  sh:name "Elements" ;
-                  sh:minCount 0 ;
-                  sh:group melod:List ;
-                  sh:node melod:Element ;
-                  sh:path schema:DataFeedElement
-                ]  .
+                  sh:class melod:DataCatalog ;
+                  ] ;
+    sh:property   [ sh:description "A statement explaining any restrictions to the use of this file, e.g. a copyright notice or a license statement." ;
+                  sh:name "Restrictions of use" ;
+                  sh:group melod:General ;
+                  sh:maxCount 1;
+                  sh:path melod:useRestrict ;
+                  dash:singleLine false ;
+                  ] ;
+    sh:property   [ sh:description "RevsionDesc" ;
+                  sh:name "Change history" ;
+                  sh:group melod:Revision ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path melod:hasRevisionDesc ;
+                  sh:node melod:RevisionDesc ;
+                  ] .
+    # sh:property   [ sh:description "Elements of the collection" ;
+    #               sh:name "Elements" ;
+    #               sh:minCount 0 ;
+    #               sh:group melod:List ;
+    #               sh:node melod:Element ;
+    #               sh:path schema:dataFeedElement
+    #             ]  .
 
-melod:Element
-  a               sh:NodeShape ;
-  sh:property   [ sh:description  "Expression as part of the DataFeed" ;
-                  sh:name         "Expression" ;
+# melod:Element
+#   a               sh:NodeShape ;
+#   sh:property   [ sh:description  "Work as part of the DataFeed" ;
+#                   sh:name         "Work" ;
+#                   sh:maxCount  1 ;
+#                   sh:minCount  1 ;
+#                   sh:path         schema:item ;
+#                   sh:class melod:WorkEntity ;
+#                 ] ;
+#   sh:targetClass  schema:DataFeedItem .
+
+melod:RevisionDesc
+    a sh:NodeShape, rdfs:Class ;
+    sh:targetClass melod:RevisionDesc ;
+    sh:property   [ sh:description "Status of the data feed" ;
+                  sh:name "Status" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path melod:hasStatus ;
+                  sh:defaultValue "draft" ;
+                  sh:in ( "draft" "candidate" "approved" "published" )
+                ] ;
+    sh:property   [ sh:description "Change" ;
+                  sh:name "Change" ;
+                  sh:path melod:hasChange ;
+                  sh:node melod:Change ;
+                  ] .
+
+melod:Change
+    a sh:NodeShape, rdfs:Class ;
+    sh:targetClass melod:Change ;
+    # sh:property [ sh:datatype     xsd:dateTime ;
+    #               sh:maxCount     1 ;
+    #               sh:name         "Date and time" ;
+    #               sh:path         melod:isodate ;
+    #             ] ;
+    sh:property   [ sh:description "Status of the file change" ;
+                  sh:name "Status" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path melod:hasStatus ;
+                  sh:in ( "draft" "candidate" "approved" "published" )
+                ] ;
+    sh:property   [ sh:description "Change Description" ;
+                  sh:name "Description" ;
+                  sh:maxCount  1 ;
+                  sh:path schema:description ;
+                  ] ;
+    sh:property   [ sh:description  "Insert ID of the Person" ;
+                  sh:name         "Person" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
-                  sh:path         schema:item ;
+                  sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
-                ] ;
-  sh:targetClass  schema:DataFeedItem .
+                  sh:class melod:PersonEntity ;
+                ] .
 
 melod:General
 a               sh:PropertyGroup ;
 rdfs:label      "General Information" .
 
-melod:List
+melod:Revision
 a               sh:PropertyGroup ;
-rdfs:label      "Collection Elements" .
+rdfs:label      "Revision" .

@@ -16,6 +16,7 @@ const TYPE_COLORS = {
   Item: "#FFC107",
   PerformanceEvent: "#F44336",
   Bibliography: "#3F51B5",
+  DataFeed: "#2dc7d8",
 };
 
 // Edge colour by relation direction

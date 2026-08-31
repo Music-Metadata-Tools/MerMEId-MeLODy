@@ -100,6 +100,15 @@ melod:Work
                   sh:class melod:WorkEntity ;
                   sh:path melod:hasWorkPart
                 ] ;
+
+  sh:property   [ sh:description "DataFeeds" ;
+                  sh:name "Data Feeds" ;
+                  sh:minCount 1 ;
+                  sh:group melod:Relation ;
+                  sh:class melod:DataFeedEntity ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:memberOfDataFeed
+                ] ;
 #  sh:property   [ sh:name "Other Relation" ;
  #                 sh:group melod:Relation ;
  #                 sh:minCount 0 ;

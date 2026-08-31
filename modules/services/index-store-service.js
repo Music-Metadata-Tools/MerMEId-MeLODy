@@ -18,6 +18,7 @@ export const INDEXES = [
   { name: "Manifestation", url: "manifestations.ttl" },
   { name: "PerformanceEvent", url: "performanceEvents.ttl" },
   { name: "Bibliography", url: "bibliography.ttl" },
+  { name: "DataFeed", url: "dataFeeds.ttl" },
 ];
 
 class IndexStoreService {
@@ -43,21 +44,21 @@ class IndexStoreService {
           );
           let ttlText = localIndex;
         // Merge local index – missing file is not an error
-        try {
-          if (!localIndex || localIndex.trim() === '') {
-            continue;
-          }
-          const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) {
-            continue;
-          }
-          let remote = await res.text();
-          let ttlText = remote + "\n" + localIndex;
-        } catch (_localErr) {
-          // no local index found, ignore
+        // try {
+        //   if (!localIndex || localIndex.trim() === '') {
+        //     continue;
+        //   }
+        //   const url = `${dataset_url}/${index.url}?t=${Date.now()}`;
+        //   const res = await fetch(url, { cache: "no-store" });
+        //   if (!res.ok) {
+        //     continue;
+        //   }
+        //   let remote = await res.text();
+        //   let ttlText = remote + "\n" + localIndex;
+        // } catch (_localErr) {
+        //   // no local index found, ignore
           
-        }
+        // }
         this.store.load(ttlText, { format: "text/turtle" });
       } catch (err) {
         console.error(`Error loading ${index.url}. Please reload.`, err);

@@ -119,6 +119,14 @@ melod:Manifestation
                   sh:class melod:ManifestationEntity ;
                   sh:path melod:isManifestationPartOf
                 ] ;
+  sh:property   [ sh:description "DataFeeds" ;
+                  sh:name "Data Feeds" ;
+                  sh:minCount 1 ;
+                  sh:group melod:Relation ;
+                  sh:class melod:DataFeedEntity ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:memberOfDataFeed
+                ] ;
   #sh:property   [ sh:name "Relation" ;
   #                sh:group melod:Relation ;
   #                sh:minCount 0 ;
