@@ -2,6 +2,8 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
+import "./repository-settings-dialog/index.js";
+import "./catalog-settings-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
 
@@ -237,12 +239,18 @@ export default class ADWLMFilesystemManager extends LitElement {
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
                             <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled || !this._hasRemote}">
-                                <sl-icon name="arrow-clockwise"></sl-icon>
+                                <sl-icon name="cloud-download"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
                             <sl-button id="remove-entity" size="small" title="Remove entity" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
+                            </sl-button>
+                            <sl-button id="repository-settings" size="small" title="Repository settings" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="gear"></sl-icon>
+                            </sl-button>
+                            <sl-button id="catalog-settings" size="small" title="Catalog settings" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="journal-bookmark"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                     </div>
@@ -293,6 +301,8 @@ export default class ADWLMFilesystemManager extends LitElement {
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
+            <adwlm-repository-settings-dialog></adwlm-repository-settings-dialog>
+            <adwlm-catalog-settings-dialog></adwlm-catalog-settings-dialog>
             <sl-alert id="commit-and-push-done" variant="primary" duration="6000" closable>
                 <sl-icon slot="icon" name="info-circle"></sl-icon>
                 The files were shared with the remote repository.
@@ -320,6 +330,8 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
+        let repository_settings_dialog = render_root.querySelector("adwlm-repository-settings-dialog");
+        let catalog_settings_dialog = render_root.querySelector("adwlm-catalog-settings-dialog");
         let container = render_root.querySelector("div#container");
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
@@ -342,6 +354,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
                     await this._updateHasRemote();
+                    await this._ensureCatalogAndMainFeed(entry_absolute_path);
 
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:item-selected', {
@@ -389,6 +402,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
                     await this._updateHasRemote();
+                    await this._ensureCatalogAndMainFeed(entry_absolute_path);
 
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
@@ -466,9 +480,37 @@ export default class ADWLMFilesystemManager extends LitElement {
                 rename_filesystem_entry_dialog.show();
             }
 
+            if (target.matches("sl-button#repository-settings")) {
+                await repository_settings_dialog.show(this._selected_repository_path);
+            }
+
+            if (target.matches("sl-button#catalog-settings")) {
+                await catalog_settings_dialog.show(this._selected_repository_path);
+            }
+
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
+                // Alert missing personal access token
+                const hasToken = await filesystem.has_token(this._selected_repository_path);
+                console.log(`Personal Access token`)
+                console.log(hasToken)
+                if (!hasToken) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        No personal access token. Synchronizing is not possible. 
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
                 const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                
                 if (canMerge[1] === 0) {
                         const alert = document.createElement('sl-alert');
                         alert.variant = 'success';
@@ -950,7 +992,13 @@ export default class ADWLMFilesystemManager extends LitElement {
             let repository_metadata = event.detail;
 
             // add the repository
-            await filesystem.add_repository(repository_metadata);
+            await filesystem.add_repository(repository_metadata, {
+                onProgress: (current, total) => {
+                    add_repository_dialog.clone_progress = { current, total };
+                },
+            });
+
+            await this._ensureCatalogAndMainFeed(`/${repository_metadata.folder}`);
 
             await this._list_repository_names();
 
@@ -971,6 +1019,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             const { repoName } = event.detail;
             this._selected_repository_path = `/${repoName}`;
             await this._updateHasRemote();
+            await this._ensureCatalogAndMainFeed(this._selected_repository_path);
 
             add_repository_dialog.reset();
 
@@ -1144,7 +1193,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             try {
                 const generatedIndexes = await filesystem.generate_indexes_for_all_files(
                     this._selected_repository_path,
-                    this.entity_type_definitions.map(def => def.folder_name)
+                    [...this.entity_type_definitions.map(def => def.folder_name), 'dataCatalogs']
                 );
 
                 // Log which indexes were generated
@@ -1236,6 +1285,55 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._hasRemote = this._selected_repository_path
             ? await filesystem.has_remote(this._selected_repository_path)
             : false;
+    }
+
+    async _ensureCatalogAndMainFeed(repository_path) {
+        const CATALOG_PATH = "dataCatalogs/catalog.ttl";
+        const FEED_PATH = "dataFeeds/main.ttl";
+
+        let domain = "urn:uuid:";
+        try {
+            const configContent = await filesystem.read_file(repository_path, "configuration/config.json");
+            if (configContent && configContent.trim() !== "") {
+                const config = JSON.parse(configContent);
+                domain = config?.projectDomain ?? domain;
+            }
+        } catch (error) {
+            // No/invalid config.json: fall back to the default domain, matching
+            // the entity editor's own fallback behaviour.
+        }
+
+        const catalogIri = `${domain}dataCatalogs/catalog`;
+        const feedIri = `${domain}dataFeeds/main`;
+
+        const existingCatalog = await filesystem.read_file(repository_path, CATALOG_PATH).catch(() => "");
+        if (!existingCatalog || existingCatalog.trim() === "") {
+            const repoName = repository_path.split("/").pop();
+            const catalogTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${catalogIri}> a schema:DataCatalog, melod:DataCatalog ;
+    rdfs:label "${repoName}" ;
+    melod:usesApplication "MerMEId MeLODy" .
+`;
+            await filesystem.save_and_stage_file(repository_path, catalogTtl, CATALOG_PATH);
+            await filesystem.generate_indexes_for_saved_file(repository_path, CATALOG_PATH, false).catch(() => {});
+        }
+
+        const existingFeed = await filesystem.read_file(repository_path, FEED_PATH).catch(() => "");
+        if (!existingFeed || existingFeed.trim() === "") {
+            const feedTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${feedIri}> a schema:DataFeed, melod:DataFeed ;
+    rdfs:label "All works" ;
+    schema:includedInDataCatalog <${catalogIri}> .
+`;
+            await filesystem.save_and_stage_file(repository_path, feedTtl, FEED_PATH);
+            await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH, false).catch(() => {});
+        }
     }
 
     // initialize the filesystem
