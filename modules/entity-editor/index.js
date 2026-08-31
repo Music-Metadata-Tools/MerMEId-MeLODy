@@ -485,10 +485,16 @@ export default class ADWLMEntityEditor extends LitElement {
         let editor = this.renderRoot.querySelector("shacl-form");
         let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
+        // Reset unsaved changes state when loading new file
+        this._hasUnsavedChanges = false;
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        
+        const mainFeedIri = this._getMainDataFeedIri(config);
+        const manifestationFeedIri = this._getManifestationDataFeedIri(config);
+        this._ensureMainDataFeedMembership(entity_to_edit, mainFeedIri);
+        this._ensureManifestationDataFeedMembership(entity_to_edit, manifestationFeedIri);
+
         if (config && config.datasetBaseUrl) {
             try {
 
@@ -544,9 +550,6 @@ export default class ADWLMEntityEditor extends LitElement {
         this.entity_to_edit.shapesUrl = editor.dataset.shapesUrl;
         
         this._entity_path = entity_to_edit.path;
-        
-        // Reset unsaved changes state when loading new file
-        this._hasUnsavedChanges = false;
     }
 
     static styles = styles;
@@ -1072,6 +1075,58 @@ export default class ADWLMEntityEditor extends LitElement {
         return array[0];
     }
 
+    _getMainDataFeedIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataFeeds/main`;
+    }
+
+    _getManifestationDataFeedIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataFeeds/manifestations`;
+    }
+
+    _isWorkEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'works';
+    }
+
+    _isManifestationEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'manifestations';
+    }
+
+    // Guarantees every Work references the repository's singleton "main" DataFeed
+    // via melod:memberOfDataFeed, without requiring the user to assign it manually.
+    _ensureMainDataFeedMembership(entity_to_edit, mainFeedIri) {
+        if (!this._isWorkEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(mainFeedIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataFeed> <${mainFeedIri}> .\n`;
+        entity_to_edit._hasUnsavedChanges = true;
+    }
+
+    _ensureManifestationDataFeedMembership(entity_to_edit, manifestationFeedIri) {
+        if (!this._isManifestationEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(manifestationFeedIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataFeed> <${manifestationFeedIri}> .\n`;
+        this._hasUnsavedChanges = true;
+    }
+
     _get_shacl_file_location() {
         let entity_type = this.entity_to_edit.entity_type;
         let shacl_file_location = this.entity_type_definitions
@@ -1082,7 +1137,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
     async _getRepoConfig() {
         // Return cached config if available
-        if (this._cachedConfig & this._cachedConfig != null) {
+        if (this._cachedConfig && this._cachedConfig != null) {
             return this._cachedConfig;
         }
 

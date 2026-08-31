@@ -8,22 +8,22 @@
 
 melod:DataCatalog
     a sh:NodeShape, rdfs:Class ;
-    sh:targetClass schema:DataCatalog ;
+    sh:targetClass melod:DataCatalog ;
     sh:property   [ sh:description "Name of the catalog" ;
                   sh:name "Name" ;
                   sh:group melod:General ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
-                ] ;
-    sh:property   [ sh:description "Domain of the project, which will be used for the entity IRIs" ;
-                  sh:name "Domain" ;
-                  sh:group melod:General ;
-                  sh:minCount 1 ;
-                  sh:maxCount 1;
-                  sh:hasValue "https://mermeid-melod.org/catalog/" ;
-                  sh:path melod:hasDomain ;
-                ] ;
+                 ] ;
+    # sh:property   [ sh:description "Domain of the project, which will be used for the entity IRIs" ;
+    #               sh:name "Domain" ;
+    #               sh:group melod:General ;
+    #               sh:minCount 1 ;
+    #               sh:maxCount 1;
+    #               sh:hasValue "urn:uuid:" ;
+    #               sh:path melod:hasDomain ;
+    #             ] ;
     sh:property   [ sh:description "Contributors of the Data Catalog" ;
                   sh:name "Person or Institution" ;
                   sh:minCount 0 ;
@@ -36,7 +36,7 @@ melod:DataCatalog
                 sh:group melod:General ;
                 sh:minCount 1 ;
                 sh:maxCount 1;
-                sh:hasValue "MerMEId MeLOD" ;
+                sh:hasValue "MerMEId MeLODy" ;
                 sh:path melod:usesApplication ;
             ] ;
     sh:property   [ sh:description "Description, annotations or further information" ;
@@ -56,16 +56,17 @@ melod:Contribution
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:Person ; rdfs:label "Person" ]
-                    [ sh:class melod:Institution; rdfs:label "Institution" ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution" ;
                   sh:name         "Role" ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasRole ;
-                  sh:in  ( "data manager" "data contributor" "editor" "contributor") ;
+                  sh:in  ( "data manager" "data contributor" "editor" "contributor" "publisher") ;
                 ] ;
   sh:targetClass  melod:Contribution .
 
