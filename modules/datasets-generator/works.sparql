@@ -1,0 +1,67 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/>
+prefix terms: <https://lod.academy/melod/vocab/terms#>
+
+construct {
+  ?work_iri a melod:WorkEntity ;
+  	skos:prefLabel ?label ;
+    skos:altLabel ?uniform_label ;
+    skos:altLabel ?alternative_label ;
+    skos:altLabel ?other_label ;
+    skos:broader ?classification ;
+    skos:related ?expression_iri ;
+    skos:related ?contributor_iri ;
+    skos:related ?work_part_iri ;
+    skos:related ?bibliography_iri ;
+    skos:related ?collection_iri .
+} where {
+  select ?work_iri ?label ?classification ?uniform_label ?alternative_label ?other_label ?expression_iri ?contributor_iri ?work_part_iri ?bibliography_iri ?collection_iri where {
+    ?work_iri a melod:Work .
+    ?work_iri melod:hasTitle ?title_subj .
+    ?title_subj melod:hasTitleType terms:MainTitle .
+    ?title_subj rdfs:label ?work_title .
+    bind(STR(?work_title) AS ?label).
+    OPTIONAL {
+      ?work_iri melod:hasTitle ?title_uniform .
+      ?title_uniform melod:hasTitleType terms:UniformTitle .
+      ?title_uniform rdfs:label ?title_uniform_label .
+      bind(STR(?title_uniform_label) AS ?uniform_label) .
+    }
+    OPTIONAL {
+      ?work_iri melod:hasTitle ?title_alternative .
+      ?title_alternative melod:hasTitleType terms:AlternativeTitle .
+      ?title_alternative rdfs:label ?title_alternative_label .
+      bind(STR(?title_alternative_label) AS ?alternative_label) .
+    }
+    OPTIONAL {
+      ?work_iri melod:hasTitle ?title_other .
+      ?title_other melod:hasTitleType terms:OtherTitle .
+      ?title_other rdfs:label ?title_other_label .
+      bind(STR(?title_other_label) AS ?other_label) .
+    }
+    OPTIONAL {
+      ?work_iri melod:hasClassification ?classification .
+    }
+    OPTIONAL {
+      ?work_iri lrmoo:R3_is_realised_in ?expression_iri .
+    }
+    OPTIONAL {
+      ?work_iri melod:hasContribution ?contributor_node .
+      ?contributor_node melod:hasAgent ?contributor_iri .
+    }
+    OPTIONAL {
+      ?work_iri melod:hasWorkPart ?work_part_iri .
+    }
+    OPTIONAL {
+      ?work_iri schema:citation ?bibliography_iri .
+    }
+    OPTIONAL {
+      ?work_iri melod:memberOfDataCollection ?collection_iri .
+    }
+  }
+  order by ?label
+}

@@ -1,0 +1,20 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?person_iri a melod:PersonEntity ;
+  	skos:prefLabel ?full_name .
+} where {
+  select ?person_iri ?full_name where {
+    ?person_iri a melod:Person .
+    ?person_iri schema:familyName ?family_name .
+    OPTIONAL {
+      ?person_iri schema:givenName ?given_name .
+    }
+    bind(coalesce(concat(?family_name, ", ", ?given_name), ?family_name) AS ?full_name)
+  }
+  order by ?full_name
+}

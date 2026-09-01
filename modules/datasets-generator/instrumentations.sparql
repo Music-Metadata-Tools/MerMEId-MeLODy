@@ -1,0 +1,21 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?instrumentation_iri a melod:InstrumentationEntity ;
+  	skos:prefLabel ?label ;
+    skos:related ?instrumentation_group_iri .
+} where {
+  select ?instrumentation_iri ?label ?instrumentation_group_iri where {
+    ?instrumentation_iri a melod:Instrumentation .
+    ?instrumentation_iri rdfs:label ?instrumentation_name .
+    OPTIONAL {
+      ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
+    }
+    bind(?instrumentation_name AS ?label)
+  }
+  order by ?label
+}

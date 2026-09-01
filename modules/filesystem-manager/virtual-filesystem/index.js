@@ -1529,7 +1529,7 @@ export default class ADWLMVirtualFilesystem {
                     }
 
                     // Load the SPARQL query
-                    const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                    const sparqlQuery = await this._loadSparqlQuery(`modules/datasets-generator/${folderName}`);
                     
                     if (!sparqlQuery) {
                         //console.warn(`No SPARQL query found for folder: ${folderName}`);
@@ -1598,7 +1598,7 @@ export default class ADWLMVirtualFilesystem {
                 }
 
                 // Load the SPARQL query
-                const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                const sparqlQuery = await this._loadSparqlQuery(`modules/datasets-generator/${folderName}`);
                 
                 if (!sparqlQuery) {
                     //console.warn(`No SPARQL query found for folder: ${folderName}`);
@@ -1654,13 +1654,16 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async _loadSparqlQuery(repository_path, folderName) {
+    async _loadSparqlQuery(folderName) {
         try {
-            // Load SPARQL query from the virtual filesystem
+            // Load SPARQL query
             // Path: {folderName}.sparql
             const sparqlQueryPath = `${folderName}.sparql`;
             
-            const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
+            // Load sparql query content directly from the editors repo instead of the loaded data repo (for maintainability purposes).
+            // Maybe add a check for project specific sparql queries from the data repo in the future.
+            const sparqlContent = await fetch(sparqlQueryPath).then(response => response.text());
+            //const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
             
             if (!sparqlContent || sparqlContent.trim() === '') {
                 //console.warn(`SPARQL query file is empty for folder: ${folderName}`);

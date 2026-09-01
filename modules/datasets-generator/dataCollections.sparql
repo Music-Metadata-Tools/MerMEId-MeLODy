@@ -1,0 +1,20 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?collection_iri a melod:DataCollection ;
+    skos:prefLabel ?label ;
+    skos:related ?catalog_iri .
+} where {
+  select ?collection_iri ?label where {
+    ?collection_iri a melod:DataCollection .
+    ?collection_iri rdfs:label ?label .
+    OPTIONAL {
+      ?collection_iri schema:includedInDataCatalog ?catalog_iri .
+    }
+  }
+  order by ?label
+}

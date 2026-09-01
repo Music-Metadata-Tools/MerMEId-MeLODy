@@ -1,0 +1,47 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+prefix terms: <https://lod.academy/melod/vocab/terms#>
+prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/>
+prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>
+
+construct {
+  ?item_iri a melod:ItemEntity ;
+  	skos:prefLabel ?label ;
+    skos:broader ?classification ;
+    skos:related ?manifestation_iri ;
+    skos:related ?institution_iri ;
+    skos:related ?item_part_iri ;
+    skos:related ?hand_iri ;
+    skos:related ?provenance_iri .
+} where {
+  select ?item_iri ?label ?classification ?manifestation_iri ?institution_iri ?item_part_iri ?hand_iri ?provenance_iri where {
+    ?item_iri a melod:Item .
+    ?item_iri rdfs:label ?item_name .
+    bind(?item_name AS ?label) .
+    OPTIONAL {
+      ?item_iri melod:hasClassification ?classification .
+    }
+    OPTIONAL {
+      ?item_iri lrmoo:R7_exemplifies ?manifestation_iri .
+    }
+    OPTIONAL {
+      ?item_iri cidoc:P50_has_current_keeper ?institution_iri .
+    }
+    OPTIONAL {
+      ?item_iri melod:hasItemPart ?item_part_iri .
+    }
+    OPTIONAL {
+      ?item_iri melod:hasHand ?hand_node .
+      ?hand_node melod:hasAgent ?hand_iri .
+    }
+    OPTIONAL {
+      ?item_iri melod:hasProvenance ?prov_node .
+      ?prov_node melod:hasContribution ?contribution_node .
+      ?contribution_node melod:hasAgent ?provenance_iri .
+    }
+  }
+  order by ?label
+}

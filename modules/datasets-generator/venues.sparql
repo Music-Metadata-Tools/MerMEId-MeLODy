@@ -1,0 +1,24 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?venue_iri a melod:VenueEntity ;
+  	skos:prefLabel ?label ;
+    skos:broader ?place ;
+    skos:related ?place_iri .
+} where {
+  select ?venue_iri ?label ?place ?place_iri where {
+    ?venue_iri a melod:Venue .
+    ?venue_iri schema:name ?label .
+    OPTIONAL {
+        ?venue_iri schema:containedInPlace ?place_iri .
+    }
+    OPTIONAL {
+        ?place_iri schema:name ?place .
+    }
+  }
+  order by ?label
+}

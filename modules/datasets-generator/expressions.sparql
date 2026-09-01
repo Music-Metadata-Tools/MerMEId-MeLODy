@@ -1,0 +1,61 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+prefix terms: <https://lod.academy/melod/vocab/terms#>
+
+construct {
+  ?expression_iri a melod:ExpressionEntity ;
+  	skos:prefLabel ?label ;
+    skos:related ?performance_iri ;
+    skos:related ?place_iri ;
+    skos:related ?contributor_iri ;
+    skos:related ?expression_part_iri ;
+    skos:related ?event_iri ;
+    skos:related ?instrumentation_iri ;
+    skos:related ?bibliography_iri ;
+    skos:broader ?classification .
+} where {
+  select ?expression_iri ?label ?performance_iri ?place_iri ?contributor_iri ?expression_part_iri ?instrumentation_iri ?bibliography_iri ?classification where {
+    ?expression_iri a melod:Expression .
+    {?expression_iri skos:prefLabel ?expression_label .}
+    UNION {
+      ?expression_iri rdfs:label ?expression_label .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasIncipit ?incipit_iri .
+      ?incipit_iri melod:hasIncipitText ?incipit_text .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasPerformance ?performance_iri .
+    }
+    OPTIONAL {
+      ?expression_iri schema:firstPerformance ?performance_iri .
+    }
+    OPTIONAL {
+      ?expression_iri schema:locationCreated ?place_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasContribution ?contributor_node .
+      ?contributor_node melod:hasAgent ?contributor_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasExpressionPart ?expression_part_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasHistoricEvent ?event_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasInstrumentation ?instrumentation_iri .
+    }
+    OPTIONAL {
+      ?expression_iri schema:citation ?bibliography_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasClassification ?classification .
+    }
+    bind(coalesce(concat(?expression_label, " ('", ?incipit_text, "')"), ?expression_label) AS ?label)
+  }
+  order by ?label
+}
