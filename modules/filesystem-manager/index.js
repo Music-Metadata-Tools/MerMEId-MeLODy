@@ -3,7 +3,7 @@ import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
 import "./repository-settings-dialog/index.js";
-import "./catalog-settings-dialog/index.js";
+import "./catalog-metadata-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
 
@@ -249,7 +249,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button id="repository-settings" size="small" title="Repository settings" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="gear"></sl-icon>
                             </sl-button>
-                            <sl-button id="catalog-settings" size="small" title="Catalog settings" ?disabled="${this._repository_buttons_disabled}">
+                            <sl-button id="catalog-metadata" size="small" title="Catalog metadata" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="journal-bookmark"></sl-icon>
                             </sl-button>
                         </sl-button-group>
@@ -302,7 +302,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
             <adwlm-repository-settings-dialog></adwlm-repository-settings-dialog>
-            <adwlm-catalog-settings-dialog></adwlm-catalog-settings-dialog>
+            <adwlm-catalog-metadata-dialog></adwlm-catalog-metadata-dialog>
             <sl-alert id="commit-and-push-done" variant="primary" duration="6000" closable>
                 <sl-icon slot="icon" name="info-circle"></sl-icon>
                 The files were shared with the remote repository.
@@ -331,7 +331,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
         let repository_settings_dialog = render_root.querySelector("adwlm-repository-settings-dialog");
-        let catalog_settings_dialog = render_root.querySelector("adwlm-catalog-settings-dialog");
+        let catalog_metadata_dialog = render_root.querySelector("adwlm-catalog-metadata-dialog");
         let container = render_root.querySelector("div#container");
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
@@ -484,8 +484,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 await repository_settings_dialog.show(this._selected_repository_path);
             }
 
-            if (target.matches("sl-button#catalog-settings")) {
-                await catalog_settings_dialog.show(this._selected_repository_path);
+            if (target.matches("sl-button#catalog-metadata")) {
+                await catalog_metadata_dialog.show(this._selected_repository_path);
             }
 
             if (target.matches("sl-button#synchronize-repository")) {
@@ -1289,7 +1289,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     async _ensureCatalogAndMainFeed(repository_path) {
         const CATALOG_PATH = "dataCatalogs/catalog.ttl";
-        const FEED_PATH = "dataFeeds/main.ttl";
+        const FEED_PATH = "dataCollections/works.ttl";
 
         let domain = "urn:uuid:";
         try {
@@ -1304,7 +1304,7 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
 
         const catalogIri = `${domain}dataCatalogs/catalog`;
-        const feedIri = `${domain}dataFeeds/main`;
+        const collectionIri = `${domain}dataCollections/works`;
 
         const existingCatalog = await filesystem.read_file(repository_path, CATALOG_PATH).catch(() => "");
         if (!existingCatalog || existingCatalog.trim() === "") {
@@ -1313,7 +1313,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 @prefix schema: <https://schema.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<${catalogIri}> a schema:DataCatalog, melod:DataCatalog ;
+<${catalogIri}> a melod:DataCatalog ;
     rdfs:label "${repoName}" ;
     melod:usesApplication "MerMEId MeLODy" .
 `;
@@ -1327,7 +1327,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 @prefix schema: <https://schema.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<${feedIri}> a schema:DataFeed, melod:DataFeed ;
+<${collectionIri}> a melod:DataCollection ;
     rdfs:label "All works" ;
     schema:includedInDataCatalog <${catalogIri}> .
 `;

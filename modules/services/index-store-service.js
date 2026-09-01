@@ -18,7 +18,7 @@ export const INDEXES = [
   { name: "Manifestation", url: "manifestations.ttl" },
   { name: "PerformanceEvent", url: "performanceEvents.ttl" },
   { name: "Bibliography", url: "bibliography.ttl" },
-  { name: "DataFeed", url: "dataFeeds.ttl" },
+  { name: "DataCollection", url: "dataCollections.ttl" },
 ];
 
 class IndexStoreService {

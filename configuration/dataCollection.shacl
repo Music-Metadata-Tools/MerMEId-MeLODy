@@ -7,9 +7,9 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-melod:DataFeed
+melod:DataCollection
     a sh:NodeShape, rdfs:Class ;
-    sh:targetClass melod:DataFeed ;
+    sh:targetClass melod:DataCollection ;
     sh:property   [ sh:description "Name of the collection" ;
                   sh:name "Name" ;
                   sh:group melod:General ;
@@ -25,7 +25,7 @@ melod:DataFeed
                   sh:path schema:includedInDataCatalog ;
                   sh:class melod:DataCatalog ;
                   ] ;
-    sh:property   [ sh:description "A statement explaining any restrictions to the use of this file, e.g. a copyright notice or a license statement." ;
+    sh:property   [ sh:description "A statement explaining any restrictions to the use of this collection, e.g. a copyright notice or a license statement." ;
                   sh:name "Restrictions of use" ;
                   sh:group melod:General ;
                   sh:maxCount 1;
@@ -62,7 +62,7 @@ melod:DataFeed
 melod:RevisionDesc
     a sh:NodeShape, rdfs:Class ;
     sh:targetClass melod:RevisionDesc ;
-    sh:property   [ sh:description "Status of the data feed" ;
+    sh:property   [ sh:description "Status of the data collection" ;
                   sh:name "Status" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
@@ -70,40 +70,34 @@ melod:RevisionDesc
                   sh:defaultValue "draft" ;
                   sh:in ( "draft" "candidate" "approved" "published" )
                 ] ;
-    sh:property   [ sh:description "Change" ;
-                  sh:name "Change" ;
-                  sh:path melod:hasChange ;
-                  sh:node melod:Change ;
-                  ] .
+    sh:property   [ sh:description "Contributors of the Data Collection" ;
+                  sh:name "Person or Institution" ;
+                  sh:minCount 0 ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution
+                ] .
 
-melod:Change
-    a sh:NodeShape, rdfs:Class ;
-    sh:targetClass melod:Change ;
-    # sh:property [ sh:datatype     xsd:dateTime ;
-    #               sh:maxCount     1 ;
-    #               sh:name         "Date and time" ;
-    #               sh:path         melod:isodate ;
-    #             ] ;
-    sh:property   [ sh:description "Status of the file change" ;
-                  sh:name "Status" ;
-                  sh:minCount 1 ;
-                  sh:maxCount 1;
-                  sh:path melod:hasStatus ;
-                  sh:in ( "draft" "candidate" "approved" "published" )
-                ] ;
-    sh:property   [ sh:description "Change Description" ;
-                  sh:name "Description" ;
-                  sh:maxCount  1 ;
-                  sh:path schema:description ;
-                  ] ;
-    sh:property   [ sh:description  "Insert ID of the Person" ;
-                  sh:name         "Person" ;
+melod:Contribution
+  a               sh:NodeShape ;
+  rdfs:label      "Contributors" ;
+  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+                  sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
-                  sh:class melod:PersonEntity ;
-                ] .
+                  sh:or (
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
+                  )
+                ] ;
+  sh:property   [ sh:description  "Role of the contribution" ;
+                  sh:name         "Role" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
+                  sh:in  ( "data manager" "data contributor" "editor" "contributor" "publisher") ;
+                ] ;
+  sh:targetClass  melod:Contribution .
 
 melod:General
 a               sh:PropertyGroup ;

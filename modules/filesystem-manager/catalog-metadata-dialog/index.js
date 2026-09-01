@@ -15,7 +15,7 @@ const styles =
     }
 `;
 
-export default class ADWLMCatalogSettingsDialog extends LitElement {
+export default class ADWLMCatalogMetadataDialog extends LitElement {
     static properties = {
         repository_path: {
             type: String,
@@ -39,9 +39,9 @@ export default class ADWLMCatalogSettingsDialog extends LitElement {
 
     render() {
         return html`
-            <sl-dialog label="Catalog settings" style="--width: 60vw">
+            <sl-dialog label="Catalog metadata" style="--width: 60vw">
                 <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject=""></shacl-form>
-                <sl-button id="save-catalog-settings" slot="footer" variant="primary" ?disabled="${this._isInvalid}">Save</sl-button>
+                <sl-button id="save-catalog-metadata" slot="footer" variant="primary" ?disabled="${this._isInvalid}">Save</sl-button>
             </sl-dialog>
         `;
     }
@@ -55,7 +55,7 @@ export default class ADWLMCatalogSettingsDialog extends LitElement {
                 target.blur();
             }
 
-            if (target.matches("sl-button#save-catalog-settings")) {
+            if (target.matches("sl-button#save-catalog-metadata")) {
                 const form = render_root.querySelector("shacl-form");
 
                 target.loading = true;
@@ -67,7 +67,7 @@ export default class ADWLMCatalogSettingsDialog extends LitElement {
 
                     this.hide();
                 } catch (error) {
-                    console.error("Failed to update catalog settings:", error);
+                    console.error("Failed to update catalog metadata:", error);
                     this._toast_error();
                 } finally {
                     target.loading = false;
@@ -106,7 +106,7 @@ export default class ADWLMCatalogSettingsDialog extends LitElement {
                 combinedIndexContent += content + "\n";
             }
         } catch (error) {
-            console.error("catalog-settings-dialog: failed to load indexes", error);
+            console.error("catalog-metadata-dialog: failed to load indexes", error);
         }
 
         const modifiedShaclContent = shaclContent + combinedIndexContent;
@@ -146,11 +146,11 @@ export default class ADWLMCatalogSettingsDialog extends LitElement {
         alert.duration = 8000;
         alert.innerHTML = `
             <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-            Failed to update the catalog settings. Please try again.
+            Failed to update the catalog metadata. Please try again.
         `;
         document.body.append(alert);
         alert.toast();
     }
 }
 
-window.customElements.define("adwlm-catalog-settings-dialog", ADWLMCatalogSettingsDialog);
+window.customElements.define("adwlm-catalog-metadata-dialog", ADWLMCatalogMetadataDialog);

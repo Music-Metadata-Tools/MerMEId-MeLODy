@@ -367,7 +367,12 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     async _getShapeForPath(path) {
-        let shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        let shacl_file_location;
+        if (path === "https://lod.academy/melod/vocab/ontology#DataCatalog") {
+            shacl_file_location = "configuration/dataCatalog.shacl";
+        } else {
+            shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        }
         if (shacl_file_location) {
             const config = this._cachedConfig || { datasetBaseUrl: null };
             console.log("Config in _getShapeForPath:", config);
@@ -446,6 +451,9 @@ export default class ADWLMEntityEditor extends LitElement {
                 return def.type;
             }
         }
+        if (path.startsWith("dataCatalogs/")) {
+            return "https://lod.academy/melod/vocab/ontology#DataCatalog";
+        }
         return null;
     }
 
@@ -490,10 +498,10 @@ export default class ADWLMEntityEditor extends LitElement {
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        const mainFeedIri = this._getMainDataFeedIri(config);
-        const manifestationFeedIri = this._getManifestationDataFeedIri(config);
-        this._ensureMainDataFeedMembership(entity_to_edit, mainFeedIri);
-        this._ensureManifestationDataFeedMembership(entity_to_edit, manifestationFeedIri);
+        const workCollectionIri = this._getWorkDataCollectionIri(config);
+        const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
+        this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
+        this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
 
         if (config && config.datasetBaseUrl) {
             try {
@@ -1075,14 +1083,14 @@ export default class ADWLMEntityEditor extends LitElement {
         return array[0];
     }
 
-    _getMainDataFeedIri(config) {
+    _getWorkDataCollectionIri(config) {
         const domain = config?.projectDomain ?? 'urn:uuid:';
-        return `${domain}dataFeeds/main`;
+        return `${domain}dataCollections/works`;
     }
 
-    _getManifestationDataFeedIri(config) {
+    _getManifestationDataCollectionIri(config) {
         const domain = config?.projectDomain ?? 'urn:uuid:';
-        return `${domain}dataFeeds/manifestations`;
+        return `${domain}dataCollections/manifestations`;
     }
 
     _isWorkEntityType(entity_type) {
@@ -1095,35 +1103,35 @@ export default class ADWLMEntityEditor extends LitElement {
         return definition?.folder_name === 'manifestations';
     }
 
-    // Guarantees every Work references the repository's singleton "main" DataFeed
-    // via melod:memberOfDataFeed, without requiring the user to assign it manually.
-    _ensureMainDataFeedMembership(entity_to_edit, mainFeedIri) {
+    // Guarantees every Work references the repository's singleton "main" DataCollection
+    // via melod:memberOfDataCollection, without requiring the user to assign it manually.
+    _ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri) {
         if (!this._isWorkEntityType(entity_to_edit.entity_type)) {
             return;
         }
 
-        if (entity_to_edit.contents.includes(mainFeedIri)) {
+        if (entity_to_edit.contents.includes(workCollectionIri)) {
             return;
         }
 
         const subject = entity_to_edit.entity_iri;
         entity_to_edit.contents =
-            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataFeed> <${mainFeedIri}> .\n`;
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${workCollectionIri}> .\n`;
         entity_to_edit._hasUnsavedChanges = true;
     }
 
-    _ensureManifestationDataFeedMembership(entity_to_edit, manifestationFeedIri) {
+    _ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri) {
         if (!this._isManifestationEntityType(entity_to_edit.entity_type)) {
             return;
         }
 
-        if (entity_to_edit.contents.includes(manifestationFeedIri)) {
+        if (entity_to_edit.contents.includes(manifestationCollectionIri)) {
             return;
         }
 
         const subject = entity_to_edit.entity_iri;
         entity_to_edit.contents =
-            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataFeed> <${manifestationFeedIri}> .\n`;
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${manifestationCollectionIri}> .\n`;
         this._hasUnsavedChanges = true;
     }
 

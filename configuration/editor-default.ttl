@@ -18,10 +18,10 @@ melod:Place a melod:Entity ;
     rdfs:label "Place"@en ;
     melod_ui:entity_folder_name "places" ;
     melod_ui:shacl_file_location "configuration/place.shacl" .
-melod:DataFeed a melod:Entity ;
-    rdfs:label "Data Feed"@en ;
-    melod_ui:entity_folder_name "dataFeeds" ;
-    melod_ui:shacl_file_location "configuration/dataFeed.shacl" .
+melod:DataCollection a melod:Entity ;
+    rdfs:label "Data Collection"@en ;
+    melod_ui:entity_folder_name "dataCollections" ;
+    melod_ui:shacl_file_location "configuration/dataCollection.shacl" .
 melod:Venue a melod:Entity ;
     rdfs:label "Venue"@en ;
     melod_ui:entity_folder_name "venues" ;
