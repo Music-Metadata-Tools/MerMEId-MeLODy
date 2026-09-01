@@ -1021,6 +1021,11 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             add_repository_dialog.reset();
 
+            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                bubbles: true,
+                composed: true
+            }));
+
         });
 
         document.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
