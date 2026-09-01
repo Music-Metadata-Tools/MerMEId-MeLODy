@@ -270,6 +270,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     id="staged-files-details" 
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
+                    <summary slot="summary">
+                        <span lang="en">${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}</span>
+                        <span lang="de">${this._hasUnsharedFiles ? 'Teile Dateien (!)' : 'Teile Dateien'}</span>
+                    </summary>
                     <sl-button-group>
                         <sl-button
                             id="select-all-button"
