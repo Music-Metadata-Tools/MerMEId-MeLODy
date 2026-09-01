@@ -16,22 +16,14 @@ melod:DataCatalog
                   sh:maxCount 1;
                   sh:path rdfs:label
                  ] ;
-    # sh:property   [ sh:description "Domain of the project, which will be used for the entity IRIs" ;
-    #               sh:name "Domain" ;
-    #               sh:group melod:General ;
-    #               sh:minCount 1 ;
-    #               sh:maxCount 1;
-    #               sh:hasValue "urn:uuid:" ;
-    #               sh:path melod:hasDomain ;
-    #             ] ;
-    sh:property   [ sh:description "Contributors of the Data Catalog" ;
+    sh:property   [ sh:description "Contributors of the data catalog" ;
                   sh:name "Person or Institution" ;
                   sh:minCount 0 ;
                   sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;
-    sh:property   [ sh:description "Application used to create the catalog" ;
+    sh:property   [ sh:description "Software used to create this catalog" ;
                 sh:name "Application" ;
                 sh:group melod:General ;
                 sh:minCount 1 ;

@@ -25,6 +25,13 @@ melod:DataCollection
                   sh:path schema:includedInDataCatalog ;
                   sh:class melod:DataCatalog ;
                   ] ;
+    sh:property   [ sh:description "Type of the collection" ;
+                  sh:name "Type" ;
+                  sh:group melod:General ;
+                  sh:maxCount 1;
+                  sh:path melod:hasClassification ;
+                  sh:in ( "work catalog" "source catalog"  )
+                  ] ;
     sh:property   [ sh:description "A statement explaining any restrictions to the use of this collection, e.g. a copyright notice or a license statement." ;
                   sh:name "Restrictions of use" ;
                   sh:group melod:General ;
@@ -32,14 +39,22 @@ melod:DataCollection
                   sh:path melod:useRestrict ;
                   dash:singleLine false ;
                   ] ;
-    sh:property   [ sh:description "RevsionDesc" ;
-                  sh:name "Change history" ;
-                  sh:group melod:Revision ;
+    sh:property   [ sh:description "Status of the data collection" ;
+                  sh:name "Status" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
-                  sh:path melod:hasRevisionDesc ;
-                  sh:node melod:RevisionDesc ;
-                  ] .
+                  sh:group melod:Publication ;
+                  sh:path melod:hasStatus ;
+                  sh:defaultValue "draft" ;
+                  sh:in ( "draft" "candidate" "approved" "published" )
+                  ] ;
+    sh:property   [ sh:description "Contributors of the Data Collection" ;
+                  sh:name "Responsible" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Publication ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution
+                ] .
     # sh:property   [ sh:description "Elements of the collection" ;
     #               sh:name "Elements" ;
     #               sh:minCount 0 ;
@@ -59,28 +74,10 @@ melod:DataCollection
 #                 ] ;
 #   sh:targetClass  schema:DataFeedItem .
 
-melod:RevisionDesc
-    a sh:NodeShape, rdfs:Class ;
-    sh:targetClass melod:RevisionDesc ;
-    sh:property   [ sh:description "Status of the data collection" ;
-                  sh:name "Status" ;
-                  sh:minCount 1 ;
-                  sh:maxCount 1;
-                  sh:path melod:hasStatus ;
-                  sh:defaultValue "draft" ;
-                  sh:in ( "draft" "candidate" "approved" "published" )
-                ] ;
-    sh:property   [ sh:description "Contributors of the Data Collection" ;
-                  sh:name "Person or Institution" ;
-                  sh:minCount 0 ;
-                  sh:node melod:Contribution ;
-                  sh:path melod:hasContribution
-                ] .
-
 melod:Contribution
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
-  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
+  sh:property   [ sh:description  "Choose person or institution..." ;
                   sh:name         "Person/Institution" ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
@@ -103,6 +100,6 @@ melod:General
 a               sh:PropertyGroup ;
 rdfs:label      "General Information" .
 
-melod:Revision
+melod:Publication
 a               sh:PropertyGroup ;
-rdfs:label      "Revision" .
+rdfs:label      "Publication" .

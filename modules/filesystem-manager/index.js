@@ -492,8 +492,6 @@ export default class ADWLMFilesystemManager extends LitElement {
                 target.loading = true;
                 // Alert missing personal access token
                 const hasToken = await filesystem.has_token(this._selected_repository_path);
-                console.log(`Personal Access token`)
-                console.log(hasToken)
                 if (!hasToken) {
                     const alert = document.createElement('sl-alert');
                     alert.variant = 'danger';
