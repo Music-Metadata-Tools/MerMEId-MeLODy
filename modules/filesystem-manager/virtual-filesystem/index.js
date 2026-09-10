@@ -2,7 +2,7 @@ import * as FILESYSTEM_MANAGER_CONSTANTS from "../constants.js";
 import git from "#isomorphic-git";
 import http from "#isomorphic-git-http";
 import init_oxigraph, * as oxigraph from "#oxigraph";
-import { createProvider, ensureDir, pushViaApi } from "../api-provider.js";
+import { createProvider, ensureDir, pushViaApi, mapWithConcurrency } from "../api-provider.js";
 import FSADirectoryFilesystem from "./fsa-directory-filesystem.js";
 import OPFSDirectoryFilesystem from "./opfs-directory-filesystem.js";
 import LocalRepositoryStore from "./local-repository-store.js";
@@ -132,11 +132,18 @@ export default class ADWLMVirtualFilesystem {
             await git.setConfig({ fs, dir: "/", path: "user.name", value: username });
         }
 
-        let branch_name = await git.getConfig({
-                fs,
-                dir: "/",
-                path: "branch.name"
-            });
+        // OLD IMPLEMENTATION
+        // let branch_name = await git.getConfig({
+        //         fs,
+        //         dir: "/",
+        //         path: "branch.name"
+        //     });
+        //
+        // "branch.name" is never set by a real git CLI, only by
+        // add_repository() - so this always read undefined and wrote it
+        // right back, permanently unset, breaking pushes ("branch is
+        // required"). Fixed: read the actual checked-out branch instead.
+        let branch_name = await git.currentBranch({ fs, dir: "/", fullname: false });
 
         await git.setConfig({
             fs,
@@ -343,9 +350,9 @@ export default class ADWLMVirtualFilesystem {
             });
             const files = await provider.fetchAllFiles(repository_branch);
 
-            const snapshot = {};
-
-            for (const file of files) {
+            // Same concurrency fix as pull() (see there) - sequential
+            // writes are needless overhead even for OPFS with many files.
+            await mapWithConcurrency([...files], 5, async (file) => {
                 const full_path = `${repository_folder_name}/${file.path}`;
                 const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
 
@@ -358,16 +365,24 @@ export default class ADWLMVirtualFilesystem {
 
                 await this.pfs.writeFile(full_path, file.content, "utf8");
 
-                // Needed by list_staged_files()/unstageFile() to later detect which
-                // files have changed since the last sync.
-                snapshot[file.path] = file.content;
-            }
+                // ---------------------------------------------------------------------
+                // OLD IMPLEMENTATION
+                // snapshot[file.path] = file.content;
+                // ---------------------------------------------------------------------
+            });
 
-            await this.pfs.writeFile(
-                `${repository_folder_name}/.snapshot.json`,
-                JSON.stringify(snapshot),
-                "utf8"
-            );
+            // ---------------------------------------------------------------------
+            // OLD IMPLEMENTATION
+            // const snapshot = {};
+            // ... (declared above the loop, populated inside it - see above)
+            // await this.pfs.writeFile(
+            //     `${repository_folder_name}/.snapshot.json`,
+            //     JSON.stringify(snapshot),
+            //     "utf8"
+            // );
+            // ---------------------------------------------------------------------
+            // Replaced by a lazy baseline, captured on first edit instead of
+            // eagerly for every file here - see _captureSnapshotBaselineOnFirstTouch() below.
 
             // Sets up a local (empty) Git repo, so other, untouched methods (e.g.
             // list_entries_from_workdir(), which uses git.walk(WORKDIR())) keep
@@ -553,8 +568,15 @@ export default class ADWLMVirtualFilesystem {
             fs: this._get_fs_for_repository(repository_path),
             dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
+            // caps git.walk()'s concurrency - see read_directory_files() below
+            iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
             map: async (entry_path, [entry]) => {
                 if (!entry_path.startsWith(parent_folder_relative_path)) {
+                    return;
+                }
+                // skip ".crswap" temp files (File System Access API's
+                // in-progress write swap files) - reading one throws ENOENT
+                if (entry_path.endsWith(".crswap")) {
                     return;
                 }
                 let entry_type = await entry.type();
@@ -584,15 +606,28 @@ export default class ADWLMVirtualFilesystem {
         const fs = this._get_fs_for_repository(repository_path);
         const dir = this._get_dir_for_repository(repository_path);
 
+        // Keep .dirty.json in sync (see list_staged_files()) - filesystem-
+        // manager/index.js also calls this with a bare directory name, which
+        // isn't a tracked file, so skip it (same guard as unstageFile()).
+        const is_tracked_path = file_relative_path.includes("/") && file_relative_path.endsWith(".ttl");
+        let dirty = {};
+
+        if (is_tracked_path) {
+            try {
+                dirty = await this._readDirtySet(repository_path);
+                // capture pre-delete baseline before the unlink below - see
+                // _captureSnapshotBaselineOnFirstTouch()
+                await this._captureSnapshotBaselineOnFirstTouch(repository_path, file_relative_path, dirty);
+            } catch (error) {
+                console.error("Failed to capture snapshot baseline before delete:", error);
+            }
+        }
+
         // remove the file from the git index
         await git.remove({ fs, dir, filepath: file_relative_path });
         await fs.promises.unlink(this._get_path_for_repository(repository_path, file_relative_path));
 
-        // Keep .dirty.json in sync (see list_staged_files()). filesystem-
-        // manager/index.js also calls this with a bare directory name (to
-        // clean up an empty folder after removing its last file) - that's
-        // not a tracked file, so skip it, same guard as unstageFile().
-        if (!file_relative_path.includes("/") || !file_relative_path.endsWith(".ttl")) {
+        if (!is_tracked_path) {
             return;
         }
 
@@ -604,7 +639,6 @@ export default class ADWLMVirtualFilesystem {
                 // no snapshot yet
             }
 
-            const dirty = await this._readDirtySet(repository_path);
             if (file_relative_path in snapshot) {
                 // known from a previous sync - the deletion itself is the change to push.
                 dirty[file_relative_path] = "deleted";
@@ -625,6 +659,11 @@ export default class ADWLMVirtualFilesystem {
         const absolute_path = this._get_path_for_repository(repository_path, file_relative_path);
 
         try {
+            // Capture pre-edit baseline before the write below - see
+            // _captureSnapshotBaselineOnFirstTouch(). `dirty` is reused further down.
+            const dirty = await this._readDirtySet(repository_path);
+            await this._captureSnapshotBaselineOnFirstTouch(repository_path, file_relative_path, dirty);
+
             // Create parent directories recursively
             let parent_folder_path = absolute_path.substring(0, absolute_path.lastIndexOf('/'));
             try {
@@ -658,11 +697,9 @@ export default class ADWLMVirtualFilesystem {
             });
 
             // Keep .dirty.json in sync (see list_staged_files() for why this
-            // exists): if the new content matches what's in .snapshot.json,
-            // the edit was reverted back to the synced state, so it's no
-            // longer "changed" - otherwise mark/keep it as changed. This is
-            // a single-file read, not a repo-wide scan, so it stays cheap
-            // regardless of repository size.
+            // exists): if the new content matches what's in .snapshot.json, the
+            // edit was reverted back to the synced state, so it's no longer
+            // "changed" - otherwise mark/keep it as changed. Reuses `dirty` from above.
             try {
                 let snapshot = {};
                 try {
@@ -671,7 +708,6 @@ export default class ADWLMVirtualFilesystem {
                     // no snapshot yet - everything counts as changed
                 }
 
-                const dirty = await this._readDirtySet(repository_path);
                 if (snapshot[file_relative_path] === file_contents) {
                     delete dirty[file_relative_path];
                 } else {
@@ -702,8 +738,11 @@ export default class ADWLMVirtualFilesystem {
             fs: this._get_fs_for_repository(repository_path),
             dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
+            // see read_directory_files() below
+            iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
             map: async (entry_path, [entry]) => {
-                if (entry_path === file_path) {
+                // see the .crswap comment in list_entries_from_workdir() above
+                if (entry_path === file_path && !entry_path.endsWith(".crswap")) {
                     file_contents = await entry.content();
                 }
             },
@@ -722,9 +761,19 @@ export default class ADWLMVirtualFilesystem {
             fs: this._get_fs_for_repository(repository_path),
             dir: this._get_dir_for_repository(repository_path),
             trees: [git.WORKDIR()],
+            // Caps git.walk()'s default unbounded per-directory concurrency -
+            // isomorphic-git's FileSystem.read() silently returns null on
+            // failure, crashing entry.content() ("Cannot read properties of
+            // null") under heavy File System Access API load otherwise.
+            iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
             map: async (entry_path, [entry]) => {
                 // Check if entry is in the target directory
                 if (!entry_path.startsWith(directory_path)) {
+                    return;
+                }
+
+                // skip ".crswap" temp files - see list_entries_from_workdir() above
+                if (entry_path.endsWith(".crswap")) {
                     return;
                 }
 
@@ -765,6 +814,39 @@ export default class ADWLMVirtualFilesystem {
 
     async _writeDirtySet(repository_path, dirty) {
         await this.pfs.writeFile(`${repository_path}/.dirty.json`, JSON.stringify(dirty), "utf8");
+    }
+
+    // Lazily captures the pre-edit content of `file_relative_path` into
+    // .snapshot.json, but only on its first touch since the last sync
+    // (skipped if already in `dirty`). Must run BEFORE the caller's own
+    // write/unlink. Reads via _get_fs_for_repository() (not this.pfs), so
+    // this works for both API-cloned and local repos. If the file doesn't
+    // exist yet (ENOENT), it's brand-new - no baseline is captured, which is
+    // what marks it as "new" elsewhere (commit_and_push_file(), unstageFile()).
+    async _captureSnapshotBaselineOnFirstTouch(repository_path, file_relative_path, dirty) {
+        if (file_relative_path in dirty) {
+            return; // already touched - baseline (or its absence) was already decided
+        }
+
+        const fs = this._get_fs_for_repository(repository_path);
+        const absolute_path = this._get_path_for_repository(repository_path, file_relative_path);
+
+        try {
+            const pre_edit_content = await fs.promises.readFile(absolute_path, "utf8");
+
+            let snapshot = {};
+            try {
+                snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+            } catch (error) {
+                // no snapshot file yet - fine, this is its first-ever entry
+            }
+
+            snapshot[file_relative_path] = pre_edit_content;
+            await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+        } catch (error) {
+            // file doesn't exist on disk yet - brand new, never-synced file,
+            // nothing to capture as a baseline.
+        }
     }
 
     async list_staged_files(repository_path) {
@@ -955,14 +1037,11 @@ export default class ADWLMVirtualFilesystem {
         // Replaces git.commit()/git.push(): pushes changed files via the
         // GitHub/GitLab API instead of the Git network protocol - this
         // eliminates the CORS proxy entirely, same idea as add_repository()/
-        // pull() above. Reuses pushViaApi() from api-provider.js, which was
-        // already written for this but unused until now.
+        // pull() above. Reuses pushViaApi() from api-provider.js.
         //
-        // Deliberately minimal for now: conflict detection is untouched (see
-        // canPullSafely()), and deletions aren't supported yet by
-        // provider.pushFiles() (see api-provider.js) - "-deleted" entries are
-        // skipped below instead of failing the whole push. Both are planned
-        // as separate follow-ups.
+        // Deliberately minimal for now: real conflict detection is still
+        // pending (see canPullSafely()) - deletions ARE supported (see
+        // deletedPaths below and pushFiles() in api-provider.js).
         const fs = this._get_fs_for_repository(repository_path);
         const dir = this._get_dir_for_repository(repository_path);
         let personal_access_token = await git.getConfigAll({
@@ -1072,13 +1151,19 @@ export default class ADWLMVirtualFilesystem {
             throw error;
         }
 
-        // Keep the snapshot baseline in sync with what was just pushed, so
-        // future change-detection compares against the new, now-remote state.
+        // Keep the snapshot baseline in sync with what was just pushed.
+        //
+        // OLD IMPLEMENTATION
+        // for (const path of changed_paths) {
+        //     snapshot[path] = await this.pfs.readFile(`${repository_path}/${path}`, "utf8");
+        // }
+        //
+        // Failed for local repos (wrong fs) and doesn't fit the lazy model -
+        // a just-pushed path is no longer dirty, so it needs no baseline at
+        // all. Fixed: just drop the entry; _captureSnapshotBaselineOnFirstTouch()
+        // recreates it if the path is ever touched again.
         try {
-            for (const path of changed_paths) {
-                snapshot[path] = await this.pfs.readFile(`${repository_path}/${path}`, "utf8");
-            }
-            for (const path of deleted_paths) {
+            for (const path of [...changed_paths, ...deleted_paths]) {
                 delete snapshot[path];
             }
             await this.pfs.writeFile(snapshot_path, JSON.stringify(snapshot), "utf8");
@@ -1102,6 +1187,17 @@ export default class ADWLMVirtualFilesystem {
     }
 
     async canPullSafely(repository_path, changed_files) {
+        // TEMPORARILY DISABLED: still uses the old Git-based approach below
+        // (git.fetch()+git.log()), which no longer works now that pushes go
+        // via the API and never create a local commit - the local history
+        // goes stale, causing false "modified both locally and remotely"
+        // conflicts. Deferred until the other functions are confirmed
+        // working; remove this return to re-enable. [true, 1] (not
+        // [true, 0]) so "Synchronize" doesn't short-circuit before ever
+        // calling pull() - side effect: "Push" now also runs its pre-push
+        // pull+restage step every time (see filesystem-manager/index.js).
+        return [true, 1];
+
         // API-cloned repos (see add_repository() above) never get a real
         // local commit, so there's no HEAD for the Git-based logic below to
         // compare against - it would just fail with "Could not find
@@ -1281,71 +1377,159 @@ export default class ADWLMVirtualFilesystem {
                 onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
             });
 
-            // Read the OLD snapshot BEFORE overwriting it, so we know which
-            // paths existed as of the last sync - anything that was in there
-            // but is missing from the freshly-fetched file list was deleted
-            // on the remote since then, and should be removed locally too.
-            // Paths that are NOT in the old snapshot (e.g. a new local file
-            // nobody has pushed yet) are left alone either way, since this
-            // loop only ever looks at old_snapshot's keys.
-            let old_snapshot = {};
+            // ---------------------------------------------------------------------
+            // OLD IMPLEMENTATION
+            // let old_snapshot = {};
+            // try {
+            //     old_snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+            // } catch (error) {}
+            //
+            // const files = await provider.fetchAllFiles(repository_branch);
+            // const snapshot = {};
+            // const seen_paths = new Set();
+            // for (const file of files) {
+            //     const full_path = `${repository_path}/${file.path}`;
+            //     const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+            //     if (parent_folder_path !== repository_path) {
+            //         await ensureDir(this.fs, parent_folder_path);
+            //     }
+            //     await this.pfs.writeFile(full_path, file.content, "utf8");
+            //     snapshot[file.path] = file.content;
+            //     seen_paths.add(file.path);
+            // }
+            // for (const old_path of Object.keys(old_snapshot)) {
+            //     if (!seen_paths.has(old_path)) {
+            //         try { await this.pfs.unlink(`${repository_path}/${old_path}`); } catch (error) {}
+            //     }
+            // }
+            // await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+            // ---------------------------------------------------------------------
+            //
+            // Wrote through the shared fs instead of the repo's own (broken
+            // for local repos) and rebuilt a FULL .snapshot.json every pull,
+            // which no longer fits the lazy model. Fixed: walk the current
+            // local file tree instead (paths only, no content) to find what
+            // existed before this pull. A path missing from the fresh fetch
+            // is only protected from deletion if it's a brand-new,
+            // never-pushed file (dirty but no snapshot baseline) - anything
+            // else missing is a genuine remote deletion.
+            const dirty = await this._readDirtySet(repository_path);
+            let snapshot = {};
             try {
-                old_snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+                snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
             } catch (error) {
-                // no snapshot yet - nothing to compare against, so nothing to delete
+                // no snapshot entries at all - fine, nothing was ever locally edited
             }
+
+            const local_paths_before_pull = new Set();
+            await git.walk({
+                fs,
+                dir,
+                trees: [git.WORKDIR()],
+                // see the same option in read_directory_files() above
+                iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
+                map: async (entry_path, [entry]) => {
+                    // see the .crswap comment in list_entries_from_workdir() above
+                    if (entry && !entry_path.startsWith(".") && !entry_path.endsWith(".crswap") && (await entry.type()) === "blob") {
+                        local_paths_before_pull.add(entry_path);
+                    }
+                },
+            });
 
             const files = await provider.fetchAllFiles(repository_branch);
-            const snapshot = {};
             const seen_paths = new Set();
+            const changed_paths = new Set();
 
-            for (const file of files) {
-                const full_path = `${repository_path}/${file.path}`;
+            // Sequential writes made pull() slow for real local folders
+            // (per-call File System Access API latency adds up over
+            // thousands of files) - mapWithConcurrency runs several at once
+            // instead. Also skips writing a file whose fetched content
+            // already matches disk, so changed_paths accurately reflects
+            // what to reindex (see filesystem-manager/index.js).
+            await mapWithConcurrency([...files], 5, async (file) => {
+                const full_path = this._get_path_for_repository(repository_path, file.path);
+                seen_paths.add(file.path);
+
+                let current_content;
+                try {
+                    current_content = await fs.promises.readFile(full_path, "utf8");
+                } catch (error) {
+                    // doesn't exist locally yet - definitely new/changed
+                }
+
+                if (current_content === file.content) {
+                    return; // already up to date locally - nothing to write
+                }
+
                 const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
 
-                if (parent_folder_path !== repository_path) {
+                if (parent_folder_path !== dir) {
                     // see add_repository() above for why ensureDir() is needed
-                    await ensureDir(this.fs, parent_folder_path);
+                    await ensureDir(fs, parent_folder_path);
                 }
 
-                await this.pfs.writeFile(full_path, file.content, "utf8");
-                snapshot[file.path] = file.content;
-                seen_paths.add(file.path);
-            }
+                await fs.promises.writeFile(full_path, file.content, "utf8");
+                changed_paths.add(file.path);
+            });
 
-            for (const old_path of Object.keys(old_snapshot)) {
-                if (!seen_paths.has(old_path)) {
-                    try {
-                        await this.pfs.unlink(`${repository_path}/${old_path}`);
-                    } catch (error) {
-                        // already gone locally too - nothing to do
-                    }
+            const deleted_paths = new Set();
+
+            for (const old_path of local_paths_before_pull) {
+                if (seen_paths.has(old_path)) {
+                    continue; // still exists remotely
+                }
+
+                const is_new_unpushed_file = dirty[old_path] === "changed" && !(old_path in snapshot);
+                if (is_new_unpushed_file) {
+                    continue; // never existed remotely - leave it alone
+                }
+
+                try {
+                    await fs.promises.unlink(this._get_path_for_repository(repository_path, old_path));
+                    deleted_paths.add(old_path);
+                } catch (error) {
+                    // already gone locally too - nothing to do
                 }
             }
 
-            await this.pfs.writeFile(
-                `${repository_path}/.snapshot.json`,
-                JSON.stringify(snapshot),
-                "utf8"
-            );
-
-            // pull() unconditionally overwrites local content with the
-            // remote's (no conflict detection - see canPullSafely()), so
-            // after this every file matches the new snapshot by definition.
-            // Keep .dirty.json in sync (see list_staged_files()) by clearing
-            // it entirely, rather than leaving stale "changed" entries for
-            // files that were just overwritten.
+            // Every path actually touched (changed_paths/deleted_paths) now
+            // matches remote exactly and is no longer dirty.
+            //
+            // OLD IMPLEMENTATION cleared .dirty.json/.snapshot.json entirely,
+            // including paths deliberately left untouched above (new,
+            // unpushed files) - wiping their dirty entry made the next save
+            // wrongly treat them as pre-existing, causing GitLab pushes to
+            // fail ("A file with this name doesn't exist").
+            //
+            // await this._writeDirtySet(repository_path, {});
+            // await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify({}), "utf8");
+            //
+            // Fixed: only drop entries for paths actually written/deleted.
             try {
-                await this._writeDirtySet(repository_path, {});
+                for (const path of [...changed_paths, ...deleted_paths]) {
+                    delete dirty[path];
+                    delete snapshot[path];
+                }
+                await this._writeDirtySet(repository_path, dirty);
+                await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
             } catch (error) {
-                console.error("Failed to clear dirty-file tracking after pull:", error);
+                console.error("Failed to clear dirty-file/snapshot tracking after pull:", error);
             }
+
+            let end = performance.now();
+            console.log("elapsed time for pull() via API = " + (end - start) + "ms");
+
+            // Returned so the caller can skip regenerating indexes entirely
+            // when nothing changed, and otherwise only regenerate the
+            // folders actually affected - see filesystem-manager/index.js.
+            return {
+                changedPaths: [...changed_paths],
+                deletedPaths: [...deleted_paths],
+            };
         } catch (error) {
             console.error(error);
             throw error;
         }
-        let end = performance.now();
-        console.log("elapsed time for pull() via API = " + (end - start) + "ms");
     }
 
     async has_remote(repository_path) {
@@ -1434,32 +1618,40 @@ export default class ADWLMVirtualFilesystem {
                 // known from a previous sync (edited OR locally deleted) -
                 // restore its last-synced content. This also recreates a
                 // locally-deleted file, which is exactly "undo the delete".
-                const full_path = `${repository_path}/${plain_path}`;
+                // Restored via the repo's own fs (fs/dir), not this.fs/this.pfs -
+                // otherwise this silently wrote nowhere visible for a local repo.
+                const full_path = this._get_path_for_repository(repository_path, plain_path);
                 const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
 
-                if (parent_folder_path !== repository_path) {
-                    await ensureDir(this.fs, parent_folder_path);
+                if (parent_folder_path !== dir) {
+                    await ensureDir(fs, parent_folder_path);
                 }
 
-                await this.pfs.writeFile(full_path, snapshot[plain_path], "utf8");
+                await fs.promises.writeFile(full_path, snapshot[plain_path], "utf8");
             } else if (!file_relative_path.endsWith("-deleted")) {
                 // never synced before (a brand new, unpushed file) - there's
                 // nothing to restore to, so undo the creation entirely.
                 try {
-                    await this.pfs.unlink(`${repository_path}/${plain_path}`);
+                    await fs.promises.unlink(this._get_path_for_repository(repository_path, plain_path));
                 } catch (error) {
                     // already gone - nothing to do
                 }
             }
 
             // Keep .dirty.json in sync (see list_staged_files()) - whatever
-            // just got undone is no longer "changed".
+            // just got undone is no longer "changed". Also drop its
+            // .snapshot.json baseline - no longer needed until edited again.
             try {
                 const dirty = await this._readDirtySet(repository_path);
                 delete dirty[plain_path];
                 await this._writeDirtySet(repository_path, dirty);
+
+                if (plain_path in snapshot) {
+                    delete snapshot[plain_path];
+                    await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+                }
             } catch (error) {
-                console.error("Failed to update dirty-file tracking after unstage:", error);
+                console.error("Failed to update dirty-file/snapshot tracking after unstage:", error);
             }
 
             return true;

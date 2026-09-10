@@ -63,8 +63,9 @@ async function withRetry(fn, { retries = 3, baseDelayMs = 500, label = "", onLog
 }
 
 // Runs map over all "items", but only "limit" at a time instead of
-// running everything sequentially one after another.
-async function mapWithConcurrency(items, limit, mapper) {
+// running everything sequentially one after another. Exported for reuse in
+// virtual-filesystem/index.js (capping git.walk()'s concurrency).
+export async function mapWithConcurrency(items, limit, mapper) {
     const results = new Array(items.length);
     let nextIndex = 0;
 

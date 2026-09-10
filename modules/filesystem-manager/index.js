@@ -575,6 +575,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     }
                 }
 
+                let pull_result = null;
                 try {
                     let staged_before_pull = [];
                     if (this._staged_files && this._staged_files.length > 0) {
@@ -603,7 +604,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                         );
                     }
 
-                    await filesystem.pull(this._selected_repository_path);
+                    pull_result = await filesystem.pull(this._selected_repository_path);
                     for (const file of staged_before_pull) {
                         try {
                             if (file.isDeleted) {
@@ -652,16 +653,34 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
-                    
-                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
-                    // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
+
+                    // Regenerate indexes only for folders pull() actually
+                    // touched (see its return value) - same pattern as the
+                    // "unstage" handler above. Skips the generic
+                    // "build-indexes" event, which always rebuilds everything.
+                    const affected_paths = [
+                        ...(pull_result?.changedPaths ?? []),
+                        ...(pull_result?.deletedPaths ?? []),
+                    ];
+
+                    if (affected_paths.length > 0) {
+                        const affected_folders = [...new Set(affected_paths.map(path => path.split('/')[0]))];
+
+                        try {
+                            await filesystem.generate_indexes_for_all_files(
+                                this._selected_repository_path,
+                                affected_folders,
+                            );
+                        } catch (error) {
+                            console.error('Failed to regenerate indexes after synchronizing:', error);
+                        }
+
+                        // Notify entity-search to reload indexes
+                        document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                            bubbles: true,
+                            composed: true
+                        }));
+                    }
 
                     // Update repository tree
                     if (this._selected_repository_path) {
