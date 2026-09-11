@@ -13,34 +13,34 @@
 melod:Work
   a sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Link to external resource, e.g. Wikidata IRI or GND" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "Link to external resource, e.g. Wikidata IRI or GND"@en, "Link zu externer Ressource, z.B. Wikidata IRI oder GND"@de ;
+                  sh:name "Link"@en, "Link"@de ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:nodeKind sh:IRI ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path owl:sameAs
                 ] ;
-  sh:property   [ sh:name "Titles" ;
+  sh:property   [ sh:name "Titles"@en, "Titel"@de ;
                   sh:group melod:General ;
                   sh:node melod:Title ;
                   sh:path melod:hasTitle ;
                   sh:minCount 1 ;
                 ] ;
-  sh:property   [ sh:name "Identifier" ;
+  sh:property   [ sh:name "Identifier"@en, "Identifier"@de ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:node melod:Identifier ;
                   sh:path melod:hasIdentifier
                 ] ;
-  sh:property   [ sh:name "Contributor" ;
+  sh:property   [ sh:name "Contributor"@en, "Mitwirkende"@de ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution ;
                 ] ;
-  sh:property   [ sh:description "work status" ;
-                  sh:name "Work status" ;
+  sh:property   [ sh:description "work status"@en, "Werkstatus"@de ;
+                  sh:name "Work status"@en, "Werkstatus"@de ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
@@ -48,31 +48,31 @@ melod:Work
                   #sh:in ( "authentic" "not authentic" "constructed" )
                 ] ;
 
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Annotationen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation ;
                   sh:group melod:General ;
                 ] ;
 
-  sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived" ;
-                  sh:name "Context" ;
+  sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived"@en, "Der historische, soziale, intellektuelle, künstlerische oder andere Kontext, in dem das Werk entstanden ist"@de ;
+                  sh:name "Context"@en, "Kontext"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:History ;
                   dash:singleLine false ;
                   sh:path melod:hasContext
                 ] ;
-  sh:property   [ sh:description "Creation history of the work" ;
-                  sh:name "History description" ;
+  sh:property   [ sh:description "Creation history of the work"@en, "Entstehungsgeschichte des Werks"@de ;
+                  sh:name "History description"@en, "Entstehungsgeschichte"@de ;
                   sh:minCount 0 ;
                   sh:group melod:History ;
                   dash:singleLine false ;
                   sh:path melod:hasHistoryDesc
                 ] ;
-  sh:property   [ sh:description "Insert ID of an expression of the work" ;
-                  sh:name "Expression" ;
+  sh:property   [ sh:description "Choose expression..."@en, "Wähle Expression..."@de ;
+                  sh:name "Expression"@en, "Expression"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/expression/" ;
@@ -80,25 +80,23 @@ melod:Work
                   sh:class melod:ExpressionEntity ;
                   sh:path lrmoo:R3_is_realised_in
                 ] ;
-
-  sh:property   [ sh:description "Insert ID of the superior work" ;
-                  sh:name "Is part of" ;
-                  sh:minCount 0 ;
-                  sh:group melod:Relation ;
-                  #sh:defaultValue "https://mei-metadata.org/work/" ;
-                  #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
-                  sh:class melod:WorkEntity ;
-                  sh:path melod:isWorkPartOf
-                ] ;
-
-  sh:property   [ sh:description "Insert ID of the contained work" ;
-                  sh:name "Has part" ;
+  sh:property   [ sh:description "Choose contained work..."@en, "Wähle enthaltenes Werk..."@de ;
+                  sh:name "Has part"@en, "Beinhaltet"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Relation ;
                   #sh:defaultValue "https://mei-metadata.org/work/" ;
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:class melod:WorkEntity ;
                   sh:path melod:hasWorkPart
+                ] ;
+  sh:property   [ sh:description "Choose superior work..."@en, "Wähle übergeordnetes Werk..."@de ;
+                  sh:name "Is part of"@en, "Enthalten in"@de ;
+                  sh:minCount 0 ;
+                  sh:group melod:Relation ;
+                  #sh:defaultValue "https://mei-metadata.org/work/" ;
+                  #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
+                  sh:class melod:WorkEntity ;
+                  sh:path melod:isWorkPartOf
                 ] ;
 #  sh:property   [ sh:name "Other Relation" ;
  #                 sh:group melod:Relation ;
@@ -136,18 +134,18 @@ melod:Work
 #                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
 #                  )
 #               ] ;
-  sh:property   [ sh:description "Genre or classification" ;
-                  sh:name "Classification" ;
+  sh:property   [ sh:description "Genre or classification"@en, "Genre oder Klassifikation"@de ;
+                  sh:name "Classification"@en, "Klassifikation"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassification ;
                   sh:or (
-                    [ sh:class melod:Classification; rdfs:label "MerMEId Classification Vocabulary" ; sh:nodeKind sh:IRI ]
-                    [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
+                    [ sh:class melod:Classification; rdfs:label "MerMEId Classification Vocabulary"@en, "MerMEId Klassifications Vokabular"@de ; sh:nodeKind sh:IRI ]
+                    [ rdfs:label "Custom classification"@en, "Customisierte Klassifikation"@de ; sh:datatype xsd:string ]
                   )
                 ] ;
-  sh:property   [ sh:name "Bibliography" ;
-                  sh:description "Insert ID of the bibliographic entry" ;
+  sh:property   [ sh:name "Bibliography"@en, "Bibliographie"@de ;
+                  sh:description "Choose bibliography..."@en, "Wähle Bibliographie..."@de ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
@@ -159,23 +157,23 @@ melod:Work
 
   melod:Relation
   a               sh:PropertyGroup ;
-  rdfs:label      "Relations" .
+  rdfs:label      "Relations"@en, "Beziehungen"@de .
 
   melod:History
   a               sh:PropertyGroup ;
-  rdfs:label      "History" .
+  rdfs:label      "History"@en, "Geschichte"@de .
 
   melod:General
   a               sh:PropertyGroup ;
-  rdfs:label      "General Information" .
+  rdfs:label      "General Information"@en, "Allgemeine Informationen"@de .
 
   melod:Keywords
   a               sh:PropertyGroup ;
-  rdfs:label      "Classification and Keywords" .
+  rdfs:label      "Classification and Keywords"@en, "Klassifikation und Schlagwörter"@de .
 
   melod:Evidence
   a               sh:PropertyGroup ;
-  rdfs:label      "Evidence" .
+  rdfs:label      "Evidence"@en, "Belege"@de .
 
 #  sh:property   [ sh:description "IRI of printed edition" ;
 #                  sh:name "Publication" ;
@@ -192,13 +190,13 @@ melod:Title
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Title of the work" ;
-                  sh:name      "Title" ;
+                  sh:name      "Title"@en, "Titel"@de ;
                   sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:name      "Type" ;
+  sh:property   [ sh:name      "Type"@en, "Typ"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTitleType ;
@@ -212,14 +210,14 @@ melod:Title
 melod:Annotation
   a               sh:NodeShape ;
 
-  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
-                  sh:name      "Label" ;
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes"@en, "z.B. Kommentare, Bearbeitungen, Notizen"@de ;
+                  sh:name      "Label"@en, "Bezeichnung"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "paragraph" ;
-                  sh:name      "Paragraph" ;
+  sh:property   [ sh:description "paragraph"@en, "Text"@de ;
+                  sh:name      "Paragraph"@en, "Text"@de ;
                   sh:minCount  1 ;
                   sh:datatype  rdf:HTML ;
                   dash:singleLine false ;
@@ -229,10 +227,10 @@ melod:Annotation
 
 melod:Contribution
   a               sh:NodeShape ;
-  rdfs:label      "Contributors" ;
+  rdfs:label      "Contributors"@en, "Mitwirkende"@de ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
-                  sh:name         "Person/Institution" ;
+  sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
+                  sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
@@ -242,14 +240,14 @@ melod:Contribution
                     [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
-  sh:property   [ sh:description  "Role of the contribution" ;
-                  sh:name         "Role" ;
+  sh:property   [ sh:description  "Role of the contribution"@en, "Rolle der Mitwirkung"@de ;
+                  sh:name         "Role"@en, "Rolle"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasRole ;
                   sh:class melod:Role
                 ] ;
-  sh:property   [ sh:description  "Certainty of the contribution" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the contribution"@en, "Sicherheit der Mitwirkung"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -258,14 +256,14 @@ melod:Contribution
 
 melod:Identifier
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Name of a list or catalogue, e.g. TVWV" ;
-                  sh:name      "List name" ;
+  sh:property   [ sh:description "Name of a list, catalogue or other numbering system in which the work is identified (e.g. 'Opus', 'CNW', 'BWV', 'Neue Mozart-Ausgabe' etc.)."@en, "Name einer Liste, eines Katalogs oder eines anderen Nummerierungssystems, in dem das Werk identifiziert wird (z.B. 'Opus', 'CNW', 'BWV', 'Neue Mozart-Ausgabe' etc.)."@de ;
+                  sh:name      "List name"@en, "Listenname"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "Work catalogue number, e.g. abc, 1:355" ;
-                  sh:name      "Number" ;
+  sh:property   [ sh:description "The works' number or signature in the list identifying it."@en, "Die Nummer oder Signatur des Werkes in der Liste, in der es identifiziert wird."@de ;
+                  sh:name      "Number"@en, "Nummer"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;
