@@ -86,6 +86,12 @@ melod:Manifestation
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation
                 ] ;
+  sh:property   [ sh:description "Links" ;
+                  sh:name "Links" ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:property   [ sh:description "List of the material contained within a resource. " ;
                   sh:name "Contents" ;
                   sh:group melod:General ;
@@ -198,6 +204,23 @@ melod:Annotation
                   sh:path      melod:paragraph
                 ] ;
   sh:targetClass  melod:Annotation .
+
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
 
 melod:Contents
   a               sh:NodeShape ;

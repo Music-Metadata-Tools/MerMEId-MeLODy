@@ -55,7 +55,12 @@ melod:Work
                   sh:node melod:Annotation ;
                   sh:group melod:General ;
                 ] ;
-
+  sh:property   [ sh:description "Links" ;
+                  sh:name "Links" ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived" ;
                   sh:name "Context" ;
                   sh:minCount 0 ;
@@ -235,6 +240,23 @@ melod:Annotation
                   sh:path      melod:paragraph
                 ] ;
   sh:targetClass melod:Annotation .
+
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
 
 melod:Contribution
   a               sh:NodeShape ;
