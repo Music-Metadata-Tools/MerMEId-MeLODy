@@ -9,7 +9,6 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Item
   a               sh:NodeShape, rdfs:Class ;
@@ -44,8 +43,7 @@ melod:Item
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
-  sh:property   [ owl:imports dataset:institutions.ttl ;
-                  sh:description "Choose institution..."@en,"Wähle Institution..."@de ;
+  sh:property   [ sh:description "Choose institution..."@en,"Wähle Institution..."@de ;
                   sh:name "Repository"@en,"Fundort"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
@@ -80,8 +78,7 @@ melod:Item
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ owl:imports dataset:events.ttl ;
-                  sh:description "Choose provenance event..."@en,"Wähle Provenienzereignis..." ;
+  sh:property   [ sh:description "Choose provenance event..."@en,"Wähle Provenienzereignis..." ;
                   sh:name "Event"@en,"Ereignis"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Provenance ;
@@ -106,8 +103,7 @@ melod:Item
                   sh:path      melod:hasHand ;
                   sh:node melod:Hand
                 ] ;
-  sh:property   [ owl:imports dataset:events.ttl ;
-                  sh:description "Choose event related to the history and creation of the item..."@en,"Wähle Ereignis, dass die Geschichte und Entstehung des Items beschreibt..." ;
+  sh:property   [ sh:description "Choose event related to the history and creation of the item..."@en,"Wähle Ereignis, dass die Geschichte und Entstehung des Items beschreibt..." ;
                   sh:name "History"@en,"Historie"@de ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
@@ -127,8 +123,7 @@ melod:Item
                   sh:path melod:hasPhysicalDescription ;
                   sh:node melod:PhysDesc
                 ] ;
-  sh:property   [ owl:imports dataset:items.ttl ;
-                  sh:description "Choose item..."@en,"Wähle item..."@de ;
+  sh:property   [ sh:description "Choose item..."@en,"Wähle item..."@de ;
                   sh:name "has part"@en,"Beinhaltet"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -137,8 +132,7 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:hasItemPart
                 ] ;
-  sh:property   [ owl:imports dataset:items.ttl ;
-                  sh:description "Choose item..."@en,"Wähle item..."@de ;
+  sh:property   [ sh:description "Choose item..."@en,"Wähle item..."@de ;
                   sh:name "is part of"@en,"Enthalten in"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -147,8 +141,7 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:isItemPartOf
                 ] ;
-  sh:property   [ owl:imports dataset:manifestations.ttl ;
-                  sh:description "Choose manifestation..."@en,"Wähle Manifestation..."@de ;
+  sh:property   [ sh:description "Choose manifestation..."@en,"Wähle Manifestation..."@de ;
                   sh:name "is materialization of"@en,"ist Materialisierung von"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
@@ -157,8 +150,7 @@ melod:Item
                   sh:class melod:ManifestationEntity ;
                   sh:path lrmoo:R7_exemplifies
                 ] ;
-#  sh:property   [ owl:imports dataset:items.ttl ;
-#                 sh:name "Relation" ;
+#  sh:property   [ sh:name "Relation" ;
  #                 sh:group melod:Relation ;
  #                 sh:minCount 0 ;
  #                 sh:class melod:ItemEntity ;
@@ -493,7 +485,6 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Type of the watermark"@en,"Typ des Wasserzeichens"@de ;
                   sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  0 ;
@@ -577,7 +568,6 @@ melod:Watermark
 
 melod:Inscription
   a               sh:NodeShape ;
-  owl:imports dataset:persons.ttl ;
   sh:property   [ sh:description  "Choose person..."@en,"Wähle Person..." ;
                   sh:name         "Person"@en,"Person"@de ;
                   sh:path      melod:hasAgent ;
@@ -702,7 +692,7 @@ melod:Binding
   melod:Hand
   a               sh:NodeShape ;
   rdfs:label      "Hand"@en,"Hand"@de ;
-  owl:imports     terms:melod-terms.ttl , dataset:persons.ttl ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:maxCount  1 ;
                   sh:description "Choose person..."@de,"Wähle Person..."@de ;
                   sh:name "Name"@en,"Name"@de ;
@@ -820,7 +810,7 @@ melod:Relation
 
   melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl, dataset:bibliography.ttl ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
                   sh:name "Name"@en, "Name"@de ;
                   sh:minCount 1 ;
@@ -871,8 +861,8 @@ melod:Relation
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution"@en, "Institution"@de ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ]
+                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution"@en, "Institution"@de ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution"@en, "Rolle des Beitrags"@de ;

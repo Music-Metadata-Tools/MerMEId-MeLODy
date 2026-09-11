@@ -8,11 +8,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mus: <http://data.doremus.org/ontology#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:places.ttl , dataset:instrumentations.ttl , dataset:events.ttl , dataset:performanceEvents.ttl , dataset:expressions.ttl , dataset:bibliography.ttl;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:name "Label"@en, "Label"@de ;
                   sh:description "Expression title, e.g. 'Version 1'"@en, "Titel der Expression, z.B. 'Version 1'"@de ;
                   sh:minCount 1 ;
@@ -427,8 +426,8 @@ melod:Contribution
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution"@en, "Rolle des Beitrags"@de ;
@@ -580,10 +579,8 @@ melod:MusicIncipit
 
 melod:Event
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
-  rdfs:label      "Event (without IRI)"@en, "Ereignis (ohne IRI)"@de ;
-  sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
-                  sh:name "Name"@en, "Name"@de ;
+  sh:property   [ sh:description "Name of the Event" ;
+                  sh:name "Name" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
@@ -617,10 +614,8 @@ melod:Event
 
   melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl ;
-  rdfs:label "Performance Event (without IRI)"@en, "Aufführung (ohne IRI)"@de ;
-  sh:property   [ sh:description "Name of the Performance Event"@en, "Name der Aufführung"@de ;
-                  sh:name "Name"@en, "Name"@de ;
+  sh:property   [ sh:description "Name of the Performance Event" ;
+                  sh:name "Name" ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label

@@ -9,11 +9,10 @@
 @prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:Manifestation
   a               sh:NodeShape, rdfs:Class ;
-  owl:imports     terms:melod-terms.ttl , dataset:expressions.ttl , dataset:manifestations.ttl ;
+  owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Title of the manifestation"@en,"Titel der Manifestation"@de ;
                   sh:name "Title"@en,"Titel"@de ;
                   sh:minCount 1 ;
@@ -420,7 +419,6 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Type of the watermark"@en,"Typ des Wasserzeichens"@de ;
                   sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  0 ;
@@ -576,7 +574,6 @@ melod:Date
 
 melod:PublicationEvent
   a               sh:NodeShape ;
-  owl:imports     dataset:places.ttl , dataset:institutions.ttl , dataset:persons.ttl ;
   sh:property   [ sh:description "Label of the publication event"@en,"Label der Publikation"@de ;
                   sh:name      "Label"@en,"Label"@de ;
                   sh:minCount  0 ;
@@ -705,7 +702,6 @@ melod:Binding
 
 melod:Inscription
   a               sh:NodeShape ;
-  owl:imports     dataset:persons.ttl ;
   sh:property   [ sh:description  "Choose person..."@en,"Wähle Person..."@de ;
                   sh:name         "Person"@en,"Person"@de ;
                   sh:path      melod:hasAgent ;
@@ -757,8 +753,8 @@ melod:TitlePage
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution"@en,"Rolle des Beitrags"@de ;

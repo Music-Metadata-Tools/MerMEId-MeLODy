@@ -5,7 +5,6 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 @prefix cs: <https://lod.academy/correspsearch/vocab/terms#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -45,7 +44,6 @@ melod:Letter
 
 cs:Sent
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:class cs:Sent ;
   sh:targetClass cs:Sent ;
   sh:property   [ sh:description "Participant"@en, "Teilnehmende"@de ;
@@ -71,7 +69,6 @@ cs:Sent
 
   cs:Received
   a sh:NodeShape, rdfs:Class ;
-  owl:imports     dataset:places.ttl, dataset:persons.ttl ;
   sh:targetClass cs:Received ;
   sh:class cs:Received ;
   sh:property   [ sh:description "Participant"@en, "Teilnehmende"@de ;

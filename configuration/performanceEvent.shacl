@@ -7,11 +7,9 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
-@prefix dataset: <https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/datasets/> .
 
 melod:PerformanceEvent
   a sh:NodeShape, rdfs:Class ;
-  owl:imports dataset:venues.ttl , dataset:bibliography.ttl , dataset:places.ttl , terms:melod-terms.ttl ;
   sh:property   [ sh:description "Name of the Performance Event"@en, "Name der Aufführung"@de ;
                   sh:name "Name"@en, "Name"@de ;
                   sh:group melod:General ;
@@ -177,8 +175,8 @@ melod:PerformanceEvent
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ; owl:imports dataset:persons.ttl ]
-                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ; owl:imports dataset:institutions.ttl ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ]
                   )
                 ] ;
   sh:property   [ sh:description  "Role of the contribution"@en, "Rolle des Beitrags"@de ;
