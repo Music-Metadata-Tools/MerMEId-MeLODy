@@ -254,19 +254,14 @@ class ADWLMEntitySearch extends LitElement {
     allEntries.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
 
     this._entries = allEntries;
-    this._filtered = [];
     this._loading = false;
+    this._filterResults();
     console.log("Loaded entries:", allEntries.length);
   }
 
   _onInput(e) {
     this._query = e.target.value.trim().toLowerCase();
-    // Clear filtered results if input is empty
-    if (!this._query) {
-        this._filtered = [];
-    } else {
-        this._filterResults();
-    }
+    this._filterResults();
   }
 
   _onTypeChange(e) {
