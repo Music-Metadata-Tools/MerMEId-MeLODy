@@ -19,6 +19,12 @@ const styles =
             display: inline-block;
             font-size: var(--sl-font-size-small);
         }
+        :host([data-ui-language="de"]) [lang="en"] {
+            display: none;
+        }
+        :host(:not([data-ui-language="de"])) [lang="de"] {
+            display: none;
+        }
         div#container {
             display: flex;
             flex-direction: column;
@@ -28,7 +34,8 @@ const styles =
             font-size: var(--sl-font-size-small);
         }
         div#repositories-tree-container {
-            height: 60vh;
+            min-height: 30vh;
+            max-height: 50vh;
             overflow: scroll;
         }
         /* Toggle button styles */
@@ -105,6 +112,11 @@ const styles =
 export default class ADWLMFilesystemManager extends LitElement {
 
     static properties = {
+        ui_language: {
+            type: String,
+            attribute: "data-ui-language",
+            reflect: true,
+        },
         _displayed_repository_names: {
             type: Array,
         },
@@ -176,6 +188,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     constructor() {
         super();
+        this.ui_language = document.documentElement.lang || "en";
 
         this._onUnsavedChanges = (event) => {
             this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
@@ -226,6 +239,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             </button>
             <div id="container">
                 <sl-details id="repositories-details" summary="Repositories" open>
+                    <summary slot="summary">
+                        <span lang="en">Repositories</span>
+                        <span lang="de">Repositories</span>
+                    </summary>
                     <div>
                         <sl-button-group>
                             <sl-button id="add-repository" size="small" title="Add repository">
@@ -258,6 +275,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     id="staged-files-details" 
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
+                    <summary slot="summary">
+                        <span lang="en">${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}</span>
+                        <span lang="de">${this._hasUnsharedFiles ? 'Teile Dateien (!)' : 'Teile Dateien'}</span>
+                    </summary>
                     <sl-button-group>
                         <sl-button
                             id="select-all-button"

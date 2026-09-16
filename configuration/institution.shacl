@@ -10,47 +10,47 @@
 
 melod:Institution
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Name of the Institution" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Name of the Institution"@en , "Name der Institution"@de ;
+                  sh:name "Name"@en , "Name"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:name
                 ] ;
-  sh:property   [ sh:description "Siglum of the RISM institution" ;
-                  sh:name "RISM Siglum" ;
+  sh:property   [ sh:description "Siglum of the RISM institution"@en,"Siglum der RISM Institution"@de ;
+                  sh:name "RISM Siglum"@en,"RISM Siglum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasSiglum
                 ] ;
-  sh:property   [ sh:description "Abbreviation of the institution" ;
-                  sh:name "Abbreviation" ;
+  sh:property   [ sh:description "Abbreviation of the institution"@en,"Abkürzung der Instiution"@de ;
+                  sh:name "Abbreviation"@en,"Abkürzung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAbbreviation
                 ] ;
-  sh:property   [ sh:description "Identifier (external resource, e.g. RISM)" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "Identifier (external resource, e.g. RISM)"@en,"Identifier (externe Ressource, z.B. RISM)"@de ;
+                  sh:name "Link"@en,"Link"@de ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
-  sh:property   [ sh:description "Insert ID of place" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Choose place..."@en, "Wähle Ort..."@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location ;
                   sh:class melod:PlaceEntity ;
                 ] ;
-  sh:property   [ sh:description "Address of the institution" ;
-                  sh:name "Address" ;
+  sh:property   [ sh:description "Address of the institution"@en,"Adresse der Institution"@de ;
+                  sh:name "Address"@en,"Adresse"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path schema:address
                 ] ;
-  sh:property   [ sh:description "Founding date of the institution" ;
-                  sh:name "Founding date" ;
+  sh:property   [ sh:description "Founding date of the institution"@en,"Gründungsdatum der Instiution"@de ;
+                  sh:name "Founding date"@en,"Gründungsdatum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path schema:foundingDate ;
@@ -59,8 +59,8 @@ melod:Institution
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   dash:singleLine false ;
                   sh:maxCount 1 ;
                   sh:path schema:description
@@ -70,46 +70,46 @@ melod:Institution
 melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Date span" ;
+  rdfs:label     "Date span"@en,"Datumsspanne"@de ;
   sh:xone (
 		[
 			sh:property [
-        sh:name      "Start date" ;
+        sh:name      "Start date"@en, "Startdatum"@de ;
 				sh:path schema:startDate ;
-        rdfs:label "Start date" ;
+        rdfs:label "Start date"@en, "Startdatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			] ;
       sh:property [
-        sh:name      "End date" ;
+        sh:name      "End date"@en, "Enddatum"@de ;
 				sh:path schema:endDate ;
-        rdfs:label "End date" ;
+        rdfs:label "End date"@en, "Enddatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			];
 		]
 	  [
 			sh:property [
-        sh:name      "Not Before" ;
+        sh:name      "Not Before"@en, "Nicht vor"@de ;
 				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
+        rdfs:label "Not Before"@en, "Nicht vor"@de ;
 				sh:maxCount  1 ;
 			];
 			sh:property [
-        sh:name      "Not After" ;
+        sh:name      "Not After"@en, "Nicht nach"@de ;
 				sh:path melod:notAfter ;
-        rdfs:label "Not After" ;
+        rdfs:label "Not After"@en, "Nicht nach"@de ;
 				sh:maxCount  1 ;
 			];
 		]
 	) ;
-  sh:property   [ sh:description "e.g. 1800-1850" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1800-1850"@en, "z.B. 1800-1850"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -119,20 +119,20 @@ melod:Date
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Single date" ;
-  sh:property   [ sh:name      "Date" ;
+  rdfs:label     "Single date"@en, "Exaktes Datum"@de ;
+  sh:property   [ sh:name      "Date"@en, "Datum"@de ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;

@@ -15,54 +15,54 @@ melod:EntityShapesDefinition schema:url <melod:ontologies/editor-default.ttl> .
 # 3. for an existing entity, melod_ui:entity_folder_name can be changed;
 # 4. for an existing entity, melod_ui:shacl_file_location can be changed (it can be a relative path, or an URL).
 melod:Place a melod:Entity ;
-    rdfs:label "Place"@en ;
+    rdfs:label "Place"@en , "Ort"@de ;
     melod_ui:entity_folder_name "places" ;
     melod_ui:shacl_file_location "configuration/place.shacl" .
 melod:Venue a melod:Entity ;
-    rdfs:label "Venue"@en ;
+    rdfs:label "Venue"@en , "Veranstaltungsort"@de ;
     melod_ui:entity_folder_name "venues" ;
     melod_ui:shacl_file_location "configuration/venue.shacl" .
 melod:Person a melod:Entity ;
-    rdfs:label "Person"@en ;
+    rdfs:label "Person"@en , "Person"@de ;
     melod_ui:entity_folder_name "persons" ;
     melod_ui:shacl_file_location "configuration/person.shacl" .
 melod:Institution a melod:Entity ;
-    rdfs:label "Institution"@en ;
+    rdfs:label "Institution"@en , "Institution"@de ;
     melod_ui:entity_folder_name "institutions" ;
     melod_ui:shacl_file_location "configuration/institution.shacl" .
 melod:Bibliography a melod:Entity ;
-    rdfs:label "Bibliography"@en ;
+    rdfs:label "Bibliography"@en , "Bibliographie"@de ;
     melod_ui:entity_folder_name "bibliography" ;
     melod_ui:shacl_file_location "configuration/bibliography.shacl" .
 melod:Event a melod:Entity ;
-    rdfs:label "Event"@en ;
+    rdfs:label "Event"@en , "Ereignis"@de ;
     melod_ui:entity_folder_name "events" ;
     melod_ui:shacl_file_location "configuration/event.shacl" .
 melod:PerformanceEvent a melod:Entity ;
-    rdfs:label "Performance Event"@en ;
+    rdfs:label "Performance Event"@en , "Aufführung"@de ;
     melod_ui:entity_folder_name "performanceEvents" ;
     melod_ui:shacl_file_location "configuration/performanceEvent.shacl" .
 melod:Manifestation a melod:Entity ;
-    rdfs:label "Manifestation"@en ;
+    rdfs:label "Manifestation"@en , "Manifestation"@de ;
     melod_ui:entity_folder_name "manifestations" ;
     melod_ui:shacl_file_location "configuration/manifestation.shacl" .
 melod:Item a melod:Entity ;
-    rdfs:label "Item"@en ;
+    rdfs:label "Item"@en , "Item"@de ;
     melod_ui:entity_folder_name "items" ;
     melod_ui:shacl_file_location "configuration/item.shacl" .
 melod:Expression a melod:Entity ;
-    rdfs:label "Expression"@en ;
+    rdfs:label "Expression"@en , "Expression"@de ;
     melod_ui:entity_folder_name "expressions" ;
     melod_ui:shacl_file_location "configuration/expression.shacl" .
 melod:Instrumentation a melod:Entity ;
-    rdfs:label "Instrumentation"@en ;
+    rdfs:label "Instrumentation"@en , "Besetzung"@de ;
     melod_ui:entity_folder_name "instrumentations" ;
     melod_ui:shacl_file_location "configuration/instrumentation.shacl" .
 melod:Work a melod:Entity ;
-    rdfs:label "Work"@en ;
+    rdfs:label "Work"@en , "Werk"@de ;
     melod_ui:entity_folder_name "works" ;
     melod_ui:shacl_file_location "configuration/work.shacl" .
 melod:Letter a melod:Entity ;
-    rdfs:label "Letter"@en ;
+    rdfs:label "Letter"@en , "Brief"@de ;
     melod_ui:entity_folder_name "letters" ;
     melod_ui:shacl_file_location "configuration/letter.shacl" .

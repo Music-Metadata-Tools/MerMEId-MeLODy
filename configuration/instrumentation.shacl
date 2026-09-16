@@ -15,8 +15,8 @@
 melod:Instrumentation
   sh:targetClass melod:Instrumentation ;
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Label of the instrumentation, e.g. Orchestra" ;
-                  sh:name "Label" ;
+  sh:property   [ sh:description "Label of the instrumentation, e.g. Orchestra"@en,"Label der Besetzung, z.B. Orchester" ;
+                  sh:name "Label"@en,"Label"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
@@ -24,13 +24,14 @@ melod:Instrumentation
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasInstrumentationDetail ;
                   sh:node melod:InstrumentationDetail ;
-                  sh:name "Instruments and Voices" ;
+                  sh:name "Instruments and Voices"@en,"Instrumente und Stimmen"@de ;
                 ] ;
   sh:property   [ sh:minCount 0 ;
                   sh:path melod:hasInstrumentationGroup ;
                   sh:class melod:InstrumentationEntity ;
                   #sh:node melod:InstrumentationGroup ;
-                  sh:name "Ensembles" ;
+                  sh:name "Ensembles"@en,"Ensembles"@de ;
+                  sh:description "Choose instrumentations..."@en,"Wähle Bestzungen..."@de ;
                 ] .
 
 #melod:InstrumentationGroup
@@ -52,15 +53,15 @@ melod:InstrumentationDetail
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:minCount     1 ;
-                  sh:description "Position of the instrument in the instrumentation" ;
-                  sh:name         "No." ;
+                  sh:description "Position of the instrument in the instrumentation"@en,"Position des Instruments in der Besetzung"@de ;
+                  sh:name         "No."@en,"Nr."@de ;
                   sh:maxCount     1 ;
                   sh:path         schema:position ;
                   sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
-                  sh:name         "Medium of performance" ;
+                  sh:name         "Medium of performance"@en,"Aufführungsmedium"@de ;
                   sh:or (
                     [ sh:class melod:Instrument ; rdfs:label "MerMEId Instruments Vocabulary" ; sh:nodeKind sh:IRI ]
                     [ sh:class skos:Concept ; rdfs:label "MIMO Thesaurus of musical instrument names" ; sh:nodeKind sh:IRI ]
@@ -69,44 +70,44 @@ melod:InstrumentationDetail
                   sh:path         mus:U2_foresees_use_of_medium_of_performance
                 ] ;
   sh:property   [ sh:minCount     1 ;
-                  sh:description "Name of the medium of performance" ;
-                  sh:name         "Name" ;
+                  sh:description "Name of the medium of performance"@en,"Name des Aufführungsmediums"@de ;
+                  sh:name         "Name"@en,"Name"@de ;
                   sh:maxCount     1 ;
                   sh:path         schema:description
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
-                  sh:name         "Quantity" ;
+                  sh:name         "Quantity"@en,"Anzahl"@de ;
                   sh:path         mus:U30_foresees_quantity_of_medium_of_performance ;
                   sh:datatype xsd:integer
                 ] ;
   sh:property   [ sh:minCount     0 ;
-                  sh:description "Identifier (external resource, e.g. MARC)" ;
-                  sh:name         "Link" ;
+                  sh:description "Identifier (external resource, e.g. MARC)"@en,"Identifier (externe Ressource, z.B. MARC)"@de ;
+                  sh:name         "Link"@en,"Link"@de ;
                   sh:path         owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
-                  sh:name         "Solo" ;
+                  sh:name         "Solo"@en,"Solo"@de ;
                   sh:path         melod:isSoloist ;
                   sh:datatype xsd:boolean
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
-                  sh:name         "Ad lib" ;
+                  sh:name         "Ad lib"@en,"Ad lib"@de ;
                   sh:path         melod:isAdLib ;
                   sh:datatype xsd:boolean
                 ] ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     0 ;
-                  sh:name         "Casting Detail" ;
+                  sh:name         "Role (Character)"@en,"Rolle (Charakter)"@de ;
                   sh:path         melod:hasCastingDetail ;
                   sh:node melod:CastingDetail
                 ] ;
   sh:property   [ sh:minCount     0 ;
-                  sh:name         "Alternative instrumentation" ;
+                  sh:name         "Alternative instrumentation"@en,"Alternative Besetzung"@de ;
                   sh:path         melod:hasAlternativeInstrumentation ;
                   sh:node melod:InstrumentationDetail
                 ] ;
@@ -116,12 +117,12 @@ melod:CastingDetail
   a               sh:NodeShape ;
   sh:property   [ sh:maxCount     1 ;
                   sh:minCount     1 ;
-                  sh:name         "Role name" ;
+                  sh:name         "Role name"@en,"Rollenname"@de ;
                   sh:path         melod:hasRoleName ;
                 ] ;
   sh:property   [ sh:minCount     0 ;
                   sh:maxCount     1 ;
-                  sh:name         "Role description" ;
+                  sh:name         "Role description"@en,"Rollenbeschreibung"@de ;
                   sh:path         melod:hasRoleDesc ;
                   dash:singleLine false ;
                 ] ;

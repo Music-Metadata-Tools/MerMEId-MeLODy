@@ -11,65 +11,65 @@
 melod:Event
   a sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Name of the Event" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
+                  sh:name "Name"@en, "Name"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:group melod:General ;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "Classification" ;
-                  sh:name "Classification" ;
+  sh:property   [ sh:description "Classification"@en, "Klassifikation"@de ;
+                  sh:name "Classification"@en, "Klassifikation"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasClassification ;
                   sh:group melod:General ;
                 ] ;
-  sh:property   [ sh:description "External resource (e.g. Wikidata or GND)" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "External resource (e.g. Wikidata or GND)"@en, "Externe Ressource (z.B. Wikidata oder GND)"@de ;
+                  sh:name "Link"@en, "Link"@de ;
                   sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path owl:sameAs
                 ] ;
-  sh:property   [ sh:description "Insert ID of the venue or place" ;
-                  sh:name "Venue/Place" ;
+  sh:property   [ sh:description "Choose venue or place..."@en, "Wähle den Veranstaltungsort oder Ort..."@de ;
+                  sh:name "Venue/Place"@en, "Veranstaltungsort/Ort"@de ;
                   sh:maxCount 1;
                   sh:group melod:General ;
                   sh:nodeKind sh:IRI ;
                   sh:path schema:location ;
                   sh:or (
-                    [ sh:class melod:VenueEntity ; rdfs:label "Venue" ]
-                    [ sh:class melod:PlaceEntity ; rdfs:label "Place" ]
+                    [ sh:class melod:VenueEntity ; rdfs:label "Venue"@en, "Veranstaltungsort"@de ]
+                    [ sh:class melod:PlaceEntity ; rdfs:label "Place"@en, "Ort"@de ]
                   ) ;
                 ] ;
-  sh:property   [ sh:description "Date of the event" ;
-                  sh:name "Date" ;
+  sh:property   [ sh:description "Date of the event"@en, "Datum des Ereignisses"@de ;
+                  sh:name "Date"@en, "Datum"@de ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:maxCount 1 ;
                   sh:path melod:hasEventDate ;
                   sh:or (
-                    [ sh:node melod:ExactDate ; rdfs:label "Single date" ]
-                    [ sh:node melod:Date ; rdfs:label "Date span" ]
+                    [ sh:node melod:ExactDate ; rdfs:label "Single date"@en, "Exaktes Datum"@de ]
+                    [ sh:node melod:Date ; rdfs:label "Date span"@en, "Datumsspanne"@de ]
                   )
                 ] ;
-  sh:property   [ sh:description "Contributor of the event" ;
-                  sh:name "Person or Institution" ;
+  sh:property   [ sh:description "Contributor of the event"@en, "Mitwirkende des Ereignisses"@de ;
+                  sh:name "Person or Institution"@en, "Person oder Institution"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation ;
                   sh:group melod:General ;
                 ] ;
-  sh:property   [ sh:description "Insert ID of the bibliographic entry" ;
-                  sh:name "Bibliography" ;
+  sh:property   [ sh:description "Choose bibliography..."@en, "Wähle Bibliographie..."@de ;
+                  sh:name "Bibliography"@en, "Bibliographie"@de ;
                   sh:group melod:Bibliography ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
@@ -82,46 +82,46 @@ melod:Event
   melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Date span" ;
+  rdfs:label     "Date span"@en, "Datumsspanne"@de ;
   sh:xone (
 		[
 			sh:property [
-        sh:name      "Start date" ;
+        sh:name      "Start date"@en, "Anfangsdatum"@de ;
 				sh:path schema:startDate ;
-        rdfs:label "Start date" ;
+        rdfs:label "Start date"@en, "Anfangsdatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			] ;
       sh:property [
-        sh:name      "End date" ;
+        sh:name      "End date"@en, "Enddatum"@de ;
 				sh:path schema:endDate ;
-        rdfs:label "End date" ;
+        rdfs:label "End date"@en, "Enddatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			];
 		]
 	  [
 			sh:property [
-        sh:name      "Not Before" ;
+        sh:name      "Not Before"@en, "Nicht vor"@de ;
 				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
+        rdfs:label "Not Before"@en, "Nicht vor"@de ;
 				sh:maxCount  1 ;
 			];
 			sh:property [
-        sh:name      "Not After" ;
+        sh:name      "Not After"@en, "Nicht nach"@de ;
 				sh:path melod:notAfter ;
-        rdfs:label "Not After" ;
+        rdfs:label "Not After"@en, "Nicht nach"@de ;
 				sh:maxCount  1 ;
 			];
 		]
 	) ;
-  sh:property   [ sh:description "e.g. 1800-1850" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1800-1850"@en, "z.B. 1800-1850"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -131,20 +131,20 @@ melod:Event
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Single date" ;
-  sh:property   [ sh:name      "Date" ;
+  rdfs:label     "Single date"@en, "Exaktes Datum"@de ;
+  sh:property   [ sh:name      "Date"@en, "Datum"@de ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1 January 1800"@en,"z.B. 01. Januar 1800"@de ;
+                  sh:name      "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
@@ -152,27 +152,27 @@ melod:Event
 
   melod:Contribution
   a               sh:NodeShape ;
-  rdfs:label      "Contributors" ;
+  rdfs:label      "Contributors"@en, "Mitwirkende"@de ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
-                  sh:name         "Person/Institution" ;
+  sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
+                  sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
-                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution"@en, "Institution"@de ]
                   )
                 ] ;
-  sh:property   [ sh:description  "Role of the contribution" ;
-                  sh:name         "Role" ;
+  sh:property   [ sh:description  "Role of the contribution"@en, "Rolle des Beitrags"@de ;
+                  sh:name         "Role"@en, "Rolle"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasRole ;
                   sh:class melod:Role
                 ] ;
-  sh:property   [ sh:description  "Certainty of the contribution" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the contribution"@en, "Sicherheit des Beitrags"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -182,14 +182,14 @@ melod:Event
 melod:Annotation
   a               sh:NodeShape ;
 
-  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
-                  sh:name      "Label" ;
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes"@en, "z.B. Kommentare, Bearbeitungen, Notizen"@de ;
+                  sh:name      "Label"@en, "Bezeichnung"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "paragraph" ;
-                  sh:name      "Paragraph" ;
+  sh:property   [ sh:description "paragraph"@en, "Text"@de ;
+                  sh:name      "Paragraph"@en, "Text"@de ;
                   sh:minCount  1 ;
                   sh:maxCount 1 ;
                   sh:datatype  rdf:HTML ;
@@ -200,12 +200,12 @@ melod:Annotation
 
 melod:Bibliography
   a               sh:PropertyGroup ;
-  rdfs:label      "Evidence" .
+  rdfs:label      "Evidence"@en, "Belege"@de .
 
 melod:General
 a               sh:PropertyGroup ;
-rdfs:label      "General Information" .
+rdfs:label      "General Information"@en, "Allgemeine Informationen"@de .
 
 melod:Contributors
 a               sh:PropertyGroup ;
-rdfs:label      "Contributors" .
+rdfs:label      "Contributors"@en, "Mitwirkende"@de .

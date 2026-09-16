@@ -31,6 +31,7 @@ const MELOD_NS = "https://lod.academy/melod/vocab/ontology#";
 
 class ADWLMGraphView extends LitElement {
   static properties = {
+    ui_language: { type: String, attribute: "data-ui-language", reflect: true },
     entity_to_edit: { type: Object },
     entity_type_definitions: { type: Object },
     _related: { state: true },
@@ -41,6 +42,14 @@ class ADWLMGraphView extends LitElement {
     :host {
       display: block;
       width: 100%;
+    }
+
+    :host([data-ui-language="de"]) [lang="en"] {
+      display: none;
+    }
+
+    :host(:not([data-ui-language="de"])) [lang="de"] {
+      display: none;
     }
 
     .graph-wrapper {
@@ -162,6 +171,7 @@ class ADWLMGraphView extends LitElement {
 
   constructor() {
     super();
+    this.ui_language = document.documentElement.lang || "en";
     this._related = [];
     this._loading = false;
     // Non-reactive pan/zoom state – mutated directly to avoid re-renders on every event
@@ -179,6 +189,7 @@ class ADWLMGraphView extends LitElement {
 
   updated(changedProperties) {
     super.updated(changedProperties);
+
     if (changedProperties.has("entity_to_edit")) {
       if (this.entity_to_edit && indexStoreService._loaded) {
         this._transform = { scale: 1, tx: 0, ty: 0 };
@@ -552,17 +563,26 @@ class ADWLMGraphView extends LitElement {
       <!-- Legend (outside the zoomable area) -->
       <div class="legend">
         <div class="legend-section">
-          <span class="legend-title">Current:</span>
+          <span class="legend-title">
+            <span lang="en">Current:</span>
+            <span lang="de">Aktuell:</span>
+          </span>
           ${currentTypeName ? html`
             <span class="legend-item">
               <span class="legend-swatch"
                     style="background:${currentColor}"></span>
               ${currentTypeName}
             </span>
-          ` : html`<span class="legend-item">No type</span>`}
+          ` : html`<span class="legend-item">
+              <span lang="en">No type</span>
+              <span lang="de">Kein Typ</span>
+            </span>`}
         </div>
         <div class="legend-section">
-          <span class="legend-title">Related:</span>
+          <span class="legend-title">
+            <span lang="en">Related:</span>
+            <span lang="de">Verknüpft:</span>
+          </span>
           ${legendTypes.map(
             ({ type, name }) => html`
               <span class="legend-item">
@@ -579,14 +599,21 @@ class ADWLMGraphView extends LitElement {
 
   render() {
     if (!this.entity_to_edit) {
-      return html`<div class="empty-state">No selected entity</div>`;
+      return html`<div class="empty-state">
+        <span lang="en">No selected entity</span>
+        <span lang="de">Keine Entität ausgewählt</span>
+      </div>`;
     }
     if (this._loading) {
-      return html`<div class="empty-state">Loading graph…</div>`;
+      return html`<div class="empty-state">
+        <span lang="en">Loading graph...</span>
+        <span lang="de">Graph wird geladen...</span>
+      </div>`;
     }
     if (this._related.length === 0) {
       return html`<div class="empty-state">
-        No related entities found.
+        <span lang="en">No related entities found.</span>
+        <span lang="de">Keine verknüpften Entitäten gefunden.</span>
       </div>`;
     }
     return html`<div class="graph-wrapper">${this._renderSvg()}</div>`;
