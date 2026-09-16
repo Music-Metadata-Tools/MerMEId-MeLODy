@@ -958,6 +958,34 @@ export default class ADWLMEntityEditor extends LitElement {
             this._hasUnsavedChanges = false;
         });
 
+        // A push conflict got resolved as "keep online version" - if that's
+        // the file open here, it's still showing the now-discarded local
+        // version.
+        document.addEventListener("adwlm-filesystem-manager:file-changed-remotely", (event) => {
+            if (this._entity_path === null
+                || event.detail.repositoryPath !== this._selected_repository_path
+                || event.detail.path !== this._entity_path) {
+                return; // not the file currently open here
+            }
+
+            if (event.detail.content === null) {
+                // Deleted online and accepted locally - close, like "clear-entity-editor" above.
+                let editor = this.renderRoot.querySelector("shacl-form");
+                editor.dataset.values = "";
+                editor.dataset.valuesSubject = "";
+                editor.dataset.shapesUrl = "";
+                editor.dataset.shapeSubject = "";
+                this._entity_path = null;
+                this.entity_to_edit = null;
+                this._hasUnsavedChanges = false;
+                return;
+            }
+
+            // Route through the same setter used to open any file - the
+            // "unsaved changes?" dialog still protects any newer edits.
+            this.entity_to_edit = { ...this.entity_to_edit, contents: event.detail.content };
+        });
+
         this._initPreviewLinkHandling();
         this._initDraggableWindow();
 

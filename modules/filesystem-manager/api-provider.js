@@ -174,7 +174,9 @@ function createGithubProvider({ owner, repo }, token, {
         });
 
         if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.status}\n${await response.text()}`);
+            const error = new Error(`GitHub API error: ${response.status}\n${await response.text()}`);
+            error.status = response.status;
+            throw error;
         }
 
         return response.json();
@@ -299,6 +301,30 @@ function createGithubProvider({ owner, repo }, token, {
             return fileChunks.flat();
         },
 
+        // Fetches CURRENT remote content for a small, explicit path list -
+        // unlike fetchAllFiles(), cost scales with paths given, not repo
+        // size. Used for push-time conflict detection. A missing path
+        // returns { path, content: null } instead of throwing.
+        async fetchFilesByPath(paths, branch) {
+            return mapWithConcurrency(paths, chunkConcurrency, async (path) => {
+                try {
+                    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+                    const data = await withRetry(
+                        () => githubRest(`/repos/${owner}/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(branch)}`),
+                        { label: `Loading ${path}`, onLog }
+                    );
+
+                    // GitHub base64-encodes with embedded newlines - strip before decoding.
+                    return { path, content: fromBase64(data.content.replace(/\s/g, "")) };
+                } catch (error) {
+                    if (error.status === 404) {
+                        return { path, content: null };
+                    }
+                    throw error;
+                }
+            });
+        },
+
         async pushFiles(branch, files, message) {
 
             const headQuery = `
@@ -387,7 +413,9 @@ function createGitlabProvider({ host, projectPath }, token, {
         });
 
         if (!response.ok) {
-            throw new Error(`GitLab API error: ${response.status}\n${await response.text()}`);
+            const error = new Error(`GitLab API error: ${response.status}\n${await response.text()}`);
+            error.status = response.status;
+            throw error;
         }
 
         return { data: await response.json(), headers: response.headers };
@@ -573,6 +601,30 @@ function createGitlabProvider({ host, projectPath }, token, {
             });
 
             return files;
+        },
+
+        // Same idea as the GitHub implementation above - small explicit path
+        // list, reuses the single-file REST endpoint, missing path returns null.
+        async fetchFilesByPath(paths, branch) {
+            return mapWithConcurrency(paths, fileConcurrency, async (path) => {
+                const fileUrl =
+                    `${apiBase}/projects/${projectId}/repository/files/${encodeURIComponent(path)}` +
+                    `?ref=${encodeURIComponent(branch)}`;
+
+                try {
+                    const { data } = await withRetry(
+                        () => gitlabRequest(fileUrl),
+                        { label: `Loading ${path}`, onLog }
+                    );
+
+                    return { path, content: fromBase64(data.content.replace(/\s/g, "")) };
+                } catch (error) {
+                    if (error.status === 404) {
+                        return { path, content: null };
+                    }
+                    throw error;
+                }
+            });
         },
 
         async pushFiles(branch, files, message) {
