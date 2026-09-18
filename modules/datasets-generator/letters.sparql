@@ -3,6 +3,7 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix melod: <https://lod.academy/melod/vocab/ontology#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 prefix schema: <https://schema.org/>
+prefix cs: <https://lod.academy/correspsearch/vocab/terms#>
 
 construct {
   ?letter_iri a melod:Letter ;
