@@ -668,7 +668,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                         try {
                             await filesystem.generate_indexes_for_all_files(
-                                this._selected_repository_path,
+                                        this._selected_repository_path,
                                 affected_folders,
                             );
                         } catch (error) {
@@ -1017,12 +1017,15 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             await this._ensureCatalogAndMainFeed(`/${repository_metadata.folder}`);
 
+            this._selected_repository_path = `${repository_metadata.folder}`;
+
             await this._list_repository_names();
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
 
-            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                detail: { repositoryPath: this._selected_repository_path },
                 bubbles: true,
                 composed: true
             }));
@@ -1030,17 +1033,19 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("adwlm-filesystem-manager:add-local-repository", async (event) => {
             console.log("Event received: add-local-repository", event.detail);
-            
-            await this._list_repository_names();
 
             const { repoName } = event.detail;
             this._selected_repository_path = `/${repoName}`;
+
+            await this._list_repository_names();
+
             await this._updateHasRemote();
             await this._ensureCatalogAndMainFeed(this._selected_repository_path);
 
             add_repository_dialog.reset();
 
-            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                detail: { repositoryPath: this._selected_repository_path },
                 bubbles: true,
                 composed: true
             }));
@@ -1234,6 +1239,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
                 }
             } catch (error) {
                 console.error('Error generating indexes:', error);
