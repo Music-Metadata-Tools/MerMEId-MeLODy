@@ -4,6 +4,7 @@ import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
 import "./repository-settings-dialog/index.js";
 import "./catalog-metadata-dialog/index.js";
+import "./push-conflict-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
 
@@ -20,6 +21,12 @@ const styles =
             display: inline-block;
             font-size: var(--sl-font-size-small);
         }
+        :host([data-ui-language="de"]) [lang="en"] {
+            display: none;
+        }
+        :host(:not([data-ui-language="de"])) [lang="de"] {
+            display: none;
+        }
         div#container {
             display: flex;
             flex-direction: column;
@@ -29,7 +36,8 @@ const styles =
             font-size: var(--sl-font-size-small);
         }
         div#repositories-tree-container {
-            height: 60vh;
+            min-height: 30vh;
+            max-height: 50vh;
             overflow: scroll;
         }
         /* Toggle button styles */
@@ -106,6 +114,11 @@ const styles =
 export default class ADWLMFilesystemManager extends LitElement {
 
     static properties = {
+        ui_language: {
+            type: String,
+            attribute: "data-ui-language",
+            reflect: true,
+        },
         _displayed_repository_names: {
             type: Array,
         },
@@ -177,6 +190,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     constructor() {
         super();
+        this.ui_language = document.documentElement.lang || "en";
 
         this._onUnsavedChanges = (event) => {
             this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
@@ -227,6 +241,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             </button>
             <div id="container">
                 <sl-details id="repositories-details" summary="Repositories" open>
+                    <summary slot="summary">
+                        <span lang="en">Repositories</span>
+                        <span lang="de">Repositories</span>
+                    </summary>
                     <div>
                         <sl-button-group>
                             <sl-button id="add-repository" size="small" title="Add repository">
@@ -265,6 +283,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     id="staged-files-details" 
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
+                    <summary slot="summary">
+                        <span lang="en">${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}</span>
+                        <span lang="de">${this._hasUnsharedFiles ? 'Teile Dateien (!)' : 'Teile Dateien'}</span>
+                    </summary>
                     <sl-button-group>
                         <sl-button
                             id="select-all-button"
@@ -303,14 +325,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
             <adwlm-repository-settings-dialog></adwlm-repository-settings-dialog>
             <adwlm-catalog-metadata-dialog></adwlm-catalog-metadata-dialog>
-            <sl-alert id="commit-and-push-done" variant="primary" duration="6000" closable>
-                <sl-icon slot="icon" name="info-circle"></sl-icon>
-                The files were shared with the remote repository.
-            </sl-alert>
-            <sl-alert id="commit-and-push-error" variant="warning" duration="6000" closable>
-                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                An error occured while sharing the files with the remote repository.
-            </sl-alert>
+            <adwlm-push-conflict-dialog></adwlm-push-conflict-dialog>
             <sl-alert id="commit-and-push-need" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured loading unshared files. Please share the created files with the repository.
@@ -332,11 +347,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
         let repository_settings_dialog = render_root.querySelector("adwlm-repository-settings-dialog");
         let catalog_metadata_dialog = render_root.querySelector("adwlm-catalog-metadata-dialog");
+        let push_conflict_dialog = render_root.querySelector("adwlm-push-conflict-dialog");
         let container = render_root.querySelector("div#container");
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
-        let commit_and_push_done_toast = render_root.querySelector("sl-alert#commit-and-push-done");
-        let commit_and_push_error_toast = render_root.querySelector("sl-alert#commit-and-push-error");
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
@@ -700,73 +714,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
                 target.loading = true;
-                
-                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-                if (canMerge[0] === false) {
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Sharing is not possible: Some files have been modified both locally and remotely. 
-                        Please synchronize before sharing.
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                    target.loading = false;
-                    return;
-                } else if (canMerge[1] === 0) {
-                } else if (canMerge[0] === true) {
-                    let staged_before_pull = [];
-                    if (this._staged_files && this._staged_files.length > 0) {
-                        staged_before_pull = await Promise.all(
-                            this._staged_files.map(async (path) => {
-                                const isDeleted = path.endsWith('-deleted');
 
-                                if (isDeleted) {
-                                    return {
-                                        path,
-                                        isDeleted: true
-                                    };
-                                }
-
-                                const content = await filesystem.read_file(
-                                    this._selected_repository_path,
-                                    path
-                                );
-
-                                return {
-                                    path,
-                                    content,
-                                    isDeleted: false
-                                };
-                            })
-                        );
-                    }
-
-                    await filesystem.pull(this._selected_repository_path);
-                    for (const file of staged_before_pull) {
-                        try {
-                            if (file.isDeleted) {
-                                const originalPath = file.path.replace(/-deleted$/, '');
-
-                                await filesystem.add_file(
-                                    this._selected_repository_path,
-                                    originalPath
-                                );
-                            } else {
-                                await filesystem.save_and_stage_file(
-                                    this._selected_repository_path,
-                                    file.content,
-                                    file.path
-                                );
-                            }
-                        } catch (e) {
-                            console.error("Failed to restore staged file:", file.path, e);
-                        }
-                    }
-                }
+                // ---------------------------------------------------------------------
+                // OLD IMPLEMENTATION: always pulled first via canPullSafely() (now
+                // stubbed, so this ran on every push). Replaced by checkPushConflicts()
+                // below - scoped to just the pushed files, decided per file via popup.
+                //
+                // const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                // if (canMerge[0] === false) { ...toast, return...; }
+                // else if (canMerge[1] === 0) { }
+                // else if (canMerge[0] === true) {
+                //     let staged_before_pull = [...]; // collect staged content
+                //     await filesystem.pull(this._selected_repository_path);
+                //     for (const file of staged_before_pull) { ...restore... }
+                // }
+                // ---------------------------------------------------------------------
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
                 let selected_staged_file_paths = staged_file_nodes
@@ -813,49 +775,54 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 this._commit_message = render_root.querySelector('#commit-message-field')?.value ?? '';
 
-                let push_result = false;
+                // Check the pushed paths against their current remote content -
+                // if any differ, let the user decide per file via the popup.
+                let conflicts = [];
                 try {
-                    push_result = await filesystem.commit_and_push_file(
+                    conflicts = await filesystem.checkPushConflicts(
                         this._selected_repository_path,
                         staged_file_paths,
-                        selected_staged_file_paths,
-                        this._commit_message
+                        selected_staged_file_paths
                     );
                 } catch (error) {
-                    console.error('Failed to share files:', error);
-                    // Show error notification
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Failed to share files with remote repository. Try to synchronize before sharing.
-                        <br><br>
-                        <em>${error.message}</em>
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                    push_result = false;
+                    console.error('Failed to check for push conflicts:', error);
                 }
 
-                if (push_result) {
-                    await this._list_staged_files();
-                    this._hasUnsharedFiles = false;
-                    this._hasSelectedFiles = false;
-                    this._allSelected = false;
-                    this._staged_files = [];
-                    await this._updateRepositoryTreeStatus();
-                    commit_and_push_done_toast.toast();
-                    // Clear selections in the staged files tree
-                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
-                        .forEach(item => item.selected = false);
-                    render_root.querySelector('#commit-message-field').value = '';
+                if (conflicts.length > 0) {
+                    // Render each conflict via a real <shacl-form>, same as
+                    // "Entity Preview" - needs the entity's subject IRI + shape URL.
+                    // Same domain+path pattern entity-editor.js uses elsewhere
+                    // (confirmed via live testing to match the real subject).
+                    const config = await this._getRepoConfig();
+                    const domain = config?.projectDomain ?? 'urn:uuid:';
 
-                } else {
-                    commit_and_push_error_toast.toast();
+                    // Blob URLs from a previous check are done with - free
+                    // them before building this batch (see _getShapeUrlForPath()).
+                    for (const url of this._shapeUrlCacheByType.values()) {
+                        if (url.startsWith('blob:')) {
+                            URL.revokeObjectURL(url);
+                        }
+                    }
+                    this._shapeUrlCacheByType = new Map();
+
+                    for (const conflict of conflicts) {
+                        conflict.subject = `${domain}${conflict.path.replace(/\.ttl$/, "")}`;
+                        try {
+                            conflict.shapesUrl = await this._getShapeUrlForPath(conflict.path);
+                        } catch (error) {
+                            console.error('Failed to resolve shape for preview:', conflict.path, error);
+                            conflict.shapesUrl = "";
+                        }
+                    }
+
+                    this._pending_push = { staged_file_paths, selected_staged_file_paths, target };
+                    push_conflict_dialog.conflicts = conflicts;
+                    push_conflict_dialog.show();
+                    target.loading = false;
+                    return;
                 }
-                target.loading = false;
+
+                await this._performPush(target, staged_file_paths, selected_staged_file_paths);
             }
 
             if (target.matches("sl-button#unstage-files")) {
@@ -1081,6 +1048,104 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
 
+        // Fired once every push-conflict-dialog decision is made. Applies
+        // "keep remote" decisions, then pushes whatever's left ("keep mine"
+        // proceeds untouched).
+        render_root.addEventListener("adwlm-push-conflict-dialog:resolve", async (event) => {
+            const pending = this._pending_push;
+            this._pending_push = null;
+            if (!pending) {
+                return;
+            }
+
+            const { target } = pending;
+            let { staged_file_paths, selected_staged_file_paths } = pending;
+            const remote_resolved_folders = new Set();
+
+            for (const decision of event.detail.decisions) {
+                if (decision.choice === "local") {
+                    // pushed normally below - stays in staged_file_paths/selected_staged_file_paths as-is
+                    continue;
+                }
+
+                const deleted_entry = `${decision.path}-deleted`;
+
+                if (decision.choice === "ignore") {
+                    // Skip for THIS push only - stays staged/dirty untouched
+                    // so it can be resolved another time.
+                    staged_file_paths = staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                    selected_staged_file_paths = selected_staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                    continue;
+                }
+
+                // choice === "remote"
+                try {
+                    await filesystem.resolveConflictWithRemote(
+                        this._selected_repository_path,
+                        decision.path,
+                        decision.remote
+                    );
+                } catch (error) {
+                    console.error("Failed to apply 'keep remote' for", decision.path, error);
+                    continue;
+                }
+
+                remote_resolved_folders.add(decision.path.split('/')[0]);
+
+                // Now in sync with remote - nothing left to push here.
+                staged_file_paths = staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                selected_staged_file_paths = selected_staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+
+                // Let an open entity-editor know, in case it's showing this
+                // exact file's now-discarded local version.
+                document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-changed-remotely", {
+                    detail: {
+                        repositoryPath: this._selected_repository_path,
+                        path: decision.path,
+                        content: decision.remote,
+                    },
+                    bubbles: true,
+                    composed: true,
+                }));
+            }
+
+            if (remote_resolved_folders.size > 0) {
+                try {
+                    await filesystem.generate_indexes_for_all_files(
+                        this._selected_repository_path,
+                        [...remote_resolved_folders],
+                    );
+                } catch (error) {
+                    console.error('Failed to regenerate indexes after resolving conflicts:', error);
+                }
+
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+            }
+
+            if (staged_file_paths.length === 0 && selected_staged_file_paths.length === 0) {
+                // Every conflict was resolved as "keep remote" - nothing left to push.
+                await this._list_staged_files();
+                await this._updateRepositoryTreeStatus();
+                target.loading = false;
+                return;
+            }
+
+            await this._performPush(target, staged_file_paths, selected_staged_file_paths);
+        });
+
+        // Popup closed (Escape, clicking outside, or "Abbrechen") without
+        // confirming - nothing was applied, just reset the button's spinner.
+        render_root.addEventListener("adwlm-push-conflict-dialog:cancel", () => {
+            const pending = this._pending_push;
+            this._pending_push = null;
+            if (pending) {
+                pending.target.loading = false;
+            }
+        });
+
         this.addEventListener("_save-entity", async (event) => {
             try {
                 let entity_to_save = event.detail;
@@ -1286,6 +1351,13 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._repository_buttons_disabled = true;
         this._hasSelectedFiles = false;
         this._hasRemote = false;
+        // Staged/selected paths for a push paused while push-conflict-dialog is open.
+        this._pending_push = null;
+        // Cached configuration/config.json - see _getRepoConfig() below.
+        this._cachedConfig = null;
+        // entity_type -> shape blob URL, shared by same-type conflicts
+        // within one push-conflict check - see _getShapeUrlForPath() below.
+        this._shapeUrlCacheByType = new Map();
     }
 
     // Re-grants access to a local (File System Access API) repository whose
@@ -1365,6 +1437,146 @@ export default class ADWLMFilesystemManager extends LitElement {
             await filesystem.save_and_stage_file(repository_path, feedTtl, FEED_PATH);
             await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH, false).catch(() => {});
         }
+    }
+
+    // Actually pushes - factored out so both the no-conflict path and
+    // push-conflict-dialog's "resolve" handler can call it.
+    async _performPush(target, staged_file_paths, selected_staged_file_paths) {
+        let render_root = this.renderRoot;
+        let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
+
+        let push_result = false;
+        try {
+            push_result = await filesystem.commit_and_push_file(
+                this._selected_repository_path,
+                staged_file_paths,
+                selected_staged_file_paths,
+                this._commit_message
+            );
+        } catch (error) {
+            console.error('Failed to share files:', error);
+            this._showToast('danger', `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to share files with remote repository. Try to synchronize before sharing.
+                <br><br>
+                <em>${error.message}</em>
+            `);
+            push_result = false;
+        }
+
+        // Refresh regardless of success/failure - a "keep remote" resolution
+        // may have applied real changes even if the rest of the push fails,
+        // and list_staged_files() is the only source of truth for what's
+        // still staged (don't hand-override it - "Später entscheiden" files
+        // must keep showing up here).
+        await this._list_staged_files();
+
+        if (push_result) {
+            this._hasSelectedFiles = false;
+            this._allSelected = false;
+            this._showToast('primary', `
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                The files were shared with the remote repository.
+            `);
+            staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                .forEach(item => item.selected = false);
+            render_root.querySelector('#commit-message-field').value = '';
+        } else {
+            this._showToast('warning', `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                An error occured while sharing the files with the remote repository.
+            `);
+        }
+        target.loading = false;
+    }
+
+    // sl-alert.toast() MOVES the element into a shared toast-stack container
+    // in document.body rather than showing it in place - reusing a single
+    // static, in-template <sl-alert> for this breaks after its first use
+    // (it's no longer a descendant of renderRoot, so a later querySelector
+    // for it returns null). A fresh element per call sidesteps that.
+    _showToast(variant, innerHTML) {
+        const alert = document.createElement('sl-alert');
+        alert.variant = variant;
+        alert.closable = true;
+        alert.duration = 6000;
+        alert.innerHTML = innerHTML;
+        document.body.append(alert);
+        alert.toast();
+    }
+
+    // Port of entity-editor's _getRepoConfig() - needed here too so
+    // push-conflict-dialog can render entities the same way.
+    async _getRepoConfig() {
+        if (this._cachedConfig) {
+            return this._cachedConfig;
+        }
+
+        try {
+            if (!this._selected_repository_path) {
+                throw new Error('No repository selected');
+            }
+
+            const configContent = await filesystem.read_file(this._selected_repository_path, 'configuration/config.json');
+            if (!configContent || configContent.trim() === '') {
+                throw new Error('Config file is empty');
+            }
+
+            this._cachedConfig = JSON.parse(configContent);
+        } catch (error) {
+            console.error('Failed to read repository config:', error);
+            this._cachedConfig = {
+                datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/',
+                projectDomain: 'urn:uuid:'
+            };
+        }
+
+        return this._cachedConfig;
+    }
+
+    // Port of entity-editor's _getShapeForPath(), adapted to resolve the
+    // entity type from a file path (checkPushConflicts() only has paths).
+    // Cached per entity_type (see _shapeUrlCacheByType) - several conflicts
+    // of the same type would otherwise redundantly re-fetch and re-merge
+    // the identical shape+indexes content.
+    async _getShapeUrlForPath(relative_path) {
+        const entity_type = this.entity_type_definitions?.find(def => relative_path.startsWith(def.folder_name))?.type;
+        const shacl_file_location = this.entity_type_definitions?.find(def => def.type === entity_type)?.shacl_file_location;
+
+        if (!shacl_file_location) {
+            return "";
+        }
+
+        if (this._shapeUrlCacheByType.has(entity_type)) {
+            return this._shapeUrlCacheByType.get(entity_type);
+        }
+
+        const config = await this._getRepoConfig();
+        if (!config?.datasetBaseUrl) {
+            this._shapeUrlCacheByType.set(entity_type, shacl_file_location);
+            return shacl_file_location;
+        }
+
+        let result;
+        try {
+            const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+            const indexFiles = await filesystem.read_directory_files(this._selected_repository_path, 'indexes');
+
+            let combinedIndexContent = '';
+            for (const content of Object.values(indexFiles)) {
+                combinedIndexContent += content + '\n';
+            }
+
+            const modifiedShaclContent = shaclContent + combinedIndexContent;
+            const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
+            result = URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Failed to build merged SHACL shape for preview:', error);
+            result = shacl_file_location;
+        }
+
+        this._shapeUrlCacheByType.set(entity_type, result);
+        return result;
     }
 
     // initialize the filesystem

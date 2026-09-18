@@ -951,6 +951,147 @@ export default class ADWLMVirtualFilesystem {
         return changed_files;
     }
 
+    // Shared by commit_and_push_file()/checkPushConflicts(): turns the UI's
+    // staged/selected path lists into the three buckets pushing cares about.
+    // Only what was selected, or everything staged if nothing was selected.
+    _derivePathsToPush(staged_file_paths, selected_staged_file_paths) {
+        let paths_to_push = selected_staged_file_paths.length > 0
+            ? selected_staged_file_paths
+            : staged_file_paths;
+
+        // "-deleted" entries carry the suffix themselves - strip it.
+        let deleted_paths = paths_to_push
+            .filter(path => path.endsWith("-deleted"))
+            .map(path => path.replace(/-deleted$/, ""));
+
+        // filesystem-manager/index.js also mixes bare directory names in
+        // (folder checkboxes) - those have no content, keep only real files.
+        let directory_paths = paths_to_push.filter(path =>
+            !path.endsWith("-deleted") && !(path.includes("/") && path.endsWith(".ttl"))
+        );
+        let changed_paths = paths_to_push.filter(path =>
+            !path.endsWith("-deleted") && path.includes("/") && path.endsWith(".ttl")
+        );
+
+        return { changed_paths, deleted_paths, directory_paths };
+    }
+
+    // Checks the pushed files against their CURRENT remote content, so a
+    // popup can offer a per-file choice instead of silently overwriting.
+    // Only checks paths with a .snapshot.json baseline (brand-new files
+    // can't conflict), fetched via fetchFilesByPath() to stay cheap.
+    // Returns { path, baseline, local, remote, isLocalDeletion } per
+    // path whose remote differs from the baseline; skips the case where a
+    // locally-staged deletion matches a remote deletion too.
+    async checkPushConflicts(repository_path, staged_file_paths, selected_staged_file_paths) {
+        const { changed_paths, deleted_paths } = this._derivePathsToPush(staged_file_paths, selected_staged_file_paths);
+
+        let snapshot = {};
+        try {
+            snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+        } catch (error) {
+            // no snapshot at all - nothing has a baseline to conflict against
+            return [];
+        }
+
+        const candidates = [...changed_paths, ...deleted_paths].filter(path => path in snapshot);
+        if (candidates.length === 0) {
+            return [];
+        }
+
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        const remote_origin_url = await git.getConfig({ fs, dir, path: "remote.origin.url" });
+        const repository_branch = await git.getConfig({ fs, dir, path: "branch.name" });
+        const personal_access_token = await git.getConfigAll({ fs, dir, path: "user.pat" });
+
+        const provider = createProvider(remote_origin_url, personal_access_token, {
+            onLog: (log_line) => console.log(log_line),
+            onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
+        });
+
+        const remote_files = await provider.fetchFilesByPath(candidates, repository_branch);
+        const remote_content_by_path = new Map(remote_files.map(f => [f.path, f.content]));
+        const deleted_path_set = new Set(deleted_paths);
+
+        const conflicts = [];
+
+        for (const path of candidates) {
+            const baseline = snapshot[path];
+            const remote = remote_content_by_path.get(path) ?? null;
+            const is_local_deletion = deleted_path_set.has(path);
+
+            if (remote === baseline) {
+                continue; // remote hasn't moved since our baseline - safe to push
+            }
+
+            if (remote === null && is_local_deletion) {
+                continue; // remote already deleted it too - nothing to resolve
+            }
+
+            const local = is_local_deletion
+                ? null
+                : await fs.promises.readFile(this._get_path_for_repository(repository_path, path), "utf8");
+
+            conflicts.push({ path, baseline, local, remote, isLocalDeletion: is_local_deletion });
+        }
+
+        return conflicts;
+    }
+
+    // Applies a "keep remote" decision: writes the CURRENT remote content
+    // over the local file (or removes it, if remote_content is null), then
+    // clears .dirty.json/.snapshot.json for this path. Doesn't reuse
+    // unstageFile() - that restores the OLD baseline, not the current remote.
+    async resolveConflictWithRemote(repository_path, file_relative_path, remote_content) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        const full_path = this._get_path_for_repository(repository_path, file_relative_path);
+
+        if (remote_content === null) {
+            // mirrors add_file() above: keep the git index in sync too, not just the file itself
+            try {
+                await git.remove({ fs, dir, filepath: file_relative_path });
+            } catch (error) {
+                // not in the index - fine
+            }
+            try {
+                await fs.promises.unlink(full_path);
+            } catch (error) {
+                // already gone locally too - nothing to do
+            }
+        } else {
+            const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+
+            if (parent_folder_path !== dir) {
+                await ensureDir(fs, parent_folder_path);
+            }
+
+            await fs.promises.writeFile(full_path, remote_content, "utf8");
+
+            // mirrors save_and_stage_file() above: keep the git index in sync too
+            await git.add({ fs, dir, filepath: file_relative_path });
+            await git.updateIndex({ fs, dir, add: true, filepath: file_relative_path });
+        }
+
+        try {
+            const dirty = await this._readDirtySet(repository_path);
+            delete dirty[file_relative_path];
+            await this._writeDirtySet(repository_path, dirty);
+
+            let snapshot = {};
+            try {
+                snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+            } catch (error) {
+                // no snapshot file - nothing to remove
+            }
+            delete snapshot[file_relative_path];
+            await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+        } catch (error) {
+            console.error("Failed to update dirty-file/snapshot tracking after resolving conflict:", error);
+        }
+    }
+
     async commit_and_push_file(repository_path, staged_file_paths, selected_staged_file_paths, message) {
         // ---------------------------------------------------------------------
         // OLD IMPLEMENTATION
@@ -1069,33 +1210,7 @@ export default class ADWLMVirtualFilesystem {
             message = `${(new Date()).toISOString()}, ${username}`;
         }
 
-        // Only push what was actually selected - or, if nothing was
-        // explicitly selected, everything that's currently staged (mirrors
-        // the OLD IMPLEMENTATION's unstage/restage dance above, just without
-        // needing to touch the Git index for it).
-        let paths_to_push = selected_staged_file_paths.length > 0
-            ? selected_staged_file_paths
-            : staged_file_paths;
-
-        // "-deleted" entries carry the suffix themselves (see
-        // list_staged_files() above) - strip it to get the real path.
-        let deleted_paths = paths_to_push
-            .filter(path => path.endsWith("-deleted"))
-            .map(path => path.replace(/-deleted$/, ""));
-
-        // filesystem-manager/index.js also mixes bare directory names into
-        // paths_to_push (so a folder's checkbox stays in sync when a file
-        // inside it is selected) - those aren't files and have no content
-        // to read, so they'd otherwise reach the API push with an empty
-        // body. Only keep entries that actually look like a staged file
-        // (matches the same file/directory check filesystem-manager/index.js
-        // itself uses to sort _staged_files vs. _staged_directories).
-        let directory_paths = paths_to_push.filter(path =>
-            !path.endsWith("-deleted") && !(path.includes("/") && path.endsWith(".ttl"))
-        );
-        let changed_paths = paths_to_push.filter(path =>
-            !path.endsWith("-deleted") && path.includes("/") && path.endsWith(".ttl")
-        );
+        let { changed_paths, deleted_paths, directory_paths } = this._derivePathsToPush(staged_file_paths, selected_staged_file_paths);
 
         if (directory_paths.length > 0) {
             console.warn("Skipping non-file entries (directories) from push:", directory_paths);

@@ -286,9 +286,9 @@ body>footer>* {
 fieldset#shacl-xml-output,
 fieldset#shacl-rdf-output,
 fieldset#shacl-html-output {
-    min-height: 72vh;
+    min-height: 92vh;
     height: auto;
-    max-height: 82vh;
+    max-height: 112vh;
     overflow-y: auto;
 }
 

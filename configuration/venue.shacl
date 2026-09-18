@@ -8,28 +8,28 @@
 
 melod:Venue
   a sh:NodeShape, rdfs:Class ;
-  sh:property   [ sh:description "Name of the venue" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Name of the venue"@en, "Name des Veranstaltungsortes"@de ;
+                  sh:name "Name"@en, "Name"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:name
                 ] ;
-  sh:property   [ sh:description "Insert ID of place" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Choose place..."@en, "Wähle Ort..."@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:class melod:PlaceEntity ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:containedInPlace
                 ] ;
-  sh:property   [ sh:description "External resource (e.g. geonames)" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "External resource (e.g. geonames)"@en, "Externe Ressource (z.B. geonames)"@de ;
+                  sh:name "Link"@en, "Link"@de ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Annotationen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
                   dash:singleLine false ;

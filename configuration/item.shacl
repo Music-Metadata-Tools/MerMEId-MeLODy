@@ -13,28 +13,28 @@
 melod:Item
   a               sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Label for the item" ;
-                  sh:name "Label" ;
+  sh:property   [ sh:description "Label for the item"@en,"Label des Items"@de ;
+                  sh:name "Label"@en,"Label"@de ;
                   sh:group melod:General ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "External resource, e.g. RISM or other catalogue numbers" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "External resource, e.g. RISM or other catalogue numbers"@en,"Externe Ressource, z.B. RISM oder andere Kataloge" ;
+                  sh:name "Link"@en,"Link"@de ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:path owl:sameAs ;
                   sh:nodeKind sh:IRI
                 ] ;
-  sh:property   [ sh:name "Identifier" ;
+  sh:property   [ sh:name "Identifier"@en,"Identifier"@de ;
                   sh:minCount 0 ;
                   sh:group melod:General ;
                   sh:node melod:Identifier ;
                   sh:path melod:hasIdentifier
                 ] ;
-  sh:property   [ sh:description "Keywords for searching, grouping and indexing" ;
-                  sh:name "Classification" ;
+  sh:property   [ sh:description "Keywords for searching, grouping and indexing"@en,"Schlagwörter zum Suchen, Gruppieren und Indizieren"@de ;
+                  sh:name "Classification"@en,"Klassifikation"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Keywords ;
                   sh:path melod:hasClassificationOfManifestation ;
@@ -43,8 +43,8 @@ melod:Item
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
                   )
                 ] ;
-  sh:property   [ sh:description "Insert ID of the institution" ;
-                  sh:name "Repository" ;
+  sh:property   [ sh:description "Choose institution..."@en,"Wähle Institution..."@de ;
+                  sh:name "Repository"@en,"Fundort"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Location ;
@@ -53,22 +53,22 @@ melod:Item
                   sh:class melod:InstitutionEntity ;
                   sh:path cidoc:P50_has_current_keeper
                 ] ;
-  sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository" ;
-                  sh:name "Shelfmark" ;
+  sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository"@en, "Signatur, die dieses Exemplar an dem Fundort identifiziert"@de ;
+                  sh:name "Shelfmark"@en,"Signatur"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Location ;
                   sh:path melod:hasShelfmark
                 ] ;
-  sh:property   [ sh:description "Former shelfmark or other signature identifying this item in the repository" ;
-                  sh:name "Former Shelfmark" ;
+  sh:property   [ sh:description "Former shelfmark or other signature identifying this item in the repository"@en,"Frühere Signatur, die dieses Exemplar identifiert hat"@de ;
+                  sh:name "Former Shelfmark"@en,"Frühere Signatur"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Location ;
                   sh:path melod:hasFormerShelfmark
                 ] ;
-  sh:property   [ sh:description "Acquisition date" ;
-                  sh:name "Acquisition date" ;
+  sh:property   [ sh:description "Acquisition date"@en,"Erwerbsdatum"@de ;
+                  sh:name "Acquisition date"@en,"Erwerbsdatum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Provenance ;
@@ -78,53 +78,53 @@ melod:Item
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Insert ID of the provenance event" ;
-                  sh:name "Event" ;
+  sh:property   [ sh:description "Choose provenance event..."@en,"Wähle Provenienzereignis..." ;
+                  sh:name "Event"@en,"Ereignis"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Provenance ;
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:or (
-                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ; sh:nodeKind sh:IRI ]
-                    [ sh:node melod:Event ; rdfs:label "Event" ]
+                    [ sh:class melod:EventEntity ; rdfs:label "Event entity"@en,"Ereignis-Entität"@de ; sh:nodeKind sh:IRI ]
+                    [ sh:node melod:Event ; rdfs:label "Event without IRI"@en,"Ereignis ohne IRI"@de ]
                   ) ;
                   sh:path melod:hasProvenance
                 ] ;
-  sh:property   [ sh:description "Title page of the manifestation" ;
-                  sh:name "Title pages" ;
+  sh:property   [ sh:description "Title page of the item"@en,"Titelseite des Items"@de ;
+                  sh:name "Title pages"@en,"Titelseiten"@de ;
                   sh:minCount 0 ;
                   sh:group melod:PhysicalDescription ;
                   sh:path melod:hasTitlePage ;
                   sh:node melod:TitlePage
                 ] ;
-  sh:property   [ sh:name      "Hand" ;
+  sh:property   [ sh:name      "Hand"@en,"Hand"@de ;
                   sh:minCount  0 ;
                   sh:group melod:PhysicalDescription ;
                   sh:path      melod:hasHand ;
                   sh:node melod:Hand
                 ] ;
-  sh:property   [ sh:description "Insert ID of the event related to the history and creation of the item" ;
-                  sh:name "History" ;
+  sh:property   [ sh:description "Choose event related to the history and creation of the item..."@en,"Wähle Ereignis, dass die Geschichte und Entstehung des Items beschreibt..." ;
+                  sh:name "History"@en,"Historie"@de ;
                   sh:group melod:General ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/events/" ;
                   #sh:pattern      "^https://mei-metadata.org/events/\\d{8}" ;
                   sh:or (
-                    [ sh:class melod:EventEntity ; rdfs:label "IRI of Event" ; sh:nodeKind sh:IRI ]
-                    [ sh:node melod:Event ; rdfs:label "Event" ]
+                    [ sh:class melod:EventEntity ; rdfs:label "Event Entity"@en,"Ereignis-Entität"@de ; sh:nodeKind sh:IRI ]
+                    [ sh:node melod:Event ; rdfs:label "Event"@en,"Ereignis" ]
                   ) ;
                   sh:path melod:hasHistoricEvent
                 ] ;
-  sh:property   [ sh:description "Physical Description" ;
-                  sh:name "Physical Description" ;
+  sh:property   [ sh:description "Physical Description"@en,"Physische Beschreibung"@de ;
+                  sh:name "Physical Description"@en,"Physische Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:PhysicalDescription ;
                   sh:path melod:hasPhysicalDescription ;
                   sh:node melod:PhysDesc
                 ] ;
-  sh:property   [ sh:description "Insert ID of the item" ;
-                  sh:name "has part" ;
+  sh:property   [ sh:description "Choose item..."@en,"Wähle item..."@de ;
+                  sh:name "has part"@en,"Beinhaltet"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/items/" ;
@@ -132,8 +132,8 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:hasItemPart
                 ] ;
-  sh:property   [ sh:description "Insert ID of the item" ;
-                  sh:name "is part of" ;
+  sh:property   [ sh:description "Choose item..."@en,"Wähle item..."@de ;
+                  sh:name "is part of"@en,"Enthalten in"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/items/" ;
@@ -141,8 +141,8 @@ melod:Item
                   sh:class melod:ItemEntity ;
                   sh:path melod:isItemPartOf
                 ] ;
-  sh:property   [ sh:description "Insert ID of the manifestation" ;
-                  sh:name "is materialization of" ;
+  sh:property   [ sh:description "Choose manifestation..."@en,"Wähle Manifestation..."@de ;
+                  sh:name "is materialization of"@en,"ist Materialisierung von"@de ;
                   sh:group melod:Relation ;
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/manifestations/" ;
@@ -186,8 +186,8 @@ melod:Item
 #                    [ sh:name "is translation of" ; sh:description "is translation of" ; sh:path melod:isTranslationOf ; rdfs:label "is translation of" ]
 #                  )
 #                ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:group melod:General ;
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation
@@ -203,46 +203,46 @@ melod:Item
   melod:Date
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Date span" ;
+  rdfs:label     "Date span"@en,"Datumsspanne"@de ;
   sh:xone (
 		[
 			sh:property [
-        sh:name      "Start date" ;
+        sh:name      "Start date"@en, "Startdatum"@de ;
 				sh:path schema:startDate ;
-        rdfs:label "Start date" ;
+        rdfs:label "Start date"@en, "Startdatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			] ;
       sh:property [
-        sh:name      "End date" ;
+        sh:name      "End date"@en, "Enddatum"@de ;
 				sh:path schema:endDate ;
-        rdfs:label "End date" ;
+        rdfs:label "End date"@en, "Enddatum"@de ;
         sh:datatype  xsd:date ;
 				sh:maxCount  1 ;
 			];
 		]
 	  [
 			sh:property [
-        sh:name      "Not Before" ;
+        sh:name      "Not Before"@en, "Nicht vor"@de ;
 				sh:path melod:notBefore ;
-        rdfs:label "Not Before" ;
+        rdfs:label "Not Before"@en, "Nicht vor"@de ;
 				sh:maxCount  1 ;
 			];
 			sh:property [
-        sh:name      "Not After" ;
+        sh:name      "Not After"@en, "Nicht nach"@de ;
 				sh:path melod:notAfter ;
-        rdfs:label "Not After" ;
+        rdfs:label "Not After"@en, "Nicht nach"@de ;
 				sh:maxCount  1 ;
 			];
 		]
 	) ;
-  sh:property   [ sh:description "e.g. 1800-1850" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1800-1850"@en, "z.B. 1800-1850"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -252,20 +252,20 @@ melod:Item
   melod:ExactDate
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  rdfs:label     "Single date" ;
+  rdfs:label     "Single date"@en, "Exaktes Datum"@de ;
   sh:property   [ sh:name      "Date" ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:date ;
                   sh:path  melod:isodate
                 ] ;
-  sh:property   [ sh:description  "Certainty of the date" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the date"@en, "Sicherheit des Datums"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "e.g. 1 January 1800"@en,"z.B. 01. Januar 1800"@de ;
+                  sh:name      "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   sh:path      schema:description
                 ] ;
@@ -273,14 +273,14 @@ melod:Item
 
   melod:TitlePage
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Type of the title page" ;
-                  sh:name      "Type" ;
+  sh:property   [ sh:description "Type of the title page"@en,"Typ der Titelseite"@de ;
+                  sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page" ;
-                  sh:description "Transcription" ;
+  sh:property   [ sh:name      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
+                  sh:description "Transcription"@en,"Transkription"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
@@ -290,123 +290,123 @@ melod:Item
 
   melod:PhysDesc
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Orientation" ;
-                  sh:description "Page orientation, e.g. landscape or portrait" ;
+  sh:property   [ sh:name      "Orientation"@en,"Ausrichtung"@de ;
+                  sh:description "Page orientation, e.g. landscape or portrait"@en,"Seitenausrichtung, z.B. Hochformat oder Querformat"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:in ( "landscape" "portrait" "oblong" "square" "other" ) ;
                   sh:group melod:Dimensions ;
                   sh:path      melod:hasOrientation
                 ] ;
-  sh:property   [ sh:name      "Extent" ;
+  sh:property   [ sh:name      "Extent"@en,"Umfang"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:group melod:Dimensions ;
                   sh:path      melod:hasExtent ;
                   sh:node      melod:Extent
                 ] ;
-  sh:property   [ sh:name      "Dimension" ;
-                  sh:description "Height, width or depth of the source" ;
+  sh:property   [ sh:name      "Dimension"@en,"Dimension"@de ;
+                  sh:description "Height, width or depth of the source"@en,"Höhe, Breite oder Tiefe der Quelle"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  3 ;
                   sh:group melod:Dimensions ;
                   sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Dimension
                 ] ;
-  sh:property   [ sh:description "Physical medium of the item" ;
-                  sh:name "Physical medium" ;
+  sh:property   [ sh:description "Physical medium of the item"@en,"Physikalisches Medium des Items"@de ;
+                  sh:name "Physical medium"@en,"Physikalisches Medium"@de ;
                   sh:group melod:PaperPhysMedium ;
                   sh:minCount 0 ;
                   sh:or (
-                    [ rdfs:label "paper" ; sh:node melod:PaperDetail ]
-                    [ rdfs:label "other physical mediums" ; sh:datatype xsd:string ; dash:singleLine false ]
+                    [ rdfs:label "Paper"@en,"Papier"@de ; sh:node melod:PaperDetail ]
+                    [ rdfs:label "Other physical mediums"@en,"Andere physikalische Medien"@de ; sh:datatype xsd:string ; dash:singleLine false ]
                   ) ;
                   sh:path melod:hasPhysMedium
                 ] ;
-  sh:property   [ sh:description "Plate number of the item" ;
-                  sh:name "Plate number" ;
+  sh:property   [ sh:description "Plate number of the item"@en,"Plattennummer des Items"@de ;
+                  sh:name "Plate number"@en,"Plattennummer"@de ;
                   sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasPlateNum
                 ] ;
-  sh:property   [ sh:description "Script description" ;
-                  sh:name "Script description" ;
+  sh:property   [ sh:description "Script description"@en,"Beschreibung des handschriftlichen Inhalts"@de ;
+                  sh:name "Script description"@en,"Manuskript Beschreibung"@de ;
                   sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasScriptDesc ;
                   dash:singleLine false
                 ] ;
-  sh:property   [ sh:description "Additions autograph" ;
-                  sh:name "Additions autograph" ;
+  sh:property   [ sh:description "Additions autograph"@en,"Autographische Ergänzungen"@de ;
+                  sh:name "Additions autograph"@en,"Autographische Ergänzungen"@de ;
                   sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasAddDescAutograph ;
                   dash:singleLine false
                 ] ;
-  sh:property   [ sh:description "Additions foreign" ;
-                  sh:name "Additions foreign" ;
+  sh:property   [ sh:description "Additions foreign"@en,"Fremde Ergänzungen"@de ;
+                  sh:name "Additions foreign"@en,"Fremde Ergänzungen"@de ;
                   sh:group melod:WrittenContent ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasAddDescForeign
                 ] ;
-  sh:property   [ sh:description "Foliation autograph" ;
-                  sh:name "Foliation autograph" ;
+  sh:property   [ sh:description "Foliation autograph"@en,"Autographische Foliierung"@de ;
+                  sh:name "Foliation autograph"@en,"Autographische Foliierung"@de ;
                   sh:group melod:Foliation ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasSupportDescAutograph
                 ] ;
-  sh:property   [ sh:description "Foliation foreign" ;
-                  sh:name "Foliation foreign" ;
+  sh:property   [ sh:description "Foliation foreign"@en,"Fremde Foliierung"@de ;
+                  sh:name "Foliation foreign"@en,"Fremde Foliierung"@de ;
                   sh:group melod:Foliation ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasSupportDescForeign
                 ] ;
-  sh:property   [ sh:description "Condition" ;
-                  sh:name "Condition" ;
+  sh:property   [ sh:description "Condition"@de,"Zustand"@en ;
+                  sh:name "Condition"@de,"Zustand"@en ;
                   sh:group melod:Condition ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasCondition
                 ] ;
-  sh:property   [ sh:description "Decoration description" ;
-                  sh:name "Decoration description" ;
+  sh:property   [ sh:description "Decoration description"@en, "Beschreibung der Verzierung"@de ;
+                  sh:name "Decoration"@en,"Verzierung"@de ;
                   sh:group melod:Decoration ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasDecoDesc ;
                   dash:singleLine false
                 ] ;
-  sh:property   [ sh:description "Binding" ;
-                  sh:name "Binding" ;
+  sh:property   [ sh:description "Binding"@en,"Bindung"@de ;
+                  sh:name "Binding"@en,"Bindung"@de ;
                   sh:group melod:Binding ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasBinding ;
                   sh:node melod:Binding
                 ] ;
-  sh:property   [ sh:description "Stamp" ;
-                  sh:name "Stamp" ;
+  sh:property   [ sh:description "Stamp"@en,"Stempel"@de ;
+                  sh:name "Stamp"@en,"Stempel"@de ;
                   sh:group melod:Markings ;
                   sh:minCount 0 ;
                   sh:path melod:hasStamp
                 ] ;
-  sh:property   [ sh:name      "Inscription" ;
+  sh:property   [ sh:name      "Inscription"@en,"Inschrift"@de ;
                   sh:group melod:Markings ;
                   sh:minCount  0 ;
                   sh:path      melod:hasInscription ;
                   sh:node melod:Inscription
                 ] ;
-  sh:property   [ sh:name      "Watermark" ;
+  sh:property   [ sh:name      "Watermark"@en,"Wasserzeichen"@de ;
                   sh:group melod:Markings ;
                   sh:minCount  0 ;
                   sh:path      melod:hasWatermark ;
@@ -416,54 +416,54 @@ melod:Item
 
 melod:PaperDetail
   a               sh:NodeShape ;
-  rdfs:label      "Paper" ;
-  sh:property   [ sh:name      "Name" ;
-                  sh:description "Name or short label for this paper type" ;
+  rdfs:label      "Paper"@en,"Papier"@de ;
+  sh:property   [ sh:name      "Name"@en,"Name"@de ;
+                  sh:description "Name or short label for this paper type"@en,"Name oder Kurzlabel für diesen Papiertyp"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:group melod:PaperIdentification ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:name      "Page range" ;
-                  sh:description "Page range of the given paper type" ;
+  sh:property   [ sh:name      "Page range"@en,"Seitenbereich"@de ;
+                  sh:description "Page range of the given paper type"@en,"Seitenbereich des vorhandenen Papiertyps"@de ;
                   sh:maxCount  1 ;
                   sh:group melod:PaperIdentification ;
                   sh:path      schema:pagination
                 ] ;
-  sh:property   [ sh:name      "Extent" ;
-                  sh:description "Number of pages or folios of this paper type" ;
+  sh:property   [ sh:name      "Extent"@en,"Umfang"@de ;
+                  sh:description "Number of pages or folios of this paper type"@en,"Anzahl der Seiten oder Folios dieses Papiertyps"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:group melod:PaperDimensions ;
                   sh:path      melod:hasExtent ;
                   sh:node      melod:Extent
                 ] ;
-  sh:property   [ sh:name      "Format" ;
-                  sh:description "Height or width of the format" ;
+  sh:property   [ sh:name      "Format"@en,"Format"@de ;
+                  sh:description "Height or width of the format"@en,"Höhe oder Breite des Formats"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
                   sh:group melod:PaperDimensions ;
                   sh:path      melod:hasFormat ;
                   sh:node melod:Format
                 ] ;
-  sh:property   [ sh:name      "Rastral mirror" ;
-                  sh:description "Height or width of the rastral mirror" ;
+  sh:property   [ sh:name      "Rastral mirror"@en,"Rastralspiegel"@de ;
+                  sh:description "Height or width of the rastral mirror"@en,"Höhe oder Breite des Rastralspiegels"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:group melod:PaperDimensions ;
                   sh:path      melod:hasRastral ;
                   sh:node melod:Rastral
                 ] ;
-  sh:property   [ sh:description "Paper quality" ;
-                  sh:name "Paper quality" ;
+  sh:property   [ sh:description "Paper quality"@en,"Papierqualität"@de ;
+                  sh:name "Paper quality"@en,"Papierqualität"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:PaperQuality ;
                   dash:singleLine false ;
                   sh:path melod:hasPaperQuality
                 ] ;
-  sh:property   [ sh:description "Condition of the paper" ;
-                  sh:name "Condition" ;
+  sh:property   [ sh:description "Condition of the paper"@en,"Zustand des Papiers"@de ;
+                  sh:name "Condition"@en,"Zustand"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:PaperQuality ;
@@ -475,13 +475,13 @@ melod:PaperDetail
 melod:Extent
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Number of pages or folios" ;
-                  sh:name      "Value" ;
+  sh:property   [ sh:description "Number of pages or folios"@en,"Anzahl der Seiten oder Folios"@de ;
+                  sh:name      "Value"@en,"Wert"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P90_has_value
                 ] ;
-  sh:property   [ sh:name      "Unit" ;
+  sh:property   [ sh:name      "Unit"@en,"Einheit"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:class cidoc:E58_Measurement_Unit ;
@@ -491,47 +491,47 @@ melod:Extent
 
 melod:Watermark
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Type of the watermark" ;
-                  sh:name      "Type" ;
+  sh:property   [ sh:description "Type of the watermark"@en,"Typ des Wasserzeichens"@de ;
+                  sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:description "Link to an external web resource" ;
-                  sh:name      "Link" ;
+  sh:property   [ sh:description "Link to an external web resource"@en,"Link zu einer externen Webressource"@de ;
+                  sh:name      "Link"@en,"Link"@de ;
                   sh:minCount  0 ;
                   sh:nodeKind sh:IRI ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:path      owl:sameAs
                 ] ;
-  sh:property   [ sh:name      "Heraldry" ;
-                  sh:description "Heraldric Compononent (motives)" ;
+  sh:property   [ sh:name      "Heraldry"@en,"Heraldik"@de ;
+                  sh:description "Heraldric Compononent (motives)"@en,"Heraldische Komponente (Motive)"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasHeraldry
                 ] ;
-  sh:property   [ sh:name      "Content" ;
-                  sh:description "Content (not heraldic)" ;
+  sh:property   [ sh:name      "Content"@en,"Inhalt"@de ;
+                  sh:description "Content (not heraldic)"@en,"Inhalt (nicht heraldisch)"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path      melod:hasContent
                 ] ;
-  sh:property   [ sh:name      "Paper position" ;
-                  sh:description "Position of the watermark on the paper (e.g. left part of the paper)" ;
+  sh:property   [ sh:name      "Paper position"@en,"Papierposition"@de ;
+                  sh:description "Position of the watermark on the paper (e.g. left part of the paper)"@en,"Position des Wasserzeichens auf dem Papier (z.B. linker Teil des Papiers)"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:paperPosition
                 ] ;
-  sh:property   [ sh:name      "Dimension" ;
-                  sh:description "Height and width of the watermark" ;
+  sh:property   [ sh:name      "Dimension"@en,"Dimension"@de ;
+                  sh:description "Height and width of the watermark"@en,"Höhe und Breite des Wasserzeichens"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
                   sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Format
                 ] ;
-  sh:property   [ sh:description "Date of the creation of the watermark" ;
-                  sh:name "Creation date" ;
+  sh:property   [ sh:description "Date of the creation of the watermark"@en,"Entstehungsdatum des Wasserzeichens"@de ;
+                  sh:name "Creation date"@en,"Entstehungsdatum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path schema:dateCreated ;
@@ -540,8 +540,8 @@ melod:Watermark
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Insert ID of the creation place" ;
-                  sh:name "Creation place" ;
+  sh:property   [ sh:description "Choose the creation place..."@en,"Wähle den Entstehungsort..."@de ;
+                  sh:name "Creation place"@en,"Entstehungsort"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:group melod:Creation ;
@@ -550,21 +550,21 @@ melod:Watermark
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:class melod:PlaceEntity ;
                 ] ;
-  sh:property   [ sh:description  "Insert ID of the paper maker (person)" ;
-                  sh:name         "Paper maker" ;
+  sh:property   [ sh:description  "Choose paper maker (person)..."@en,"Wähle Papierhersteller (Person)"@de ;
+                  sh:name         "Paper maker"@en,"Papierhersteller"@de ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPaperMaker ;
                   sh:class melod:PersonEntity ;
                 ] ;
-  sh:property   [ sh:description  "Insert link or name of the paper mill" ;
-                  sh:name         "Paper mill" ;
+  sh:property   [ sh:description  "Insert link or name of the paper mill"@en,"Füge den Link oder Namen der Papiermühle ein"@de ;
+                  sh:name         "Paper mill"@en,"Papiermühle"@de ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPaperMill ;
                   sh:nodeKind sh:IRI ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
-  sh:property   [ sh:description  "Insert link or name of the twin mark" ;
-                  sh:name         "Twin mark" ;
+  sh:property   [ sh:description  "Insert link or name of the twin mark"@en, "Füge den Link oder Namen eines Zwillingswasserzeichen ein"@de ;
+                  sh:name         "Twin mark"@en,"Zwillingswasserzeichen"@de ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasTwinMark ;
                   sh:nodeKind sh:IRI ;
@@ -574,13 +574,13 @@ melod:Watermark
 
 melod:Inscription
   a               sh:NodeShape ;
-  sh:property   [ sh:description  "Insert ID of the person" ;
-                  sh:name         "Person" ;
+  sh:property   [ sh:description  "Choose person..."@en,"Wähle Person..." ;
+                  sh:name         "Person"@en,"Person"@de ;
                   sh:path      melod:hasAgent ;
                   sh:class melod:PersonEntity ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name      "Description" ;
+  sh:property   [ sh:description "Description of the inscription"@en, "Beschreibung der Inschrift"@de ;
+                  sh:name      "Description"@en, "Beschreibung"@de ;
                   dash:singleLine false ;
                   sh:path      schema:description
                 ] ;
@@ -589,14 +589,14 @@ melod:Inscription
 melod:Annotation
   a               sh:NodeShape ;
 
-  sh:property   [ sh:description "e.g. Comments, Edits, Notes" ;
-                  sh:name      "Label" ;
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes"@en, "z.B. Kommentare, Bearbeitungen, Notizen"@de ;
+                  sh:name      "Label"@en,"Bezeichnung"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "paragraph" ;
-                  sh:name      "Paragraph" ;
+  sh:property   [ sh:description      "Paragraph"@en, "Text"@de ;
+                  sh:name      "Paragraph"@en, "Text"@de ;
                   sh:minCount  1 ;
                   sh:datatype  rdf:HTML ;
                   dash:singleLine false ;
@@ -623,27 +623,27 @@ melod:Link
 
 melod:Binding
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Description" ;
+  sh:property   [ sh:name      "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path      schema:description
                 ] ;
-  sh:property   [ sh:name      "Dimension" ;
-                  sh:description "Height and width of the binding" ;
+  sh:property   [ sh:name      "Dimension"@en,"Dimension"@de ;
+                  sh:description "Height and width of the binding"@en,"Höhe und Breite der Bindung"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
                   sh:path      lrmoo:R70_has_dimension ;
                   sh:node melod:Format
                 ] ;
-  sh:property   [ sh:description "Condition of the binding" ;
-                  sh:name "Condition" ;
+  sh:property   [ sh:description "Condition of the binding"@en,"Zustand der Bindung"@de ;
+                  sh:name "Condition"@en,"Zustand"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
                   sh:path melod:hasCondition
                 ] ;
-  sh:property   [ sh:description "Decoration description of the binding" ;
-                  sh:name "Binding decoration description" ;
+  sh:property   [ sh:description "Decoration description of the binding"@en,"Beschreibung der Bindungsverzierung"@de ;
+                  sh:name "Binding decoration"@en,"Bindungsverzierung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   dash:singleLine false ;
@@ -654,21 +654,21 @@ melod:Binding
   melod:Dimension
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Type (e.g. height, width or depth)" ;
-                  sh:name      "Type" ;
+  sh:property   [ sh:description "Type (height, width or depth)"@en,"Typ (Höhe, Breite, Tiefe)"@de ;
+                  sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:in ( "height" "width" "depth" ) ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:description      "Value of the source (height, width or depth)" ;
-                  sh:name      "Value" ;
+  sh:property   [ sh:description      "Value"@en,"Wert"@de ;
+                  sh:name      "Value"@en,"Wert"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P90_has_value
                 ] ;
-  sh:property   [ sh:description      "Unit of the value" ;
-                  sh:name      "Unit" ;
+  sh:property   [ sh:description      "Unit of the value"@en,"Einheit des Wertes"@de ;
+                  sh:name      "Unit"@en,"Einheit"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:class cidoc:E58_Measurement_Unit ;
@@ -679,21 +679,21 @@ melod:Binding
   melod:Format
   a               sh:NodeShape ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Type (e.g. height or width)" ;
-                  sh:name      "Type" ;
+  sh:property   [ sh:description "Type (height or width)"@en,"Typ (Höhe oder Breite)"@de ;
+                  sh:name      "Type"@en,"Typ"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:in ( "height" "width" ) ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:description      "Value of the source (height or width)" ;
-                  sh:name      "Value" ;
+  sh:property   [ sh:description      "Value"@en,"Wert"@de ;
+                  sh:name      "Value"@en,"Wert"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P90_has_value
                 ] ;
-  sh:property   [ sh:description      "Unit of the value" ;
-                  sh:name      "Unit" ;
+  sh:property   [ sh:description      "Unit of the value"@en,"Einheit des Wertes"@de ;
+                  sh:name      "Unit"@en,"Einheit"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:class cidoc:E58_Measurement_Unit ;
@@ -703,8 +703,8 @@ melod:Binding
 
   melod:Rastral
   a               sh:NodeShape ;
-  sh:property   [ sh:name      "Dimension" ;
-                  sh:description "Height and width of the rastral" ;
+  sh:property   [ sh:name      "Dimension"@en,"Dimension"@de ;
+                  sh:description "Height and width of the rastral"@en,"Höhe und Breite des Rastrals"@de ;
                   sh:minCount  0 ;
                   sh:maxCount  2 ;
                   sh:path      lrmoo:R70_has_dimension ;
@@ -714,30 +714,30 @@ melod:Binding
 
   melod:Hand
   a               sh:NodeShape ;
-  rdfs:label      "Hand" ;
+  rdfs:label      "Hand"@en,"Hand"@de ;
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:maxCount  1 ;
-                  sh:description "Insert ID of the person" ;
-                  sh:name "Name" ;
+                  sh:description "Choose person..."@de,"Wähle Person..."@de ;
+                  sh:name "Name"@en,"Name"@de ;
                   sh:path      melod:hasAgent ;
                   #sh:defaultValue "https://mei-metadata.org/persons/" ;
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                   sh:class melod:PersonEntity ;
                 ] ;
-  sh:property   [ sh:description  "Type of the hand" ;
-                  sh:name         "Type" ;
+  sh:property   [ sh:description  "Type of the hand"@en,"Typ der Schreiberhand"@de ;
+                  sh:name         "Type"@en,"Typ"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasHandType ;
                   sh:class melod:HandType
                 ] ;
-  sh:property   [ sh:description  "Medium of the hand" ;
-                  sh:name         "Medium" ;
+  sh:property   [ sh:description  "Medium of the hand"@en,"Medium der Schreiberhand"@de ;
+                  sh:name         "Medium"@en,"Medium"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasMedium ;
                   sh:class melod:Medium
                 ] ;
-  sh:property   [ sh:description "Additional information related to the manifestation" ;
-                  sh:name         "Description" ;
+  sh:property   [ sh:description "Description"@en,"Beschreibung"@de ;
+                  sh:name         "Description"@en,"Beschreibung"@de ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path         schema:description
@@ -747,109 +747,109 @@ melod:Binding
 melod:Relation
   a               sh:PropertyGroup ;
   sh:order        6 ;
-  rdfs:label      "Relations" .
+  rdfs:label      "Relations"@en, "Beziehungen"@de .
 
   melod:General
   a               sh:PropertyGroup ;
   sh:order        1 ;
-  rdfs:label      "General Information" .
+  rdfs:label      "General Information"@en, "Allgemeine Informationen"@de .
 
   melod:Keywords
   a               sh:PropertyGroup ;
   sh:order        2 ;
-  rdfs:label      "Classification and Keywords" .
+  rdfs:label      "Classification and Keywords"@en, "Klassifikation und Schlagwörter"@de .
 
   melod:Location
   a               sh:PropertyGroup ;
   sh:order        3 ;
-  rdfs:label      "Location" .
+  rdfs:label      "Location"@en,"Fundort"@de .
 
   melod:Provenance
   a               sh:PropertyGroup ;
   sh:order        4 ;
-  rdfs:label      "Provenance" .
+  rdfs:label      "Provenance"@en,"Provenienz"@de .
 
   melod:PhysicalDescription
   a               sh:PropertyGroup ;
   sh:order        5 ;
-  rdfs:label      "Physical Properties" .
+  rdfs:label      "Physical Properties"@en,"Physische Eigenschaften"@de .
 
   # PhysDesc sub-groups (used within melod:PhysDesc NodeShape)
   melod:Dimensions
   a               sh:PropertyGroup ;
   sh:order        10 ;
-  rdfs:label      "Dimensions and Extent" .
+  rdfs:label      "Dimensions and Extent"@en,"Dimensionen und Umfang"@de .
 
   melod:PaperPhysMedium
   a               sh:PropertyGroup ;
   sh:order        20 ;
-  rdfs:label      "Physical Medium" .
+  rdfs:label      "Physical Medium"@en,"Physisches Medium"@de .
 
   melod:WrittenContent
   a               sh:PropertyGroup ;
   sh:order        30 ;
-  rdfs:label      "Written Content" .
+  rdfs:label      "Written Content"@en,"Schriftlicher Inhalt"@de .
 
   melod:Foliation
   a               sh:PropertyGroup ;
   sh:order        40 ;
-  rdfs:label      "Foliation" .
+  rdfs:label      "Foliation"@en,"Foliierung"@de .
 
   melod:Markings
   a               sh:PropertyGroup ;
   sh:order        80 ;
-  rdfs:label      "Markings" .
+  rdfs:label      "Markings"@en,"Markierungen" .
 
   melod:Condition
   a               sh:PropertyGroup ;
   sh:order        50 ;
-  rdfs:label      "Condition" .
+  rdfs:label      "Condition"@en,"Zustand"@de .
 
   melod:Decoration
   a               sh:PropertyGroup ;
   sh:order        60 ;
-  rdfs:label      "Decoration" .
+  rdfs:label      "Decoration"@en,"Verzierung"@de .
 
   melod:Binding
   a               sh:PropertyGroup ;
   sh:order        70 ;
-  rdfs:label      "Binding" .
+  rdfs:label      "Binding"@en,"Bindung"@de .
 
   # PaperDetail sub-groups
   melod:PaperIdentification
   a               sh:PropertyGroup ;
   sh:order        10 ;
-  rdfs:label      "Identification" .
+  rdfs:label      "Identification"@en,"Identifizierung"@de .
 
   melod:PaperDimensions
   a               sh:PropertyGroup ;
   sh:order        20 ;
-  rdfs:label      "Dimensions" .
+  rdfs:label      "Dimensions"@en,"Dimensionen"@de .
 
   melod:PaperQuality
   a               sh:PropertyGroup ;
   sh:order        30 ;
-  rdfs:label      "Quality and Condition" .
+  rdfs:label      "Quality and Condition"@en,"Qualität und Zustand"@de .
 
   melod:Event
   a sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description "Name of the Event" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
+                  sh:name "Name"@en, "Name"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
-  sh:property   [ sh:description "Insert ID of the place" ;
-                  sh:name "Place" ;
+  sh:property   [ sh:description "Choose place..."@en, "Wähle den Ort..."@de ;
+                  sh:name "Place"@en, "Ort"@de ;
                   sh:maxCount 1;
                   sh:class melod:PlaceEntity ;
                   #sh:defaultValue "https://mei-metadata.org/places/" ;
                   #sh:pattern      "^https://mei-metadata.org/places/\\d{8}" ;
                   sh:path schema:location
                 ] ;
-  sh:property   [ sh:description "Date of the event" ;
-                  sh:name "Date" ;
+  sh:property   [ sh:description "Date of the event"@en, "Datum des Ereignisses"@de ;
+                  sh:name "Date"@en, "Datum"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1 ;
                   sh:path melod:hasEventDate ;
@@ -858,15 +858,15 @@ melod:Relation
                     [ sh:node melod:Date ; rdfs:label "Date span" ]
                   )
                 ] ;
-  sh:property   [ sh:description "Contributor of the event" ;
-                  sh:name "Person or Institution" ;
+  sh:property   [ sh:description "Contributor of the event"@en, "Mitwirkende des Ereignisses"@de ;
+                  sh:name "Person or Institution"@en, "Person oder Institution"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   dash:singleLine false ;
                   sh:maxCount 1 ;
                   sh:path schema:description
@@ -877,25 +877,25 @@ melod:Relation
   a               sh:NodeShape ;
   rdfs:label      "Contributors" ;
   owl:imports     terms:melod-terms.ttl ;
-  sh:property   [ sh:description  "Insert ID of the Person or Institution" ;
-                  sh:name         "Person/Institution" ;
+  sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
+                  sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
                   sh:minCount  1 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
-                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
-                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution" ]
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person"@en, "Person"@de ]
+                    [ sh:class melod:InstitutionEntity; rdfs:label "Institution"@en, "Institution"@de ]
                   )
                 ] ;
-  sh:property   [ sh:description  "Role of the contribution" ;
-                  sh:name         "Role" ;
+  sh:property   [ sh:description  "Role of the contribution"@en, "Rolle des Beitrags"@de ;
+                  sh:name         "Role"@en, "Rolle"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasRole ;
                   sh:class melod:Role
                 ] ;
-  sh:property   [ sh:description  "Certainty of the contribution" ;
-                  sh:name         "Certainty" ;
+  sh:property   [ sh:description  "Certainty of the contribution"@en, "Sicherheit des Beitrags"@de ;
+                  sh:name         "Certainty"@en, "Sicherheit"@de ;
                   sh:maxCount  1 ;
                   sh:path         melod:hasCertainty ;
                   sh:class melod:Certainty
@@ -905,14 +905,14 @@ melod:Relation
 
   melod:Identifier
   a               sh:NodeShape ;
-  sh:property   [ sh:description "Name of a list or catalogue, e.g. TVWV" ;
-                  sh:name      "List name" ;
+  sh:property   [ sh:description "Name of a list, catalogue or other numbering system in which the item is identified (e.g. 'Opus', 'CNW', 'BWV', 'Neue Mozart-Ausgabe' etc.)."@en, "Name einer Liste, eines Katalogs oder eines anderen Nummerierungssystems, in dem das Item identifiziert wird (z.B. 'Opus', 'CNW', 'BWV', 'Neue Mozart-Ausgabe' etc.)."@de ;
+                  sh:name      "List name"@en, "Listenname"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:path      rdfs:label
                 ] ;
-  sh:property   [ sh:description "Work catalogue number, e.g. abc, 1:355" ;
-                  sh:name      "Number" ;
+  sh:property   [ sh:description "The items' number or signature in the list identifying it."@en, "Die Nummer oder Signatur des Items in der Liste, in der sie identifiziert wird."@de ;
+                  sh:name      "Number"@en, "Nummer"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   sh:datatype  xsd:string ;

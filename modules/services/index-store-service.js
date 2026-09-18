@@ -4,21 +4,21 @@ import { filesystemService } from "../services/filesystem-service.js";
 await init_oxigraph();
 
 export const INDEXES = [
-  { name: "Person", url: "persons.ttl" },
-  { name: "Place", url: "places.ttl" },
-  { name: "Institution", url: "institutions.ttl" },
-  { name: "RISMInstitution", url: "rism.ttl" },
-  { name: "Letter", url: "letters.ttl" },
-  { name: "Work", url: "works.ttl" },
-  { name: "Venue", url: "venues.ttl" },
-  { name: "Event", url: "events.ttl" },
-  { name: "Expression", url: "expressions.ttl" },
-  { name: "Instrumentation", url: "instrumentations.ttl" },
-  { name: "Item", url: "items.ttl" },
-  { name: "Manifestation", url: "manifestations.ttl" },
-  { name: "PerformanceEvent", url: "performanceEvents.ttl" },
-  { name: "Bibliography", url: "bibliography.ttl" },
-  { name: "DataCollection", url: "dataCollections.ttl" },
+  { name: "Person", url: "persons.ttl", labels: { en: "Person", de: "Person" } },
+  { name: "Place", url: "places.ttl", labels: { en: "Place", de: "Ort" } },
+  { name: "Institution", url: "institutions.ttl", labels: { en: "Institution", de: "Institution" } },
+  { name: "RISMInstitution", url: "rism.ttl", labels: { en: "RISM Institution", de: "RISM-Institution" } },
+  { name: "Letter", url: "letters.ttl", labels: { en: "Letter", de: "Brief" } },
+  { name: "Work", url: "works.ttl", labels: { en: "Work", de: "Werk" } },
+  { name: "Venue", url: "venues.ttl", labels: { en: "Venue", de: "Veranstaltungsort" } },
+  { name: "Event", url: "events.ttl", labels: { en: "Event", de: "Ereignis" } },
+  { name: "Expression", url: "expressions.ttl", labels: { en: "Expression", de: "Expression" } },
+  { name: "Instrumentation", url: "instrumentations.ttl", labels: { en: "Instrumentation", de: "Besetzung" } },
+  { name: "Item", url: "items.ttl", labels: { en: "Item", de: "Item" } },
+  { name: "Manifestation", url: "manifestations.ttl", labels: { en: "Manifestation", de: "Manifestation" } },
+  { name: "PerformanceEvent", url: "performanceEvents.ttl", labels: { en: "Performance Event", de: "Aufführung" } },
+  { name: "Bibliography", url: "bibliography.ttl", labels: { en: "Bibliography", de: "Bibliographie" } },
+  { name: "DataCollection", url: "dataCollections.ttl", labels: { en: "Data Collection", de: "Data Collection" } },
 ];
 
 class IndexStoreService {
