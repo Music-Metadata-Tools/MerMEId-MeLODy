@@ -27,14 +27,27 @@ class IndexStoreService {
     this._loaded = false;
     this._loading = false;
     this._dataset_url = null;
+    this._loadingPromise = null;
   }
 
-  async loadIndexes(dataset_url, selected_repository_path) {
-    if (this._loading) return;
+  async loadIndexes(selected_repository_path) {
+    if (this._loadingPromise) {
+      return this._loadingPromise;
+    }
+    this._loadingPromise = this._doLoadIndexes(selected_repository_path);
+    try {
+      await this._loadingPromise;
+    } finally {
+      this._loadingPromise = null;
+    }
+  }
+
+  async _doLoadIndexes(selected_repository_path) {
     this._loading = true;
-    this._dataset_url = dataset_url;
     this._selected_repository_path = selected_repository_path;
     const filesystem = filesystemService.getInstance();
+
+    let loadedCount = 0;
 
     for (const index of INDEXES) {
       try {
@@ -57,9 +70,10 @@ class IndexStoreService {
         //   let ttlText = remote + "\n" + localIndex;
         // } catch (_localErr) {
         //   // no local index found, ignore
-          
+
         // }
         this.store.load(ttlText, { format: "text/turtle" });
+        loadedCount++;
       } catch (err) {
         console.error(`Error loading ${index.url}. Please reload.`, err);
       }
@@ -67,13 +81,19 @@ class IndexStoreService {
 
     this._loaded = true;
     this._loading = false;
+    console.log(`[index-store] finished loading ${loadedCount}/${INDEXES.length} indexes, ${this.store.size} triples total`);
     document.dispatchEvent(new CustomEvent("adwlm-index-store:loaded", { bubbles: true }));
   }
 
-  async reloadIndexes(dataset_url) {
+  async reloadIndexes(selected_repository_path) {
+    // Wait for loadingIndexes so this.store is not resetted
+    if (this._loadingPromise) {
+      console.log("[index-store] reloadIndexes waiting for in-flight load to finish before resetting store");
+      await this._loadingPromise;
+    }
     this.store = new oxigraph.Store();
     this._loaded = false;
-    await this.loadIndexes(dataset_url ?? this._dataset_url, this._selected_repository_path);
+    await this.loadIndexes(selected_repository_path ?? this._selected_repository_path);
   }
 }
 

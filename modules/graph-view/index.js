@@ -173,9 +173,9 @@ class ADWLMGraphView extends LitElement {
       if (this.entity_to_edit) this._queryRelated();
     });
 
-    document.addEventListener("adwlm-entity-search:reload-indexes", () => {
-      indexStoreService.reloadIndexes();
-    });
+    // document.addEventListener("adwlm-entity-search:reload-indexes", () => {
+    //   indexStoreService.reloadIndexes();
+    // });
   }
 
   updated(changedProperties) {

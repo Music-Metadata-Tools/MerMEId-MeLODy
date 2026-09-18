@@ -146,6 +146,16 @@ class ADWLMEntitySearch extends LitElement {
 
     // Rebuild entries whenever the shared store finishes (re-)loading
     document.addEventListener("adwlm-index-store:loaded", async () => {
+      const alert = document.createElement('sl-alert');
+      alert.variant = 'success';
+      alert.closable = true;
+      alert.duration = 3000;
+      alert.innerHTML = `
+          <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+          Reloaded indexes successfully
+      `;
+      document.body.append(alert);
+      alert.toast();
       await this._buildEntries();
     });
 
@@ -159,7 +169,8 @@ class ADWLMEntitySearch extends LitElement {
     super.updated(changedProperties);
 
     if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
-      indexStoreService.loadIndexes(this._dataset_url, this._selected_repository_path);
+      this._loading = true;
+      indexStoreService.loadIndexes(this._selected_repository_path);
     }
   }
 
@@ -313,8 +324,9 @@ class ADWLMEntitySearch extends LitElement {
     this._entries = [];
     this._filtered = [];
     this._query = "";
+    this._loading = true;
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
-    await indexStoreService.reloadIndexes(this._dataset_url, this._selected_repository_path);
+    await indexStoreService.reloadIndexes(this._selected_repository_path);
   }
 
   render() {
@@ -346,7 +358,7 @@ class ADWLMEntitySearch extends LitElement {
         ` : ''}
         <div class="results">
           ${this._loading ? html`
-            Refresh the editor to load indexes.
+            <sl-spinner></sl-spinner> Loading …
           ` : this._filtered.map(
             (entry) => html`
               
