@@ -819,11 +819,13 @@ export default class ADWLMEntityEditor extends LitElement {
 
                 target.loading = true;
                 
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
-                    bubbles: true,
-                    composed: true
-                }));
+                // maybe change this event to a git fetch of the indexes folder of the remote repository?
+                // this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                //     bubbles: true,
+                //     composed: true
+                // }));
 
+                // Uncommented because reload-indexes is started in the build-indexes
                 document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                     bubbles: true,
                     composed: true
@@ -832,16 +834,17 @@ export default class ADWLMEntityEditor extends LitElement {
                 
 
                 // Show success notification
-                const alert = document.createElement('sl-alert');
-                alert.variant = 'success';
-                alert.closable = true;
-                alert.duration = 3000;
-                alert.innerHTML = `
-                    <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
-                    Reloaded indexes successfully
-                `;
-                document.body.append(alert);
-                alert.toast();
+                // Uncommented because indexes are not completely loaded at this stage
+                // const alert = document.createElement('sl-alert');
+                // alert.variant = 'success';
+                // alert.closable = true;
+                // alert.duration = 3000;
+                // alert.innerHTML = `
+                //     <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+                //     Reloaded indexes successfully
+                // `;
+                // document.body.append(alert);
+                // alert.toast();
                 target.loading = false;
                 /*
                 if (this._hasUnsavedChanges) {
