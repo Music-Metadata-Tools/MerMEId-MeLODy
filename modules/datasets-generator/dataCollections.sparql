@@ -5,7 +5,7 @@ prefix skos: <http://www.w3.org/2004/02/skos/core#>
 prefix schema: <https://schema.org/>
 
 construct {
-  ?collection_iri a melod:DataCollection ;
+  ?collection_iri a melod:DataCollectionEntity ;
     skos:prefLabel ?label ;
     skos:related ?catalog_iri .
 } where {
