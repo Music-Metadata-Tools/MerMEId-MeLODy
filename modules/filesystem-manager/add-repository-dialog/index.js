@@ -12,6 +12,11 @@ class RepositoryToClone {
         this._branch = null;
         this._username = null;
         this._token = null;
+        // Lazy loading (only files' paths are fetched up front, content
+        // on-demand per file) is the default - "Repo vollständig laden" in
+        // the dialog (see below) lets the user opt back into the old
+        // eager-download-everything behavior instead, per repo.
+        this._use_lazy_loading = true;
     }
 
     set folder(value) {
@@ -60,6 +65,14 @@ class RepositoryToClone {
 
     get token() {
         return this._token;
+    }
+
+    set use_lazy_loading(value) {
+        this._use_lazy_loading = value;
+    }
+
+    get use_lazy_loading() {
+        return this._use_lazy_loading;
     }
 }
 
@@ -202,6 +215,12 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
                         <sl-select id="repository-branches" label="${this._get_repository_branches_label()}"></sl-select>
+                        <sl-switch id="use-lazy-loading" checked style="margin-top: 1.5em;">
+                            Use lazy loading
+                        </sl-switch>
+                        <div style="color: var(--sl-color-neutral-500); font-size: var(--sl-font-size-small); margin-top: 0.25em;">
+                            Recommended: only file names are loaded up front, file content is fetched on demand when opened. Turn off to download the whole repository immediately instead, like before this option existed.
+                        </div>
                     </sl-tab-panel>
                 </sl-tab-group>
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
@@ -408,6 +427,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 let clone_button = render_root.querySelector("sl-button#clone-repository");
                 clone_button.disabled = false;
             }
+
+            if (target.matches("sl-switch#use-lazy-loading")) {
+                this._repository_to_clone.use_lazy_loading = target.checked;
+            }
         });
 
         return render_root;
@@ -459,6 +482,11 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         let repository_branches_select = this.renderRoot.querySelector("sl-select#repository-branches");
         repository_branches_select.value = "";
         repository_branches_select.innerHTML = "";
+        // Matches the fresh RepositoryToClone()'s use_lazy_loading default
+        // above - without this, toggling it off, then closing/reopening the
+        // dialog, would leave the switch visually off while the underlying
+        // state has already reset back to true.
+        this.renderRoot.querySelector("sl-switch#use-lazy-loading").checked = true;
         this.renderRoot.querySelector("sl-button#clone-repository").style.display = "none";
         this.renderRoot.querySelector("sl-button#next-button").style.display = "inline-block";
     }

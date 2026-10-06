@@ -32,6 +32,14 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// A 429 response's "Retry-After" header (seconds) - see withRetry() above
+// for why this takes priority over a guessed exponential delay.
+function parseRetryAfterMs(headers) {
+    const value = headers?.get("retry-after");
+    const seconds = Number(value);
+    return value && Number.isFinite(seconds) ? seconds * 1000 : undefined;
+}
+
 function chunkArray(array, size) {
     const chunks = [];
     for (let i = 0; i < array.length; i += size) {
@@ -42,6 +50,13 @@ function chunkArray(array, size) {
 
 // Retries a failing operation with an exponentially growing delay in
 // between (500ms, 1000ms, 2000ms, ...), instead of giving up immediately.
+//
+// A 429 response tells us exactly how long to back off via its "Retry-After"
+// header (see gitlabRequest()/gitlabGraphQL() below, which attach it as
+// error.retryAfterMs) - a strict, per-time-window rate limit (like
+// gitlab.rlp.net's) can easily need tens of seconds to reset, far longer
+// than the fixed exponential schedule below would ever wait on its own, so
+// that header - when present - takes priority over the exponential guess.
 async function withRetry(fn, { retries = 3, baseDelayMs = 500, label = "", onLog = noop } = {}) {
     let lastError;
 
@@ -52,7 +67,7 @@ async function withRetry(fn, { retries = 3, baseDelayMs = 500, label = "", onLog
             lastError = error;
 
             if (attempt < retries) {
-                const delay = baseDelayMs * 2 ** attempt;
+                const delay = error.retryAfterMs ?? baseDelayMs * 2 ** attempt;
                 onLog(`⚠️ ${label || "Request"} failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`);
                 await sleep(delay);
             }
@@ -242,8 +257,10 @@ function createGithubProvider({ owner, repo }, token, {
             return branches;
         },
 
-        async fetchAllFiles(branch) {
-
+        // Paths only (plus blob sha), no content - the cheap first half of
+        // fetchAllFiles() below, exposed on its own for lazy loading (build
+        // the file tree/menu without downloading every file's content).
+        async fetchFileTree(branch) {
             const treeData = await githubRest(`/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
 
             let blobs;
@@ -256,6 +273,13 @@ function createGithubProvider({ owner, repo }, token, {
             }
 
             onLog(`Files found according to tree: ${blobs.length}`);
+
+            return blobs;
+        },
+
+        async fetchAllFiles(branch) {
+
+            const blobs = await this.fetchFileTree(branch);
 
             const chunks = chunkArray(blobs, DEFAULT_CHUNK_SIZE);
             let loadedCount = 0;
@@ -415,6 +439,7 @@ function createGitlabProvider({ host, projectPath }, token, {
         if (!response.ok) {
             const error = new Error(`GitLab API error: ${response.status}\n${await response.text()}`);
             error.status = response.status;
+            error.retryAfterMs = parseRetryAfterMs(response.headers);
             throw error;
         }
 
@@ -431,10 +456,21 @@ function createGitlabProvider({ host, projectPath }, token, {
             body: JSON.stringify({ query, variables }),
         });
 
+        // Checked BEFORE parsing the body as JSON - a 429 from the rate
+        // limiter itself isn't guaranteed to carry a JSON body (unlike a
+        // normal GraphQL error response), and the Retry-After header is what
+        // withRetry() actually needs here (see there).
+        if (!response.ok) {
+            const error = new Error(`GitLab GraphQL error: ${response.status}\n${await response.text()}`);
+            error.status = response.status;
+            error.retryAfterMs = parseRetryAfterMs(response.headers);
+            throw error;
+        }
+
         const result = await response.json();
 
-        if (!response.ok || result.errors) {
-            throw new Error(`GitLab GraphQL error: ${response.status}\n${JSON.stringify(result.errors ?? result)}`);
+        if (result.errors) {
+            throw new Error(`GitLab GraphQL error: ${JSON.stringify(result.errors)}`);
         }
 
         return result.data;
@@ -443,9 +479,13 @@ function createGitlabProvider({ host, projectPath }, token, {
     // Fast path: GitLab's GraphQL API has a "blobs(paths: [...])" field that
     // returns multiple file contents in ONE request (analogous to GitHub's
     // alias batching). Not necessarily available / named identically on
-    // every GitLab version - which is why this is only attempted ONCE (see
-    // fetchAllFiles), falling back completely to the proven REST approach on
-    // any error, instead of retrying it for every chunk.
+    // every GitLab version - callers (fetchAllFiles()/fetchFilesByPath()
+    // below) fall back completely to the proven REST approach if this fails
+    // outright (e.g. the field doesn't exist there at all). Each chunk
+    // itself IS retried (withRetry(), Retry-After-aware) though - a
+    // transient 429 here shouldn't throw away already-fetched chunks and
+    // abandon the whole batch to REST, which would only make a strict
+    // rate limit (like gitlab.rlp.net's) worse, not better.
     //
     // Field choice: RepositoryBlob has both "plainData" (syntax-HIGHLIGHTED
     // HTML, meant for the web UI - do not use, produces broken Turtle/JSON)
@@ -465,17 +505,20 @@ function createGitlabProvider({ host, projectPath }, token, {
 
         for (const chunk of chunks) {
 
-            const data = await gitlabGraphQL(
-                `query($projectPath: ID!, $paths: [String!]!, $ref: String!) {
-                    project(fullPath: $projectPath) {
-                        repository {
-                            blobs(paths: $paths, ref: $ref) {
-                                nodes { path rawTextBlob }
+            const data = await withRetry(
+                () => gitlabGraphQL(
+                    `query($projectPath: ID!, $paths: [String!]!, $ref: String!) {
+                        project(fullPath: $projectPath) {
+                            repository {
+                                blobs(paths: $paths, ref: $ref) {
+                                    nodes { path rawTextBlob }
+                                }
                             }
                         }
-                    }
-                }`,
-                { projectPath, paths: chunk, ref: branch }
+                    }`,
+                    { projectPath, paths: chunk, ref: branch }
+                ),
+                { label: `Loading GraphQL batch (${loadedCount + 1}-${loadedCount + chunk.length})`, onLog }
             );
 
             const nodes = data?.project?.repository?.blobs?.nodes;
@@ -527,12 +570,14 @@ function createGitlabProvider({ host, projectPath }, token, {
             return branches;
         },
 
-        async fetchAllFiles(branch) {
-
-            // 1. Load structure - the "x-total-pages" response header tells us
-            //    right after the first page how many pages there are in total,
-            //    so we can load the remaining pages IN PARALLEL instead of
-            //    strictly following the "Link" header one by one.
+        // Paths only, no content - the cheap first half of fetchAllFiles()
+        // below, exposed on its own for lazy loading (build the file
+        // tree/menu without downloading every file's content).
+        async fetchFileTree(branch) {
+            // The "x-total-pages" response header tells us right after the
+            // first page how many pages there are in total, so we can load
+            // the remaining pages IN PARALLEL instead of strictly following
+            // the "Link" header one by one.
             const baseTreeUrl =
                 `${apiBase}/projects/${projectId}/repository/tree` +
                 `?recursive=true&per_page=100&ref=${encodeURIComponent(branch)}`;
@@ -560,6 +605,19 @@ function createGitlabProvider({ host, projectPath }, token, {
             }
 
             onLog(`Files found according to tree: ${blobEntries.length}`);
+
+            // GitLab's own field for the blob's content hash is "id" (not
+            // "sha") - normalized to "sha" here so callers (pull()'s
+            // change-detection in virtual-filesystem/index.js) can compare
+            // against GitHub's tree entries the same way, without needing to
+            // know which platform they came from.
+            return blobEntries.map((entry) => ({ path: entry.path, sha: entry.id }));
+        },
+
+        async fetchAllFiles(branch) {
+
+            // 1. Load structure.
+            const blobEntries = await this.fetchFileTree(branch);
 
             // 2. Load content.
             //
@@ -603,9 +661,34 @@ function createGitlabProvider({ host, projectPath }, token, {
             return files;
         },
 
-        // Same idea as the GitHub implementation above - small explicit path
-        // list, reuses the single-file REST endpoint, missing path returns null.
+        // Originally built for small explicit path lists (a handful of dirty
+        // files for checkPushConflicts()) - one REST call per path was fine
+        // there. pull()'s lazy-refresh step (see virtual-filesystem/index.js)
+        // can hand this hundreds/thousands of paths at once though (e.g. the
+        // very first sync after upgrading to SHA-based change detection,
+        // where every already-downloaded path still counts as "unknown"), and
+        // that many individual REST calls - even spread out with retries -
+        // is enough to make GitLab's per-instance rate limit reject nearly
+        // everything with 429. Same fast-path/fallback pattern as
+        // fetchAllFiles() above fixes this: try the GraphQL batch endpoint
+        // (few large requests) first, fall back completely to the REST loop
+        // only if that doesn't work at all.
         async fetchFilesByPath(paths, branch) {
+            try {
+                const files = await fetchContentViaGraphQLBatch(paths, branch);
+
+                // blobs(paths: [...]) simply omits paths that don't exist
+                // (no per-path error) - map those back to { content: null },
+                // matching the REST fallback's/GitHub's "missing" contract.
+                const contentByPath = new Map(files.map((file) => [file.path, file.content]));
+                return paths.map((path) => ({
+                    path,
+                    content: contentByPath.has(path) ? contentByPath.get(path) : null,
+                }));
+            } catch (error) {
+                onLog(`⚠️ GraphQL batch loading failed (${error.message}), falling back to per-file REST loading...`);
+            }
+
             return mapWithConcurrency(paths, fileConcurrency, async (path) => {
                 const fileUrl =
                     `${apiBase}/projects/${projectId}/repository/files/${encodeURIComponent(path)}` +

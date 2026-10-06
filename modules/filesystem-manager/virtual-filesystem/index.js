@@ -30,6 +30,19 @@ export default class ADWLMVirtualFilesystem {
         this.store = null;
         this.index_store = null;
         this.entity_store = null;
+
+        // In-memory cache for .remote-tree.json (see _readRemoteTree() /
+        // _writeRemoteTree() below) - repository_path -> { tree, childrenIndex }.
+        // Without this, EVERY list_entries_from_workdir() call (i.e. every
+        // single folder expand in the tree UI) re-reads and re-parses the
+        // whole manifest from OPFS - fine for a small repo, but for one with
+        // tens of thousands of files this made expanding any folder (and
+        // therefore opening any file via search/graph-view, which expands
+        // every ancestor folder) noticeably slow. Lives only as long as this
+        // object does (a fresh page load starts empty) and is kept in sync
+        // because _writeRemoteTree() is the only place that ever changes
+        // the manifest on disk.
+        this._remoteTreeCache = new Map();
     }
 
     // .dirty.json/.snapshot.json bookkeeping (_readDirtySet/_writeDirtySet
@@ -289,6 +302,17 @@ export default class ADWLMVirtualFilesystem {
         let username = repository_metadata.username;
         let remote_origin_url = repository_metadata.url;
         let repository_branch = repository_metadata.branch;
+        // Whether this repo is cloned lazily (tree only, content fetched on
+        // demand - see fetchFileTree()/_ensureFileDownloaded() etc. below)
+        // or downloaded fully up front, like before lazy loading existed
+        // (see the "add repository" dialog's "Lazy Loading verwenden"
+        // switch). Defaults to true, so any other/older caller not yet
+        // passing this field keeps getting the (now default) lazy
+        // behavior. Persisted as the "lazy.enabled" git config value below,
+        // so pull() later knows which of the two modes to keep using for
+        // THIS repo without having to guess from whether a
+        // .remote-tree.json manifest happens to exist.
+        let use_lazy_loading = repository_metadata.use_lazy_loading !== false;
 
         try {
             await this.pfs.mkdir(repository_folder_name);
@@ -323,45 +347,45 @@ export default class ADWLMVirtualFilesystem {
         // ---------------------------------------------------------------------
 
         try {
-            // Replaces git.clone(): loads all files via the GitHub/GitLab API instead
-            // of the Git network protocol - this eliminates the CORS proxy entirely.
             const provider = createProvider(remote_origin_url, personal_acces_token, {
                 onLog: (message) => console.log(message),
                 onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
             });
-            const files = await provider.fetchAllFiles(repository_branch);
 
-            // Same concurrency fix as pull() (see there) - sequential
-            // writes are needless overhead even for OPFS with many files.
-            await mapWithConcurrency([...files], 5, async (file) => {
-                const full_path = `${repository_folder_name}/${file.path}`;
-                const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+            if (use_lazy_loading) {
+                // Replaces git.clone(): loads only the file TREE (paths, no content) via
+                // the GitHub/GitLab API - this eliminates the CORS proxy entirely, same
+                // as before, but also means the tree/menu is available immediately
+                // without downloading any file content. Individual files are fetched
+                // on demand the first time they're actually read - see
+                // _ensureFileDownloaded()/_ensureFilesDownloaded() below, hooked into
+                // read_file()/read_directory_files(), and list_entries_from_workdir()
+                // (which merges this manifest into what it shows even before anything
+                // has been downloaded).
+                const tree = await provider.fetchFileTree(repository_branch);
+                await this._writeRemoteTree(repository_folder_name, new Map(tree.map(entry => [entry.path, entry.sha])));
+            } else {
+                // "Repo vollständig laden" option: restores the pre-lazy-loading
+                // behavior on purpose (e.g. for a repo the user knows they'll browse
+                // exhaustively anyway, where paying the cost once up front beats
+                // many later on-demand fetches). Deliberately does NOT write
+                // .remote-tree.json - its absence is exactly what keeps
+                // _ensureFileDownloaded()/_ensureFilesDownloaded()/
+                // list_entries_from_workdir()'s manifest merge complete no-ops for
+                // this repo (see _readRemoteTree()), so nothing else needs to know
+                // or branch on use_lazy_loading at all - only pull() below does,
+                // via the "lazy.enabled" config value set further down.
+                const files = await provider.fetchAllFiles(repository_branch);
+                await mapWithConcurrency([...files], 5, async (file) => {
+                    const full_path = `${repository_folder_name}/${file.path}`;
+                    const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+                    if (parent_folder_path !== repository_folder_name) {
+                        await ensureDir(this.fs, parent_folder_path);
+                    }
+                    await this.pfs.writeFile(full_path, file.content, "utf8");
+                });
+            }
 
-                if (parent_folder_path !== repository_folder_name) {
-                    // ensureDir() creates intermediate directories level by level, since
-                    // Lightning-FS does not reliably create all missing directories at
-                    // once with { recursive: true } (unlike Node.js) - see api-provider.js.
-                    await ensureDir(this.fs, parent_folder_path);
-                }
-
-                await this.pfs.writeFile(full_path, file.content, "utf8");
-
-                // ---------------------------------------------------------------------
-                // OLD IMPLEMENTATION
-                // snapshot[file.path] = file.content;
-                // ---------------------------------------------------------------------
-            });
-
-            // ---------------------------------------------------------------------
-            // OLD IMPLEMENTATION
-            // const snapshot = {};
-            // ... (declared above the loop, populated inside it - see above)
-            // await this.pfs.writeFile(
-            //     `${repository_folder_name}/.snapshot.json`,
-            //     JSON.stringify(snapshot),
-            //     "utf8"
-            // );
-            // ---------------------------------------------------------------------
             // Replaced by a lazy baseline, captured on first edit instead of
             // eagerly for every file here - see _captureSnapshotBaselineOnFirstTouch() below.
 
@@ -413,6 +437,19 @@ export default class ADWLMVirtualFilesystem {
             path: "branch.name",
             value: repository_branch
         });
+
+        // store which of the two modes this repo was added with, so pull()
+        // (see below) keeps using the same one on every future sync -
+        // without this, pull() would have no explicit way to tell "eager,
+        // by choice" apart from "lazy, but nothing downloaded yet" for a
+        // repo that has no .remote-tree.json purely because it was just
+        // added and no pull has happened yet.
+        await git.setConfig({
+            fs: this.fs,
+            dir: repository_folder_name,
+            path: "lazy.enabled",
+            value: use_lazy_loading ? "true" : "false"
+        });
     }
 
     async remove_repository(repository_folder_name) {
@@ -422,7 +459,29 @@ export default class ADWLMVirtualFilesystem {
             console.error(error);
         }
 
-        await this._clear_directory(repository_folder_name);
+        // ---------------------------------------------------------------------
+        // OLD IMPLEMENTATION: manually walked the whole directory tree and
+        // deleted every file/folder one at a time (see _clear_directory()
+        // below), fully sequential (no concurrency at all, unlike the
+        // read/write loops elsewhere in this file) - 2 separate async OPFS
+        // calls (stat + unlink) per file. For an eager-loaded repo with
+        // thousands of files this made "remove repository" extremely slow.
+        //
+        // await this._clear_directory(repository_folder_name);
+        // ---------------------------------------------------------------------
+        //
+        // Fixed: entirely redundant - this.pfs.rmdir() below already deletes
+        // the whole directory tree in one native, recursive call
+        // (FSADirectoryFilesystem.rmdir() -> dirHandle.removeEntry(name,
+        // { recursive: true })), handled by the browser/OS itself instead of
+        // one-by-one from JS. _clear_directory() was doing the same work
+        // twice, the slow way first.
+        //
+        // Measured after this fix on a 14,358-file repo: ~38s, almost
+        // entirely inside this one call (git.deleteRemote() above: ~100ms).
+        // That remaining cost is the browser's own native recursive delete
+        // actually freeing every file's storage - there's no faster
+        // primitive available for this; it's no longer duplicated work.
         await this.pfs.rmdir(repository_folder_name);
     }
 
@@ -574,6 +633,69 @@ export default class ADWLMVirtualFilesystem {
             },
         });
 
+        // Lazy repos (see add_repository()) don't have every file physically
+        // on disk yet - merge in whatever .remote-tree.json knows about at
+        // this same folder level, so the tree/menu shows the full picture
+        // even before anything's been downloaded. No-op (remote_children is
+        // null) for local repos and repos added before this feature existed.
+        //
+        // ---------------------------------------------------------------------
+        // OLD IMPLEMENTATION: scanned every single path in .remote-tree.json on
+        // every call, just to find the handful belonging to this one folder -
+        // fine for a small repo, but for one with tens of thousands of files
+        // this meant every folder expand (and therefore every file opened via
+        // search/graph-view, which expands each ancestor folder in turn) paid
+        // a cost that scaled with the whole repo's size, not the folder's.
+        //
+        // const remote_tree = await this._readRemoteTree(repository_path);
+        // if (remote_tree) {
+        //     const seen_folders = new Set(folders);
+        //     const seen_files = new Set(files);
+        //     for (const remote_path of remote_tree.keys()) {
+        //         if (!remote_path.startsWith(parent_folder_relative_path) || remote_path.startsWith(".")) {
+        //             continue;
+        //         }
+        //         const rest = remote_path.slice(parent_folder_relative_path.length);
+        //         const slash_index = rest.indexOf("/");
+        //         if (slash_index === -1) {
+        //             if (rest && !seen_files.has(remote_path)) {
+        //                 files.push(remote_path);
+        //                 seen_files.add(remote_path);
+        //             }
+        //         } else {
+        //             const folder_path = parent_folder_relative_path + rest.slice(0, slash_index);
+        //             if (!seen_folders.has(folder_path)) {
+        //                 folders.push(folder_path);
+        //                 seen_folders.add(folder_path);
+        //             }
+        //         }
+        //     }
+        // }
+        // ---------------------------------------------------------------------
+        //
+        // Fixed: _getRemoteTreeChildren() looks this one folder up in an
+        // index built ONCE from the whole manifest (see
+        // _buildRemoteTreeChildrenIndex()), instead of re-scanning
+        // everything per call.
+        const remote_children = await this._getRemoteTreeChildren(repository_path, parent_folder_relative_path);
+        if (remote_children) {
+            const seen_folders = new Set(folders);
+            const seen_files = new Set(files);
+
+            for (const folder_path of remote_children.folders) {
+                if (!seen_folders.has(folder_path)) {
+                    folders.push(folder_path);
+                    seen_folders.add(folder_path);
+                }
+            }
+            for (const file_path of remote_children.files) {
+                if (!seen_files.has(file_path)) {
+                    files.push(file_path);
+                    seen_files.add(file_path);
+                }
+            }
+        }
+
         folders.sort();
         files.sort();
 
@@ -712,31 +834,127 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async read_file(repository_path, file_path) {
-        let file_contents = "";
-
-        await git.walk({
-            fs: this._get_fs_for_repository(repository_path),
-            dir: this._get_dir_for_repository(repository_path),
-            trees: [git.WORKDIR()],
-            // see read_directory_files() below
-            iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
-            map: async (entry_path, [entry]) => {
-                // see the .crswap comment in list_entries_from_workdir() above
-                if (entry_path === file_path && !entry_path.endsWith(".crswap")) {
-                    file_contents = await entry.content();
-                }
-            },
-        });
-        if (file_contents) {
-            file_contents = new TextDecoder().decode(file_contents);
+    // Lazy repos (see add_repository()) may know a file exists remotely
+    // (.remote-tree.json) without it being physically downloaded yet -
+    // fetches and writes any such missing paths now, the first time
+    // they're actually read. No-op for paths already on disk, and for
+    // repos without a manifest (local repos, or repos added before this
+    // feature existed).
+    async _ensureFilesDownloaded(repository_path, file_relative_paths) {
+        const remote_tree = await this._readRemoteTree(repository_path);
+        if (!remote_tree) {
+            return;
         }
 
-        return file_contents;
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
+        const missing_paths = [];
+        for (const path of file_relative_paths) {
+            if (!remote_tree.has(path)) {
+                continue; // not a known remote file either - genuinely doesn't exist
+            }
+            try {
+                await fs.promises.stat(this._get_path_for_repository(repository_path, path));
+            } catch (error) {
+                missing_paths.push(path);
+            }
+        }
+
+        if (missing_paths.length === 0) {
+            return;
+        }
+
+        const remote_origin_url = await git.getConfig({ fs, dir, path: "remote.origin.url" });
+        const repository_branch = await git.getConfig({ fs, dir, path: "branch.name" });
+        const personal_access_token = await git.getConfigAll({ fs, dir, path: "user.pat" });
+
+        const provider = createProvider(remote_origin_url, personal_access_token, {
+            onLog: (log_line) => console.log(log_line),
+            onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
+        });
+
+        const files = await provider.fetchFilesByPath(missing_paths, repository_branch);
+
+        await mapWithConcurrency(files, 5, async (file) => {
+            if (file.content === null) {
+                return; // gone remotely too by now - nothing to write
+            }
+            const full_path = this._get_path_for_repository(repository_path, file.path);
+            const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+            if (parent_folder_path !== dir) {
+                await ensureDir(fs, parent_folder_path);
+            }
+            await fs.promises.writeFile(full_path, file.content, "utf8");
+        });
+    }
+
+    async _ensureFileDownloaded(repository_path, file_relative_path) {
+        await this._ensureFilesDownloaded(repository_path, [file_relative_path]);
+    }
+
+    async read_file(repository_path, file_path) {
+        await this._ensureFileDownloaded(repository_path, file_path);
+
+        // ---------------------------------------------------------------------
+        // OLD IMPLEMENTATION: walked the ENTIRE workdir tree just to find one
+        // already-known path. git.walk()'s default iterate() recurses into
+        // every directory regardless of what map() does with each entry, so
+        // this scaled with the TOTAL number of files physically on disk, not
+        // with the single target file - harmless for a small repo, but for
+        // an eager-loaded repo with thousands of files already downloaded,
+        // opening any one file this way became very slow (e.g. every open
+        // triggered from search/graph-view).
+        //
+        // let file_contents = "";
+        // await git.walk({
+        //     fs: this._get_fs_for_repository(repository_path),
+        //     dir: this._get_dir_for_repository(repository_path),
+        //     trees: [git.WORKDIR()],
+        //     iterate: (walk, children) => mapWithConcurrency([...children], 5, walk),
+        //     map: async (entry_path, [entry]) => {
+        //         if (entry_path === file_path && !entry_path.endsWith(".crswap")) {
+        //             file_contents = await entry.content();
+        //         }
+        //     },
+        // });
+        // if (file_contents) {
+        //     file_contents = new TextDecoder().decode(file_contents);
+        // }
+        // return file_contents;
+        // ---------------------------------------------------------------------
+        //
+        // Fixed: file_path is already the exact path to read - no need to
+        // search the whole tree for it. Same direct-read pattern already
+        // used elsewhere in this file (pull(), _ensureFilesDownloaded()).
+        // A missing file (including a stray same-named ".crswap" in-progress
+        // write) throws and falls through to "", matching the old walk's
+        // default when nothing matched.
+        const fs = this._get_fs_for_repository(repository_path);
+        const full_path = this._get_path_for_repository(repository_path, file_path);
+
+        try {
+            return await fs.promises.readFile(full_path, "utf8");
+        } catch (error) {
+            return "";
+        }
     }
 
     async read_directory_files(repository_path, directory_path) {
         const fileContents = {};
+
+        // Ensure every remotely-known top-level file in this directory is
+        // downloaded first (lazy repos) - the walk below only sees what's
+        // physically on disk, so anything not yet downloaded would
+        // otherwise silently look like it doesn't exist.
+        const remote_tree = await this._readRemoteTree(repository_path);
+        if (remote_tree) {
+            const prefix = `${directory_path}/`;
+            const top_level_paths = [...remote_tree.keys()].filter(path =>
+                path.startsWith(prefix) && !path.slice(prefix.length).includes("/")
+            );
+            await this._ensureFilesDownloaded(repository_path, top_level_paths);
+        }
 
         await git.walk({
             fs: this._get_fs_for_repository(repository_path),
@@ -795,6 +1013,122 @@ export default class ADWLMVirtualFilesystem {
 
     async _writeDirtySet(repository_path, dirty) {
         await this.pfs.writeFile(`${repository_path}/.dirty.json`, JSON.stringify(dirty), "utf8");
+    }
+
+    // Reads .remote-tree.json: path -> blob SHA, for every path known to
+    // exist on the remote, for a lazily-cloned repo (see
+    // add_repository()/pull() below) - same "always on the shared this.pfs"
+    // placement as .dirty.json above. The SHA (not just the path) is what
+    // lets pull() tell which already-downloaded files actually changed
+    // remotely, instead of re-fetching content for everything on every
+    // sync (see pull() below). Returns null (not an empty Map) when there's
+    // no manifest at all, so callers can tell "not a lazy repo" (local
+    // folder, or added before this feature existed) apart from "lazy repo
+    // with zero known files".
+    //
+    // Backed by this._remoteTreeCache (see constructor) - for a repo with
+    // tens of thousands of entries, re-reading + re-JSON.parse()-ing the
+    // whole manifest on every call (every single folder expand in the tree
+    // UI ends up calling this) was measurably slow. Cached per
+    // repository_path for the lifetime of this object; _writeRemoteTree()
+    // below is the only writer, so it keeps the cache in sync directly
+    // instead of just invalidating it.
+    async _readRemoteTree(repository_path) {
+        const cached = this._remoteTreeCache.get(repository_path);
+        if (cached) {
+            return cached.tree;
+        }
+
+        try {
+            const data = JSON.parse(await this.pfs.readFile(`${repository_path}/.remote-tree.json`, "utf8"));
+
+            // Backward compatible: an earlier version of this manifest was a
+            // flat array of paths only (no SHA tracking yet). Treated as
+            // "SHA unknown" rather than failing outright - pull() then
+            // refreshes those paths once (see paths_to_refresh below), which
+            // self-heals the manifest into the new path->sha format.
+            const tree = Array.isArray(data)
+                ? new Map(data.map((path) => [path, undefined]))
+                : new Map(Object.entries(data));
+
+            this._remoteTreeCache.set(repository_path, { tree, childrenIndex: null });
+            return tree;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    async _writeRemoteTree(repository_path, pathToShaMap) {
+        await this.pfs.writeFile(`${repository_path}/.remote-tree.json`, JSON.stringify(Object.fromEntries(pathToShaMap)), "utf8");
+        // childrenIndex: null - rebuilt lazily on next _getRemoteTreeChildren()
+        // call (see below), no need to redo that work here on every write.
+        this._remoteTreeCache.set(repository_path, { tree: pathToShaMap, childrenIndex: null });
+    }
+
+    // Folder-scoped lookup for list_entries_from_workdir()'s manifest merge
+    // (see there) - backed by a per-repo index built ONCE from the whole
+    // manifest (see _buildRemoteTreeChildrenIndex() below) and cached
+    // alongside the tree itself, instead of linearly scanning every path in
+    // the repo on every single folder expand. Returns null when there's no
+    // manifest, or { folders: Set<path>, files: Set<path> } (possibly both
+    // empty) for the requested folder - parent_folder_relative_path must be
+    // in the same "" (root) / "a/b/" (trailing slash) form
+    // list_entries_from_workdir() already uses internally.
+    async _getRemoteTreeChildren(repository_path, parent_folder_relative_path) {
+        const tree = await this._readRemoteTree(repository_path);
+        if (!tree) {
+            return null;
+        }
+
+        const cached = this._remoteTreeCache.get(repository_path);
+        if (!cached.childrenIndex) {
+            cached.childrenIndex = this._buildRemoteTreeChildrenIndex(tree);
+        }
+
+        return cached.childrenIndex.get(parent_folder_relative_path) ?? null;
+    }
+
+    // Turns the flat path->sha manifest into folderKey -> { folders, files }
+    // buckets (one entry per folder level, keyed the same "" / "a/b/" way as
+    // parent_folder_relative_path), so a lookup for one folder afterwards is
+    // O(children of that folder) instead of O(every path in the repo).
+    // Mirrors the "skip a path whose FULL path starts with '.'" rule the old
+    // linear-scan merge used.
+    _buildRemoteTreeChildrenIndex(tree) {
+        const index = new Map();
+
+        const ensureBucket = (folderKey) => {
+            let bucket = index.get(folderKey);
+            if (!bucket) {
+                bucket = { folders: new Set(), files: new Set() };
+                index.set(folderKey, bucket);
+            }
+            return bucket;
+        };
+
+        for (const path of tree.keys()) {
+            if (path.startsWith(".")) {
+                continue;
+            }
+
+            const segments = path.split("/");
+            let folderKey = "";
+            let folderPath = "";
+
+            for (let i = 0; i < segments.length; i++) {
+                const entryPath = folderPath ? `${folderPath}/${segments[i]}` : segments[i];
+
+                if (i === segments.length - 1) {
+                    ensureBucket(folderKey).files.add(entryPath);
+                } else {
+                    ensureBucket(folderKey).folders.add(entryPath);
+                    folderPath = entryPath;
+                    folderKey = `${entryPath}/`;
+                }
+            }
+        }
+
+        return index;
     }
 
     // Lazily captures the pre-edit content of `file_relative_path` into
@@ -1532,41 +1866,144 @@ export default class ADWLMVirtualFilesystem {
                 },
             });
 
-            const files = await provider.fetchAllFiles(repository_branch);
-            const seen_paths = new Set();
+            // Which of the two add_repository() modes this repo uses (see
+            // there) - an explicit "lazy.enabled" config value wins; a repo
+            // added before that flag existed falls back to inferring it from
+            // whether it already has a .remote-tree.json manifest (i.e. was
+            // already being treated as lazy), so nothing changes for repos
+            // added before this two-mode choice existed.
+            const lazy_config = await git.getConfig({ fs, dir, path: "lazy.enabled" });
+            const is_lazy = lazy_config === "false"
+                ? false
+                : (lazy_config === "true" ? true : (await this._readRemoteTree(repository_path)) !== null);
+
+            let remote_tree = null; // only used (and only written back) in lazy mode
+            let seen_paths;
             const changed_paths = new Set();
 
-            // Sequential writes made pull() slow for real local folders
-            // (per-call File System Access API latency adds up over
-            // thousands of files) - mapWithConcurrency runs several at once
-            // instead. Also skips writing a file whose fetched content
-            // already matches disk, so changed_paths accurately reflects
-            // what to reindex (see filesystem-manager/index.js).
-            await mapWithConcurrency([...files], 5, async (file) => {
-                const full_path = this._get_path_for_repository(repository_path, file.path);
-                seen_paths.add(file.path);
+            if (is_lazy) {
+                // Fetch only the TREE (paths, no content) - cheap regardless
+                // of repo size - and only re-fetch CONTENT for paths that are
+                // already physically downloaded (previously opened). A remote
+                // file never opened before just gets added to
+                // .remote-tree.json below, fetched lazily whenever it's
+                // eventually opened (see _ensureFileDownloaded()).
+                //
+                // ---------------------------------------------------------------------
+                // OLD IMPLEMENTATION: refreshed content for EVERY already-downloaded
+                // path that still exists remotely, on every single pull - fine for a
+                // freshly-added repo where only a handful of files were ever opened,
+                // but for a repo where most/all files are already present locally
+                // (e.g. a local folder import with a remote configured, or any
+                // repo that's simply been browsed a lot) this could mean thousands
+                // of individual fetchFilesByPath() REST calls at once, hammering
+                // GitLab's per-instance rate limit (429) hard enough to abort the
+                // whole pull.
+                //
+                // const seen_paths = new Set(tree.map(entry => entry.path));
+                // const paths_to_refresh = [...local_paths_before_pull].filter(path => seen_paths.has(path));
+                // ---------------------------------------------------------------------
+                //
+                // Fixed: the tree already carries each blob's current SHA "for
+                // free" - compared against the SHA recorded in .remote-tree.json
+                // the last time we wrote it (add_repository()/a previous pull()),
+                // content only needs to be re-fetched for paths whose SHA
+                // actually changed. On a routine sync where only a few files
+                // changed, this turns "thousands of requests" into "a handful" -
+                // a path with no previously-known SHA (a repo added before SHA
+                // tracking existed, or a not-yet-migrated flat-array manifest,
+                // see _readRemoteTree()) is refreshed once to be safe, then
+                // self-heals going forward.
+                const tree = await provider.fetchFileTree(repository_branch);
+                remote_tree = new Map(tree.map(entry => [entry.path, entry.sha]));
+                seen_paths = new Set(remote_tree.keys());
 
-                let current_content;
-                try {
-                    current_content = await fs.promises.readFile(full_path, "utf8");
-                } catch (error) {
-                    // doesn't exist locally yet - definitely new/changed
+                const previous_remote_tree = (await this._readRemoteTree(repository_path)) ?? new Map();
+
+                const paths_to_refresh = [...local_paths_before_pull].filter(path => {
+                    if (!remote_tree.has(path)) {
+                        return false; // no longer remote - the deletion loop below handles it
+                    }
+                    const previous_sha = previous_remote_tree.get(path);
+                    return previous_sha === undefined || previous_sha !== remote_tree.get(path);
+                });
+
+                if (paths_to_refresh.length > 0) {
+                    const files = await provider.fetchFilesByPath(paths_to_refresh, repository_branch);
+
+                    // Sequential writes made pull() slow for real local folders
+                    // (per-call File System Access API latency adds up over
+                    // thousands of files) - mapWithConcurrency runs several at once
+                    // instead. Also skips writing a file whose fetched content
+                    // already matches disk, so changed_paths accurately reflects
+                    // what to reindex (see filesystem-manager/index.js).
+                    await mapWithConcurrency(files, 5, async (file) => {
+                        if (file.content === null) {
+                            return; // deleted remotely just now - the deletion loop below handles it
+                        }
+
+                        const full_path = this._get_path_for_repository(repository_path, file.path);
+
+                        let current_content;
+                        try {
+                            current_content = await fs.promises.readFile(full_path, "utf8");
+                        } catch (error) {
+                            // shouldn't happen (path came from local_paths_before_pull) - be defensive anyway
+                        }
+
+                        if (current_content === file.content) {
+                            return; // already up to date locally - nothing to write
+                        }
+
+                        const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+
+                        if (parent_folder_path !== dir) {
+                            // see add_repository() above for why ensureDir() is needed
+                            await ensureDir(fs, parent_folder_path);
+                        }
+
+                        await fs.promises.writeFile(full_path, file.content, "utf8");
+                        changed_paths.add(file.path);
+                    });
                 }
+            } else {
+                // Eager mode ("Repo vollständig laden" - see add_repository()):
+                // every remote file's current content is checked/refreshed on
+                // every pull, not just already-downloaded ones - matches the
+                // "everything is always fully present locally" guarantee this
+                // mode promises. fetchAllFiles() already tries GitLab's GraphQL
+                // batch endpoint internally (see api-provider.js), so this
+                // isn't thousands of individual REST calls even for a large
+                // repo. seen_paths is derived straight from what came back -
+                // no separate tree fetch needed since fetchAllFiles() already
+                // includes every path.
+                const files = await provider.fetchAllFiles(repository_branch);
+                seen_paths = new Set(files.map(file => file.path));
 
-                if (current_content === file.content) {
-                    return; // already up to date locally - nothing to write
-                }
+                await mapWithConcurrency(files, 5, async (file) => {
+                    const full_path = this._get_path_for_repository(repository_path, file.path);
 
-                const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+                    let current_content;
+                    try {
+                        current_content = await fs.promises.readFile(full_path, "utf8");
+                    } catch (error) {
+                        // not downloaded yet at all - fine, falls through to the write below
+                    }
 
-                if (parent_folder_path !== dir) {
-                    // see add_repository() above for why ensureDir() is needed
-                    await ensureDir(fs, parent_folder_path);
-                }
+                    if (current_content === file.content) {
+                        return; // already up to date locally - nothing to write
+                    }
 
-                await fs.promises.writeFile(full_path, file.content, "utf8");
-                changed_paths.add(file.path);
-            });
+                    const parent_folder_path = full_path.substring(0, full_path.lastIndexOf("/"));
+
+                    if (parent_folder_path !== dir) {
+                        await ensureDir(fs, parent_folder_path);
+                    }
+
+                    await fs.promises.writeFile(full_path, file.content, "utf8");
+                    changed_paths.add(file.path);
+                });
+            }
 
             const deleted_paths = new Set();
 
@@ -1610,6 +2047,22 @@ export default class ADWLMVirtualFilesystem {
                 await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
             } catch (error) {
                 console.error("Failed to clear dirty-file/snapshot tracking after pull:", error);
+            }
+
+            // Keep the remote-tree manifest current (see add_repository()) -
+            // lazy repos only. Written with the fresh SHAs (not just paths),
+            // so the NEXT pull can again tell changed from unchanged files
+            // without re-fetching content for everything - see
+            // paths_to_refresh above. Eager repos never get a manifest at
+            // all (see add_repository()), which is exactly what keeps them
+            // eager on every future pull too, instead of silently drifting
+            // into lazy mode the way any repo used to on its first pull.
+            if (is_lazy) {
+                try {
+                    await this._writeRemoteTree(repository_path, remote_tree);
+                } catch (error) {
+                    console.error("Failed to update remote-tree manifest after pull:", error);
+                }
             }
 
             let end = performance.now();
