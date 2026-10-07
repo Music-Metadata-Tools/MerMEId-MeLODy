@@ -760,13 +760,13 @@ melod:TitlePage
   a               sh:NodeShape ;
   sh:property   [ sh:description "Type of the title page"@en,"Typ der Titelseite"@de ;
                   sh:name      "Type"@en,"Typ"@de ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
-                  sh:description "Transcription"@en,"Transkription"@de ;
-                  sh:minCount  0 ;
+  sh:property   [ sh:description      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
+                  sh:name "Transcription"@en,"Transkription"@de ;
+                  sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph ;

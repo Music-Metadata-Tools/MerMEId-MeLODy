@@ -279,8 +279,8 @@ melod:Item
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
-                  sh:description "Transcription"@en,"Transkription"@de ;
+  sh:property   [ sh:description      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
+                  sh:name "Transcription"@en,"Transkription"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
