@@ -1434,6 +1434,7 @@ export default class ADWLMFilesystemManager extends LitElement {
     async _ensureCatalogAndMainFeed(repository_path) {
         const CATALOG_PATH = "dataCatalogs/catalog.ttl";
         const FEED_PATH = "dataCollections/works.ttl";
+        const FEED_PATH_MANIF = "dataCollections/manifestations.ttl";
 
         let domain = "urn:uuid:";
         try {
@@ -1449,6 +1450,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         const catalogIri = `${domain}dataCatalogs/catalog`;
         const collectionIri = `${domain}dataCollections/works`;
+        const collectionIriManif = `${domain}dataCollections/manifestations`;
 
         const existingCatalog = await filesystem.read_file(repository_path, CATALOG_PATH).catch(() => "");
         if (!existingCatalog || existingCatalog.trim() === "") {
@@ -1473,10 +1475,26 @@ export default class ADWLMFilesystemManager extends LitElement {
 
 <${collectionIri}> a melod:DataCollection ;
     rdfs:label "All works" ;
+    melod:hasClassification "work catalog" ;
     schema:includedInDataCatalog <${catalogIri}> .
 `;
             await filesystem.save_and_stage_file(repository_path, feedTtl, FEED_PATH);
             await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH, false).catch(() => {});
+        }
+
+        const existingFeedManif = await filesystem.read_file(repository_path, FEED_PATH_MANIF).catch(() => "");
+        if (!existingFeedManif || existingFeedManif.trim() === "") {
+            const feedManifTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${collectionIriManif}> a melod:DataCollection ;
+    rdfs:label "All manifestations" ;
+    melod:hasClassification "source catalog" ;
+    schema:includedInDataCatalog <${catalogIri}> .
+`;
+            await filesystem.save_and_stage_file(repository_path, feedManifTtl, FEED_PATH_MANIF);
+            await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH_MANIF, false).catch(() => {});
         }
     }
 
