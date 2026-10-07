@@ -55,8 +55,8 @@ melod:Work
                   sh:node melod:Annotation ;
                   sh:group melod:General ;
                 ] ;
-  sh:property   [ sh:description "Links"@en , sh:description "Links"@de ;
-                  sh:name "Links"@en , sh:name "Links"@de ;
+  sh:property   [ sh:description "Links"@en , "Links"@de ;
+                  sh:name "Links"@en , "Links"@de ;
                   sh:group melod:General ;
                   sh:path melod:hasLinks ;
                   sh:node melod:Link
@@ -104,8 +104,8 @@ melod:Work
                   sh:path melod:isWorkPartOf
                 ] ;
 
-  sh:property   [ sh:description "DataCollections"@en , sh:description "DataCollections"@de ;
-                  sh:name "Data Collections"@en , sh:name "Data Collections"@de ;
+  sh:property   [ sh:description "DataCollections"@en , "DataCollections"@de ;
+                  sh:name "Data Collections"@en , "Data Collections"@de ;
                   sh:minCount 1 ;
                   sh:group melod:Relation ;
                   sh:class melod:DataCollectionEntity ;

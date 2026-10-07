@@ -267,8 +267,8 @@ melod:Expression
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation ;
                 ] ;
-  sh:property   [ sh:description "Links"@en , sh:description "Links"@de ;
-                  sh:name "Links"@en , sh:name "Links"@de ;
+  sh:property   [ sh:description "Links"@en , "Links"@de ;
+                  sh:name "Links"@en , "Links"@de ;
                   sh:group melod:General ;
                   sh:path melod:hasLinks ;
                   sh:node melod:Link
