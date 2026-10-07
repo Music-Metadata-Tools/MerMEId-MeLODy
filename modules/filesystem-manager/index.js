@@ -668,25 +668,30 @@ export default class ADWLMFilesystemManager extends LitElement {
                     document.body.append(alert);
                     alert.toast();
 
-                    // Regenerate indexes only for folders pull() actually
-                    // touched (see its return value) - same pattern as the
-                    // "unstage" handler above. Skips the generic
-                    // "build-indexes" event, which always rebuilds everything.
+                    // Update indexes incrementally, one file at a time (see
+                    // generate_indexes_for_saved_file()) - pull() already
+                    // tells us exactly which paths changed/were deleted, no
+                    // need to re-read whole folders (generate_indexes_for_all_files())
+                    // for this, which under lazy loading would force-download
+                    // every other file in those folders too.
                     const affected_paths = [
                         ...(pull_result?.changedPaths ?? []),
                         ...(pull_result?.deletedPaths ?? []),
                     ];
 
                     if (affected_paths.length > 0) {
-                        const affected_folders = [...new Set(affected_paths.map(path => path.split('/')[0]))];
+                        const deleted_path_set = new Set(pull_result?.deletedPaths ?? []);
 
-                        try {
-                            await filesystem.generate_indexes_for_all_files(
-                                        this._selected_repository_path,
-                                affected_folders,
-                            );
-                        } catch (error) {
-                            console.error('Failed to regenerate indexes after synchronizing:', error);
+                        for (const path of affected_paths) {
+                            try {
+                                await filesystem.generate_indexes_for_saved_file(
+                                    this._selected_repository_path,
+                                    path,
+                                    deleted_path_set.has(path),
+                                );
+                            } catch (error) {
+                                console.error('Failed to update index for', path, error);
+                            }
                         }
 
                         // Notify entity-search to reload indexes
@@ -863,24 +868,38 @@ export default class ADWLMFilesystemManager extends LitElement {
                     }
 
                     try {
-                        const generatedIndexes = await filesystem.generate_indexes_for_all_files(
-                            this._selected_repository_path,
-                            selected_staged_files.map(file => file.path.split('/')[0]),
-                        );
+                        // Update indexes incrementally, one file at a time
+                        // (see generate_indexes_for_saved_file()) instead of
+                        // rebuilding whole folders - we already know exactly
+                        // which files were unstaged. Unstaging either reverts
+                        // a file to its last-synced content, or (for a
+                        // never-synced new file) makes it vanish entirely
+                        // again - check which actually happened per file
+                        // rather than guessing.
+                        const successfulFolders = new Set();
 
-                        // Log which indexes were generated
-                        const successfulIndexes = Object.entries(generatedIndexes)
-                            .filter(([_, result]) => result.success)
-                            .map(([name, _]) => name);
+                        for (const file of selected_staged_files) {
+                            if (!(file.path.includes('/') && file.path.endsWith('.ttl'))) {
+                                continue; // a bare directory entry, not an actual entity file
+                            }
+                            try {
+                                const current_content = await filesystem.read_file(this._selected_repository_path, file.path);
+                                const is_now_gone = !current_content || current_content.trim() === '';
+                                await filesystem.generate_indexes_for_saved_file(this._selected_repository_path, file.path, is_now_gone);
+                                successfulFolders.add(file.path.split('/')[0]);
+                            } catch (error) {
+                                console.error('Failed to update index for', file.path, error);
+                            }
+                        }
 
-                        if (successfulIndexes.length > 0) {
+                        if (successfulFolders.size > 0) {
                             const alert = document.createElement('sl-alert');
                             alert.variant = 'success';
                             alert.closable = true;
                             alert.duration = 6000;
                             alert.innerHTML = `
                                 <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                                Successfully generated indexes for: ${[...successfulFolders].join(', ')}
                             `;
                             document.body.append(alert);
                             alert.toast();
@@ -1060,7 +1079,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             const { target } = pending;
             let { staged_file_paths, selected_staged_file_paths } = pending;
-            const remote_resolved_folders = new Set();
+            let resolved_any_remote = false;
 
             for (const decision of event.detail.decisions) {
                 if (decision.choice === "local") {
@@ -1090,7 +1109,20 @@ export default class ADWLMFilesystemManager extends LitElement {
                     continue;
                 }
 
-                remote_resolved_folders.add(decision.path.split('/')[0]);
+                resolved_any_remote = true;
+
+                // Update the index incrementally for just this file instead
+                // of rebuilding its whole folder - decision.remote is the
+                // fresh content, or null if the file was deleted online.
+                try {
+                    await filesystem.generate_indexes_for_saved_file(
+                        this._selected_repository_path,
+                        decision.path,
+                        decision.remote === null,
+                    );
+                } catch (error) {
+                    console.error('Failed to update index for', decision.path, error);
+                }
 
                 // Now in sync with remote - nothing left to push here.
                 staged_file_paths = staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
@@ -1109,16 +1141,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                 }));
             }
 
-            if (remote_resolved_folders.size > 0) {
-                try {
-                    await filesystem.generate_indexes_for_all_files(
-                        this._selected_repository_path,
-                        [...remote_resolved_folders],
-                    );
-                } catch (error) {
-                    console.error('Failed to regenerate indexes after resolving conflicts:', error);
-                }
-
+            if (resolved_any_remote) {
                 document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                     bubbles: true,
                     composed: true
@@ -1283,9 +1306,27 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         document.addEventListener("adwlm-filesystem-manager:build-indexes", async (event) => {
             try {
+                let folder_names = [...this.entity_type_definitions.map(def => def.folder_name), 'dataCatalogs'];
+
+                if (event.detail?.onlyIfMissing) {
+                    // Only rebuild folders that don't already have an index -
+                    // trust whatever's already committed otherwise (see the
+                    // dispatch site for why: a full rebuild here would defeat
+                    // lazy loading by downloading almost the whole repo again).
+                    const checks = await Promise.all(folder_names.map(async (folder_name) => {
+                        try {
+                            const existing = await filesystem.read_file(this._selected_repository_path, `indexes/${folder_name}.ttl`);
+                            return { folder_name, hasIndex: !!existing && existing.trim() !== '' };
+                        } catch (error) {
+                            return { folder_name, hasIndex: false };
+                        }
+                    }));
+                    folder_names = checks.filter(c => !c.hasIndex).map(c => c.folder_name);
+                }
+
                 const generatedIndexes = await filesystem.generate_indexes_for_all_files(
                     this._selected_repository_path,
-                    [...this.entity_type_definitions.map(def => def.folder_name), 'dataCatalogs']
+                    folder_names
                 );
 
                 // Log which indexes were generated
@@ -1647,7 +1688,11 @@ export default class ADWLMFilesystemManager extends LitElement {
         let repository_path = this._selected_repository_path;          //e.g. "/repo"
 
         // Get files and directories in folder
+        // TEMP PERF INSTRUMENTATION - remove once the remaining bottleneck is confirmed.
+        let t0 = performance.now();
         let entries = await filesystem.list_entries_from_workdir(repository_path, entry_relative_path);
+        let t1 = performance.now();
+        console.log(`[perf] list_entries_from_workdir("${entry_relative_path}"): ${(t1 - t0).toFixed(1)}ms, ${entries.folders.length} folders, ${entries.files.length} files`);
 
         let tree_subitems = ""
         // insert subfolders in tree
@@ -1686,7 +1731,11 @@ export default class ADWLMFilesystemManager extends LitElement {
         setTimeout(() => expandItems(), 500);
 
         // Insert subitems into the input tree
+        // TEMP PERF INSTRUMENTATION - remove once the remaining bottleneck is confirmed.
+        let t2 = performance.now();
         treeItem.insertAdjacentHTML("beforeend", tree_subitems);
+        let t3 = performance.now();
+        console.log(`[perf] HTML string build: ${(t2 - t1).toFixed(1)}ms, DOM insert: ${(t3 - t2).toFixed(1)}ms`);
         treeItem.removeAttribute("lazy");
         treeItem.dataset.loaded = "true";
         } finally {
@@ -1694,57 +1743,105 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
     }
 
+    // Opens a file "from outside the tree" (search, graph-view's "Open in
+    // Editor", and a few internal re-selection spots after save/push/pull -
+    // see callers). Loads the file directly, independent of the tree's DOM
+    // state, and only highlights the corresponding tree node if it already
+    // happens to be visible - it does NOT force-expand the folder chain
+    // down to it.
+    //
+    // ---------------------------------------------------------------------
+    // OLD IMPLEMENTATION: expanded every ancestor folder in relativePath's
+    // path first (repo root, then one _generate_folder_tree() call per
+    // folder level), purely so the file's <sl-tree-item> would exist in the
+    // DOM to look up and select - only THEN loaded the file via
+    // _handleRepositoryFileSelection(fileItem). For a very large repository
+    // each of those folder expansions does a live git.walk() plus builds
+    // potentially thousands of <sl-tree-item> web components - opening a
+    // file via search/graph-view paid that cost once per ancestor folder,
+    // even though showing the tree's expanded state was never actually
+    // required to open the file.
+    //
+    // async selectEntityInTree(relativePath) {
+    //     if (!relativePath) return false;
+    //     const repositoriesTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+    //     if (!repositoriesTree || !this._selected_repository_path) return false;
+    //     const repoItem = repositoriesTree.querySelector(
+    //         `sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`
+    //     );
+    //     if (!repoItem) return false;
+    //     repoItem.setAttribute("expanded", "");
+    //     await this._generate_folder_tree(repoItem);
+    //     const segments = String(relativePath).split("/").filter(Boolean);
+    //     const folderSegments = segments.slice(0, -1);
+    //     let currentPath = "";
+    //     for (const segment of folderSegments) {
+    //         currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    //         const folderItem = repositoriesTree.querySelector(
+    //             `sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${currentPath}"]`
+    //         );
+    //         if (!folderItem) break;
+    //         folderItem.setAttribute("expanded", "");
+    //         await this._generate_folder_tree(folderItem);
+    //     }
+    //     let fileItem = repositoriesTree.querySelector(
+    //         `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
+    //     );
+    //     if (!fileItem) {
+    //         const fileName = segments[segments.length - 1] || relativePath;
+    //         fileItem = repositoriesTree.querySelector(
+    //             `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-name="${fileName}"]`
+    //         );
+    //     }
+    //     if (!fileItem) return false;
+    //     repositoriesTree.querySelectorAll("sl-tree-item[selected]").forEach((item) => {
+    //         item.selected = false;
+    //         item.removeAttribute("selected");
+    //     });
+    //     fileItem.selected = true;
+    //     fileItem.setAttribute("selected", "");
+    //     this._repository_buttons_disabled = false;
+    //     await this._handleRepositoryFileSelection(fileItem);
+    //     return true;
+    // }
+    // ---------------------------------------------------------------------
     async selectEntityInTree(relativePath) {
-        if (!relativePath) return false;
+        if (!relativePath || !this._selected_repository_path) return false;
 
+        this._repository_buttons_disabled = false;
+
+        // Same "skip reload if this file is already open" behavior
+        // _handleRepositoryFileSelection() used to provide.
+        if (relativePath !== this._file_path) {
+            this._file_path = relativePath;
+            await this._load_entity_to_edit();
+        }
+
+        this._highlightEntityInTreeIfVisible(relativePath);
+
+        return true;
+    }
+
+    // Best-effort selection highlight: only touches tree nodes that are
+    // already in the DOM (i.e. folders the user expanded themselves) -
+    // never expands anything. No-op if the file's node isn't currently
+    // visible in the tree.
+    _highlightEntityInTreeIfVisible(relativePath) {
         const repositoriesTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
-        if (!repositoriesTree || !this._selected_repository_path) return false;
-
-        const repoItem = repositoriesTree.querySelector(
-            `sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`
-        );
-        if (!repoItem) return false;
-
-        repoItem.setAttribute("expanded", "");
-        await this._generate_folder_tree(repoItem);
-
-        // Open folder chain (folder1/folder2/file.ttl)
-        const segments = String(relativePath).split("/").filter(Boolean);
-        const folderSegments = segments.slice(0, -1);
-        let currentPath = "";
-        for (const segment of folderSegments) {
-            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
-            const folderItem = repositoriesTree.querySelector(
-                `sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${currentPath}"]`
-            );
-            if (!folderItem) break;
-            folderItem.setAttribute("expanded", "");
-            await this._generate_folder_tree(folderItem);
-        }
-
-        let fileItem = repositoriesTree.querySelector(
-            `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
-        );
-
-        if (!fileItem) {
-            const fileName = segments[segments.length - 1] || relativePath;
-            fileItem = repositoriesTree.querySelector(
-                `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-name="${fileName}"]`
-            );
-        }
-
-        if (!fileItem) return false;
+        if (!repositoriesTree) return;
 
         repositoriesTree.querySelectorAll("sl-tree-item[selected]").forEach((item) => {
             item.selected = false;
             item.removeAttribute("selected");
         });
-        fileItem.selected = true;
-        fileItem.setAttribute("selected", "");
-        this._repository_buttons_disabled = false;
-        await this._handleRepositoryFileSelection(fileItem);
 
-        return true;
+        const fileItem = repositoriesTree.querySelector(
+            `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
+        );
+        if (fileItem) {
+            fileItem.selected = true;
+            fileItem.setAttribute("selected", "");
+        }
     }
 
     async _handleRepositoryFileSelection(fileItem) {
