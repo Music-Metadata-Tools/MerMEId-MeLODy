@@ -475,6 +475,12 @@ export default class ADWLMFilesystemManager extends LitElement {
                     "composed": true,
                 }));
 
+                // Notify entity-search to reload indexes
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+
                 target.loading = false;
             }
 

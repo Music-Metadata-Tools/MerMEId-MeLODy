@@ -180,12 +180,26 @@ class ADWLMEntitySearch extends LitElement {
     document.addEventListener("adwlm-entity-search:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
+
+    // Listen for clear indexes event (e.g. after a repository is removed)
+    document.addEventListener("adwlm-entity-search:clear-indexes", () => {
+      this._entries = [];
+      this._filtered = [];
+      this._query = "";
+      this._typeFilter = ALL_FILTER_VALUE;
+      this._selected_repository_path = null;
+      indexStoreService.clear();
+    });
   }
 
   updated(changedProperties) {
     super.updated(changedProperties);
 
-    if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
+    if (
+      (changedProperties.has("_dataset_url") || changedProperties.has("_selected_repository_path")) &&
+      this._dataset_url != null &&
+      this._selected_repository_path != null
+    ) {
       this._loading = true;
       indexStoreService.loadIndexes(this._selected_repository_path);
     }
@@ -344,7 +358,7 @@ class ADWLMEntitySearch extends LitElement {
     this._loading = true;
     this._typeFilter = ALL_FILTER_VALUE;
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
-    await indexStoreService.reloadIndexes(this._dataset_url, this._selected_repository_path);
+    await indexStoreService.reloadIndexes(this._selected_repository_path);
   }
 
   _getUiLabel(key) {

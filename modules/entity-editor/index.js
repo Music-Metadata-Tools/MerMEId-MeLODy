@@ -997,11 +997,22 @@ export default class ADWLMEntityEditor extends LitElement {
 
         document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
             let editor = this.renderRoot.querySelector("shacl-form");
+            let preview = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+            let rdf = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+            let xml = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
 
             editor.dataset.values = "";
             editor.dataset.valuesSubject = "";
             editor.dataset.shapesUrl = "";
             editor.dataset.shapeSubject = "";
+
+            preview.dataset.values = "";
+            preview.dataset.valuesSubject = "";
+            preview.dataset.shapesUrl = "";
+            preview.dataset.shapeSubject = "";
+
+            rdf.textContent = "";
+            xml.textContent = "";
 
             this._entity_path = null;
             this.entity_to_edit = null;

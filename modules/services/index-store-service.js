@@ -95,6 +95,13 @@ class IndexStoreService {
     this._loaded = false;
     await this.loadIndexes(selected_repository_path ?? this._selected_repository_path);
   }
+
+  clear() {
+    this.store = new oxigraph.Store();
+    this._loaded = false;
+    this._loading = false;
+    this._selected_repository_path = null;
+  }
 }
 
 export const indexStoreService = new IndexStoreService();
