@@ -1000,7 +1000,12 @@ export default class ADWLMEntityEditor extends LitElement {
             let preview = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
             let rdf = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
             let xml = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
-
+            let graph_view = document.querySelector("adwlm-graph-view");
+            
+            if (graph_view) {
+                graph_view.entity_to_edit = null;
+            }
+            
             editor.dataset.values = "";
             editor.dataset.valuesSubject = "";
             editor.dataset.shapesUrl = "";
