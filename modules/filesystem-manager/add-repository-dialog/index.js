@@ -234,8 +234,11 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                         </div>
                     </sl-tab-panel>
                 </sl-tab-group>
-                ${this.clone_progress
+                ${this.clone_progress && this.clone_progress.current != this.clone_progress.total
                     ? html`<span id="clone-progress" slot="footer">${this.clone_progress.current}/${this.clone_progress.total}</span>`
+                    : ""}
+                ${this.clone_progress && this.clone_progress.current == this.clone_progress.total
+                    ? html`<span id="clone-progress" slot="footer">Loading files in folder tree... </span>`
                     : ""}
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
