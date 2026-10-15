@@ -84,9 +84,9 @@ const styles =
 
         .form-container {
             flex: 1;
-            min-height: 72vh;
+            min-height: 92vh;
             height: auto;
-            max-height: 82vh;
+            max-height: 112vh;
             overflow-y: auto;
             position: relative;
         }
@@ -177,10 +177,17 @@ export default class ADWLMEntityEditor extends LitElement {
         entity_type_definitions: {
             type: Object,
         },
+        ui_language: {
+            type: String,
+        },
         _entity_path: {
             type: String,
         },
         _hasUnsavedChanges: {
+            type: Boolean,
+            state: true
+        },
+        _isInvalid: {
             type: Boolean,
             state: true
         },
@@ -212,6 +219,8 @@ export default class ADWLMEntityEditor extends LitElement {
 
     updated(changedProperties) {
         super.updated(changedProperties);
+
+        this._applyLanguageVisibility();
 
         if (changedProperties.has("entity_to_edit")) {
             let entity_to_edit = this.entity_to_edit;
@@ -285,6 +294,10 @@ export default class ADWLMEntityEditor extends LitElement {
                 let entity_name_tree_dialog = this.renderRoot.querySelector("adwlm-entity-types-dialog");
                 entity_name_tree_dialog.entity_name_tree_items = tree_items;
             }
+        }
+
+        if (changedProperties.has("ui_language")) {
+            this._applyUiLanguageToForms();
         }
 
         if (changedProperties.has('_hasUnsavedChanges')) {
@@ -363,7 +376,12 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     async _getShapeForPath(path) {
-        let shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        let shacl_file_location;
+        if (path === "https://lod.academy/melod/vocab/ontology#DataCatalog") {
+            shacl_file_location = "configuration/dataCatalog.shacl";
+        } else {
+            shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        }
         if (shacl_file_location) {
             const config = this._cachedConfig || { datasetBaseUrl: null };
             console.log("Config in _getShapeForPath:", config);
@@ -442,6 +460,9 @@ export default class ADWLMEntityEditor extends LitElement {
                 return def.type;
             }
         }
+        if (path.startsWith("dataCatalogs/")) {
+            return "https://lod.academy/melod/vocab/ontology#DataCatalog";
+        }
         return null;
     }
 
@@ -481,10 +502,16 @@ export default class ADWLMEntityEditor extends LitElement {
         let editor = this.renderRoot.querySelector("shacl-form");
         let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
+        // Reset unsaved changes state when loading new file
+        this._hasUnsavedChanges = false;
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        
+        const workCollectionIri = this._getWorkDataCollectionIri(config);
+        const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
+        this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
+        this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+
         if (config && config.datasetBaseUrl) {
             try {
 
@@ -518,31 +545,34 @@ export default class ADWLMEntityEditor extends LitElement {
                 const modifiedFileUrl = URL.createObjectURL(blob);
                 
                 // Use the modified file URL
+                editor.setAttribute("data-language", this.ui_language);
                 editor.dataset.values = entity_to_edit.contents;
                 editor.dataset.valuesSubject = entity_to_edit.entity_iri;
                 editor.dataset.shapesUrl = modifiedFileUrl;
 
+                shacl_renderer.setAttribute("data-language", this.ui_language);
                 shacl_renderer.setAttribute("data-values-subject", entity_to_edit.entity_iri);
                 shacl_renderer.setAttribute("data-values", entity_to_edit.contents);
                 shacl_renderer.setAttribute("data-shapes-url", modifiedFileUrl);
             } catch (error) {
                 console.error('Failed to modify SHACL file:', error);
                 // Fallback to original file
+                editor.setAttribute("data-language", this.ui_language);
                 editor.dataset.shapesUrl = shacl_file_location;
+                shacl_renderer.setAttribute("data-language", this.ui_language);
                 shacl_renderer.setAttribute("data-shapes-url", shacl_file_location);
             }
         } else {
             // Use original file if no config is found
+            editor.setAttribute("data-language", this.ui_language);
             editor.dataset.shapesUrl = shacl_file_location;
+            shacl_renderer.setAttribute("data-language", this.ui_language);
             shacl_renderer.setAttribute("data-shapes-url", shacl_file_location);
         }
 
         this.entity_to_edit.shapesUrl = editor.dataset.shapesUrl;
         
         this._entity_path = entity_to_edit.path;
-        
-        // Reset unsaved changes state when loading new file
-        this._hasUnsavedChanges = false;
     }
 
     static styles = styles;
@@ -583,18 +613,22 @@ export default class ADWLMEntityEditor extends LitElement {
                                 </sl-button>
                             </sl-button-group>
                             <sl-button-group>
-                                <sl-button id="add-entity" variant="primary" size="small" title="Add entity">New
+                                <sl-button id="add-entity" variant="primary" size="small" title="Add entity">
+                                    <span lang="en">New</span>
+                                    <span lang="de">Neu</span>
                                     <sl-icon name="file-earmark-plus" slot="suffix"></sl-icon>
                                 </sl-button>
                                 <sl-button id="save-entity" variant="primary" size="small" title="Save entity" 
                                     ?disabled="${!this._hasUnsavedChanges}">
                                     ${this._hasUnsavedChanges ? html`<sl-icon name="circle-fill" slot="prefix"></sl-icon>` : ''}
-                                    Save
+                                    <span lang="en">Save</span>
+                                    <span lang="de">Speichern</span>
                                     <sl-icon name="floppy" slot="suffix"></sl-icon>
                                 </sl-button>
                                 <sl-button id="delete-entity" variant="danger" size="small" title="Delete entity"
                                     ?disabled="${!this.entity_to_edit}">
-                                    Delete
+                                    <span lang="en">Delete</span>
+                                    <span lang="de">Löschen</span>
                                     <sl-icon name="file-earmark-minus" slot="suffix"></sl-icon>
                                 </sl-button>
                                 <sl-button id="undo-changes" variant="primary" size="small" ?disabled="${!this._hasUnsavedChanges}">
@@ -616,7 +650,7 @@ export default class ADWLMEntityEditor extends LitElement {
                             ` : ''}
                         </div>
                         <div class="form-container">
-                            <shacl-form data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                            <shacl-form lang=${this.ui_language} data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
                         </div>
                     </div>
                 </div>
@@ -636,7 +670,8 @@ export default class ADWLMEntityEditor extends LitElement {
 
                         <div style="display:flex; gap:0.3rem;">
                             <sl-button size="small" @click=${this._openInEditor}>
-                                Edit
+                                <span lang="en">Edit</span>
+                                <span lang="de">Bearbeiten</span>
                             </sl-button>
 
                             <sl-button size="small" @click=${this._closeSidePanel}>
@@ -651,6 +686,7 @@ export default class ADWLMEntityEditor extends LitElement {
                                 data-values=${this._sidePanelEntity.values}
                                 data-values-subject=${this._sidePanelEntity.subject}
                                 data-shapes-url=${this._sidePanelEntity.shapesUrl}
+                                data-language=${this.ui_language}
                                 data-view>
                             </shacl-form>
                         ` : ''}
@@ -660,7 +696,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
             </div>
 
-            <adwlm-entity-types-dialog></adwlm-entity-types-dialog>
+            <adwlm-entity-types-dialog data-ui-language=${this.ui_language}></adwlm-entity-types-dialog>
         `;
     }
 
@@ -669,6 +705,18 @@ export default class ADWLMEntityEditor extends LitElement {
         if (!this.entity_type_definitions) return '';
         const definition = this.entity_type_definitions.find(def => def.type === entity_type);
         return definition ? definition.name : '';
+    }
+
+    _applyUiLanguageToForms() {
+        const forms = [
+            this.renderRoot.querySelector("shacl-form"),
+            this.renderRoot.querySelector(".entity-window shacl-form"),
+            document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form"),
+        ].filter(Boolean);
+
+        for (const form of forms) {
+            form.setAttribute("data-language", this.ui_language);
+        }
     }
 
     firstUpdated() {
@@ -680,6 +728,12 @@ export default class ADWLMEntityEditor extends LitElement {
         editor.addEventListener("change", (event) => {
             let target = event.target;
             this._hasUnsavedChanges = true;
+            if (event.detail.valid) {
+                this._isInvalid = false;
+            }
+            else {
+                this._isInvalid = true;
+            }
             //console.log(editor.serialize());
         });
 
@@ -747,7 +801,8 @@ export default class ADWLMEntityEditor extends LitElement {
                     alert.duration = 3000;
                     alert.innerHTML = `
                         <sl-icon slot="icon" name="clipboard-check"></sl-icon>
-                        Entity IRI copied to clipboard
+                        <span lang="en">Entity IRI copied to clipboard</span>
+                        <span lang="de">Entity-IRI in die Zwischenablage kopiert</span>
                     `;
                     document.body.append(alert);
                     alert.toast();
@@ -760,33 +815,52 @@ export default class ADWLMEntityEditor extends LitElement {
             }
 
             if (target.matches("sl-button#save-entity")) {
-                let rdf_output = editor.serialize();
-                let json_ld_output = editor.serialize("application/ld+json");
-                let entity_to_save = {
-                    entity_iri: this.entity_to_edit.entity_iri,
-                    rdf_contents: rdf_output,
-                    json_ld_contents: json_ld_output,
-                    path: this._entity_path,
-                    shapesUrl: this.entity_to_edit.shapesUrl,
-                };
 
-                this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
-                    "detail": entity_to_save,
-                    "bubbles": true,
-                    "composed": true,
-                }));
-                this._hasUnsavedChanges = false;
+                if (this._isInvalid) {
+                        // Show error notification
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'danger';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                            <span lang="en">Cannot save entity. Please fill out all required fields or correct invalid fields.</span>
+                            <span lang="de">Entität kann nicht gespeichert werden. Bitte füllen Sie alle Pflichtfelder aus oder korrigieren Sie ungültige Felder.</span>
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+                }
+                else {
+                    let rdf_output = editor.serialize();
+                    let json_ld_output = editor.serialize("application/ld+json");
+                    let entity_to_save = {
+                        entity_iri: this.entity_to_edit.entity_iri,
+                        rdf_contents: rdf_output,
+                        json_ld_contents: json_ld_output,
+                        path: this._entity_path,
+                        shapesUrl: this.entity_to_edit.shapesUrl,
+                    };
+
+                    this.dispatchEvent(new CustomEvent("adwlm-entity-editor:entity-to-save", {
+                        "detail": entity_to_save,
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+                    this._hasUnsavedChanges = false;
+                }
             }
 
             if (target.matches("sl-button#sync-index")) {
 
                 target.loading = true;
                 
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
-                    bubbles: true,
-                    composed: true
-                }));
+                // maybe change this event to a git fetch of the indexes folder of the remote repository?
+                // this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                //     bubbles: true,
+                //     composed: true
+                // }));
 
+                // Uncommented because reload-indexes is started in the build-indexes
                 document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                     bubbles: true,
                     composed: true
@@ -795,16 +869,18 @@ export default class ADWLMEntityEditor extends LitElement {
                 
 
                 // Show success notification
-                const alert = document.createElement('sl-alert');
-                alert.variant = 'success';
-                alert.closable = true;
-                alert.duration = 3000;
-                alert.innerHTML = `
-                    <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
-                    Reloaded indexes successfully
-                `;
-                document.body.append(alert);
-                alert.toast();
+                // Uncommented because indexes are not completely loaded at this stage
+                // const alert = document.createElement('sl-alert');
+                // alert.variant = 'success';
+                // alert.closable = true;
+                // alert.duration = 3000;
+                // alert.innerHTML = `
+                //     <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+                //     <span lang="en">Reloaded indexes successfully</span>
+                //     <span lang="de">Indizes erfolgreich neu geladen</span>
+                // `;
+                // document.body.append(alert);
+                // alert.toast();
                 target.loading = false;
                 /*
                 if (this._hasUnsavedChanges) {
@@ -873,7 +949,8 @@ export default class ADWLMEntityEditor extends LitElement {
                         alert.duration = 3000;
                         alert.innerHTML = `
                             <sl-icon slot="icon" name="arrow-counterclockwise"></sl-icon>
-                            Changes undone successfully
+                            <span lang="en">Changes undone successfully</span>
+                            <span lang="de">Änderungen erfolgreich rückgängig gemacht</span>
                         `;
                         document.body.append(alert);
                         alert.toast();
@@ -886,7 +963,8 @@ export default class ADWLMEntityEditor extends LitElement {
                     alert.duration = 6000;
                     alert.innerHTML = `
                         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Failed to undo changes. Please try again.
+                        <span lang="en">Failed to undo changes. Please try again.</span>
+                        <span lang="de">Fehler beim Rückgängig machen der Änderungen. Bitte versuchen Sie es erneut.</span>
                     `;
                     document.body.append(alert);
                     alert.toast();
@@ -919,17 +997,61 @@ export default class ADWLMEntityEditor extends LitElement {
 
         document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
             let editor = this.renderRoot.querySelector("shacl-form");
-
+            let preview = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+            let rdf = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+            let xml = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+            let graph_view = document.querySelector("adwlm-graph-view");
+            
+            if (graph_view) {
+                graph_view.entity_to_edit = null;
+            }
+            
             editor.dataset.values = "";
             editor.dataset.valuesSubject = "";
             editor.dataset.shapesUrl = "";
             editor.dataset.shapeSubject = "";
+
+            preview.dataset.values = "";
+            preview.dataset.valuesSubject = "";
+            preview.dataset.shapesUrl = "";
+            preview.dataset.shapeSubject = "";
+
+            rdf.textContent = "";
+            xml.textContent = "";
 
             this._entity_path = null;
             this.entity_to_edit = null;
 
             // Reset unsaved changes state when deleting file
             this._hasUnsavedChanges = false;
+        });
+
+        // A push conflict got resolved as "keep online version" - if that's
+        // the file open here, it's still showing the now-discarded local
+        // version.
+        document.addEventListener("adwlm-filesystem-manager:file-changed-remotely", (event) => {
+            if (this._entity_path === null
+                || event.detail.repositoryPath !== this._selected_repository_path
+                || event.detail.path !== this._entity_path) {
+                return; // not the file currently open here
+            }
+
+            if (event.detail.content === null) {
+                // Deleted online and accepted locally - close, like "clear-entity-editor" above.
+                let editor = this.renderRoot.querySelector("shacl-form");
+                editor.dataset.values = "";
+                editor.dataset.valuesSubject = "";
+                editor.dataset.shapesUrl = "";
+                editor.dataset.shapeSubject = "";
+                this._entity_path = null;
+                this.entity_to_edit = null;
+                this._hasUnsavedChanges = false;
+                return;
+            }
+
+            // Route through the same setter used to open any file - the
+            // "unsaved changes?" dialog still protects any newer edits.
+            this.entity_to_edit = { ...this.entity_to_edit, contents: event.detail.content };
         });
 
         this._initPreviewLinkHandling();
@@ -944,10 +1066,19 @@ export default class ADWLMEntityEditor extends LitElement {
     _init() {
         this.entity_to_edit = null;
         this.entity_type_definitions = null;
+        this.ui_language = document.documentElement.lang || "en";
+        this.setAttribute("data-ui-language", this.ui_language);
         this._entity_path = null;
         this._hasUnsavedChanges = false;
         this._skipNextUpdate = false;
         this._cachedConfig = null;
+    }
+
+    _applyLanguageVisibility() {
+        const normalizedLanguage = this.ui_language === "de" ? "de" : "en";
+        this.renderRoot.querySelectorAll("[lang]").forEach((element) => {
+            element.hidden = element.getAttribute("lang") !== normalizedLanguage;
+        });
     }
 
     async _showQuickAddDialog(detail) {
@@ -971,11 +1102,15 @@ export default class ADWLMEntityEditor extends LitElement {
 
         const config = await this._getRepoConfig().catch(() => null);
         const domain = config?.projectDomain ?? 'urn:uuid:';
+        let entity_folder_name = typeDef?.folder_name;
+        let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
         const entity_id = this._generate_entity_id();
-        const entity_path = `${typeDef.folder_name}/${entity_id}.ttl`;
-        const entity_iri = `${domain}${typeDef.folder_name}/${entity_id}`;
+        const entity_path = `${entity_folder_name}/${entity_id_prefix}${entity_id}.ttl`;
+        const entity_iri = `${domain}${entity_folder_name}/${entity_id_prefix}${entity_id}`;
 
-        const shapesUrl = typeDef?.shacl_file_location || this.entity_to_edit?.shapesUrl || this._get_shacl_file_location();
+        let entity_type = this._detectEntityType(entity_folder_name);
+
+        const shapesUrl = await this._getShapeForPath(entity_type);
 
         const dialog = document.createElement('sl-dialog');
         dialog.label = 'Quick Add';
@@ -984,6 +1119,7 @@ export default class ADWLMEntityEditor extends LitElement {
         const form = document.createElement('shacl-form');
         form.style.maxHeight = '70vh';
         form.style.overflow = 'auto';
+        form.setAttribute('data-language', this.ui_language);
 
         form.dataset.shapesUrl = shapesUrl;
         form.dataset.valuesSubject = entity_iri;
@@ -1014,6 +1150,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 json_ld_contents: json_ld_output,
                 path: entity_path,
                 shapesUrl,
+                isQuickAdd: true,
             };
 
             this.dispatchEvent(new CustomEvent("adwlm-quick-add:entity-to-save", {
@@ -1041,6 +1178,58 @@ export default class ADWLMEntityEditor extends LitElement {
         return array[0];
     }
 
+    _getWorkDataCollectionIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataCollections/works`;
+    }
+
+    _getManifestationDataCollectionIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataCollections/manifestations`;
+    }
+
+    _isWorkEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'works';
+    }
+
+    _isManifestationEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'manifestations';
+    }
+
+    // Guarantees every Work references the repository's singleton "main" DataCollection
+    // via melod:memberOfDataCollection, without requiring the user to assign it manually.
+    _ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri) {
+        if (!this._isWorkEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(workCollectionIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${workCollectionIri}> .\n`;
+        entity_to_edit._hasUnsavedChanges = true;
+    }
+
+    _ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri) {
+        if (!this._isManifestationEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(manifestationCollectionIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${manifestationCollectionIri}> .\n`;
+        this._hasUnsavedChanges = true;
+    }
+
     _get_shacl_file_location() {
         let entity_type = this.entity_to_edit.entity_type;
         let shacl_file_location = this.entity_type_definitions
@@ -1051,7 +1240,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
     async _getRepoConfig() {
         // Return cached config if available
-        if (this._cachedConfig & this._cachedConfig != null) {
+        if (this._cachedConfig && this._cachedConfig != null) {
             return this._cachedConfig;
         }
 
@@ -1087,7 +1276,8 @@ export default class ADWLMEntityEditor extends LitElement {
                 alert.duration = 6000;
                 alert.innerHTML = `
                     <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                    Using default configuration: ${error.message}
+                    <span lang="en">Using default configuration: ${error.message}</span>
+                    <span lang="de">Verwende Standardkonfiguration: ${error.message}</span>
                 `;
                 document.body.append(alert);
                 alert.toast();

@@ -10,26 +10,26 @@
 melod:Place
   a sh:NodeShape, rdfs:Class ;
   sh:targetClass melod:Place ;
-  sh:property   [ sh:description "Place name" ;
-                  sh:name "Name" ;
+  sh:property   [ sh:description "Place name"@en, "Ortsname"@de ;
+                  sh:name "Name"@en, "Name"@de ;
                   sh:minCount 1 ;
                   sh:maxCount 1;
                   sh:path schema:name
                 ] ;
-  sh:property   [ sh:description "Contained in place" ;
-                  sh:name "Country" ;
+  sh:property   [ sh:description "Contained in place"@en, "Liegt in Ort"@de ;
+                  sh:name "Country"@en, "Land"@de ;
                   sh:maxCount 1;
                   sh:class melod:Country ;
                   sh:path schema:containedInPlace
                 ] ;
-  sh:property   [ sh:description "External resource (e.g. geonames)" ;
-                  sh:name "Link" ;
+  sh:property   [ sh:description "External resource (e.g. geonames)"@en, "Externe Ressource (z.B. geonames)"@de ;
+                  sh:name "Link"@en, "Link"@de ;
                   sh:nodeKind sh:IRI ;
                   sh:path owl:sameAs ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information" ;
-                  sh:name "Description" ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Annotationen oder weitere Informationen"@de ;
+                  sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
                   sh:maxCount 1;
                   dash:singleLine false ;

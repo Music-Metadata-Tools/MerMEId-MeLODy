@@ -5,10 +5,23 @@ const styles =
         sl-dialog {
             --width: 30vw;
         }
+
+        :host([data-ui-language="de"]) [lang="en"] {
+            display: none;
+        }
+
+        :host(:not([data-ui-language="de"])) [lang="de"] {
+            display: none;
+        }
 `;
 
 export default class ADWLMEntityTypesDialog extends LitElement {
     static properties = {
+        ui_language: {
+            type: String,
+            attribute: "data-ui-language",
+            reflect: true,
+        },
         entity_name_tree_items: {
             type: Object,
         },
@@ -19,14 +32,20 @@ export default class ADWLMEntityTypesDialog extends LitElement {
     constructor() {
         super();
 
+        this.ui_language = document.documentElement.lang || "en";
+
         this.init();
+    }
+
+    _getDialogLabel() {
+        return this.ui_language === "de" ? "Neue Entität" : "New entity";
     }
 
     render() {
         return html`
-            <sl-dialog id="entity-type-dialog" label="New entity">
+            <sl-dialog id="entity-type-dialog" label=${this._getDialogLabel()}>
                 <sl-tree>${this.entity_name_tree_items}</sl-tree>
-                <sl-button id="add-entity" slot="footer" variant="primary">Create</sl-button>
+                <sl-button id="add-entity" slot="footer" variant="primary"><span lang="en">Create</span><span lang="de">Erstellen</span></sl-button>
             </sl-dialog>
         `;
     }

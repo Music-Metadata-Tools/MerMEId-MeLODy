@@ -284,10 +284,16 @@ document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
 
 // TODO: move separately
 // TODO: change "urn:uuid:" to project specific variable
-let ui_language = "en";
+const supported_ui_languages = new Set(["en", "de"]);
+let ui_language = document.documentElement.lang || "en";
+document.documentElement.lang = ui_language;
+
+function normalizeUiLanguage(language) {
+    return supported_ui_languages.has(language) ? language : "en";
+}
+
 let SparqlQueries = {
-    "entity_type_definitions":
-        `
+    "entity_type_definitions": (language) => `
         prefix melod: <https://lod.academy/melod/vocab/ontology#>
         prefix melod_ui: <https://mei-metadata.org/ui/>
         prefix schema: <https://schema.org/>
@@ -297,7 +303,7 @@ let SparqlQueries = {
         where {
             ?entity_type a melod:Entity .
             ?entity_type rdfs:label ?entity_name .
-            filter (lang(?entity_name) = '${ui_language}')
+            filter (lang(?entity_name) = '${language}')
             ?entity_type melod_ui:entity_folder_name ?entity_folder_name .
             ?entity_type melod_ui:shacl_file_location ?shacl_file_location .
         }
@@ -337,54 +343,101 @@ class EditorConfiguration {
     }
 }
 
-let graph_store = new oxigraph.Store();
-
 let configuration_file = await fetch("configuration/editor-default.ttl").then(response => response.text());
 
-graph_store.load(configuration_file,
-    {
+function loadEntityTypeDefinitions(language) {
+    const graph_store = new oxigraph.Store();
+
+    graph_store.load(configuration_file, {
         format: "text/turtle",
         base_iri: null,
         to_graph_name: oxigraph.Default
+    });
+
+    const entity_type_definition_bindings = graph_store.query(SparqlQueries.entity_type_definitions(language));
+    const entity_type_definitions = [];
+
+    for (const binding of entity_type_definition_bindings) {
+        let entity_type = binding.get("entity_type").value;
+        let entity_name = binding.get("entity_name").value;
+        let entity_folder_name = binding.get("entity_folder_name").value;
+        let shacl_file_location = binding.get("shacl_file_location").value;
+
+        let entity_type_definition = new EntityTypeDefinition(entity_type, entity_name, entity_folder_name, shacl_file_location);
+
+        entity_type_definitions.push(entity_type_definition);
     }
-);
 
-//extract the entity type definitions
-let entity_type_definition_bindings = graph_store.query(SparqlQueries.entity_type_definitions);
-let entity_type_definitions = [];
-
-for (const binding of entity_type_definition_bindings) {
-    let entity_type = binding.get("entity_type").value;
-    let entity_name = binding.get("entity_name").value;
-    let entity_folder_name = binding.get("entity_folder_name").value;
-    let shacl_file_location = binding.get("shacl_file_location").value;
-
-    let entity_type_definition = new EntityTypeDefinition(entity_type, entity_name, entity_folder_name, shacl_file_location);
-
-    entity_type_definitions.push(entity_type_definition);
+    graph_store.free();
+    return entity_type_definitions;
 }
 
-const editor_configuration = new EditorConfiguration(entity_type_definitions);
-entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
-filesystem_manager.entity_type_definitions = editor_configuration.entity_type_definitions;
+function applyEntityTypeDefinitions(entity_type_definitions) {
+    const editor_configuration = new EditorConfiguration(entity_type_definitions);
+    if (entity_editor) {
+        entity_editor.entity_type_definitions = editor_configuration.entity_type_definitions;
+        entity_editor.ui_language = ui_language;
+        entity_editor.setAttribute("data-ui-language", ui_language);
+    }
+    if (filesystem_manager) {
+        filesystem_manager.entity_type_definitions = editor_configuration.entity_type_definitions;
+    }
 
-// Pass entity type definitions to the graph view
-const graph_view = document.querySelector("adwlm-graph-view");
-if (graph_view) {
-    graph_view.entity_type_definitions = editor_configuration.entity_type_definitions;
+    // Pass entity type definitions to the graph view
+    const graph_view = document.querySelector("adwlm-graph-view");
+    if (graph_view) {
+        graph_view.entity_type_definitions = editor_configuration.entity_type_definitions;
+    }
+
+    // Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
+    globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
 }
 
-// Expose the same entity types as used by the "New" dialog (for QuickAdd allowlisting)
-globalThis.__MERMEID_ENTITY_TYPE_ALLOWLIST__ = editor_configuration.entity_type_definitions.map(d => d.type);
+function syncLanguageToComponents(language) {
+    const componentSelectors = [
+        "adwlm-entity-search",
+        "adwlm-filesystem-manager",
+        "adwlm-graph-view",
+        "adwlm-entity-editor",
+    ];
 
-/*
-let entity_types = graph_store.match(null, oxigraph.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), oxigraph.namedNode("https://mei-metadata.org/Entity"), oxigraph.defaultGraph());
-for (let entity_type of entity_types) {
-    //console.log(`${entity_type.subject.value} ${entity_type.predicate.value} ${entity_type.object.value}`);
-}*/
+    componentSelectors.forEach((selector) => {
+        const component = document.querySelector(selector);
+        if (!component) return;
+        component.setAttribute("data-ui-language", language);
+        if ("ui_language" in component) {
+            component.ui_language = language;
+        }
+    });
+}
 
-// free the store
-graph_store.free();
+function syncLanguageToForms(language) {
+    document.documentElement.lang = language;
+    syncLanguageToComponents(language);
+
+    if (entity_editor) {
+        entity_editor.ui_language = language;
+    }
+
+    window.dispatchEvent(new CustomEvent("mermeid-ui-language-changed", {
+        detail: { language },
+        bubbles: true,
+        composed: true,
+    }));
+}
+
+async function setUiLanguage(language) {
+    const normalizedLanguage = normalizeUiLanguage(language);
+    ui_language = normalizedLanguage;
+
+    applyEntityTypeDefinitions(loadEntityTypeDefinitions(ui_language));
+    syncLanguageToForms(ui_language);
+}
+
+window.__MERMEID_setUiLanguage = setUiLanguage;
+
+applyEntityTypeDefinitions(loadEntityTypeDefinitions(ui_language));
+syncLanguageToForms(ui_language);
 
 // END TODO
 

@@ -201,7 +201,7 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
             ).join('\n') : '' }
         </physMedium>` : ''}
         ${data.physDesc?.inscription?.length > 0 ? data.physDesc?.inscription.map(inscription => `<inscription>
-                ${inscription.agent.length > 0 ? inscription.agent.map(agent => `<persName${agent ? ` sameas="${agent || ''}"` : ''}/>`).join('\n') : '' }
+                ${inscription.agent?.length > 0 ? inscription.agent.map(agent => `<persName${agent ? ` sameas="${agent || ''}"` : ''}/>`).join('\n') : '' }
                 <annot>${inscription.description.length > 0 ? inscription.description.map(description => `<p>${description || ''}</p>`).join('\n') : '<p/>' }</annot>
             </inscription>`).join('\n') : '' }
     </physDesc>` : '' ,

@@ -1,0 +1,39 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+prefix terms: <https://lod.academy/melod/vocab/terms#>
+prefix lrmoo: <http://iflastandards.info/ns/lrm/lrmoo/>
+
+construct {
+  ?manifestation_iri a melod:ManifestationEntity ;
+  	skos:prefLabel ?label ;
+    skos:broader ?classification ;
+    skos:related ?expression_iri ;
+    skos:related ?manifestation_part_iri ;
+    skos:related ?collection_iri .
+} where {
+  select ?manifestation_iri ?label ?classification ?expression_iri ?manifestation_part_iri ?collection_iri where {
+    ?manifestation_iri a melod:Manifestation .
+    ?manifestation_iri melod:hasTitle ?title_subj .
+    ?title_subj rdfs:label ?manifestation_title .
+    OPTIONAL {
+      ?title_subj melod:hasTitleType ?title_label .
+    }
+    bind(coalesce(concat(?title_label, " ", ?manifestation_title), ?manifestation_title) AS ?label) .
+    OPTIONAL {
+      ?manifestation_iri melod:hasClassification ?classification .
+    }
+    OPTIONAL {
+      ?manifestation_iri lrmoo:R4_embodies ?expression_iri .
+    }
+    OPTIONAL {
+      ?manifestation_iri melod:hasManifestationPart ?manifestation_part_iri .
+    }
+    OPTIONAL {
+      ?manifestation_iri melod:memberOfDataCollection ?collection_iri .
+    }
+  }
+  order by ?label
+}

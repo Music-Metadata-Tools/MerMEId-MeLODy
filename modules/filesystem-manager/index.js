@@ -2,6 +2,9 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { Task } from "https://cdn.jsdelivr.net/npm/@lit/task@1.0.1/+esm";
 import "./add-repository-dialog/index.js";
 import "./rename-filesystem-entry-dialog/index.js";
+import "./repository-settings-dialog/index.js";
+import "./catalog-metadata-dialog/index.js";
+import "./push-conflict-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
 
@@ -18,6 +21,12 @@ const styles =
             display: inline-block;
             font-size: var(--sl-font-size-small);
         }
+        :host([data-ui-language="de"]) [lang="en"] {
+            display: none;
+        }
+        :host(:not([data-ui-language="de"])) [lang="de"] {
+            display: none;
+        }
         div#container {
             display: flex;
             flex-direction: column;
@@ -27,7 +36,8 @@ const styles =
             font-size: var(--sl-font-size-small);
         }
         div#repositories-tree-container {
-            height: 60vh;
+            min-height: 30vh;
+            max-height: 50vh;
             overflow: scroll;
         }
         /* Toggle button styles */
@@ -104,6 +114,11 @@ const styles =
 export default class ADWLMFilesystemManager extends LitElement {
 
     static properties = {
+        ui_language: {
+            type: String,
+            attribute: "data-ui-language",
+            reflect: true,
+        },
         _displayed_repository_names: {
             type: Array,
         },
@@ -149,9 +164,13 @@ export default class ADWLMFilesystemManager extends LitElement {
         },
         _commit_message: {
             type: String
+        },
+        _hasRemote: {
+            type: Boolean,
+            state: true
         }
 
-        
+
     };
 
     updated(changedProperties) {
@@ -171,6 +190,7 @@ export default class ADWLMFilesystemManager extends LitElement {
 
     constructor() {
         super();
+        this.ui_language = document.documentElement.lang || "en";
 
         this._onUnsavedChanges = (event) => {
             this._hasUnsavedChanges = event.detail.hasUnsavedChanges;
@@ -221,6 +241,10 @@ export default class ADWLMFilesystemManager extends LitElement {
             </button>
             <div id="container">
                 <sl-details id="repositories-details" summary="Repositories" open>
+                    <summary slot="summary">
+                        <span lang="en">Repositories</span>
+                        <span lang="de">Repositories</span>
+                    </summary>
                     <div>
                         <sl-button-group>
                             <sl-button id="add-repository" size="small" title="Add repository">
@@ -232,13 +256,19 @@ export default class ADWLMFilesystemManager extends LitElement {
                             <sl-button class="rename-entry" size="small" title="Rename repository" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="folder"></sl-icon>
                             </sl-button>
-                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled}">
-                                <sl-icon name="arrow-clockwise"></sl-icon>
+                            <sl-button id="synchronize-repository" size="small" title="Synchronize repository" ?disabled="${this._repository_buttons_disabled || !this._hasRemote}">
+                                <sl-icon name="cloud-download"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                         <sl-button-group>
                             <sl-button id="remove-entity" size="small" title="Remove entity" ?disabled="${this._repository_buttons_disabled}">
                                 <sl-icon name="file-earmark-minus"></sl-icon>
+                            </sl-button>
+                            <sl-button id="repository-settings" size="small" title="Repository settings" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="gear"></sl-icon>
+                            </sl-button>
+                            <sl-button id="catalog-metadata" size="small" title="Catalog metadata" ?disabled="${this._repository_buttons_disabled}">
+                                <sl-icon name="journal-bookmark"></sl-icon>
                             </sl-button>
                         </sl-button-group>
                     </div>
@@ -253,6 +283,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     id="staged-files-details" 
                     summary="${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}" 
                     disabled>
+                    <summary slot="summary">
+                        <span lang="en">${this._hasUnsharedFiles ? 'Share files (!)' : 'Share files'}</span>
+                        <span lang="de">${this._hasUnsharedFiles ? 'Teile Dateien (!)' : 'Teile Dateien'}</span>
+                    </summary>
                     <sl-button-group>
                         <sl-button
                             id="select-all-button"
@@ -263,9 +297,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         </sl-button>
                         <sl-button
                             id="commit-and-push-staged-files"
-                            size="small" 
+                            size="small"
                             title="Share files"
-                            ?disabled="${!this._hasSelectedFiles}">
+                            ?disabled="${!this._hasSelectedFiles || !this._hasRemote}">
                             <sl-icon name="cloud-upload"></sl-icon>
                         </sl-button>
                         <sl-button
@@ -289,14 +323,9 @@ export default class ADWLMFilesystemManager extends LitElement {
             </div>
             <adwlm-add-repository-dialog></adwlm-add-repository-dialog>
             <adwlm-rename-filesystem-entry-dialog></adwlm-rename-filesystem-entry-dialog>
-            <sl-alert id="commit-and-push-done" variant="primary" duration="6000" closable>
-                <sl-icon slot="icon" name="info-circle"></sl-icon>
-                The files were shared with the remote repository.
-            </sl-alert>
-            <sl-alert id="commit-and-push-error" variant="warning" duration="6000" closable>
-                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                An error occured while sharing the files with the remote repository.
-            </sl-alert>
+            <adwlm-repository-settings-dialog></adwlm-repository-settings-dialog>
+            <adwlm-catalog-metadata-dialog></adwlm-catalog-metadata-dialog>
+            <adwlm-push-conflict-dialog></adwlm-push-conflict-dialog>
             <sl-alert id="commit-and-push-need" variant="warning" duration="6000" closable>
                 <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
                 An error occured loading unshared files. Please share the created files with the repository.
@@ -316,11 +345,12 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         let add_repository_dialog = render_root.querySelector("adwlm-add-repository-dialog");
         let rename_filesystem_entry_dialog = render_root.querySelector("adwlm-rename-filesystem-entry-dialog");
+        let repository_settings_dialog = render_root.querySelector("adwlm-repository-settings-dialog");
+        let catalog_metadata_dialog = render_root.querySelector("adwlm-catalog-metadata-dialog");
+        let push_conflict_dialog = render_root.querySelector("adwlm-push-conflict-dialog");
         let container = render_root.querySelector("div#container");
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
-        let commit_and_push_done_toast = render_root.querySelector("sl-alert#commit-and-push-done");
-        let commit_and_push_error_toast = render_root.querySelector("sl-alert#commit-and-push-error");
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
@@ -331,8 +361,14 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // If loading a repo folder: store repo path and enable staged files details
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
+                    if (!(await this._ensureRepositoryAccess(entry_absolute_path))) {
+                        return;
+                    }
+
                     this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
+                    await this._updateHasRemote();
+                    await this._ensureCatalogAndMainFeed(entry_absolute_path);
 
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:item-selected', {
@@ -371,9 +407,17 @@ export default class ADWLMFilesystemManager extends LitElement {
                 let entry_type = selected_tree_item.dataset.entryType;
 
                 if (entry_type === CONSTANTS.REPO_FOLDER_SCHEME_NAME) {
-                    this._selected_repository_path = selected_tree_item.dataset.entryAbsolutePath;
+                    let entry_absolute_path = selected_tree_item.dataset.entryAbsolutePath;
+
+                    if (!(await this._ensureRepositoryAccess(entry_absolute_path))) {
+                        return;
+                    }
+
+                    this._selected_repository_path = entry_absolute_path;
                     staged_files_details.disabled = false;
-                    
+                    await this._updateHasRemote();
+                    await this._ensureCatalogAndMainFeed(entry_absolute_path);
+
                     // Dispatch event with repository path
                     this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
                         detail: { repositoryPath: this._selected_repository_path },
@@ -422,12 +466,19 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 // Disable buttons and details
                 this._repository_buttons_disabled = true;
+                this._hasRemote = false;
                 staged_files_details.disabled = true;
 
                 // Clear the entity editor
                 this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
                     "bubbles": true,
                     "composed": true,
+                }));
+
+                // Notify entity-search to reload indexes
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
+                    bubbles: true,
+                    composed: true
                 }));
 
                 target.loading = false;
@@ -449,9 +500,35 @@ export default class ADWLMFilesystemManager extends LitElement {
                 rename_filesystem_entry_dialog.show();
             }
 
+            if (target.matches("sl-button#repository-settings")) {
+                await repository_settings_dialog.show(this._selected_repository_path);
+            }
+
+            if (target.matches("sl-button#catalog-metadata")) {
+                await catalog_metadata_dialog.show(this._selected_repository_path);
+            }
+
             if (target.matches("sl-button#synchronize-repository")) {
                 target.loading = true;
+                // Alert missing personal access token
+                const hasToken = await filesystem.has_token(this._selected_repository_path);
+                if (!hasToken) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        No personal access token. Synchronizing is not possible. 
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
+
                 const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                
                 if (canMerge[1] === 0) {
                         const alert = document.createElement('sl-alert');
                         alert.variant = 'success';
@@ -518,6 +595,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                     }
                 }
 
+                let pull_result = null;
                 try {
                     let staged_before_pull = [];
                     if (this._staged_files && this._staged_files.length > 0) {
@@ -532,9 +610,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                                     };
                                 }
 
-                                const content = await filesystem.pfs.readFile(
-                                    `${this._selected_repository_path}/${path}`,
-                                    'utf8'
+                                const content = await filesystem.read_file(
+                                    this._selected_repository_path,
+                                    path
                                 );
 
                                 return {
@@ -546,7 +624,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                         );
                     }
 
-                    await filesystem.pull(this._selected_repository_path);
+                    pull_result = await filesystem.pull(this._selected_repository_path);
                     for (const file of staged_before_pull) {
                         try {
                             if (file.isDeleted) {
@@ -595,16 +673,39 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
-                    
-                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
-                    // Notify entity-search to reload indexes
-                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
-                        bubbles: true,
-                        composed: true
-                    }));
+
+                    // Update indexes incrementally, one file at a time (see
+                    // generate_indexes_for_saved_file()) - pull() already
+                    // tells us exactly which paths changed/were deleted, no
+                    // need to re-read whole folders (generate_indexes_for_all_files())
+                    // for this, which under lazy loading would force-download
+                    // every other file in those folders too.
+                    const affected_paths = [
+                        ...(pull_result?.changedPaths ?? []),
+                        ...(pull_result?.deletedPaths ?? []),
+                    ];
+
+                    if (affected_paths.length > 0) {
+                        const deleted_path_set = new Set(pull_result?.deletedPaths ?? []);
+
+                        for (const path of affected_paths) {
+                            try {
+                                await filesystem.generate_indexes_for_saved_file(
+                                    this._selected_repository_path,
+                                    path,
+                                    deleted_path_set.has(path),
+                                );
+                            } catch (error) {
+                                console.error('Failed to update index for', path, error);
+                            }
+                        }
+
+                        // Notify entity-search to reload indexes
+                        document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                            bubbles: true,
+                            composed: true
+                        }));
+                    }
 
                     // Update repository tree
                     if (this._selected_repository_path) {
@@ -624,73 +725,21 @@ export default class ADWLMFilesystemManager extends LitElement {
 
             if (target.matches("sl-button#commit-and-push-staged-files")) {
                 target.loading = true;
-                
-                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-                if (canMerge[0] === false) {
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Sharing is not possible: Some files have been modified both locally and remotely. 
-                        Please synchronize before sharing.
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                    target.loading = false;
-                    return;
-                } else if (canMerge[1] === 0) {
-                } else if (canMerge[0] === true) {
-                    let staged_before_pull = [];
-                    if (this._staged_files && this._staged_files.length > 0) {
-                        staged_before_pull = await Promise.all(
-                            this._staged_files.map(async (path) => {
-                                const isDeleted = path.endsWith('-deleted');
 
-                                if (isDeleted) {
-                                    return {
-                                        path,
-                                        isDeleted: true
-                                    };
-                                }
-
-                                const content = await filesystem.pfs.readFile(
-                                    `${this._selected_repository_path}/${path}`,
-                                    'utf8'
-                                );
-
-                                return {
-                                    path,
-                                    content,
-                                    isDeleted: false
-                                };
-                            })
-                        );
-                    }
-
-                    await filesystem.pull(this._selected_repository_path);
-                    for (const file of staged_before_pull) {
-                        try {
-                            if (file.isDeleted) {
-                                const originalPath = file.path.replace(/-deleted$/, '');
-
-                                await filesystem.add_file(
-                                    this._selected_repository_path,
-                                    originalPath
-                                );
-                            } else {
-                                await filesystem.save_and_stage_file(
-                                    this._selected_repository_path,
-                                    file.content,
-                                    file.path
-                                );
-                            }
-                        } catch (e) {
-                            console.error("Failed to restore staged file:", file.path, e);
-                        }
-                    }
-                }
+                // ---------------------------------------------------------------------
+                // OLD IMPLEMENTATION: always pulled first via canPullSafely() (now
+                // stubbed, so this ran on every push). Replaced by checkPushConflicts()
+                // below - scoped to just the pushed files, decided per file via popup.
+                //
+                // const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                // if (canMerge[0] === false) { ...toast, return...; }
+                // else if (canMerge[1] === 0) { }
+                // else if (canMerge[0] === true) {
+                //     let staged_before_pull = [...]; // collect staged content
+                //     await filesystem.pull(this._selected_repository_path);
+                //     for (const file of staged_before_pull) { ...restore... }
+                // }
+                // ---------------------------------------------------------------------
 
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
                 let selected_staged_file_paths = staged_file_nodes
@@ -737,49 +786,54 @@ export default class ADWLMFilesystemManager extends LitElement {
 
                 this._commit_message = render_root.querySelector('#commit-message-field')?.value ?? '';
 
-                let push_result = false;
+                // Check the pushed paths against their current remote content -
+                // if any differ, let the user decide per file via the popup.
+                let conflicts = [];
                 try {
-                    push_result = await filesystem.commit_and_push_file(
+                    conflicts = await filesystem.checkPushConflicts(
                         this._selected_repository_path,
                         staged_file_paths,
-                        selected_staged_file_paths,
-                        this._commit_message
+                        selected_staged_file_paths
                     );
                 } catch (error) {
-                    console.error('Failed to share files:', error);
-                    // Show error notification
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Failed to share files with remote repository. Try to synchronize before sharing.
-                        <br><br>
-                        <em>${error.message}</em>
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                    push_result = false;
+                    console.error('Failed to check for push conflicts:', error);
                 }
 
-                if (push_result) {
-                    await this._list_staged_files();
-                    this._hasUnsharedFiles = false;
-                    this._hasSelectedFiles = false;
-                    this._allSelected = false;
-                    this._staged_files = [];
-                    await this._updateRepositoryTreeStatus();
-                    commit_and_push_done_toast.toast();
-                    // Clear selections in the staged files tree
-                    staged_files_tree.querySelectorAll('sl-tree-item[selected]')
-                        .forEach(item => item.selected = false);
-                    render_root.querySelector('#commit-message-field').value = '';
+                if (conflicts.length > 0) {
+                    // Render each conflict via a real <shacl-form>, same as
+                    // "Entity Preview" - needs the entity's subject IRI + shape URL.
+                    // Same domain+path pattern entity-editor.js uses elsewhere
+                    // (confirmed via live testing to match the real subject).
+                    const config = await this._getRepoConfig();
+                    const domain = config?.projectDomain ?? 'urn:uuid:';
 
-                } else {
-                    commit_and_push_error_toast.toast();
+                    // Blob URLs from a previous check are done with - free
+                    // them before building this batch (see _getShapeUrlForPath()).
+                    for (const url of this._shapeUrlCacheByType.values()) {
+                        if (url.startsWith('blob:')) {
+                            URL.revokeObjectURL(url);
+                        }
+                    }
+                    this._shapeUrlCacheByType = new Map();
+
+                    for (const conflict of conflicts) {
+                        conflict.subject = `${domain}${conflict.path.replace(/\.ttl$/, "")}`;
+                        try {
+                            conflict.shapesUrl = await this._getShapeUrlForPath(conflict.path);
+                        } catch (error) {
+                            console.error('Failed to resolve shape for preview:', conflict.path, error);
+                            conflict.shapesUrl = "";
+                        }
+                    }
+
+                    this._pending_push = { staged_file_paths, selected_staged_file_paths, target };
+                    push_conflict_dialog.conflicts = conflicts;
+                    push_conflict_dialog.show();
+                    target.loading = false;
+                    return;
                 }
-                target.loading = false;
+
+                await this._performPush(target, staged_file_paths, selected_staged_file_paths);
             }
 
             if (target.matches("sl-button#unstage-files")) {
@@ -820,24 +874,38 @@ export default class ADWLMFilesystemManager extends LitElement {
                     }
 
                     try {
-                        const generatedIndexes = await filesystem.generate_indexes_for_all_files(
-                            this._selected_repository_path,
-                            selected_staged_files.map(file => file.path.split('/')[0]),
-                        );
+                        // Update indexes incrementally, one file at a time
+                        // (see generate_indexes_for_saved_file()) instead of
+                        // rebuilding whole folders - we already know exactly
+                        // which files were unstaged. Unstaging either reverts
+                        // a file to its last-synced content, or (for a
+                        // never-synced new file) makes it vanish entirely
+                        // again - check which actually happened per file
+                        // rather than guessing.
+                        const successfulFolders = new Set();
 
-                        // Log which indexes were generated
-                        const successfulIndexes = Object.entries(generatedIndexes)
-                            .filter(([_, result]) => result.success)
-                            .map(([name, _]) => name);
+                        for (const file of selected_staged_files) {
+                            if (!(file.path.includes('/') && file.path.endsWith('.ttl'))) {
+                                continue; // a bare directory entry, not an actual entity file
+                            }
+                            try {
+                                const current_content = await filesystem.read_file(this._selected_repository_path, file.path);
+                                const is_now_gone = !current_content || current_content.trim() === '';
+                                await filesystem.generate_indexes_for_saved_file(this._selected_repository_path, file.path, is_now_gone);
+                                successfulFolders.add(file.path.split('/')[0]);
+                            } catch (error) {
+                                console.error('Failed to update index for', file.path, error);
+                            }
+                        }
 
-                        if (successfulIndexes.length > 0) {
+                        if (successfulFolders.size > 0) {
                             const alert = document.createElement('sl-alert');
                             alert.variant = 'success';
                             alert.closable = true;
                             alert.duration = 6000;
                             alert.innerHTML = `
                                 <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                                Successfully generated indexes for: ${successfulIndexes.join(', ')}
+                                Successfully generated indexes for: ${[...successfulFolders].join(', ')}
                             `;
                             document.body.append(alert);
                             alert.toast();
@@ -920,23 +988,36 @@ export default class ADWLMFilesystemManager extends LitElement {
         render_root.addEventListener("adwlm-filesystem-manager:repository-branches", async (event) => {
             let repository_metadata = event.detail;
 
-            let branches = await filesystem.list_branches(repository_metadata);
-
-            add_repository_dialog.repository_branches = branches;
+            try {
+                let branches = await filesystem.list_branches(repository_metadata);
+                add_repository_dialog.repository_branches = branches;
+            } catch (error) {
+                console.error("Failed to list branches:", error);
+                add_repository_dialog.reportBranchLoadError();
+            }
         });
 
         render_root.addEventListener("adwlm-filesystem-manager:repository-to-add", async (event) => {
             let repository_metadata = event.detail;
 
             // add the repository
-            await filesystem.add_repository(repository_metadata);
+            await filesystem.add_repository(repository_metadata, {
+                onProgress: (current, total) => {
+                    add_repository_dialog.clone_progress = { current, total };
+                },
+            });
+
+            await this._ensureCatalogAndMainFeed(`/${repository_metadata.folder}`);
+
+            this._selected_repository_path = `${repository_metadata.folder}`;
 
             await this._list_repository_names();
 
             add_repository_dialog.hide();
             add_repository_dialog.reset();
 
-            this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                detail: { repositoryPath: this._selected_repository_path },
                 bubbles: true,
                 composed: true
             }));
@@ -944,13 +1025,22 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         render_root.addEventListener("adwlm-filesystem-manager:add-local-repository", async (event) => {
             console.log("Event received: add-local-repository", event.detail);
-            
-            await this._list_repository_names();
 
             const { repoName } = event.detail;
             this._selected_repository_path = `/${repoName}`;
 
+            await this._list_repository_names();
+
+            await this._updateHasRemote();
+            await this._ensureCatalogAndMainFeed(this._selected_repository_path);
+
             add_repository_dialog.reset();
+
+            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                detail: { repositoryPath: this._selected_repository_path },
+                bubbles: true,
+                composed: true
+            }));
 
         });
 
@@ -983,16 +1073,121 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
         });
 
+        // Fired once every push-conflict-dialog decision is made. Applies
+        // "keep remote" decisions, then pushes whatever's left ("keep mine"
+        // proceeds untouched).
+        render_root.addEventListener("adwlm-push-conflict-dialog:resolve", async (event) => {
+            const pending = this._pending_push;
+            this._pending_push = null;
+            if (!pending) {
+                return;
+            }
+
+            const { target } = pending;
+            let { staged_file_paths, selected_staged_file_paths } = pending;
+            let resolved_any_remote = false;
+
+            for (const decision of event.detail.decisions) {
+                if (decision.choice === "local") {
+                    // pushed normally below - stays in staged_file_paths/selected_staged_file_paths as-is
+                    continue;
+                }
+
+                const deleted_entry = `${decision.path}-deleted`;
+
+                if (decision.choice === "ignore") {
+                    // Skip for THIS push only - stays staged/dirty untouched
+                    // so it can be resolved another time.
+                    staged_file_paths = staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                    selected_staged_file_paths = selected_staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                    continue;
+                }
+
+                // choice === "remote"
+                try {
+                    await filesystem.resolveConflictWithRemote(
+                        this._selected_repository_path,
+                        decision.path,
+                        decision.remote
+                    );
+                } catch (error) {
+                    console.error("Failed to apply 'keep remote' for", decision.path, error);
+                    continue;
+                }
+
+                resolved_any_remote = true;
+
+                // Update the index incrementally for just this file instead
+                // of rebuilding its whole folder - decision.remote is the
+                // fresh content, or null if the file was deleted online.
+                try {
+                    await filesystem.generate_indexes_for_saved_file(
+                        this._selected_repository_path,
+                        decision.path,
+                        decision.remote === null,
+                    );
+                } catch (error) {
+                    console.error('Failed to update index for', decision.path, error);
+                }
+
+                // Now in sync with remote - nothing left to push here.
+                staged_file_paths = staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+                selected_staged_file_paths = selected_staged_file_paths.filter(p => p !== decision.path && p !== deleted_entry);
+
+                // Let an open entity-editor know, in case it's showing this
+                // exact file's now-discarded local version.
+                document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:file-changed-remotely", {
+                    detail: {
+                        repositoryPath: this._selected_repository_path,
+                        path: decision.path,
+                        content: decision.remote,
+                    },
+                    bubbles: true,
+                    composed: true,
+                }));
+            }
+
+            if (resolved_any_remote) {
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+            }
+
+            if (staged_file_paths.length === 0 && selected_staged_file_paths.length === 0) {
+                // Every conflict was resolved as "keep remote" - nothing left to push.
+                await this._list_staged_files();
+                await this._updateRepositoryTreeStatus();
+                target.loading = false;
+                return;
+            }
+
+            await this._performPush(target, staged_file_paths, selected_staged_file_paths);
+        });
+
+        // Popup closed (Escape, clicking outside, or "Abbrechen") without
+        // confirming - nothing was applied, just reset the button's spinner.
+        render_root.addEventListener("adwlm-push-conflict-dialog:cancel", () => {
+            const pending = this._pending_push;
+            this._pending_push = null;
+            if (pending) {
+                pending.target.loading = false;
+            }
+        });
+
         this.addEventListener("_save-entity", async (event) => {
             try {
                 let entity_to_save = event.detail;
+                const isQuickAdd = entity_to_save?.isQuickAdd === true;
                 const result = await filesystem.save_and_stage_file(
                     this._selected_repository_path, 
                     entity_to_save.rdf_contents, 
                     entity_to_save.path
                 );
 
-                this._file_path = entity_to_save.path;
+                if (!isQuickAdd) {
+                    this._file_path = entity_to_save.path;
+                }
 
                 // Show success notification
                 const alert = document.createElement('sl-alert');
@@ -1069,8 +1264,9 @@ export default class ADWLMFilesystemManager extends LitElement {
                         // Just log the error
                     }
 
-                    // reload the previously selected file, if any
-                    if (this._selected_repository_path && this._file_path) {
+                    // For regular saves, keep selection aligned with saved file.
+                    // For Quick Add, keep the current editor context unchanged.
+                    if (!isQuickAdd && this._selected_repository_path && this._file_path) {
                         await this.selectEntityInTree(this._file_path);
                     }
 
@@ -1116,9 +1312,27 @@ export default class ADWLMFilesystemManager extends LitElement {
 
         document.addEventListener("adwlm-filesystem-manager:build-indexes", async (event) => {
             try {
+                let folder_names = [...this.entity_type_definitions.map(def => def.folder_name), 'dataCatalogs'];
+
+                if (event.detail?.onlyIfMissing) {
+                    // Only rebuild folders that don't already have an index -
+                    // trust whatever's already committed otherwise (see the
+                    // dispatch site for why: a full rebuild here would defeat
+                    // lazy loading by downloading almost the whole repo again).
+                    const checks = await Promise.all(folder_names.map(async (folder_name) => {
+                        try {
+                            const existing = await filesystem.read_file(this._selected_repository_path, `indexes/${folder_name}.ttl`);
+                            return { folder_name, hasIndex: !!existing && existing.trim() !== '' };
+                        } catch (error) {
+                            return { folder_name, hasIndex: false };
+                        }
+                    }));
+                    folder_names = checks.filter(c => !c.hasIndex).map(c => c.folder_name);
+                }
+
                 const generatedIndexes = await filesystem.generate_indexes_for_all_files(
                     this._selected_repository_path,
-                    this.entity_type_definitions.map(def => def.folder_name)
+                    folder_names
                 );
 
                 // Log which indexes were generated
@@ -1137,6 +1351,10 @@ export default class ADWLMFilesystemManager extends LitElement {
                     `;
                     document.body.append(alert);
                     alert.toast();
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
                 }
             } catch (error) {
                 console.error('Error generating indexes:', error);
@@ -1179,6 +1397,251 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._displayed_staged_files = [];
         this._repository_buttons_disabled = true;
         this._hasSelectedFiles = false;
+        this._hasRemote = false;
+        // Staged/selected paths for a push paused while push-conflict-dialog is open.
+        this._pending_push = null;
+        // Cached configuration/config.json - see _getRepoConfig() below.
+        this._cachedConfig = null;
+        // entity_type -> shape blob URL, shared by same-type conflicts
+        // within one push-conflict check - see _getShapeUrlForPath() below.
+        this._shapeUrlCacheByType = new Map();
+    }
+
+    // Re-grants access to a local (File System Access API) repository whose
+    // directory handle survived a reload but whose permission did not - a
+    // browser restart resets permission to "prompt", and only a user gesture
+    // (this is called from click/selection handlers) can re-request it.
+    async _ensureRepositoryAccess(repository_absolute_path) {
+        let repository_name = repository_absolute_path.replace(/^\//, "");
+        let access_granted = await filesystem.ensure_local_repository_access(repository_name);
+
+        if (!access_granted) {
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'warning';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Access to the local folder '${repository_name}' was not granted. Please try again and allow access.
+            `;
+            document.body.append(alert);
+            alert.toast();
+        }
+
+        return access_granted;
+    }
+
+    async _updateHasRemote() {
+        this._hasRemote = this._selected_repository_path
+            ? await filesystem.has_remote(this._selected_repository_path)
+            : false;
+    }
+
+    async _ensureCatalogAndMainFeed(repository_path) {
+        const CATALOG_PATH = "dataCatalogs/catalog.ttl";
+        const FEED_PATH = "dataCollections/works.ttl";
+        const FEED_PATH_MANIF = "dataCollections/manifestations.ttl";
+
+        let domain = "urn:uuid:";
+        try {
+            const configContent = await filesystem.read_file(repository_path, "configuration/config.json");
+            if (configContent && configContent.trim() !== "") {
+                const config = JSON.parse(configContent);
+                domain = config?.projectDomain ?? domain;
+            }
+        } catch (error) {
+            // No/invalid config.json: fall back to the default domain, matching
+            // the entity editor's own fallback behaviour.
+        }
+
+        const catalogIri = `${domain}dataCatalogs/catalog`;
+        const collectionIri = `${domain}dataCollections/works`;
+        const collectionIriManif = `${domain}dataCollections/manifestations`;
+
+        const existingCatalog = await filesystem.read_file(repository_path, CATALOG_PATH).catch(() => "");
+        if (!existingCatalog || existingCatalog.trim() === "") {
+            const repoName = repository_path.split("/").pop();
+            const catalogTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${catalogIri}> a melod:DataCatalog ;
+    rdfs:label "${repoName}" ;
+    melod:usesApplication "MerMEId MeLODy" .
+`;
+            await filesystem.save_and_stage_file(repository_path, catalogTtl, CATALOG_PATH);
+            await filesystem.generate_indexes_for_saved_file(repository_path, CATALOG_PATH, false).catch(() => {});
+        }
+
+        const existingFeed = await filesystem.read_file(repository_path, FEED_PATH).catch(() => "");
+        if (!existingFeed || existingFeed.trim() === "") {
+            const feedTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${collectionIri}> a melod:DataCollection ;
+    rdfs:label "All works" ;
+    melod:hasClassification "work catalog" ;
+    schema:includedInDataCatalog <${catalogIri}> .
+`;
+            await filesystem.save_and_stage_file(repository_path, feedTtl, FEED_PATH);
+            await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH, false).catch(() => {});
+        }
+
+        const existingFeedManif = await filesystem.read_file(repository_path, FEED_PATH_MANIF).catch(() => "");
+        if (!existingFeedManif || existingFeedManif.trim() === "") {
+            const feedManifTtl = `@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<${collectionIriManif}> a melod:DataCollection ;
+    rdfs:label "All manifestations" ;
+    melod:hasClassification "source catalog" ;
+    schema:includedInDataCatalog <${catalogIri}> .
+`;
+            await filesystem.save_and_stage_file(repository_path, feedManifTtl, FEED_PATH_MANIF);
+            await filesystem.generate_indexes_for_saved_file(repository_path, FEED_PATH_MANIF, false).catch(() => {});
+        }
+    }
+
+    // Actually pushes - factored out so both the no-conflict path and
+    // push-conflict-dialog's "resolve" handler can call it.
+    async _performPush(target, staged_file_paths, selected_staged_file_paths) {
+        let render_root = this.renderRoot;
+        let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
+
+        let push_result = false;
+        try {
+            push_result = await filesystem.commit_and_push_file(
+                this._selected_repository_path,
+                staged_file_paths,
+                selected_staged_file_paths,
+                this._commit_message
+            );
+        } catch (error) {
+            console.error('Failed to share files:', error);
+            this._showToast('danger', `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to share files with remote repository. Try to synchronize before sharing.
+                <br><br>
+                <em>${error.message}</em>
+            `);
+            push_result = false;
+        }
+
+        // Refresh regardless of success/failure - a "keep remote" resolution
+        // may have applied real changes even if the rest of the push fails,
+        // and list_staged_files() is the only source of truth for what's
+        // still staged (don't hand-override it - "Später entscheiden" files
+        // must keep showing up here).
+        await this._list_staged_files();
+
+        if (push_result) {
+            this._hasSelectedFiles = false;
+            this._allSelected = false;
+            this._showToast('primary', `
+                <sl-icon slot="icon" name="info-circle"></sl-icon>
+                The files were shared with the remote repository.
+            `);
+            staged_files_tree.querySelectorAll('sl-tree-item[selected]')
+                .forEach(item => item.selected = false);
+            render_root.querySelector('#commit-message-field').value = '';
+        } else {
+            this._showToast('warning', `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                An error occured while sharing the files with the remote repository.
+            `);
+        }
+        target.loading = false;
+    }
+
+    // sl-alert.toast() MOVES the element into a shared toast-stack container
+    // in document.body rather than showing it in place - reusing a single
+    // static, in-template <sl-alert> for this breaks after its first use
+    // (it's no longer a descendant of renderRoot, so a later querySelector
+    // for it returns null). A fresh element per call sidesteps that.
+    _showToast(variant, innerHTML) {
+        const alert = document.createElement('sl-alert');
+        alert.variant = variant;
+        alert.closable = true;
+        alert.duration = 6000;
+        alert.innerHTML = innerHTML;
+        document.body.append(alert);
+        alert.toast();
+    }
+
+    // Port of entity-editor's _getRepoConfig() - needed here too so
+    // push-conflict-dialog can render entities the same way.
+    async _getRepoConfig() {
+        if (this._cachedConfig) {
+            return this._cachedConfig;
+        }
+
+        try {
+            if (!this._selected_repository_path) {
+                throw new Error('No repository selected');
+            }
+
+            const configContent = await filesystem.read_file(this._selected_repository_path, 'configuration/config.json');
+            if (!configContent || configContent.trim() === '') {
+                throw new Error('Config file is empty');
+            }
+
+            this._cachedConfig = JSON.parse(configContent);
+        } catch (error) {
+            console.error('Failed to read repository config:', error);
+            this._cachedConfig = {
+                datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/',
+                projectDomain: 'urn:uuid:'
+            };
+        }
+
+        return this._cachedConfig;
+    }
+
+    // Port of entity-editor's _getShapeForPath(), adapted to resolve the
+    // entity type from a file path (checkPushConflicts() only has paths).
+    // Cached per entity_type (see _shapeUrlCacheByType) - several conflicts
+    // of the same type would otherwise redundantly re-fetch and re-merge
+    // the identical shape+indexes content.
+    async _getShapeUrlForPath(relative_path) {
+        const entity_type = this.entity_type_definitions?.find(def => relative_path.startsWith(def.folder_name))?.type;
+        const shacl_file_location = this.entity_type_definitions?.find(def => def.type === entity_type)?.shacl_file_location;
+
+        if (!shacl_file_location) {
+            return "";
+        }
+
+        if (this._shapeUrlCacheByType.has(entity_type)) {
+            return this._shapeUrlCacheByType.get(entity_type);
+        }
+
+        const config = await this._getRepoConfig();
+        if (!config?.datasetBaseUrl) {
+            this._shapeUrlCacheByType.set(entity_type, shacl_file_location);
+            return shacl_file_location;
+        }
+
+        let result;
+        try {
+            const shaclContent = await fetch(shacl_file_location).then(res => res.text());
+            const indexFiles = await filesystem.read_directory_files(this._selected_repository_path, 'indexes');
+
+            let combinedIndexContent = '';
+            for (const content of Object.values(indexFiles)) {
+                combinedIndexContent += content + '\n';
+            }
+
+            const modifiedShaclContent = shaclContent + combinedIndexContent;
+            const blob = new Blob([modifiedShaclContent], { type: 'text/turtle' });
+            result = URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Failed to build merged SHACL shape for preview:', error);
+            result = shacl_file_location;
+        }
+
+        this._shapeUrlCacheByType.set(entity_type, result);
+        return result;
     }
 
     // initialize the filesystem
@@ -1205,15 +1668,24 @@ export default class ADWLMFilesystemManager extends LitElement {
         // (editor, search) can load the repository config without requiring
         // an explicit user click.
         if (repository_names.length > 0 && !this._selected_repository_path) {
-            this._selected_repository_path = `/${repository_names[0]}`;
+            let first_repository_name = repository_names[0];
 
-            // Dispatch the repository-selected event so listeners react as if
-            // the user selected the repository in the UI.
-            this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
-                detail: { repositoryPath: this._selected_repository_path },
-                bubbles: true,
-                composed: true
-            }));
+            // No user gesture is available here (this runs on load), so a local
+            // repository whose permission reset to "prompt" over a browser
+            // restart can't be silently reconnected - leave it unselected and
+            // let the user pick it explicitly, which does carry a gesture.
+            if (await filesystem.ensure_local_repository_access(first_repository_name)) {
+                this._selected_repository_path = `/${first_repository_name}`;
+                await this._updateHasRemote();
+
+                // Dispatch the repository-selected event so listeners react as if
+                // the user selected the repository in the UI.
+                this.dispatchEvent(new CustomEvent('adwlm-filesystem-manager:repository-selected', {
+                    detail: { repositoryPath: this._selected_repository_path },
+                    bubbles: true,
+                    composed: true
+                }));
+            }
         }
     }
 
@@ -1240,7 +1712,11 @@ export default class ADWLMFilesystemManager extends LitElement {
         let repository_path = this._selected_repository_path;          //e.g. "/repo"
 
         // Get files and directories in folder
+        // TEMP PERF INSTRUMENTATION - remove once the remaining bottleneck is confirmed.
+        let t0 = performance.now();
         let entries = await filesystem.list_entries_from_workdir(repository_path, entry_relative_path);
+        let t1 = performance.now();
+        console.log(`[perf] list_entries_from_workdir("${entry_relative_path}"): ${(t1 - t0).toFixed(1)}ms, ${entries.folders.length} folders, ${entries.files.length} files`);
 
         let tree_subitems = ""
         // insert subfolders in tree
@@ -1279,7 +1755,11 @@ export default class ADWLMFilesystemManager extends LitElement {
         setTimeout(() => expandItems(), 500);
 
         // Insert subitems into the input tree
+        // TEMP PERF INSTRUMENTATION - remove once the remaining bottleneck is confirmed.
+        let t2 = performance.now();
         treeItem.insertAdjacentHTML("beforeend", tree_subitems);
+        let t3 = performance.now();
+        console.log(`[perf] HTML string build: ${(t2 - t1).toFixed(1)}ms, DOM insert: ${(t3 - t2).toFixed(1)}ms`);
         treeItem.removeAttribute("lazy");
         treeItem.dataset.loaded = "true";
         } finally {
@@ -1287,62 +1767,116 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
     }
 
+    // Opens a file "from outside the tree" (search, graph-view's "Open in
+    // Editor", and a few internal re-selection spots after save/push/pull -
+    // see callers). Loads the file directly, independent of the tree's DOM
+    // state, and only highlights the corresponding tree node if it already
+    // happens to be visible - it does NOT force-expand the folder chain
+    // down to it.
+    //
+    // ---------------------------------------------------------------------
+    // OLD IMPLEMENTATION: expanded every ancestor folder in relativePath's
+    // path first (repo root, then one _generate_folder_tree() call per
+    // folder level), purely so the file's <sl-tree-item> would exist in the
+    // DOM to look up and select - only THEN loaded the file via
+    // _handleRepositoryFileSelection(fileItem). For a very large repository
+    // each of those folder expansions does a live git.walk() plus builds
+    // potentially thousands of <sl-tree-item> web components - opening a
+    // file via search/graph-view paid that cost once per ancestor folder,
+    // even though showing the tree's expanded state was never actually
+    // required to open the file.
+    //
+    // async selectEntityInTree(relativePath) {
+    //     if (!relativePath) return false;
+    //     const repositoriesTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
+    //     if (!repositoriesTree || !this._selected_repository_path) return false;
+    //     const repoItem = repositoriesTree.querySelector(
+    //         `sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`
+    //     );
+    //     if (!repoItem) return false;
+    //     repoItem.setAttribute("expanded", "");
+    //     await this._generate_folder_tree(repoItem);
+    //     const segments = String(relativePath).split("/").filter(Boolean);
+    //     const folderSegments = segments.slice(0, -1);
+    //     let currentPath = "";
+    //     for (const segment of folderSegments) {
+    //         currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    //         const folderItem = repositoriesTree.querySelector(
+    //             `sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${currentPath}"]`
+    //         );
+    //         if (!folderItem) break;
+    //         folderItem.setAttribute("expanded", "");
+    //         await this._generate_folder_tree(folderItem);
+    //     }
+    //     let fileItem = repositoriesTree.querySelector(
+    //         `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
+    //     );
+    //     if (!fileItem) {
+    //         const fileName = segments[segments.length - 1] || relativePath;
+    //         fileItem = repositoriesTree.querySelector(
+    //             `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-name="${fileName}"]`
+    //         );
+    //     }
+    //     if (!fileItem) return false;
+    //     repositoriesTree.querySelectorAll("sl-tree-item[selected]").forEach((item) => {
+    //         item.selected = false;
+    //         item.removeAttribute("selected");
+    //     });
+    //     fileItem.selected = true;
+    //     fileItem.setAttribute("selected", "");
+    //     this._repository_buttons_disabled = false;
+    //     await this._handleRepositoryFileSelection(fileItem);
+    //     return true;
+    // }
+    // ---------------------------------------------------------------------
     async selectEntityInTree(relativePath) {
-        if (!relativePath) return false;
+        if (!relativePath || !this._selected_repository_path) return false;
 
+        this._repository_buttons_disabled = false;
+
+        // Same "skip reload if this file is already open" behavior
+        // _handleRepositoryFileSelection() used to provide.
+        if (relativePath !== this._file_path) {
+            this._file_path = relativePath;
+            await this._load_entity_to_edit();
+        }
+
+        this._highlightEntityInTreeIfVisible(relativePath);
+
+        return true;
+    }
+
+    // Best-effort selection highlight: only touches tree nodes that are
+    // already in the DOM (i.e. folders the user expanded themselves) -
+    // never expands anything. No-op if the file's node isn't currently
+    // visible in the tree.
+    _highlightEntityInTreeIfVisible(relativePath) {
         const repositoriesTree = this.renderRoot.querySelector("sl-tree#repositories-tree");
-        if (!repositoriesTree || !this._selected_repository_path) return false;
-
-        const repoItem = repositoriesTree.querySelector(
-            `sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`
-        );
-        if (!repoItem) return false;
-
-        repoItem.setAttribute("expanded", "");
-        await this._generate_folder_tree(repoItem);
-
-        // Open folder chain (folder1/folder2/file.ttl)
-        const segments = String(relativePath).split("/").filter(Boolean);
-        const folderSegments = segments.slice(0, -1);
-        let currentPath = "";
-        for (const segment of folderSegments) {
-            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
-            const folderItem = repositoriesTree.querySelector(
-                `sl-tree-item[data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}"][data-entry-relative-path="${currentPath}"]`
-            );
-            if (!folderItem) break;
-            folderItem.setAttribute("expanded", "");
-            await this._generate_folder_tree(folderItem);
-        }
-
-        let fileItem = repositoriesTree.querySelector(
-            `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
-        );
-
-        if (!fileItem) {
-            const fileName = segments[segments.length - 1] || relativePath;
-            fileItem = repositoriesTree.querySelector(
-                `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-name="${fileName}"]`
-            );
-        }
-
-        if (!fileItem) return false;
+        if (!repositoriesTree) return;
 
         repositoriesTree.querySelectorAll("sl-tree-item[selected]").forEach((item) => {
             item.selected = false;
             item.removeAttribute("selected");
         });
-        fileItem.selected = true;
-        fileItem.setAttribute("selected", "");
-        this._repository_buttons_disabled = false;
-        await this._handleRepositoryFileSelection(fileItem);
 
-        return true;
+        const fileItem = repositoriesTree.querySelector(
+            `sl-tree-item[data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"][data-entry-relative-path="${relativePath}"]`
+        );
+        if (fileItem) {
+            fileItem.selected = true;
+            fileItem.setAttribute("selected", "");
+        }
     }
 
     async _handleRepositoryFileSelection(fileItem) {
-        this._file_path = fileItem.dataset.entryRelativePath;
-        await this._load_entity_to_edit();
+        if (fileItem.dataset.entryRelativePath === this._file_path) {
+            this._file_path = fileItem.dataset.entryRelativePath;
+        }
+        else {
+            this._file_path = fileItem.dataset.entryRelativePath;
+            await this._load_entity_to_edit();
+        }
+        
     }
 
     async _load_entity_to_edit() {
@@ -1436,10 +1970,12 @@ export default class ADWLMFilesystemManager extends LitElement {
         // Maybe load the files asynchronously, as they are discovered?
         // The current approach implies 0.5-1.5 seconds for listing the files, for
         // a repo with 4K+ files, so async loading is not needed.
-        const tree = this.renderRoot.querySelector("sl-tree#staged-files-tree");
         const details = this.renderRoot.querySelector("sl-details#staged-files-details");
-        tree.innerHTML = "";
-        tree.insertAdjacentHTML("afterbegin", `<sl-tree-item>Loading files...</sl-tree-item>`);
+
+        // Loading placeholder - goes through the reactive _displayed_staged_files
+        // property (see below), not direct DOM manipulation, so it doesn't get
+        // wiped by the next unrelated re-render.
+        this._displayed_staged_files = [html`<sl-tree-item>Loading files...</sl-tree-item>`];
 
         let staged_file_relative_paths = await filesystem.list_staged_files(this._selected_repository_path);
 
@@ -1466,26 +2002,27 @@ export default class ADWLMFilesystemManager extends LitElement {
         this._hasUnsharedFiles = staged_file_relative_paths.length > 0;
         details.setAttribute('data-has-unshared', this._hasUnsharedFiles);
 
-        tree.innerHTML = "";
-
-        let tree_items = "";
-        // process the files
-        for (const staged_file of this._staged_files) {
-            
+        // Build the tree items through Lit's reactive rendering (same pattern
+        // as _list_repository_names()/_displayed_repository_names above)
+        // instead of tree.innerHTML/insertAdjacentHTML. The direct-DOM version
+        // got silently overwritten by the very next unrelated re-render (e.g.
+        // triggered by _hasUnsharedFiles just above, itself a reactive
+        // property) - the <sl-tree> element is declaratively bound to
+        // ${this._displayed_staged_files} in the template, and that binding
+        // always wins on the next render pass.
+        this._displayed_staged_files = this._staged_files.map(staged_file => {
             let file_name = staged_file.split('/')[1];
             let staged_file_absolute_path = `${this._selected_repository_path}/${staged_file}`;
 
-            tree_items += `
-                <sl-tree-item 
-                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" 
-                    data-entry-absolute-path="${staged_file_absolute_path}" 
+            return html`
+                <sl-tree-item
+                    data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}"
+                    data-entry-absolute-path="${staged_file_absolute_path}"
                     data-entry-relative-path="${staged_file}"
                     data-entry-name="${file_name}">
                     ${staged_file}
                 </sl-tree-item>`;
-        }
-
-        tree.insertAdjacentHTML("beforeend", tree_items);
+        });
     }
 
     async _updateRepositoryTreeStatus() {

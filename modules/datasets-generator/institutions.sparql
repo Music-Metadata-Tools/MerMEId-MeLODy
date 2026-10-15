@@ -1,0 +1,35 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?institution_iri a melod:InstitutionEntity ;
+  	skos:prefLabel ?label ;
+    skos:broader ?siglum ;
+    skos:broader ?place ;
+    skos:related ?place_iri .
+} where {
+  select ?institution_iri ?label ?siglum ?place_iri ?place where {
+    ?institution_iri a melod:Institution .
+    ?institution_iri schema:name ?institution_name .
+    OPTIONAL {
+      {
+        ?institution_iri melod:hasAbbreviation ?abbr .
+        bind('Organization' AS ?siglum) .
+      } UNION {
+        ?institution_iri melod:hasSiglum ?abbr .
+        bind('RISM' AS ?siglum) .
+      }
+    }
+    OPTIONAL {
+        ?institution_iri schema:location ?place_iri .
+        OPTIONAL {
+          ?place_iri schema:name ?place .
+      }
+    }
+    bind(coalesce(concat(?abbr, " (", ?institution_name, ")"), ?institution_name) AS ?label)
+  }
+  order by ?label
+}

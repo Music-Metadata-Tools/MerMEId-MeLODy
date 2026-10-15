@@ -2,6 +2,15 @@ import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { filesystemService } from "../services/filesystem-service.js";
 import { indexStoreService, INDEXES } from "../services/index-store-service.js";
 
+const ALL_FILTER_VALUE = "all";
+
+const SEARCH_UI_LABELS = {
+  all: { en: "All", de: "Alle" },
+  placeholder: { en: "Search entities...", de: "Suche Entitäten..." },
+  results: { en: "Results", de: "Ergebnisse" },
+  reloadHint: { en: "Refresh the editor to load indexes.", de: "Editor neu laden, um die Indizes zu laden." },
+};
+
 function endsWithOrBeforeEntity(str, variable) {
   if (str.endsWith("Entity")) {
     return str.slice(0, -6).endsWith(variable);
@@ -15,6 +24,12 @@ class ADWLMEntitySearch extends LitElement {
       display: block;
       width: 14vw;
       font-size: var(--sl-font-size-small);
+    }
+    :host([data-ui-language="de"]) [lang="en"] {
+      display: none;
+    }
+    :host(:not([data-ui-language="de"])) [lang="de"] {
+      display: none;
     }
     div#search-container {
           display: flex;
@@ -104,6 +119,7 @@ class ADWLMEntitySearch extends LitElement {
   `;
 
   static properties = {
+    ui_language: { type: String, attribute: "data-ui-language", reflect: true },
     _entries: { state: true },
     _filtered: { state: true },
     _query: { state: true },
@@ -118,10 +134,11 @@ class ADWLMEntitySearch extends LitElement {
 
   constructor() {
     super();
+    this.ui_language = document.documentElement.lang || "en";
     this._entries = [];
     this._filtered = [];
     this._query = "";
-    this._typeFilter = "All";
+    this._typeFilter = ALL_FILTER_VALUE;
     this._loading = false;
     this._dataset_url = null;
     this._project_domain = null;
@@ -146,6 +163,16 @@ class ADWLMEntitySearch extends LitElement {
 
     // Rebuild entries whenever the shared store finishes (re-)loading
     document.addEventListener("adwlm-index-store:loaded", async () => {
+      const alert = document.createElement('sl-alert');
+      alert.variant = 'success';
+      alert.closable = true;
+      alert.duration = 3000;
+      alert.innerHTML = `
+          <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+          Reloaded indexes successfully
+      `;
+      document.body.append(alert);
+      alert.toast();
       await this._buildEntries();
     });
 
@@ -153,13 +180,28 @@ class ADWLMEntitySearch extends LitElement {
     document.addEventListener("adwlm-entity-search:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
+
+    // Listen for clear indexes event (e.g. after a repository is removed)
+    document.addEventListener("adwlm-entity-search:clear-indexes", () => {
+      this._entries = [];
+      this._filtered = [];
+      this._query = "";
+      this._typeFilter = ALL_FILTER_VALUE;
+      this._selected_repository_path = null;
+      indexStoreService.clear();
+    });
   }
 
   updated(changedProperties) {
     super.updated(changedProperties);
 
-    if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
-      indexStoreService.loadIndexes(this._dataset_url, this._selected_repository_path);
+    if (
+      (changedProperties.has("_dataset_url") || changedProperties.has("_selected_repository_path")) &&
+      this._dataset_url != null &&
+      this._selected_repository_path != null
+    ) {
+      this._loading = true;
+      indexStoreService.loadIndexes(this._selected_repository_path);
     }
   }
 
@@ -254,19 +296,14 @@ class ADWLMEntitySearch extends LitElement {
     allEntries.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
 
     this._entries = allEntries;
-    this._filtered = [];
     this._loading = false;
+    this._filterResults();
     console.log("Loaded entries:", allEntries.length);
   }
 
   _onInput(e) {
     this._query = e.target.value.trim().toLowerCase();
-    // Clear filtered results if input is empty
-    if (!this._query) {
-        this._filtered = [];
-    } else {
-        this._filterResults();
-    }
+    this._filterResults();
   }
 
   _onTypeChange(e) {
@@ -281,7 +318,7 @@ class ADWLMEntitySearch extends LitElement {
         e.composer?.some(composer => composer.toLowerCase().includes(this._query)) ||
         e.altlabels?.some(alt => alt.toLowerCase().includes(this._query)) ||
         e.classifications?.some(cls => cls.toLowerCase().includes(this._query));
-      const matchesType = this._typeFilter === "All" || endsWithOrBeforeEntity(e.type, this._typeFilter);
+      const matchesType = this._typeFilter === ALL_FILTER_VALUE || endsWithOrBeforeEntity(e.type, this._typeFilter);
       return matchesLabel && matchesType;
     });
 
@@ -318,27 +355,41 @@ class ADWLMEntitySearch extends LitElement {
     this._entries = [];
     this._filtered = [];
     this._query = "";
+    this._loading = true;
+    this._typeFilter = ALL_FILTER_VALUE;
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
-    await indexStoreService.reloadIndexes(this._dataset_url, this._selected_repository_path);
+    await indexStoreService.reloadIndexes(this._selected_repository_path);
+  }
+
+  _getUiLabel(key) {
+    return SEARCH_UI_LABELS[key]?.[this.ui_language] || SEARCH_UI_LABELS[key]?.en || "";
+  }
+
+  _getIndexLabel(index) {
+    return index.labels?.[this.ui_language] || index.labels?.en || index.name;
   }
 
   render() {
     return html`
     <div id="search-container">
-      <sl-details id="search-details" summary="Search" open>
+      <sl-details id="search-details" open>
+        <summary slot="summary">
+          <span lang="en">Search</span>
+          <span lang="de">Suche</span>
+        </summary>
         <div class="search-input">
           <sl-select @sl-change=${this._onTypeChange} value=${this._typeFilter} size="small" hoist>
-            <sl-option value="All">All</sl-option>
+            <sl-option value=${ALL_FILTER_VALUE}>${this._getUiLabel("all")}</sl-option>
             ${INDEXES.map(
               (index) => html`
-                <sl-option value=${index.name}>${index.name}</sl-option>
+                <sl-option value=${index.name}>${this._getIndexLabel(index)}</sl-option>
               `
             )}
           </sl-select>
           
-          <sl-input 
+          <sl-input
             type="text" 
-            placeholder="Search entities..." 
+            placeholder=${this._getUiLabel("placeholder")}
             @sl-input=${this._onInput}
             size="small"
             clearable>
@@ -346,12 +397,12 @@ class ADWLMEntitySearch extends LitElement {
         </div>
         ${this._filtered.length >= 1 ? html`
           <div class="results-count">
-            <span>Results: ${this._filtered.length}</span>
+            <span>${this._getUiLabel("results")}: ${this._filtered.length}</span>
           </div>
         ` : ''}
         <div class="results">
           ${this._loading ? html`
-            Refresh the editor to load indexes.
+            <sl-spinner></sl-spinner> Loading …
           ` : this._filtered.map(
             (entry) => html`
               

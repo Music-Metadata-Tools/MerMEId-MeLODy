@@ -12,6 +12,11 @@ class RepositoryToClone {
         this._branch = null;
         this._username = null;
         this._token = null;
+        // Lazy loading (only files' paths are fetched up front, content
+        // on-demand per file) is the default - "Repo vollständig laden" in
+        // the dialog (see below) lets the user opt back into the old
+        // eager-download-everything behavior instead, per repo.
+        this._use_lazy_loading = true;
     }
 
     set folder(value) {
@@ -61,6 +66,14 @@ class RepositoryToClone {
     get token() {
         return this._token;
     }
+
+    set use_lazy_loading(value) {
+        this._use_lazy_loading = value;
+    }
+
+    get use_lazy_loading() {
+        return this._use_lazy_loading;
+    }
 }
 
 const styles =
@@ -77,6 +90,12 @@ const styles =
     }
     sl-input {
         padding-bottom: 0.5em;
+    }
+    #clone-progress {
+        align-self: center;
+        margin-right: auto;
+        font-size: var(--sl-font-size-small);
+        color: var(--sl-color-neutral-600);
     }
 `;
 
@@ -111,6 +130,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             attribute: false,
         },
         _credentials_alert: {
+            type: Object,
+            attribute: false,
+        },
+        clone_progress: {
             type: Object,
             attribute: false,
         }
@@ -150,8 +173,19 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 next_button.style.display = "none";
             } else {
                 clone_button.style.display = "inline-block";
-                clone_button.disabled = true;
                 next_button.style.display = "none";
+
+                // Default to "main" if it exists, so the user doesn't have
+                // to manually pick the most common default branch name every
+                // time - they can still change the selection via the
+                // dropdown afterwards, same as before.
+                if (this.repository_branches.includes("main")) {
+                    repository_branches_select.value = "main";
+                    this._repository_to_clone.branch = "main";
+                    clone_button.disabled = false;
+                } else {
+                    clone_button.disabled = true;
+                }
             }
         }
     }
@@ -167,6 +201,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
         this._repository_url_regex = /^https?:\/\/[^\/]+\/(?:[^\/]+\/)*[^\/]+\.git$/;
         this._credentials_alert = null;
+        this.clone_progress = null;
     }
 
     render() {
@@ -191,8 +226,20 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     </sl-tab-panel>
                     <sl-tab-panel name="panel_2">
                         <sl-select id="repository-branches" label="${this._get_repository_branches_label()}"></sl-select>
+                        <sl-switch id="use-lazy-loading" checked style="margin-top: 1.5em;">
+                            Use lazy loading
+                        </sl-switch>
+                        <div style="color: var(--sl-color-neutral-500); font-size: var(--sl-font-size-small); margin-top: 0.25em;">
+                            Recommended: only file names are loaded up front, file content is fetched on demand when opened. Turn off to download the whole repository immediately instead, like before this option existed.
+                        </div>
                     </sl-tab-panel>
                 </sl-tab-group>
+                ${this.clone_progress && this.clone_progress.current != this.clone_progress.total
+                    ? html`<span id="clone-progress" slot="footer">${this.clone_progress.current}/${this.clone_progress.total}</span>`
+                    : ""}
+                ${this.clone_progress && this.clone_progress.current == this.clone_progress.total
+                    ? html`<span id="clone-progress" slot="footer">Loading files in folder tree... </span>`
+                    : ""}
                 <sl-button id="next-button" slot="footer" variant="primary">Next</sl-button>
                 <sl-button id="clone-repository" slot="footer" variant="primary">Clone</sl-button>
             </sl-dialog>
@@ -320,6 +367,14 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     this.renderRoot.querySelector("sl-button#open-repository").disabled = true;
                     return;
                 }
+
+                // Username/personal access token are optional here, just like for
+                // cloning: only required together, so private local repos (e.g.
+                // cloned via SSH but with an HTTPS remote) can still be pushed to.
+                let username_input = render_root.querySelector("sl-input#username");
+                let personal_access_token_input = render_root.querySelector("sl-input#personal-access-token");
+                let username = username_input.value;
+                let personal_access_token = personal_access_token_input.value;
                 
                 // Close the dialog before opening the file picker to avoid focus conflicts
                 this.hide();
@@ -329,15 +384,18 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
                     const repoName = dirHandle.name;
 
-                    await filesystem.add_local_repository(repoName, dirHandle);
-                    
+                    await filesystem.add_local_repository(repoName, dirHandle, {
+                        username: username || undefined,
+                        token: personal_access_token || undefined,
+                    });
+
                     this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:add-local-repository",
                         {
                         detail: { repoName },
                         bubbles: true,
                         composed: true
                     }));
-                    
+
 
                 } catch (err) {
                     console.error("Directory selection cancelled or failed", err);
@@ -372,6 +430,10 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                 let clone_button = render_root.querySelector("sl-button#clone-repository");
                 clone_button.disabled = false;
             }
+
+            if (target.matches("sl-switch#use-lazy-loading")) {
+                this._repository_to_clone.use_lazy_loading = target.checked;
+            }
         });
 
         return render_root;
@@ -381,6 +443,33 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this.renderRoot.querySelector("sl-dialog").show();
     }
 
+    // Called by filesystem-manager/index.js when filesystem.list_branches()
+    // fails (e.g. wrong/missing token, wrong URL) - stops the "Next" button's
+    // spinner so the dialog is usable again and shows why, instead of the
+    // button just staying stuck loading with an error only visible in the
+    // console.
+    reportBranchLoadError() {
+        let next_button = this.renderRoot.querySelector("sl-button#next-button");
+        next_button.loading = false;
+
+        // A static <sl-alert> in the template only toasts correctly once -
+        // Shoelace moves it into a shared toast stack and removes it from
+        // the DOM entirely once it hides, so a second .toast() call finds
+        // nothing there anymore. Creating a fresh element every time (same
+        // pattern already used elsewhere in filesystem-manager/index.js for
+        // error alerts) avoids that.
+        const alert = document.createElement('sl-alert');
+        alert.variant = 'danger';
+        alert.closable = true;
+        alert.duration = 8000;
+        alert.innerHTML = `
+            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+            Failed to load branches. Please check the repository URL, username and personal access token, then press "Next" again.
+        `;
+        document.body.append(alert);
+        alert.toast();
+    }
+
     hide() {
         this.renderRoot.querySelector("sl-dialog").hide();
         this.reset();
@@ -388,6 +477,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
 
     reset() {
         this._repository_to_clone = new RepositoryToClone();
+        this.clone_progress = null;
         this.renderRoot.querySelector("sl-tab-group").show(this._tab_panel_1_name);
         //this.renderRoot.querySelector("sl-input#repository-folder-name").value = "";
         //this.renderRoot.querySelector("sl-input#repository-url").value = "";
@@ -396,6 +486,11 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         let repository_branches_select = this.renderRoot.querySelector("sl-select#repository-branches");
         repository_branches_select.value = "";
         repository_branches_select.innerHTML = "";
+        // Matches the fresh RepositoryToClone()'s use_lazy_loading default
+        // above - without this, toggling it off, then closing/reopening the
+        // dialog, would leave the switch visually off while the underlying
+        // state has already reset back to true.
+        this.renderRoot.querySelector("sl-switch#use-lazy-loading").checked = true;
         this.renderRoot.querySelector("sl-button#clone-repository").style.display = "none";
         this.renderRoot.querySelector("sl-button#next-button").style.display = "inline-block";
     }
