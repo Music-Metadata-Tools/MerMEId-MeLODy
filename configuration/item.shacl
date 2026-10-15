@@ -284,7 +284,8 @@ melod:Item
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
-                  sh:path      melod:paragraph
+                  sh:path      melod:paragraph ;
+                  sh:datatype rdf:HTML
                 ] ;
   sh:targetClass  melod:TitlePage .
 
@@ -836,7 +837,7 @@ melod:Relation
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
                   sh:name "Name"@en, "Name"@de ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
@@ -861,7 +862,6 @@ melod:Relation
   sh:property   [ sh:description "Contributor of the event"@en, "Mitwirkende des Ereignisses"@de ;
                   sh:name "Person or Institution"@en, "Person oder Institution"@de ;
                   sh:minCount 0 ;
-                  sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;
