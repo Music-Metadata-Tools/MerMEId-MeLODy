@@ -1,6 +1,14 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
+import { unsafeHTML } from "https://cdn.jsdelivr.net/npm/lit/directives/unsafe-html.js/+esm";
 import "./entity-types-dialog/index.js";
 import { filesystemService } from "../services/filesystem-service.js";
+import {
+    INCIPITS_FOLDER,
+    INCIPITS_INDEX,
+    getIncipitFilename,
+    readIncipitFile,
+    renderMei,
+} from "../services/incipit-service.js";
 
 const styles =
     css`
@@ -121,7 +129,7 @@ const styles =
             left: 120px;
 
             min-width: 300px;
-            max-width: 600px;
+            max-width: 900px;
 
             max-height: 80vh;
             overflow: hidden;
@@ -165,6 +173,31 @@ const styles =
             min-height: auto;
             height: auto;
             max-height: none;
+        }
+
+        shacl-form[hidden] {
+            display: none;
+        }
+
+        .incipit-view {
+            padding: 1rem;
+            background-color: white;
+        }
+
+        .incipit-filename {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--sl-color-neutral-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .incipit-score svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .incipit-error {
+            color: var(--sl-color-danger-600);
         }
     `;
 
@@ -211,9 +244,17 @@ export default class ADWLMEntityEditor extends LitElement {
             type: Boolean, 
             state: true 
         },
-        _sidePanelEntity: { 
-            type: Object, 
-            state: true 
+        _sidePanelEntity: {
+            type: Object,
+            state: true
+        },
+        _sidePanelIncipit: {
+            type: Object,
+            state: true
+        },
+        _incipit: {
+            type: Object,
+            state: true
         },
     };
 
@@ -336,14 +377,34 @@ export default class ADWLMEntityEditor extends LitElement {
 
             if (!href) return;
 
-            // dein # Fix
-            const clean = href.replace(/^#?urn:uuid:/, "");
+            const iri = href.replace(/^#/, "");
 
-            await this._openSidePanel(clean);
+            await this._openSidePanel(iri);
         });
     }
 
-    async _openSidePanel(relativePath) {
+    // Maps an entity IRI to its path in the repository by stripping the project domain
+    // from config.json (falling back to "urn:uuid:"), e.g. "urn:uuid:persons/123" -> "persons/123".
+    async _getRelativePath(iri) {
+        const config = await this._getRepoConfig();
+        const prefixes = [config?.projectDomain, "urn:uuid:"].filter(Boolean);
+
+        for (const prefix of prefixes) {
+            if (iri.startsWith(prefix)) {
+                return iri.slice(prefix.length);
+            }
+        }
+        return iri;
+    }
+
+    async _openSidePanel(iri) {
+        const relativePath = await this._getRelativePath(iri);
+
+        if (relativePath.startsWith(`${INCIPITS_FOLDER}/`)) {
+            await this._openIncipitPanel(iri);
+            return;
+        }
+
         try {
             const filesystem = filesystemService.getInstance();
 
@@ -352,13 +413,14 @@ export default class ADWLMEntityEditor extends LitElement {
                 `${relativePath}.ttl`
             );
 
-            const subject = `urn:uuid:${relativePath}`;
             let entity_type = this._detectEntityType(relativePath);
             const shapeUrl = await this._getShapeForPath(entity_type);
 
+            this._sidePanelIncipit = null;
             this._sidePanelEntity = {
                 values: ttl,
-                subject,
+                subject: iri,
+                relativePath,
                 shapesUrl: shapeUrl,
                 entity_type
             };
@@ -370,9 +432,37 @@ export default class ADWLMEntityEditor extends LitElement {
         }
     }
 
+    // Incipits are MEI files in the repository's incipits folder. The entity IRI is mapped
+    // to the file name via skos:prefLabel in indexes/incipits.ttl and rendered with Verovio.
+    async _openIncipitPanel(subject) {
+        this._sidePanelEntity = null;
+        this._sidePanelIncipit = { subject, filename: null, svg: null, error: null };
+        this._sidePanelOpen = true;
+
+        try {
+            const filename = await getIncipitFilename(this._selected_repository_path, subject);
+            if (!filename) {
+                throw new Error(`No file name found for ${subject} in ${INCIPITS_INDEX}`);
+            }
+            this._sidePanelIncipit = { ...this._sidePanelIncipit, filename };
+
+            const mei = await readIncipitFile(this._selected_repository_path, filename);
+            const svg = await renderMei(mei);
+
+            // Ignore the result if another entity was opened in the meantime
+            if (this._sidePanelIncipit?.subject !== subject) return;
+            this._sidePanelIncipit = { ...this._sidePanelIncipit, svg };
+        } catch (err) {
+            console.error("Incipit load error:", err);
+            if (this._sidePanelIncipit?.subject !== subject) return;
+            this._sidePanelIncipit = { ...this._sidePanelIncipit, error: err.message ?? String(err) };
+        }
+    }
+
     _closeSidePanel() {
         this._sidePanelOpen = false;
         this._sidePanelEntity = null;
+        this._sidePanelIncipit = null;
     }
 
     async _getShapeForPath(path) {
@@ -433,7 +523,7 @@ export default class ADWLMEntityEditor extends LitElement {
     _openInEditor() {
         if (!this._sidePanelEntity) return;
 
-        const path = this._sidePanelEntity.subject.replace("urn:uuid:", "");
+        const path = this._sidePanelEntity.relativePath;
 
         let filename = `${path}.ttl`;
 
@@ -497,8 +587,45 @@ export default class ADWLMEntityEditor extends LitElement {
         });
     }
 
+    // Incipits are MEI files without SHACL shapes, so instead of the form the file name
+    // and the notation rendered with Verovio are shown.
+    async _loadIncipit(entity_to_edit) {
+        let editor = this.renderRoot.querySelector("shacl-form");
+        let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+
+        editor.dataset.values = "";
+        editor.dataset.valuesSubject = "";
+        editor.dataset.shapesUrl = "";
+        shacl_renderer.setAttribute("data-values", "");
+        shacl_renderer.setAttribute("data-values-subject", "");
+        shacl_renderer.setAttribute("data-shapes-url", "");
+
+        this._hasUnsavedChanges = false;
+        this._entity_path = entity_to_edit.path;
+
+        const path = entity_to_edit.path;
+        const filename = path.slice(path.lastIndexOf("/") + 1);
+        this._incipit = { path, filename, svg: null, error: null };
+
+        try {
+            const svg = await renderMei(entity_to_edit.contents);
+            if (this._incipit?.path !== path) return;
+            this._incipit = { ...this._incipit, svg };
+        } catch (err) {
+            console.error("Incipit render error:", err);
+            if (this._incipit?.path !== path) return;
+            this._incipit = { ...this._incipit, error: err.message ?? String(err) };
+        }
+    }
+
     // Add new helper method to handle entity loading
     async _loadNewEntity(entity_to_edit) {
+        if (entity_to_edit.isIncipit) {
+            await this._loadIncipit(entity_to_edit);
+            return;
+        }
+        this._incipit = null;
+
         let editor = this.renderRoot.querySelector("shacl-form");
         let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
@@ -582,7 +709,8 @@ export default class ADWLMEntityEditor extends LitElement {
         this._init();
         this._sidePanelOpen = false;
         this._sidePanelEntity = null;
-        
+        this._sidePanelIncipit = null;
+
         // Listen for repository selection events
         document.addEventListener('adwlm-filesystem-manager:repository-selected', async (event) => {
             this._selected_repository_path = event.detail.repositoryPath;
@@ -626,7 +754,7 @@ export default class ADWLMEntityEditor extends LitElement {
                                     <sl-icon name="floppy" slot="suffix"></sl-icon>
                                 </sl-button>
                                 <sl-button id="delete-entity" variant="danger" size="small" title="Delete entity"
-                                    ?disabled="${!this.entity_to_edit}">
+                                    ?disabled="${!this.entity_to_edit || this._incipit}">
                                     <span lang="en">Delete</span>
                                     <span lang="de">Löschen</span>
                                     <sl-icon name="file-earmark-minus" slot="suffix"></sl-icon>
@@ -638,7 +766,7 @@ export default class ADWLMEntityEditor extends LitElement {
                             ${this.entity_to_edit ? html`
                                 <div class="header-container">
                                     <h2>
-                                        ${this._getEntityName(this.entity_to_edit.entity_type)}
+                                        ${this._incipit ? 'Incipit' : this._getEntityName(this.entity_to_edit.entity_type)}
                                     </h2>
                                     <div class="iri-container">
                                         <sl-button id="copy-iri" variant="neutral" size="small" title="Copy entity IRI">
@@ -650,7 +778,10 @@ export default class ADWLMEntityEditor extends LitElement {
                             ` : ''}
                         </div>
                         <div class="form-container">
-                            <shacl-form lang=${this.ui_language} data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                            <shacl-form ?hidden=${this._incipit} lang=${this.ui_language} data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
+                            ${this._incipit ? html`
+                                <div class="incipit-view">${this._renderIncipit(this._incipit)}</div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -665,14 +796,18 @@ export default class ADWLMEntityEditor extends LitElement {
     
                     <div class="entity-window-header" id="entity-window-header">
                         <span>
-                            ${this._getEntityName(this._sidePanelEntity?.entity_type) || 'Linked Entity'}
+                            ${this._sidePanelIncipit
+                                ? 'Incipit'
+                                : this._getEntityName(this._sidePanelEntity?.entity_type) || 'Linked Entity'}
                         </span>
 
                         <div style="display:flex; gap:0.3rem;">
-                            <sl-button size="small" @click=${this._openInEditor}>
-                                <span lang="en">Edit</span>
-                                <span lang="de">Bearbeiten</span>
-                            </sl-button>
+                            ${this._sidePanelIncipit ? '' : html`
+                                <sl-button size="small" @click=${this._openInEditor}>
+                                    <span lang="en">Edit</span>
+                                    <span lang="de">Bearbeiten</span>
+                                </sl-button>
+                            `}
 
                             <sl-button size="small" @click=${this._closeSidePanel}>
                                 ✕
@@ -690,6 +825,7 @@ export default class ADWLMEntityEditor extends LitElement {
                                 data-view>
                             </shacl-form>
                         ` : ''}
+                        ${this._sidePanelIncipit ? this._renderIncipit(this._sidePanelIncipit) : ''}
                     </div>
 
                 </div>
@@ -697,6 +833,17 @@ export default class ADWLMEntityEditor extends LitElement {
             </div>
 
             <adwlm-entity-types-dialog data-ui-language=${this.ui_language}></adwlm-entity-types-dialog>
+        `;
+    }
+
+    _renderIncipit(incipit) {
+        return html`
+            ${incipit.filename ? html`<div class="incipit-filename">${incipit.filename}</div>` : ''}
+            ${incipit.error
+                ? html`<div class="incipit-error">${incipit.error}</div>`
+                : incipit.svg
+                    ? html`<div class="incipit-score">${unsafeHTML(incipit.svg)}</div>`
+                    : html`<sl-spinner></sl-spinner>`}
         `;
     }
 
@@ -1021,6 +1168,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
             this._entity_path = null;
             this.entity_to_edit = null;
+            this._incipit = null;
 
             // Reset unsaved changes state when deleting file
             this._hasUnsavedChanges = false;
@@ -1045,6 +1193,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 editor.dataset.shapeSubject = "";
                 this._entity_path = null;
                 this.entity_to_edit = null;
+                this._incipit = null;
                 this._hasUnsavedChanges = false;
                 return;
             }
@@ -1059,7 +1208,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
         // Open the side-panel preview when the graph-view requests it
         document.addEventListener("adwlm-graph-view:preview-entity", async (event) => {
-            await this._openSidePanel(event.detail.relativePath);
+            await this._openSidePanel(event.detail.iri);
         });
     }
 
@@ -1072,6 +1221,7 @@ export default class ADWLMEntityEditor extends LitElement {
         this._hasUnsavedChanges = false;
         this._skipNextUpdate = false;
         this._cachedConfig = null;
+        this._incipit = null;
     }
 
     _applyLanguageVisibility() {

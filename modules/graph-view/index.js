@@ -17,6 +17,7 @@ const TYPE_COLORS = {
   PerformanceEvent: "#F44336",
   Bibliography: "#3F51B5",
   DataCollection: "#2dc7d8",
+  Incipit: "#4c224f",
 };
 
 // Edge colour by relation direction
@@ -361,11 +362,10 @@ class ADWLMGraphView extends LitElement {
   }
 
   _onNodeClick(node) {
-    const relativePath = node.subject.replace(/^urn:uuid:/, "");
-    if (!relativePath) return;
+    if (!node.subject) return;
     document.dispatchEvent(
       new CustomEvent("adwlm-graph-view:preview-entity", {
-        detail: { relativePath },
+        detail: { iri: node.subject },
         bubbles: true,
       })
     );

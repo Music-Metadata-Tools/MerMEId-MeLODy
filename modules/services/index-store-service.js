@@ -7,7 +7,6 @@ export const INDEXES = [
   { name: "Person", url: "persons.ttl", labels: { en: "Person", de: "Person" } },
   { name: "Place", url: "places.ttl", labels: { en: "Place", de: "Ort" } },
   { name: "Institution", url: "institutions.ttl", labels: { en: "Institution", de: "Institution" } },
-  { name: "RISMInstitution", url: "rism.ttl", labels: { en: "RISM Institution", de: "RISM-Institution" } },
   { name: "Letter", url: "letters.ttl", labels: { en: "Letter", de: "Brief" } },
   { name: "Work", url: "works.ttl", labels: { en: "Work", de: "Werk" } },
   { name: "Venue", url: "venues.ttl", labels: { en: "Venue", de: "Veranstaltungsort" } },
@@ -19,6 +18,7 @@ export const INDEXES = [
   { name: "PerformanceEvent", url: "performanceEvents.ttl", labels: { en: "Performance Event", de: "Aufführung" } },
   { name: "Bibliography", url: "bibliography.ttl", labels: { en: "Bibliography", de: "Bibliographie" } },
   { name: "DataCollection", url: "dataCollections.ttl", labels: { en: "Data Collection", de: "Data Collection" } },
+  { name: "Incipit", url: "incipits.ttl", labels: { en: "Incipit", de: "Incipit" } },
 ];
 
 class IndexStoreService {

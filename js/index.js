@@ -13,6 +13,7 @@ import { ExpressionConverter } from '../modules/rdf-xml-converter/converters/exp
 import { ManifestationConverter } from '../modules/rdf-xml-converter/converters/manifestation.js';
 import { ItemConverter } from '../modules/rdf-xml-converter/converters/item.js';
 import { LetterConverter } from '../modules/rdf-xml-converter/converters/letter.js';
+import { isIncipitFilePath, getIncipitIri, INCIPIT_ENTITY_TYPE } from '../modules/services/incipit-service.js';
 
 
 
@@ -494,13 +495,35 @@ function constructJsonLdFromQuads(quads) {
     return itemOrder.map(key => items[key]);
 }
 
-document.addEventListener("adwlm-filesystem-manager:entity-to-edit", (event) => {
+document.addEventListener("adwlm-filesystem-manager:entity-to-edit", async (event) => {
     let entity_to_edit = event.detail;
     let file_contents = entity_to_edit.contents;
 
     // Update the XML and RDF renderers
     let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
     let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+
+    // Incipits are MEI files, not RDF: show the MEI in the XML tab and let the entity editor render the notation
+    if (isIncipitFilePath(entity_to_edit.path)) {
+        if (rdf_renderer) rdf_renderer.innerText = "";
+        if (xml_renderer) xml_renderer.innerText = file_contents;
+
+        const filename = entity_to_edit.path.slice(entity_to_edit.path.lastIndexOf("/") + 1);
+        try {
+            entity_to_edit.entity_iri = await getIncipitIri(entity_to_edit.repository_path, filename);
+        } catch (error) {
+            console.error("Failed to look up incipit IRI:", error);
+        }
+        entity_to_edit.entity_type = INCIPIT_ENTITY_TYPE;
+        entity_to_edit.isIncipit = true;
+        entity_editor.entity_to_edit = entity_to_edit;
+
+        const graph_view = document.querySelector("adwlm-graph-view");
+        if (graph_view) {
+            graph_view.entity_to_edit = entity_to_edit;
+        }
+        return;
+    }
 
     if (rdf_renderer) {
         rdf_renderer.innerText = entity_to_edit.rdf_output || file_contents;

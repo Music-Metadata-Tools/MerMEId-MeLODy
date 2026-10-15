@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { filesystemService } from "../services/filesystem-service.js";
 import { indexStoreService, INDEXES } from "../services/index-store-service.js";
+import { INCIPITS_FOLDER, getIncipitFilename } from "../services/incipit-service.js";
 
 const ALL_FILTER_VALUE = "all";
 
@@ -332,8 +333,15 @@ class ADWLMEntitySearch extends LitElement {
 
     const parts = String(raw).split("/").filter(Boolean);
     const rel = parts.length >= 2 ? parts.slice(-2).join("/") : (parts[0] || "");
-    const filename = rel.endsWith(".ttl") ? rel : `${rel}.ttl`;
+    let filename = rel.endsWith(".ttl") ? rel : `${rel}.ttl`;
     if (!filename || filename === ".ttl") return;
+
+    // Incipits are MEI files, whose file name is the skos:prefLabel in indexes/incipits.ttl
+    if (rel.startsWith(`${INCIPITS_FOLDER}/`)) {
+      const incipitFilename = await getIncipitFilename(this._selected_repository_path, subject);
+      if (!incipitFilename) return;
+      filename = `${INCIPITS_FOLDER}/${incipitFilename}`;
+    }
 
     const filesystemManager = document.querySelector("adwlm-filesystem-manager");
     if (filesystemManager?.selectEntityInTree) {

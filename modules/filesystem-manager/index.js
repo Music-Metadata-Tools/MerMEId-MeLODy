@@ -7,6 +7,7 @@ import "./catalog-metadata-dialog/index.js";
 import "./push-conflict-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
+import { INCIPITS_FOLDER, isIncipitFilePath } from "../services/incipit-service.js";
 
 const filesystem = filesystemService.getInstance();
 
@@ -1724,7 +1725,8 @@ export default class ADWLMFilesystemManager extends LitElement {
             let folder_name = folder_relative_path.includes("/") ? folder_relative_path.substring(folder_relative_path.lastIndexOf("/") + 1) : folder_relative_path;
             let folder_absolute_path = `${repository_path}/${folder_relative_path}`;
 
-            if (this.entity_type_definitions.filter(definition => definition.folder_name === folder_name)[0]?.folder_name) {
+            if (this.entity_type_definitions.filter(definition => definition.folder_name === folder_name)[0]?.folder_name
+                || folder_relative_path === INCIPITS_FOLDER) {
                 tree_subitems += `<sl-tree-item lazy data-entry-type="${CONSTANTS.FOLDER_SCHEME_NAME}" data-entry-absolute-path="${folder_absolute_path}" data-entry-relative-path="${folder_relative_path}" data-entry-name="${folder_name}">${folder_name}</sl-tree-item>`;
             }
             
@@ -1735,7 +1737,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             let file_name = file_relative_path.includes("/") ? file_relative_path.substring(file_relative_path.lastIndexOf("/") + 1) : file_relative_path;
             let file_absolute_path = `${repository_path}/${file_relative_path}`;
 
-            if (file_name.endsWith('.ttl') || file_name.endsWith('.rdf')) {
+            if (file_name.endsWith('.ttl') || file_name.endsWith('.rdf') || isIncipitFilePath(file_relative_path)) {
                 tree_subitems += `<sl-tree-item data-entry-type="${CONSTANTS.FILE_SCHEME_NAME}" data-entry-absolute-path="${file_absolute_path}" data-entry-relative-path="${file_relative_path}" data-entry-name="${file_name}">${file_name}</sl-tree-item>`;
             }
             
@@ -1900,6 +1902,7 @@ export default class ADWLMFilesystemManager extends LitElement {
             let entity_to_edit = {
                 contents: file_contents,
                 path: this._file_path,
+                repository_path: this._selected_repository_path,
             };
 
             this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:entity-to-edit", {
