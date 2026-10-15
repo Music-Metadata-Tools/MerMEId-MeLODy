@@ -15,23 +15,26 @@ construct {
     skos:related ?event_iri ;
     skos:related ?instrumentation_iri ;
     skos:related ?bibliography_iri ;
+    skos:related ?incipit_mei ;
     skos:broader ?classification .
 } where {
-  select ?expression_iri ?label ?performance_iri ?place_iri ?contributor_iri ?expression_part_iri ?instrumentation_iri ?bibliography_iri ?classification where {
+  select ?expression_iri ?label ?performance_iri ?event_iri ?place_iri ?contributor_iri ?expression_part_iri ?instrumentation_iri ?bibliography_iri ?classification ?incipit_mei where {
     ?expression_iri a melod:Expression .
-    {?expression_iri skos:prefLabel ?expression_label .}
-    UNION {
-      ?expression_iri rdfs:label ?expression_label .
+    OPTIONAL { 
+      ?expression_iri rdfs:label ?existing_label . 
     }
+    bind(coalesce(?existing_label, STR(?expression_iri)) AS ?expression_label)
     OPTIONAL {
       ?expression_iri melod:hasIncipit ?incipit_iri .
       ?incipit_iri melod:hasIncipitText ?incipit_text .
     }
     OPTIONAL {
       ?expression_iri melod:hasPerformance ?performance_iri .
+      FILTER(isIRI(?performance_iri)) .
     }
     OPTIONAL {
       ?expression_iri schema:firstPerformance ?performance_iri .
+      FILTER(isIRI(?performance_iri)) .
     }
     OPTIONAL {
       ?expression_iri schema:locationCreated ?place_iri .
@@ -44,7 +47,11 @@ construct {
       ?expression_iri melod:hasExpressionPart ?expression_part_iri .
     }
     OPTIONAL {
+      ?expression_iri schema:includedComposition ?expression_part_iri .
+    }
+    OPTIONAL {
       ?expression_iri melod:hasHistoricEvent ?event_iri .
+      FILTER(isIRI(?event_iri)) .
     }
     OPTIONAL {
       ?expression_iri melod:hasInstrumentation ?instrumentation_iri .
@@ -54,6 +61,10 @@ construct {
     }
     OPTIONAL {
       ?expression_iri melod:hasClassification ?classification .
+    }
+    OPTIONAL {
+      ?expression_iri melod:hasIncipit ?incipit_node .
+      ?incipit_node melod:hasMEIScore ?incipit_mei .
     }
     bind(coalesce(concat(?expression_label, " ('", ?incipit_text, "')"), ?expression_label) AS ?label)
   }

@@ -19,8 +19,10 @@ construct {
 } where {
   select ?item_iri ?label ?classification ?manifestation_iri ?institution_iri ?item_part_iri ?hand_iri ?provenance_iri where {
     ?item_iri a melod:Item .
-    ?item_iri rdfs:label ?item_name .
-    bind(?item_name AS ?label) .
+    OPTIONAL {
+      ?item_iri rdfs:label ?item_name .
+    }
+    bind(coalesce(?item_name, STR(?item_iri)) AS ?label) .
     OPTIONAL {
       ?item_iri melod:hasClassification ?classification .
     }

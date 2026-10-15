@@ -11,11 +11,13 @@ construct {
 } where {
   select ?instrumentation_iri ?label ?instrumentation_group_iri where {
     ?instrumentation_iri a melod:Instrumentation .
-    ?instrumentation_iri rdfs:label ?instrumentation_name .
+    OPTIONAL { 
+      ?instrumentation_iri rdfs:label ?instrumentation_name .
+    }
     OPTIONAL {
       ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
     }
-    bind(?instrumentation_name AS ?label)
+    bind(coalesce(?instrumentation_name, STR(?instrumentation_iri)) AS ?label)
   }
   order by ?label
 }
