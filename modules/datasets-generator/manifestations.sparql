@@ -41,9 +41,6 @@ construct {
       ?manifestation_iri melod:memberOfDataCollection ?collection_iri .
     }
     OPTIONAL {
-      ?manifestation_iri melod:memberOfDataCollection ?collection_iri .
-    }
-    OPTIONAL {
       ?manifestation_iri melod:hasContribution ?contributor_node .
       ?contributor_node melod:hasAgent ?contributor_iri .
     }
