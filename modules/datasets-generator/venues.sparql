@@ -15,9 +15,9 @@ construct {
     ?venue_iri schema:name ?label .
     OPTIONAL {
         ?venue_iri schema:containedInPlace ?place_iri .
-    }
-    OPTIONAL {
-        ?place_iri schema:name ?place .
+        OPTIONAL {
+          ?place_iri schema:name ?place .
+        }
     }
   }
   order by ?label

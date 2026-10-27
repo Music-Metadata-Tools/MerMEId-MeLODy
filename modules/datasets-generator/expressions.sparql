@@ -9,20 +9,25 @@ construct {
   ?expression_iri a melod:ExpressionEntity ;
   	skos:prefLabel ?label ;
     skos:related ?performance_iri ;
+    skos:related ?first_performance_iri ;
     skos:related ?place_iri ;
     skos:related ?contributor_iri ;
     skos:related ?expression_part_iri ;
     skos:related ?expression_part_of_iri ;
+    skos:related ?expression_component_iri ;
     skos:related ?event_iri ;
     skos:related ?instrumentation_iri ;
     skos:related ?bibliography_iri ;
     skos:related ?incipit_mei ;
     skos:broader ?classification .
 } where {
-  select ?expression_iri ?label ?performance_iri ?event_iri ?place_iri ?contributor_iri ?expression_part_iri ?expression_part_of_iri ?instrumentation_iri ?bibliography_iri ?classification ?incipit_mei where {
+  select ?expression_iri ?label ?performance_iri ?first_performance_iri ?event_iri ?place_iri ?contributor_iri ?expression_part_iri ?expression_part_of_iri ?expression_component_iri ?instrumentation_iri ?bibliography_iri ?classification ?incipit_mei where {
     ?expression_iri a melod:Expression .
     OPTIONAL { 
       ?expression_iri rdfs:label ?existing_label . 
+    }
+    OPTIONAL { 
+      ?expression_iri schema:position ?position .
     }
     bind(coalesce(?existing_label, STR(?expression_iri)) AS ?expression_label)
     OPTIONAL {
@@ -34,8 +39,8 @@ construct {
       FILTER(isIRI(?performance_iri)) .
     }
     OPTIONAL {
-      ?expression_iri schema:firstPerformance ?performance_iri .
-      FILTER(isIRI(?performance_iri)) .
+      ?expression_iri schema:firstPerformance ?first_performance_iri .
+      FILTER(isIRI(?first_performance_iri)) .
     }
     OPTIONAL {
       ?expression_iri schema:locationCreated ?place_iri .
@@ -51,7 +56,7 @@ construct {
       ?expression_iri melod:isExpressionPartOf ?expression_part_of_iri .
     }
     OPTIONAL {
-      ?expression_iri schema:includedComposition ?expression_part_iri .
+      ?expression_iri schema:includedComposition ?expression_component_iri .
     }
     OPTIONAL {
       ?expression_iri melod:hasHistoricEvent ?event_iri .
@@ -70,7 +75,8 @@ construct {
       ?expression_iri melod:hasIncipit ?incipit_node .
       ?incipit_node melod:hasMEIScore ?incipit_mei .
     }
-    bind(coalesce(concat(?expression_label, " ('", ?incipit_text, "')"), ?expression_label) AS ?label)
+    bind(coalesce(concat(?expression_label, " ('", ?incipit_text, "')"), ?expression_label) AS ?label_incipit)
+    bind(coalesce(concat(?position, ". '", ?label_incipit), ?label_incipit) AS ?label)
   }
   order by ?label
 }

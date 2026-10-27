@@ -23,9 +23,9 @@ construct {
     }
     OPTIONAL {
       ?performanceEvent_iri melod:hasVenue | schema:location ?performanceEvent_place .
-    }
-    OPTIONAL {
-      ?performanceEvent_place schema:name ?place_name .
+      OPTIONAL {
+        ?performanceEvent_place schema:name ?place_name .
+      }
     }
     OPTIONAL {
       ?performanceEvent_iri melod:hasContribution ?contributor_node .
