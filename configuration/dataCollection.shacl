@@ -1,0 +1,105 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix melod: <https://lod.academy/melod/vocab/ontology#> .
+@prefix owl: <https://www.w3.org/TR/owl-ref/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+melod:DataCollection
+    a sh:NodeShape, rdfs:Class ;
+    sh:targetClass melod:DataCollection ;
+    sh:property   [ sh:description "Name of the collection" ;
+                  sh:name "Name" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path rdfs:label
+                ] ;
+    sh:property   [ sh:description "Data Catalog" ;
+                  sh:name "Data Catalog" ;
+                  sh:group melod:General ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:path schema:includedInDataCatalog ;
+                  sh:class melod:DataCatalog ;
+                  ] ;
+    sh:property   [ sh:description "Type of the collection" ;
+                  sh:name "Type" ;
+                  sh:group melod:General ;
+                  sh:maxCount 1;
+                  sh:path melod:hasClassification ;
+                  sh:in ( "work catalog" "source catalog"  )
+                  ] ;
+    sh:property   [ sh:description "A statement explaining any restrictions to the use of this collection, e.g. a copyright notice or a license statement." ;
+                  sh:name "Restrictions of use" ;
+                  sh:group melod:General ;
+                  sh:maxCount 1;
+                  sh:path melod:useRestrict ;
+                  dash:singleLine false ;
+                  ] ;
+    sh:property   [ sh:description "Status of the data collection" ;
+                  sh:name "Status" ;
+                  sh:minCount 1 ;
+                  sh:maxCount 1;
+                  sh:group melod:Publication ;
+                  sh:path melod:hasStatus ;
+                  sh:defaultValue "draft" ;
+                  sh:in ( "draft" "candidate" "approved" "published" )
+                  ] ;
+    sh:property   [ sh:description "Contributors of the Data Collection" ;
+                  sh:name "Responsible" ;
+                  sh:minCount 0 ;
+                  sh:group melod:Publication ;
+                  sh:node melod:Contribution ;
+                  sh:path melod:hasContribution
+                ] .
+    # sh:property   [ sh:description "Elements of the collection" ;
+    #               sh:name "Elements" ;
+    #               sh:minCount 0 ;
+    #               sh:group melod:List ;
+    #               sh:node melod:Element ;
+    #               sh:path schema:dataFeedElement
+    #             ]  .
+
+# melod:Element
+#   a               sh:NodeShape ;
+#   sh:property   [ sh:description  "Work as part of the DataFeed" ;
+#                   sh:name         "Work" ;
+#                   sh:maxCount  1 ;
+#                   sh:minCount  1 ;
+#                   sh:path         schema:item ;
+#                   sh:class melod:WorkEntity ;
+#                 ] ;
+#   sh:targetClass  schema:DataFeedItem .
+
+melod:Contribution
+  a               sh:NodeShape ;
+  rdfs:label      "Contributors" ;
+  sh:property   [ sh:description  "Choose person or institution..." ;
+                  sh:name         "Person/Institution" ;
+                  sh:maxCount  1 ;
+                  sh:minCount  1 ;
+                  sh:path      melod:hasAgent ;
+                  sh:nodeKind sh:IRI ;
+                  sh:or (
+                    [ sh:class melod:PersonEntity ; rdfs:label "Person" ]
+                    [ sh:class melod:InstitutionEntity ; rdfs:label "Institution" ]
+                  )
+                ] ;
+  sh:property   [ sh:description  "Role of the contribution" ;
+                  sh:name         "Role" ;
+                  sh:maxCount  1 ;
+                  sh:path         melod:hasRole ;
+                  sh:in  ( "data manager" "data contributor" "editor" "contributor" "publisher") ;
+                ] ;
+  sh:targetClass  melod:Contribution .
+
+melod:General
+a               sh:PropertyGroup ;
+rdfs:label      "General Information" .
+
+melod:Publication
+a               sh:PropertyGroup ;
+rdfs:label      "Publication" .

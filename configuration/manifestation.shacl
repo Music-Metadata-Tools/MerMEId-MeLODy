@@ -39,7 +39,7 @@ melod:Manifestation
                   sh:name "Classification"@en,"Klassifikation"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Keywords ;
-                  sh:path melod:hasClassificationOfManifestation ;
+                  sh:path melod:hasClassification ;
                   sh:or (
                     [ sh:class melod:ClassificationOfManifestation; rdfs:label "MerMEId Classification Vocabulary"@en,"MerMEId Klassifikationsvokabular"@de ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification"@en,"Customisierte Klassifikation"@de ; sh:datatype xsd:string ]
@@ -86,6 +86,12 @@ melod:Manifestation
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation
                 ] ;
+  sh:property   [ sh:description "Links"@en , "Links"@de ;
+                  sh:name "Links"@en , "Links"@de ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:property   [ sh:description "List of the material contained within a resource."@en,"Liste des Materials, das in der Ressource enthalten ist."@de ;
                   sh:name "Contents"@en,"Inhalte"@de ;
                   sh:group melod:General ;
@@ -118,6 +124,14 @@ melod:Manifestation
                   #sh:pattern      "^https://mei-metadata.org/manifestations/\\d{8}" ;
                   sh:class melod:ManifestationEntity ;
                   sh:path melod:isManifestationPartOf
+                ] ;
+  sh:property   [ sh:description "DataCollections" ;
+                  sh:name "Data Collections" ;
+                  sh:minCount 1 ;
+                  sh:group melod:Relation ;
+                  sh:class melod:DataCollectionEntity ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:memberOfDataCollection
                 ] ;
   #sh:property   [ sh:name "Relation" ;
   #                sh:group melod:Relation ;
@@ -190,6 +204,23 @@ melod:Annotation
                   sh:path      melod:paragraph
                 ] ;
   sh:targetClass  melod:Annotation .
+
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
 
 melod:Contents
   a               sh:NodeShape ;
@@ -591,7 +622,7 @@ melod:PublicationEvent
                   sh:datatype  xsd:date
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:description "Choose publisher (person or institution)..."@en,"Wählen Sie den Herausgeber (Person oder Institution)..."@de ;
                   sh:name         "Publisher"@en,"Herausgeber"@de ;
                   sh:path         schema:publishedBy ;
@@ -604,7 +635,7 @@ melod:PublicationEvent
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:description "Choose publishing place..."@en,"Wähle Ort..."@de ;
                   sh:name         "Place"@en,"Ort"@de ;
                   sh:path         schema:location ;
@@ -729,13 +760,13 @@ melod:TitlePage
   a               sh:NodeShape ;
   sh:property   [ sh:description "Type of the title page"@en,"Typ der Titelseite"@de ;
                   sh:name      "Type"@en,"Typ"@de ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
-                  sh:description "Transcription"@en,"Transkription"@de ;
-                  sh:minCount  0 ;
+  sh:property   [ sh:description      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
+                  sh:name "Transcription"@en,"Transkription"@de ;
+                  sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
                   sh:path      melod:paragraph ;

@@ -1,0 +1,17 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+
+construct {
+  ?place_iri a melod:PlaceEntity ;
+  	skos:prefLabel ?label .
+} where {
+  select ?place_iri ?label where {
+    ?place_iri a melod:Place .
+    ?place_iri schema:name ?place_name .
+    bind(?place_name AS ?label)
+  }
+  order by ?label
+}

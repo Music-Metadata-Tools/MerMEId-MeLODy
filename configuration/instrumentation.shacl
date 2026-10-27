@@ -76,7 +76,7 @@ melod:InstrumentationDetail
                   sh:path         schema:description
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:name         "Quantity"@en,"Anzahl"@de ;
                   sh:path         mus:U30_foresees_quantity_of_medium_of_performance ;
                   sh:datatype xsd:integer

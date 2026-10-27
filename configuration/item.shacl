@@ -37,7 +37,7 @@ melod:Item
                   sh:name "Classification"@en,"Klassifikation"@de ;
                   sh:minCount 0 ;
                   sh:group melod:Keywords ;
-                  sh:path melod:hasClassificationOfManifestation ;
+                  sh:path melod:hasClassification ;
                   sh:or (
                     [ sh:class melod:ClassificationOfManifestation; rdfs:label "MerMEId Classification Vocabulary" ; sh:nodeKind sh:IRI ]
                     [ rdfs:label "Custom classification" ; sh:datatype xsd:string ]
@@ -192,6 +192,12 @@ melod:Item
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation
                 ] ;
+  sh:property   [ sh:description "Links" ;
+                  sh:name "Links" ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:targetClass  melod:Item .
 
   melod:Date
@@ -273,12 +279,13 @@ melod:Item
                   sh:maxCount  1 ;
                   sh:path      cidoc:P2_has_type
                 ] ;
-  sh:property   [ sh:name      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
-                  sh:description "Transcription"@en,"Transkription"@de ;
+  sh:property   [ sh:description      "Transcription of the item's title page"@en,"Transkription der Titelseite des Items"@de ;
+                  sh:name "Transcription"@en,"Transkription"@de ;
                   sh:minCount  1 ;
                   sh:maxCount  1 ;
                   dash:singleLine false ;
-                  sh:path      melod:paragraph
+                  sh:path      melod:paragraph ;
+                  sh:datatype rdf:HTML
                 ] ;
   sh:targetClass  melod:TitlePage .
 
@@ -598,6 +605,23 @@ melod:Annotation
                 ] ;
   sh:targetClass  melod:Annotation .
 
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
+
 melod:Binding
   a               sh:NodeShape ;
   sh:property   [ sh:name      "Description"@en,"Beschreibung"@de ;
@@ -813,7 +837,7 @@ melod:Relation
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Name of the Event"@en, "Name des Ereignisses"@de ;
                   sh:name "Name"@en, "Name"@de ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
@@ -838,7 +862,6 @@ melod:Relation
   sh:property   [ sh:description "Contributor of the event"@en, "Mitwirkende des Ereignisses"@de ;
                   sh:name "Person or Institution"@en, "Person oder Institution"@de ;
                   sh:minCount 0 ;
-                  sh:group melod:Contributors ;
                   sh:node melod:Contribution ;
                   sh:path melod:hasContribution
                 ] ;

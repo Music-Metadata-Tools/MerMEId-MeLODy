@@ -55,7 +55,12 @@ melod:Work
                   sh:node melod:Annotation ;
                   sh:group melod:General ;
                 ] ;
-
+  sh:property   [ sh:description "Links"@en , "Links"@de ;
+                  sh:name "Links"@en , "Links"@de ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:property   [ sh:description "The historical, social, intellectual, artistic, or other context within the Work was conceived"@en, "Der historische, soziale, intellektuelle, künstlerische oder andere Kontext, in dem das Werk entstanden ist"@de ;
                   sh:name "Context"@en, "Kontext"@de ;
                   sh:minCount 0 ;
@@ -97,6 +102,24 @@ melod:Work
                   #sh:pattern      "^https://mei-metadata.org/work/\\d{8}" ;
                   sh:class melod:WorkEntity ;
                   sh:path melod:isWorkPartOf
+                ] ;
+
+  sh:property   [ sh:description "DataCollections"@en , "DataCollections"@de ;
+                  sh:name "Data Collections"@en , "Data Collections"@de ;
+                  sh:minCount 1 ;
+                  sh:group melod:Relation ;
+                  sh:class melod:DataCollectionEntity ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:memberOfDataCollection
+                ] ;
+
+  sh:property   [ sh:description "DataCollections" ;
+                  sh:name "Data Collections" ;
+                  sh:minCount 1 ;
+                  sh:group melod:Relation ;
+                  sh:class melod:DataCollectionEntity ;
+                  sh:nodeKind sh:IRI ;
+                  sh:path melod:memberOfDataCollection
                 ] ;
 #  sh:property   [ sh:name "Other Relation" ;
  #                 sh:group melod:Relation ;
@@ -224,6 +247,23 @@ melod:Annotation
                   sh:path      melod:paragraph
                 ] ;
   sh:targetClass melod:Annotation .
+
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
 
 melod:Contribution
   a               sh:NodeShape ;
