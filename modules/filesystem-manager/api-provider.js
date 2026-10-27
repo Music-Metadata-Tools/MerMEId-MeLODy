@@ -114,15 +114,37 @@ function createProgressReporter(onProgress, step) {
 // parseRepoUrl / createProvider
 // ---------------------------------------------------------------------------
 
+// Throws (instead of returning something silently nonsensical) for any
+// input that LOOKS like it parsed fine but isn't actually usable - the add-
+// repository dialog relies on this to validate what the user typed, and
+// every other caller (createProvider() below) benefits from the same
+// guarantee instead of failing confusingly much later at the first actual
+// API call (e.g. a request for "/repos/owner/undefined/...").
 export function parseRepoUrl(url) {
 
-    // Convert the SSH form (git@host:path) into a normal URL, so we can
-    // parse both forms (SSH + HTTPS, including ssh://...) with the same
-    // URL class.
-    const normalized = url.trim().replace(/^git@([^:]+):/, "https://$1/");
-    const { hostname, pathname } = new URL(normalized);
+    // Convert the SSH forms (git@host:path and ssh://[user@]host[:port]/path)
+    // into a normal URL, so we can parse SSH + HTTPS with the same URL class.
+    // The SSH port is dropped - the APIs are always served over HTTPS.
+    const normalized = url.trim()
+        .replace(/^git@([^:]+):/, "https://$1/")
+        .replace(/^ssh:\/\/(?:[^@/]+@)?([^/:]+)(?::\d+)?\//i, "https://$1/");
+    const { protocol, hostname, pathname } = new URL(normalized);
 
-    const pathPart = pathname.replace(/^\//, "").replace(/\.git$/, "").replace(/\/+$/, "");
+    if (protocol !== "http:" && protocol !== "https:") {
+        throw new Error(`Unsupported repository URL scheme "${protocol}" - expected an HTTPS URL or an SSH URL ("git@host:path").`);
+    }
+
+    // GitLab web UI URLs (e.g. ".../project/-/tree/main") are cut at "/-/",
+    // so a URL copied from the browser's address bar resolves to the project.
+    const pathPart = pathname
+        .replace(/^\//, "")
+        .replace(/\/-(\/.*)?$/, "")
+        .replace(/\/+$/, "")
+        .replace(/\.git$/, "");
+
+    if (!pathPart) {
+        throw new Error(`Repository URL is missing a path - expected something like "https://${hostname}/owner/repo".`);
+    }
 
     // Only check the hostname, not the whole URL - otherwise a GitLab project
     // with "github" in its name (e.g. "github-migration-tool") would be
@@ -131,6 +153,11 @@ export function parseRepoUrl(url) {
 
     if (platform === "github") {
         const [owner, repo] = pathPart.split("/");
+
+        if (!owner || !repo) {
+            throw new Error(`GitHub repository URL must look like "https://github.com/owner/repo" (got path "${pathPart}").`);
+        }
+
         return { platform, host: hostname, owner, repo };
     }
 

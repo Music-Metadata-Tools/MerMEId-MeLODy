@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { CredentialsHelper } from '../credentials-helper.js';
 import { filesystemService } from "../../services/filesystem-service.js";
+import { parseRepoUrl } from "../api-provider.js";
 
 const filesystem = filesystemService.getInstance();
 
@@ -119,10 +120,6 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
             type: Object,
             attribute: false,
         },
-        _repository_url_regex: {
-            type: Object,
-            attribute: false,
-        },
         _credentials_alert: {
             type: Object,
             attribute: false,
@@ -189,7 +186,6 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
         this._tab_panel_2_name = "panel_2";
         this._repository_to_clone = new RepositoryToClone();
         this._repository_folder_name_regex = /^[a-zA-Z0-9][\w.-]*$/;
-        this._repository_url_regex = /^https?:\/\/[^\/]+\/(?:[^\/]+\/)*[^\/]+\.git$/;
         this._credentials_alert = null;
     }
 
@@ -291,19 +287,11 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                     this._repository_to_clone.folder = repository_folder_name;
                 }
 
-                let repository_url = render_root.querySelector("sl-input#repository-url").value;
+                let repository_url = render_root.querySelector("sl-input#repository-url").value.trim();
 
                 // check if the repository url is valid
-                if (!this._repository_url_regex.test(repository_url)) {
-                    repository_url_input.setCustomValidity("The repository url is not valid. It has to start with 'http' and hast to end with '.git'. Example: `https://gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/mermeid-sample-data.git`.");
-                    repository_url_input.reportValidity();
-
-                    return;
-                }
-
-                // check if repository_url is valid
                 try {
-                    new URL(repository_url);
+                    parseRepoUrl(repository_url);
 
                     this._repository_to_clone.url = repository_url;
 
@@ -336,7 +324,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                         "composed": true,
                     }));
                 } catch (err) {
-                    repository_url_input.setCustomValidity("The repository URL is not valid.");
+                    repository_url_input.setCustomValidity(`The repository URL is not valid. ${err.message}`);
                     repository_url_input.reportValidity();
 
                     return;
