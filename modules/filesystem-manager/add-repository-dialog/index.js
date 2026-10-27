@@ -226,7 +226,7 @@ export default class ADWLMAddRepositoryDialog extends LitElement {
                             Use lazy loading
                         </sl-switch>
                         <div style="color: var(--sl-color-neutral-500); font-size: var(--sl-font-size-small); margin-top: 0.25em;">
-                            Recommended: only file names are loaded up front, file content is fetched on demand when opened. Turn off to download the whole repository immediately instead, like before this option existed.
+                            Recommended for large repositories. Files are downloaded from the repository one by one as you open them. Turn this off to download everything at once. That suits smaller repositories, or working with a poor internet connection.
                         </div>
                     </sl-tab-panel>
                 </sl-tab-group>
