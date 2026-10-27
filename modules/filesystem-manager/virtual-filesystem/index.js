@@ -267,6 +267,22 @@ export default class ADWLMVirtualFilesystem {
         return { username, token };
     }
 
+    // get credentials for repository settings
+    async get_credentials(repository_path) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
+        return this._get_credentials_for_repository(fs, dir);
+    }
+
+    async update_credentials(repository_path, { username, token } = {}) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+
+        await git.setConfig({ fs, dir, path: "user.pat", value: token });
+        await git.setConfig({ fs, dir, path: "user.name", value: username });
+    }
+
     async is_public_repository(repository_metadata) {
         let is_public = true;
         let repository_url = repository_metadata.url;
@@ -296,7 +312,7 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async add_repository(repository_metadata) {
+    async add_repository(repository_metadata, { onProgress } = {}) {
         let repository_folder_name = repository_metadata.folder;
         let personal_acces_token = repository_metadata.token;
         let username = repository_metadata.username;
@@ -349,7 +365,10 @@ export default class ADWLMVirtualFilesystem {
         try {
             const provider = createProvider(remote_origin_url, personal_acces_token, {
                 onLog: (message) => console.log(message),
-                onProgress: (current, total, label) => console.log(`${label}: ${current}/${total}`),
+                onProgress: (current, total, label) => {
+                    console.log(`${label}: ${current}/${total}`);
+                    onProgress?.(current, total, label);
+                },
             });
 
             if (use_lazy_loading) {
@@ -2090,6 +2109,18 @@ export default class ADWLMVirtualFilesystem {
         return remotes.length > 0;
     }
 
+    async has_token(repository_path) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        let personal_access_token = await git.getConfigAll({
+            fs,
+            dir,
+            path: "user.pat"
+        });
+
+        return personal_access_token != '' ;
+    }
+
     async unstageFile(repository_path, file_relative_path) {
         // ---------------------------------------------------------------------
         // OLD IMPLEMENTATION
@@ -2258,7 +2289,7 @@ export default class ADWLMVirtualFilesystem {
                     }
 
                     // Load the SPARQL query
-                    const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                    const sparqlQuery = await this._loadSparqlQuery(`modules/datasets-generator/${folderName}`);
                     
                     if (!sparqlQuery) {
                         //console.warn(`No SPARQL query found for folder: ${folderName}`);
@@ -2327,7 +2358,7 @@ export default class ADWLMVirtualFilesystem {
                 }
 
                 // Load the SPARQL query
-                const sparqlQuery = await this._loadSparqlQuery(repository_path, `modules/datasets-generator/${folderName}`);
+                const sparqlQuery = await this._loadSparqlQuery(`modules/datasets-generator/${folderName}`);
                 
                 if (!sparqlQuery) {
                     //console.warn(`No SPARQL query found for folder: ${folderName}`);
@@ -2383,13 +2414,16 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    async _loadSparqlQuery(repository_path, folderName) {
+    async _loadSparqlQuery(folderName) {
         try {
-            // Load SPARQL query from the virtual filesystem
+            // Load SPARQL query
             // Path: {folderName}.sparql
             const sparqlQueryPath = `${folderName}.sparql`;
             
-            const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
+            // Load sparql query content directly from the editors repo instead of the loaded data repo (for maintainability purposes).
+            // Maybe add a check for project specific sparql queries from the data repo in the future.
+            const sparqlContent = await fetch(sparqlQueryPath).then(response => response.text());
+            //const sparqlContent = await this.read_file(repository_path, sparqlQueryPath);
             
             if (!sparqlContent || sparqlContent.trim() === '') {
                 //console.warn(`SPARQL query file is empty for folder: ${folderName}`);

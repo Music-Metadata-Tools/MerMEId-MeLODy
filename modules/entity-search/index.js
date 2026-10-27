@@ -12,10 +12,11 @@ const SEARCH_UI_LABELS = {
 };
 
 function endsWithOrBeforeEntity(str, variable) {
+  str = str.split("#").pop();
   if (str.endsWith("Entity")) {
-    return str.slice(0, -6).endsWith(variable);
+    return str.slice(0, -6) === variable ;
   }
-  return str.endsWith(variable);
+  return str === variable;
 }
 
 class ADWLMEntitySearch extends LitElement {
@@ -163,6 +164,16 @@ class ADWLMEntitySearch extends LitElement {
 
     // Rebuild entries whenever the shared store finishes (re-)loading
     document.addEventListener("adwlm-index-store:loaded", async () => {
+      const alert = document.createElement('sl-alert');
+      alert.variant = 'success';
+      alert.closable = true;
+      alert.duration = 3000;
+      alert.innerHTML = `
+          <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+          Reloaded indexes successfully
+      `;
+      document.body.append(alert);
+      alert.toast();
       await this._buildEntries();
     });
 
@@ -170,13 +181,28 @@ class ADWLMEntitySearch extends LitElement {
     document.addEventListener("adwlm-entity-search:reload-indexes", async (event) => {
       await this.reloadIndexes();
     });
+
+    // Listen for clear indexes event (e.g. after a repository is removed)
+    document.addEventListener("adwlm-entity-search:clear-indexes", () => {
+      this._entries = [];
+      this._filtered = [];
+      this._query = "";
+      this._typeFilter = ALL_FILTER_VALUE;
+      this._selected_repository_path = null;
+      indexStoreService.clear();
+    });
   }
 
   updated(changedProperties) {
     super.updated(changedProperties);
 
-    if (changedProperties.has("_dataset_url") && this._dataset_url != null && this._selected_repository_path != null) {
-      indexStoreService.loadIndexes(this._dataset_url, this._selected_repository_path);
+    if (
+      (changedProperties.has("_dataset_url") || changedProperties.has("_selected_repository_path")) &&
+      this._dataset_url != null &&
+      this._selected_repository_path != null
+    ) {
+      this._loading = true;
+      indexStoreService.loadIndexes(this._selected_repository_path);
     }
   }
 
@@ -271,19 +297,14 @@ class ADWLMEntitySearch extends LitElement {
     allEntries.sort((a, b) => a.label[0]?.localeCompare(b.label[0]) || 0);
 
     this._entries = allEntries;
-    this._filtered = [];
     this._loading = false;
+    this._filterResults();
     console.log("Loaded entries:", allEntries.length);
   }
 
   _onInput(e) {
     this._query = e.target.value.trim().toLowerCase();
-    // Clear filtered results if input is empty
-    if (!this._query) {
-        this._filtered = [];
-    } else {
-        this._filterResults();
-    }
+    this._filterResults();
   }
 
   _onTypeChange(e) {
@@ -335,9 +356,10 @@ class ADWLMEntitySearch extends LitElement {
     this._entries = [];
     this._filtered = [];
     this._query = "";
+    this._loading = true;
     this._typeFilter = ALL_FILTER_VALUE;
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
-    await indexStoreService.reloadIndexes(this._dataset_url, this._selected_repository_path);
+    await indexStoreService.reloadIndexes(this._selected_repository_path);
   }
 
   _getUiLabel(key) {
@@ -381,7 +403,7 @@ class ADWLMEntitySearch extends LitElement {
         ` : ''}
         <div class="results">
           ${this._loading ? html`
-            ${this._getUiLabel("reloadHint")}
+            <sl-spinner></sl-spinner> Loading …
           ` : this._filtered.map(
             (entry) => html`
               

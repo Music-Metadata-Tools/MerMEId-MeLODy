@@ -1,0 +1,50 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix melod: <https://lod.academy/melod/vocab/ontology#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+prefix schema: <https://schema.org/>
+prefix terms: <https://lod.academy/melod/vocab/terms#>
+prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>
+
+construct {
+  ?bibl_iri a melod:BibliographyEntity ;
+  	skos:prefLabel ?label ;
+    skos:related ?person_iri ;
+    skos:related ?editor_iri ;
+    skos:related ?publisher_iri ;
+    skos:related ?place_iri ;
+    skos:related ?institution_iri .
+} where {
+  select ?bibl_iri ?label ?person_iri ?editor_iri ?publisher_iri ?place_iri ?institution_iri where {
+    ?bibl_iri a melod:Bibliography .
+     {
+      ?bibl_iri melod:hasAbbreviation ?abbr .
+      BIND(?abbr AS ?label)
+    }
+    UNION {
+      ?bibl_iri melod:hasTitle ?title_subj .
+      ?title_subj rdfs:label ?bibl_title .
+      FILTER NOT EXISTS { ?bibl_iri melod:hasAbbreviation ?abbr }
+      bind(?bibl_title AS ?label)
+    }
+    OPTIONAL {
+      ?bibl_iri schema:author ?person_iri .
+    }
+    OPTIONAL {
+      ?bibl_iri melod:hasEditor ?editor_iri .
+    }
+    OPTIONAL {
+      ?bibl_iri schema:publication ?publication_node .
+      OPTIONAL {
+        ?publication_node schema:publishedBy ?publisher_iri .
+      }
+      OPTIONAL {
+        ?publication_node schema:location ?place_iri .
+      }
+    }
+    OPTIONAL {
+      ?bibl_iri cidoc:P50_has_current_keeper ?institution_iri .
+    }
+  }
+  order by ?label
+}

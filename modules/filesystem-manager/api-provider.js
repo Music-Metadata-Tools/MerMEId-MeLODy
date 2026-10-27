@@ -300,6 +300,14 @@ function createGithubProvider({ owner, repo }, token, {
             }
 
             onLog(`Files found according to tree: ${blobs.length}`);
+            reportProgress(0, blobs.length, "Files loaded");
+
+            return blobs;
+        },
+
+        async fetchAllFiles(branch) {
+
+            const blobs = await this.fetchFileTree(branch);
 
             return blobs;
         },
@@ -530,6 +538,8 @@ function createGitlabProvider({ host, projectPath }, token, {
         const files = [];
         let loadedCount = 0;
 
+        reportProgress(0, paths.length, "Files loaded (GraphQL batch)");
+
         for (const chunk of chunks) {
 
             const data = await withRetry(
@@ -667,6 +677,8 @@ function createGitlabProvider({ host, projectPath }, token, {
             // Fallback: one REST request per file, but with limited
             // concurrency + retry.
             let loadedCount = 0;
+
+            reportProgress(0, blobEntries.length, "Files loaded");
 
             const files = await mapWithConcurrency(blobEntries, fileConcurrency, async (entry) => {
 

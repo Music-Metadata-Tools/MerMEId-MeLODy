@@ -376,7 +376,12 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     async _getShapeForPath(path) {
-        let shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        let shacl_file_location;
+        if (path === "https://lod.academy/melod/vocab/ontology#DataCatalog") {
+            shacl_file_location = "configuration/dataCatalog.shacl";
+        } else {
+            shacl_file_location = this.entity_type_definitions.filter(definition => definition.type === path)[0]?.shacl_file_location;
+        }
         if (shacl_file_location) {
             const config = this._cachedConfig || { datasetBaseUrl: null };
             console.log("Config in _getShapeForPath:", config);
@@ -455,6 +460,9 @@ export default class ADWLMEntityEditor extends LitElement {
                 return def.type;
             }
         }
+        if (path.startsWith("dataCatalogs/")) {
+            return "https://lod.academy/melod/vocab/ontology#DataCatalog";
+        }
         return null;
     }
 
@@ -494,10 +502,16 @@ export default class ADWLMEntityEditor extends LitElement {
         let editor = this.renderRoot.querySelector("shacl-form");
         let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
         let shacl_file_location = this._get_shacl_file_location();
+        // Reset unsaved changes state when loading new file
+        this._hasUnsavedChanges = false;
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        
+        const workCollectionIri = this._getWorkDataCollectionIri(config);
+        const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
+        this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
+        this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+
         if (config && config.datasetBaseUrl) {
             try {
 
@@ -559,9 +573,6 @@ export default class ADWLMEntityEditor extends LitElement {
         this.entity_to_edit.shapesUrl = editor.dataset.shapesUrl;
         
         this._entity_path = entity_to_edit.path;
-        
-        // Reset unsaved changes state when loading new file
-        this._hasUnsavedChanges = false;
     }
 
     static styles = styles;
@@ -843,11 +854,13 @@ export default class ADWLMEntityEditor extends LitElement {
 
                 target.loading = true;
                 
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
-                    bubbles: true,
-                    composed: true
-                }));
+                // maybe change this event to a git fetch of the indexes folder of the remote repository?
+                // this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:build-indexes", {
+                //     bubbles: true,
+                //     composed: true
+                // }));
 
+                // Uncommented because reload-indexes is started in the build-indexes
                 document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
                     bubbles: true,
                     composed: true
@@ -856,17 +869,18 @@ export default class ADWLMEntityEditor extends LitElement {
                 
 
                 // Show success notification
-                const alert = document.createElement('sl-alert');
-                alert.variant = 'success';
-                alert.closable = true;
-                alert.duration = 3000;
-                alert.innerHTML = `
-                    <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
-                    <span lang="en">Reloaded indexes successfully</span>
-                    <span lang="de">Indizes erfolgreich neu geladen</span>
-                `;
-                document.body.append(alert);
-                alert.toast();
+                // Uncommented because indexes are not completely loaded at this stage
+                // const alert = document.createElement('sl-alert');
+                // alert.variant = 'success';
+                // alert.closable = true;
+                // alert.duration = 3000;
+                // alert.innerHTML = `
+                //     <sl-icon slot="icon" name="arrow-clockwise"></sl-icon>
+                //     <span lang="en">Reloaded indexes successfully</span>
+                //     <span lang="de">Indizes erfolgreich neu geladen</span>
+                // `;
+                // document.body.append(alert);
+                // alert.toast();
                 target.loading = false;
                 /*
                 if (this._hasUnsavedChanges) {
@@ -983,11 +997,27 @@ export default class ADWLMEntityEditor extends LitElement {
 
         document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
             let editor = this.renderRoot.querySelector("shacl-form");
-
+            let preview = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+            let rdf = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+            let xml = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+            let graph_view = document.querySelector("adwlm-graph-view");
+            
+            if (graph_view) {
+                graph_view.entity_to_edit = null;
+            }
+            
             editor.dataset.values = "";
             editor.dataset.valuesSubject = "";
             editor.dataset.shapesUrl = "";
             editor.dataset.shapeSubject = "";
+
+            preview.dataset.values = "";
+            preview.dataset.valuesSubject = "";
+            preview.dataset.shapesUrl = "";
+            preview.dataset.shapeSubject = "";
+
+            rdf.textContent = "";
+            xml.textContent = "";
 
             this._entity_path = null;
             this.entity_to_edit = null;
@@ -1148,6 +1178,58 @@ export default class ADWLMEntityEditor extends LitElement {
         return array[0];
     }
 
+    _getWorkDataCollectionIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataCollections/works`;
+    }
+
+    _getManifestationDataCollectionIri(config) {
+        const domain = config?.projectDomain ?? 'urn:uuid:';
+        return `${domain}dataCollections/manifestations`;
+    }
+
+    _isWorkEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'works';
+    }
+
+    _isManifestationEntityType(entity_type) {
+        const definition = this.entity_type_definitions?.find(def => def.type === entity_type);
+        return definition?.folder_name === 'manifestations';
+    }
+
+    // Guarantees every Work references the repository's singleton "main" DataCollection
+    // via melod:memberOfDataCollection, without requiring the user to assign it manually.
+    _ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri) {
+        if (!this._isWorkEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(workCollectionIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${workCollectionIri}> .\n`;
+        entity_to_edit._hasUnsavedChanges = true;
+    }
+
+    _ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri) {
+        if (!this._isManifestationEntityType(entity_to_edit.entity_type)) {
+            return;
+        }
+
+        if (entity_to_edit.contents.includes(manifestationCollectionIri)) {
+            return;
+        }
+
+        const subject = entity_to_edit.entity_iri;
+        entity_to_edit.contents =
+            `${entity_to_edit.contents}\n<${subject}> <https://lod.academy/melod/vocab/ontology#memberOfDataCollection> <${manifestationCollectionIri}> .\n`;
+        this._hasUnsavedChanges = true;
+    }
+
     _get_shacl_file_location() {
         let entity_type = this.entity_to_edit.entity_type;
         let shacl_file_location = this.entity_type_definitions
@@ -1158,7 +1240,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
     async _getRepoConfig() {
         // Return cached config if available
-        if (this._cachedConfig & this._cachedConfig != null) {
+        if (this._cachedConfig && this._cachedConfig != null) {
             return this._cachedConfig;
         }
 

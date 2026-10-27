@@ -6,6 +6,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix cs: <https://lod.academy/correspsearch/vocab/terms#> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -33,12 +34,33 @@ melod:Letter
                   sh:qualifiedMaxCount 1 ;
                   sh:qualifiedValueShapesDisjoint true ;
                 ] ;
-  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Anmerkungen oder weitere Informationen"@de ;
+  sh:property   [ sh:description "Choose institution..."@en,"Wähle Institution..."@de ;
+                  sh:name "Repository"@en,"Fundort"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Location ;
+                  sh:class melod:InstitutionEntity ;
+                  sh:path cidoc:P50_has_current_keeper
+                ] ;
+  sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository"@en, "Signatur, die dieses Exemplar an dem Fundort identifiziert"@de ;
+                  sh:name "Shelfmark"@en,"Signatur"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Location ;
+                  sh:path melod:hasShelfmark
+                ] ;
+  sh:property   [ sh:description "Former shelfmark or other signature identifying this item in the repository"@en,"Frühere Signatur, die dieses Exemplar identifiert hat"@de ;
+                  sh:name "Former Shelfmark"@en,"Frühere Signatur"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Location ;
+                  sh:path melod:hasFormerShelfmark
+                ] ;
+  sh:property   [ sh:description "Description, annotations or further information"@en, "Beschreibung, Annotationen oder weitere Informationen"@de ;
                   sh:name "Description"@en, "Beschreibung"@de ;
                   sh:minCount 0 ;
-                  sh:maxCount 1;
-                  dash:singleLine false ;
-                  sh:path schema:description
+                  sh:path melod:hasAnnotation ;
+                  sh:node melod:Annotation ;
                 ] ;
   sh:targetClass melod:Letter .
 
@@ -163,3 +185,25 @@ melod:Date
                   sh:path      schema:description
                 ] ;
   sh:targetClass  melod:ExactDate .
+
+melod:Annotation
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. Comments, Edits, Notes"@en, "z.B. Kommentare, Bearbeitungen, Notizen"@de ;
+                  sh:name      "Label"@en, "Bezeichnung"@de ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "paragraph"@en, "Text"@de ;
+                  sh:name      "Paragraph"@en, "Text"@de ;
+                  sh:minCount  1 ;
+                  sh:datatype  rdf:HTML ;
+                  dash:singleLine false ;
+                  sh:path      melod:paragraph
+                ] ;
+  sh:targetClass melod:Annotation .
+
+melod:Location
+  a               sh:PropertyGroup ;
+  rdfs:label      "Location"@en,"Fundort"@de .

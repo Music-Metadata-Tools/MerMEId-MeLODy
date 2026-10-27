@@ -12,6 +12,13 @@
 melod:Expression
   a               sh:NodeShape, rdfs:Class ;
   owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:name "No."@en, "Nr."@de ;
+                  sh:description "Number, e.g. '1'"@en, "Nummer, z.B. '1'"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:General ;
+                  sh:path schema:position
+                ] ;
   sh:property   [ sh:name "Label"@en, "Label"@de ;
                   sh:description "Expression title, e.g. 'Version 1'"@en, "Titel der Expression, z.B. 'Version 1'"@de ;
                   sh:minCount 1 ;
@@ -36,6 +43,12 @@ melod:Expression
                   sh:group melod:General ;
                   sh:pattern "^http(s)?://.+?/..+?" ;
                   sh:nodeKind sh:IRI
+                ] ;
+  sh:property   [ sh:name "Titles"@en, "Titel"@de ;
+                  sh:group melod:General ;
+                  sh:node melod:Title ;
+                  sh:path melod:hasTitle ;
+                  sh:minCount 0 ;
                 ] ;
   sh:property   [ sh:description "Index identifiers"@en, "Index Identifikatoren"@de ;
                   sh:name "Index identifiers"@en, "Index Identifikatoren"@de ;
@@ -267,6 +280,12 @@ melod:Expression
                   sh:path melod:hasAnnotation ;
                   sh:node melod:Annotation ;
                 ] ;
+  sh:property   [ sh:description "Links"@en , "Links"@de ;
+                  sh:name "Links"@en , "Links"@de ;
+                  sh:group melod:General ;
+                  sh:path melod:hasLinks ;
+                  sh:node melod:Link
+                ] ;
   sh:property   [ sh:description "Choose bibliography..."@en, "Wähle Bibliographie..."@de ;
                   sh:name "Bibliography"@en, "Bibliographie"@de ;
                   sh:minCount 0 ;
@@ -325,6 +344,17 @@ melod:Identifier
                 ] ;
   sh:targetClass  melod:Identifier .
 
+melod:Title
+  a               sh:NodeShape ;
+  sh:property   [ sh:description "Title of the expression"@en, "Titel der Expression"@de ;
+                  sh:name      "Title"@en, "Titel"@de ;
+                  sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
+                  sh:minCount  1 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:targetClass  melod:Title .
+
 melod:Annotation
   a               sh:NodeShape ;
 
@@ -342,6 +372,23 @@ melod:Annotation
                   sh:path      melod:paragraph
                 ] ;
   sh:targetClass  melod:Annotation .
+
+melod:Link
+  a               sh:NodeShape ;
+
+  sh:property   [ sh:description "e.g. digitised content" ;
+                  sh:name      "Label" ;
+                  sh:minCount  0 ;
+                  sh:maxCount  1 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:description "URL" ;
+                  sh:name      "URL" ;
+                  sh:minCount  1 ;
+                  sh:nodeKind  sh:IRI ;
+                  sh:path      melod:hasURL
+                ] ;
+  sh:targetClass  melod:Link .
 
 melod:Date
   a               sh:NodeShape ;
@@ -565,13 +612,14 @@ melod:MusicIncipit
                   sh:path         melod:hasIncipitText ;
                   dash:singleLine false ;
                   sh:minCount     0 ;
-                  sh:maxCount     1
+                  sh:maxCount     1 ;
+                  sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
                 ] ;
   sh:property   [ sh:description  "Incipit in MEI"@en, "Incipit in MEI"@de ;
                   sh:name         "Incipit in MEI"@en, "Incipit in MEI"@de ;
                   sh:path         melod:hasMEIScore ;
-                  dash:singleLine false ;
-                  sh:datatype     xsd:base64Binary ;
+                  sh:nodeKind sh:IRI ;
+                  sh:class melod:IncipitEntity ;
                   sh:minCount     0 ;
                 ] ;        
   sh:targetClass  melod:MusicIncipit .
@@ -581,7 +629,7 @@ melod:Event
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:description "Name of the Event" ;
                   sh:name "Name" ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
