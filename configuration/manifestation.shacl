@@ -622,7 +622,7 @@ melod:PublicationEvent
                   sh:datatype  xsd:date
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:description "Choose publisher (person or institution)..."@en,"Wählen Sie den Herausgeber (Person oder Institution)..."@de ;
                   sh:name         "Publisher"@en,"Herausgeber"@de ;
                   sh:path         schema:publishedBy ;
@@ -635,7 +635,7 @@ melod:PublicationEvent
                   #sh:pattern      "^https://mei-metadata.org/persons/\\d{8}" ;
                 ] ;
   sh:property   [ sh:maxCount     1 ;
-                  sh:minCount     1 ;
+                  sh:minCount     0 ;
                   sh:description "Choose publishing place..."@en,"Wähle Ort..."@de ;
                   sh:name         "Place"@en,"Ort"@de ;
                   sh:path         schema:location ;

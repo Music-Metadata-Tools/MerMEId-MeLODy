@@ -13,8 +13,10 @@ construct {
 } where {
   select ?performanceEvent_iri ?label ?contributor_iri ?performanceEvent_place ?bibliography_iri where {
     ?performanceEvent_iri a melod:PerformanceEvent .
-
-    ?performanceEvent_iri rdfs:label ?performanceEvent_name .
+    OPTIONAL { 
+      ?performanceEvent_iri rdfs:label ?existing_label .
+    }
+    bind(coalesce(?existing_label, STR(?performanceEvent_iri)) AS ?performanceEvent_name) .
     OPTIONAL {
       ?performanceEvent_iri melod:hasEventDate ?performanceEvent_date_iri .
       ?performanceEvent_date_iri schema:description ?performanceEvent_date .

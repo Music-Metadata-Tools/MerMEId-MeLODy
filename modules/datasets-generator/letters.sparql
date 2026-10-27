@@ -4,14 +4,16 @@ prefix melod: <https://lod.academy/melod/vocab/ontology#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 prefix schema: <https://schema.org/>
 prefix cs: <https://lod.academy/correspsearch/vocab/terms#>
+prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>
 
 construct {
   ?letter_iri a melod:Letter ;
   	skos:prefLabel ?label ;
     skos:related ?person_iri ;
-    skos:related ?place_iri .
+    skos:related ?place_iri ;
+    skos:related ?institution_iri .
 } where {
-  select ?letter_iri ?label ?person_iri ?place_iri where {
+  select ?letter_iri ?label ?person_iri ?place_iri ?institution_iri where {
     ?letter_iri a melod:Letter .
     ?letter_iri rdfs:label ?letter_title .
     OPTIONAL {
@@ -21,6 +23,9 @@ construct {
     OPTIONAL {
       ?letter_iri cs:hasCorrespAction ?corresp_node .
       ?corresp_node cs:tookPlaceAt ?place_iri .
+    }
+    OPTIONAL {
+      ?letter_iri cidoc:P50_has_current_keeper ?institution_iri .
     }
     bind(?letter_title AS ?label)
   }

@@ -12,13 +12,14 @@ construct {
     skos:related ?place_iri ;
     skos:related ?contributor_iri ;
     skos:related ?expression_part_iri ;
+    skos:related ?expression_part_of_iri ;
     skos:related ?event_iri ;
     skos:related ?instrumentation_iri ;
     skos:related ?bibliography_iri ;
     skos:related ?incipit_mei ;
     skos:broader ?classification .
 } where {
-  select ?expression_iri ?label ?performance_iri ?event_iri ?place_iri ?contributor_iri ?expression_part_iri ?instrumentation_iri ?bibliography_iri ?classification ?incipit_mei where {
+  select ?expression_iri ?label ?performance_iri ?event_iri ?place_iri ?contributor_iri ?expression_part_iri ?expression_part_of_iri ?instrumentation_iri ?bibliography_iri ?classification ?incipit_mei where {
     ?expression_iri a melod:Expression .
     OPTIONAL { 
       ?expression_iri rdfs:label ?existing_label . 
@@ -45,6 +46,9 @@ construct {
     }
     OPTIONAL {
       ?expression_iri melod:hasExpressionPart ?expression_part_iri .
+    }
+    OPTIONAL {
+      ?expression_iri melod:isExpressionPartOf ?expression_part_of_iri .
     }
     OPTIONAL {
       ?expression_iri schema:includedComposition ?expression_part_iri .

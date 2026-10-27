@@ -12,12 +12,18 @@ construct {
     skos:broader ?classification ;
     skos:related ?expression_iri ;
     skos:related ?manifestation_part_iri ;
-    skos:related ?collection_iri .
+    skos:related ?collection_iri ;
+    skos:related ?publisher_iri ;
+    skos:related ?contributor_iri ;
+    skos:related ?place_iri .
 } where {
-  select ?manifestation_iri ?label ?classification ?expression_iri ?manifestation_part_iri ?collection_iri where {
+  select ?manifestation_iri ?label ?classification ?expression_iri ?manifestation_part_iri ?collection_iri ?contributor_iri ?publisher_iri ?place_iri where {
     ?manifestation_iri a melod:Manifestation .
-    ?manifestation_iri melod:hasTitle ?title_subj .
-    ?title_subj rdfs:label ?manifestation_title .
+    OPTIONAL { 
+      ?manifestation_iri melod:hasTitle ?title_subj .
+      ?title_subj rdfs:label ?existing_label .
+    }
+    bind(coalesce(?existing_label, STR(?manifestation_iri)) AS ?manifestation_title) .
     OPTIONAL {
       ?title_subj melod:hasTitleType ?title_label .
     }
@@ -33,6 +39,22 @@ construct {
     }
     OPTIONAL {
       ?manifestation_iri melod:memberOfDataCollection ?collection_iri .
+    }
+    OPTIONAL {
+      ?manifestation_iri melod:memberOfDataCollection ?collection_iri .
+    }
+    OPTIONAL {
+      ?manifestation_iri melod:hasContribution ?contributor_node .
+      ?contributor_node melod:hasAgent ?contributor_iri .
+    }
+    OPTIONAL {
+      ?manifestation_iri schema:publication ?publication_node .
+      OPTIONAL {
+        ?publication_node schema:publishedBy ?publisher_iri .
+      }
+      OPTIONAL {
+        ?publication_node schema:location ?place_iri .
+      }
     }
   }
   order by ?label

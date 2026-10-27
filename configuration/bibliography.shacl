@@ -7,6 +7,7 @@
 @prefix dash: <http://datashapes.org/dash#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix terms: <https://mermeid-data-model-efbf77.pages.gitlab.rlp.net/> .
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/> .
 
 melod:Bibliography
   sh:targetClass melod:Bibliography ;
@@ -77,6 +78,28 @@ melod:Bibliography
                   sh:group melod:Publication ;
                   sh:path schema:inLanguage ;
                   sh:class melod:Language
+                ] ;
+  sh:property   [ sh:description "Choose institution..."@en,"Wähle Institution..."@de ;
+                  sh:name "Repository"@en,"Fundort"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Publication ;
+                  sh:class melod:InstitutionEntity ;
+                  sh:path cidoc:P50_has_current_keeper
+                ] ;
+  sh:property   [ sh:description "Shelfmark or other signature identifying this item in the repository"@en, "Signatur, die dieses Exemplar an dem Fundort identifiziert"@de ;
+                  sh:name "Shelfmark"@en,"Signatur"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Publication ;
+                  sh:path melod:hasShelfmark
+                ] ;
+  sh:property   [ sh:description "Former shelfmark or other signature identifying this item in the repository"@en,"Frühere Signatur, die dieses Exemplar identifiert hat"@de ;
+                  sh:name "Former Shelfmark"@en,"Frühere Signatur"@de ;
+                  sh:minCount 0 ;
+                  sh:maxCount 1 ;
+                  sh:group melod:Publication ;
+                  sh:path melod:hasFormerShelfmark
                 ] ;
   sh:property   [ sh:name "Pages"@en , "Seiten"@de ;
                   sh:description "Scope of the article, chapter, ..."@en , "Umfang des Artikels, Kapitels, ..."@de ;
