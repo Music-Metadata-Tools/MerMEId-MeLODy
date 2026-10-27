@@ -12,10 +12,11 @@ const SEARCH_UI_LABELS = {
 };
 
 function endsWithOrBeforeEntity(str, variable) {
+  str = str.split("#").pop();
   if (str.endsWith("Entity")) {
-    return str.slice(0, -6).endsWith(variable);
+    return str.slice(0, -6) === variable ;
   }
-  return str.endsWith(variable);
+  return str === variable;
 }
 
 class ADWLMEntitySearch extends LitElement {

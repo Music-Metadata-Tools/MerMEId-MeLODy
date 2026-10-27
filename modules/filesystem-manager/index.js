@@ -109,6 +109,15 @@ const styles =
         sl-tree#staged-files-tree sl-tree-item::part(item) {
             padding-inline-start: var(--sl-spacing-x-small);
         }
+
+        sl-tree#staged-files-tree .staged-file-name {
+            cursor: pointer;
+        }
+
+        sl-tree#staged-files-tree .staged-file-name:hover {
+            text-decoration: underline;
+            color: var(--sl-color-primary-600);
+        }
     `;
 
 export default class ADWLMFilesystemManager extends LitElement {
@@ -1868,6 +1877,14 @@ export default class ADWLMFilesystemManager extends LitElement {
         }
     }
 
+    // Click on a file name in the staged files list: open it as entity_to_edit.
+    // stopPropagation keeps sl-tree from toggling the item's selection, so the
+    // checkbox stays the only way to (de)select a staged file.
+    async _openStagedFile(event, relativePath) {
+        event.stopPropagation();
+        await this.selectEntityInTree(relativePath);
+    }
+
     async _handleRepositoryFileSelection(fileItem) {
         if (fileItem.dataset.entryRelativePath === this._file_path) {
             this._file_path = fileItem.dataset.entryRelativePath;
@@ -2020,7 +2037,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     data-entry-absolute-path="${staged_file_absolute_path}"
                     data-entry-relative-path="${staged_file}"
                     data-entry-name="${file_name}">
-                    ${staged_file}
+                    <span class="staged-file-name"
+                          title="${staged_file}"
+                          @click="${(event) => this._openStagedFile(event, staged_file)}">
+                        ${staged_file}
+                    </span>
                 </sl-tree-item>`;
         });
     }
