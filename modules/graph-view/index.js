@@ -44,6 +44,7 @@ class ADWLMGraphView extends LitElement {
     _viewMode: { state: true },
     _expanded: { state: true },
     _showAllChildren: { state: true },
+    _currentLabel: { state: true },
   };
 
   static styles = css`

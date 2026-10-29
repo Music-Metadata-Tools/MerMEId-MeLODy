@@ -27,11 +27,18 @@ const styles =
             background-color: white;
             padding-bottom: 5px;
         }
-        h2 {
+        .header-container h2 {
             text-align: center;
             color: var(--sl-color-primary-600);
             font-size: 1.5rem;
             margin: 0;
+        }
+        h2 {
+            text-align: left;
+            font-size: 1.5rem;
+            margin: 0;
+            padding-left: 1rem;
+            font-weight: normal;
         }
         sl-button::part(base) {
             --sl-color-neutral-600: var(--sl-color-primary-600);
@@ -650,6 +657,9 @@ export default class ADWLMEntityEditor extends LitElement {
                             ` : ''}
                         </div>
                         <div class="form-container">
+                            <h2>
+                            ${document.querySelector("adwlm-graph-view")._currentLabel}
+                            </h2>
                             <shacl-form lang=${this.ui_language} data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
                         </div>
                     </div>
