@@ -335,6 +335,7 @@ class ADWLMGraphView extends LitElement {
     super();
     this.ui_language = document.documentElement.lang || "en";
     this._related = [];
+    this._currentLabel = null;
     this._loading = false;
     // Type URI of the related entities shown in the graph; null = all types
     this._selectedType = null;
@@ -377,6 +378,7 @@ class ADWLMGraphView extends LitElement {
         this._queryRelated();
       } else {
         this._related = [];
+        this._currentLabel = null;
       }
     }
     // Re-apply current transform after every Lit render
@@ -499,6 +501,13 @@ class ADWLMGraphView extends LitElement {
     }
 
     this._loading = true;
+    const labelQuery = `
+      SELECT ?label WHERE {
+        <${this.entity_to_edit.entity_iri}> <${SKOS_LABEL}> ?label .
+      }
+    `;
+    const labelResult = indexStoreService.store.query(labelQuery);
+    this._currentLabel = labelResult.length > 0 ? labelResult[0].get("label").value : null;
     this._related = this._fetchRelated(this.entity_to_edit.entity_iri);
     // Keep the expanded node only if it is still related after a reload
     if (!this._related.some((n) => n.subject === this._expanded)) {
@@ -931,7 +940,7 @@ class ADWLMGraphView extends LitElement {
 
         <!-- Center node (current entity) -->
         <g>
-          <title>${this.entity_to_edit.entity_iri}${currentTypeName ? ` (${this._getTypeName(currentTypeName)})` : ''}</title>
+          <title>${this._currentLabel}${currentTypeName ? ` (${this._getTypeName(currentTypeName)})` : ''}</title>
           <circle cx="${cx}" cy="${cy}" r="${R_CENTER}"
                   fill="${currentColor}" filter="url(#gv-shadow)" />
           <text x="${cx}" y="${cy - FS_CENTER_TYPE * 0.3}" text-anchor="middle" fill="white"
@@ -939,8 +948,8 @@ class ADWLMGraphView extends LitElement {
             ${this._truncate(currentTypeName, 12)}
           </text>
           <text x="${cx}" y="${cy + FS_CENTER_LABEL * 1.2}" text-anchor="middle"
-                fill="rgba(255,255,255,0.92)" font-size="${FS_CENTER_LABEL}" font-family="sans-serif">
-            ${this._truncate(currentLabel, 20)}
+                fill="rgba(255, 255, 255, 0.92)" font-size="${FS_CENTER_LABEL}" font-family="sans-serif">
+            ${this._truncate(this._currentLabel, 15)}
           </text>
         </g>
 
