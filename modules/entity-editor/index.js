@@ -882,7 +882,7 @@ export default class ADWLMEntityEditor extends LitElement {
                 // document.body.append(alert);
                 // alert.toast();
                 target.loading = false;
-                /*
+                
                 if (this._hasUnsavedChanges) {
                     // Show warning dialog
                     const dialog = document.createElement('sl-dialog');
@@ -911,9 +911,17 @@ export default class ADWLMEntityEditor extends LitElement {
                     });
 
                     dialog.querySelector('#continue').addEventListener('click', () => {
-                        window.dispatchEvent(new Event('refreshOwlImports'));
-                        window.dispatchEvent(new Event('owlImportsReloaded'));
-                        this._hasUnsavedChanges = false;
+                        // Get the current editor form
+                        const editor = this.renderRoot.querySelector("shacl-form");
+                    
+                        // Get the last saved state from the entity_to_edit
+                        if (this.entity_to_edit) {
+                            // Reset the form to the last saved state
+                            editor.dataset.values = this.entity_to_edit.contents;
+                            
+                            // Reset unsaved changes flag
+                            this._hasUnsavedChanges = false;
+                        }
                         dialog.hide();
                         setTimeout(() => dialog.remove(), 100); // Clean up dialog after animation
                     });
@@ -923,10 +931,17 @@ export default class ADWLMEntityEditor extends LitElement {
                     return; // Stop further processing until user decides
                 } else {
                     // No unsaved changes, reload indexes directly
-                    window.dispatchEvent(new Event('refreshOwlImports'));
-                    window.dispatchEvent(new Event('owlImportsReloaded'));
+                    // window.dispatchEvent(new Event('refreshOwlImports'));
+                    // window.dispatchEvent(new Event('owlImportsReloaded'));
+                    const editor = this.renderRoot.querySelector("shacl-form");
+                    
+                        // Get the last saved state from the entity_to_edit
+                        if (this.entity_to_edit) {
+                            // Reset the form to the last saved state
+                            editor.dataset.values = this.entity_to_edit.contents;
+                        }
+                    console.log("Reloaded form");
                 }
-                */
             }
 
             if (target.matches("sl-button#undo-changes")) {
