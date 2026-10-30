@@ -751,7 +751,20 @@ export default class ADWLMEntityEditor extends LitElement {
         render_root.addEventListener("shacl-form:quick-add", async (event) => {
             event.preventDefault?.();
             event.stopPropagation?.();
-            await this._showQuickAddDialog(event.detail);
+            // Remember the select (inside the form's shadow DOM) and the form the quick-add came from
+            const path = event.composedPath();
+            const sourceEditor = path[0];
+            const sourceForm = path.find(el => el instanceof Element && el.localName === "shacl-form");
+            await this._showQuickAddDialog(event.detail, sourceEditor, sourceForm);
+        });
+
+        // Quick Add entity was saved and indexed: append its index entries to the shapes of the
+        // originating form and select the new entity in the property it was created for
+        document.addEventListener("adwlm-filesystem-manager:quick-add-indexed", async (event) => {
+            const pending = this._pendingQuickAdd;
+            if (!pending || pending.entity_iri !== event.detail.entity_iri) return;
+            this._pendingQuickAdd = null;
+            await this._applyQuickAddIndex(pending, event.detail.indexContent);
         });
 
         render_root.addEventListener("click", (event) => {
@@ -1118,6 +1131,7 @@ export default class ADWLMEntityEditor extends LitElement {
         this._hasUnsavedChanges = false;
         this._skipNextUpdate = false;
         this._cachedConfig = null;
+        this._pendingQuickAdd = null;
     }
 
     _applyLanguageVisibility() {
@@ -1127,7 +1141,61 @@ export default class ADWLMEntityEditor extends LitElement {
         });
     }
 
-    async _showQuickAddDialog(detail) {
+    async _applyQuickAddIndex({ entity_iri, sourceEditor, sourceForm }, indexContent) {
+        if (!sourceForm?.isConnected) return;
+
+        try {
+            // toRDF() prefers editor.dataset.value over the select's value, so the new IRI
+            // ends up in the serialized values even though it is not an option yet
+            if (sourceEditor?.isConnected) {
+                sourceEditor.dataset.value = entity_iri;
+            }
+            const values = sourceForm.serialize();
+
+            // Reloading re-renders the form collapsed - restore the open/closed state once it's ready
+            const openStates = this._getCollapsibleOpenStates(sourceForm);
+            sourceForm.addEventListener("ready", () => {
+                this._restoreCollapsibleOpenStates(sourceForm, openStates);
+            }, { once: true });
+
+            const currentShapesUrl = sourceForm.dataset.shapesUrl;
+            if (currentShapesUrl) {
+                const shaclContent = await fetch(currentShapesUrl).then(res => res.text());
+                const blob = new Blob([shaclContent + '\n' + indexContent], { type: 'text/turtle' });
+                const modifiedFileUrl = URL.createObjectURL(blob);
+                sourceForm.dataset.shapesUrl = modifiedFileUrl;
+
+                if (sourceForm === this.editor && this.entity_to_edit) {
+                    this.entity_to_edit.shapesUrl = modifiedFileUrl;
+                }
+            }
+            sourceForm.dataset.values = values;
+
+            if (sourceForm === this.editor) {
+                this._hasUnsavedChanges = true;
+            }
+        } catch (error) {
+            console.error('QuickAdd: failed to apply new index to form:', error);
+        }
+    }
+
+    // Collapsibles are matched by their position in the form; values (and thus the
+    // rendered structure) are unchanged by the reload, so the order stays the same
+    _getCollapsibleOpenStates(form) {
+        const root = form.shadowRoot ?? form;
+        return Array.from(root.querySelectorAll(".collapsible"), collapsible => collapsible.open);
+    }
+
+    _restoreCollapsibleOpenStates(form, openStates) {
+        const root = form.shadowRoot ?? form;
+        root.querySelectorAll(".collapsible").forEach((collapsible, index) => {
+            if (index < openStates.length) {
+                collapsible.open = openStates[index];
+            }
+        });
+    }
+
+    async _showQuickAddDialog(detail, sourceEditor = null, sourceForm = null) {
         await Promise.all([
             customElements.whenDefined('sl-dialog'),
             customElements.whenDefined('shacl-form'),
@@ -1198,6 +1266,8 @@ export default class ADWLMEntityEditor extends LitElement {
                 shapesUrl,
                 isQuickAdd: true,
             };
+
+            this._pendingQuickAdd = { entity_iri, sourceEditor, sourceForm };
 
             this.dispatchEvent(new CustomEvent("adwlm-quick-add:entity-to-save", {
                 detail: entity_to_save,
