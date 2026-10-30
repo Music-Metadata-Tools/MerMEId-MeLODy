@@ -514,7 +514,7 @@ export default class ADWLMEntityEditor extends LitElement {
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        if (!this._selected_repository_path === 'default') {
+        if (this._selected_repository_path !== 'default') {
             const workCollectionIri = this._getWorkDataCollectionIri(config);
             const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
             this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
