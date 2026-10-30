@@ -1241,6 +1241,17 @@ export default class ADWLMFilesystemManager extends LitElement {
                             this._selected_repository_path,
                             entity_to_save.path, false
                         );
+                        // Quick Add: hand the new index entries to the entity editor, so the
+                        // originating form can offer (and select) the new entity without a sync
+                        const indexContent = generatedIndexes[result.folder]?.index;
+                        if (isQuickAdd && indexContent) {
+                            document.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:quick-add-indexed", {
+                                detail: {
+                                    entity_iri: entity_to_save.entity_iri,
+                                    indexContent
+                                }
+                            }));
+                        }
 
                         // Log which indexes were generated
                         const successfulIndexes = Object.entries(generatedIndexes)

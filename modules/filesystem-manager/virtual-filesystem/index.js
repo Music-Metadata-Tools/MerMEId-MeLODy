@@ -2377,6 +2377,7 @@ export default class ADWLMVirtualFilesystem {
                 let indexFile = await this.read_file(repository_path, `indexes/${folderName}.ttl`);
 
                 if (indexContent !== '' && indexFile !== '') {
+                    let newIndex = indexContent;
 
                     if (is_deleted===true) {
                         indexContent = await this._executeSparqlUpdate(indexFile, indexContent, is_deleted=true);
@@ -2389,7 +2390,8 @@ export default class ADWLMVirtualFilesystem {
                     generatedIndexes[folderName] = {
                         path: indexPath,
                         filesProcessed: saved_file_path,
-                        success: true
+                        success: true,
+                        index: newIndex
                     };
 
                     console.log(`Index updated successfully for ${folderName}`);
