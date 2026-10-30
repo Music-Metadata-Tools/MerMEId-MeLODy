@@ -659,9 +659,6 @@ export default class ADWLMEntityEditor extends LitElement {
                             ` : ''}
                         </div>
                         <div class="form-container">
-                            <h2>
-                            ${document.querySelector("adwlm-graph-view")._currentLabel}
-                            </h2>
                             <shacl-form lang=${this.ui_language} data-shapes-url="" data-values-subject="" data-shape-subject="" data-collapse="close"></shacl-form>
                         </div>
                     </div>
@@ -1000,6 +997,25 @@ export default class ADWLMEntityEditor extends LitElement {
         });
 
         this.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
+            let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+            let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+            let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+
+            if (xml_renderer) xml_renderer.innerText = '';
+            if (rdf_renderer) rdf_renderer.innerText = '';
+            if (shacl_renderer) {
+                shacl_renderer.removeAttribute("data-values-subject");
+                shacl_renderer.removeAttribute("data-values");
+                shacl_renderer.removeAttribute("data-shapes-url");
+            }
+
+            let graph_view = document.querySelector("adwlm-graph-view");
+                    
+            if (graph_view) {
+                graph_view.entity_to_edit = null;
+            }
+            
+            
             let entity_type = event.detail;
             let entity_type_definition = this.entity_type_definitions.filter(item => item.type === entity_type)[0];
             let entity_folder_name = entity_type_definition.folder_name;
@@ -1020,6 +1036,9 @@ export default class ADWLMEntityEditor extends LitElement {
 
             // configure the editor
             this.entity_to_edit = entity_to_edit;
+            if (graph_view) {
+                graph_view.entity_to_edit = entity_to_edit;
+            }
         });
 
         document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
