@@ -262,7 +262,7 @@ melod:Contribution
   sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
                   sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
