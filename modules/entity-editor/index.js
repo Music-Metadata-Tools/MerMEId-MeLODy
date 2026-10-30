@@ -929,7 +929,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         // Get the last saved state from the entity_to_edit
                         if (this.entity_to_edit) {
                             // Reset the form to the last saved state
-                            editor.dataset.values = this.entity_to_edit.contents;
+                            editor.dataset.values = editor.serialize();
                             
                             // Reset unsaved changes flag
                             this._hasUnsavedChanges = false;
@@ -950,7 +950,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         // Get the last saved state from the entity_to_edit
                         if (this.entity_to_edit) {
                             // Reset the form to the last saved state
-                            editor.dataset.values = this.entity_to_edit.contents;
+                            editor.dataset.values = editor.serialize();
                         }
                     console.log("Reloaded form");
                 }
