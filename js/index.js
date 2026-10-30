@@ -268,25 +268,25 @@ document.addEventListener("adwlm-quick-add:entity-to-save", (event) => {
 });
 
 // Clear XML and RDF renderers when a new (unsaved) entity is being created
-document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
-    let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
-    let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
-    let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+// document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
+//     let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+//     let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+//     let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
 
-    if (xml_renderer) xml_renderer.innerText = '';
-    if (rdf_renderer) rdf_renderer.innerText = '';
-    if (shacl_renderer) {
-        shacl_renderer.removeAttribute("data-values-subject");
-        shacl_renderer.removeAttribute("data-values");
-        shacl_renderer.removeAttribute("data-shapes-url");
-    }
+//     if (xml_renderer) xml_renderer.innerText = '';
+//     if (rdf_renderer) rdf_renderer.innerText = '';
+//     if (shacl_renderer) {
+//         shacl_renderer.removeAttribute("data-values-subject");
+//         shacl_renderer.removeAttribute("data-values");
+//         shacl_renderer.removeAttribute("data-shapes-url");
+//     }
 
-    let graph_view = document.querySelector("adwlm-graph-view");
+//     let graph_view = document.querySelector("adwlm-graph-view");
             
-    if (graph_view) {
-        graph_view.entity_to_edit = null;
-    }
-});
+//     if (graph_view) {
+//         graph_view.entity_to_edit = null;
+//     }
+// });
 
 // TODO: move separately
 // TODO: change "urn:uuid:" to project specific variable
