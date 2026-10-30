@@ -106,16 +106,6 @@ melod:Work
 
   sh:property   [ sh:description "DataCollections"@en , "DataCollections"@de ;
                   sh:name "Data Collections"@en , "Data Collections"@de ;
-                  sh:minCount 1 ;
-                  sh:group melod:Relation ;
-                  sh:class melod:DataCollectionEntity ;
-                  sh:nodeKind sh:IRI ;
-                  sh:path melod:memberOfDataCollection
-                ] ;
-
-  sh:property   [ sh:description "DataCollections" ;
-                  sh:name "Data Collections" ;
-                  sh:minCount 1 ;
                   sh:group melod:Relation ;
                   sh:class melod:DataCollectionEntity ;
                   sh:nodeKind sh:IRI ;
@@ -272,7 +262,7 @@ melod:Contribution
   sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
                   sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (

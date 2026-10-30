@@ -357,7 +357,6 @@ class ADWLMEntitySearch extends LitElement {
     this._filtered = [];
     this._query = "";
     this._loading = true;
-    this._typeFilter = ALL_FILTER_VALUE;
     // Delegate to the shared service; _buildEntries is called via adwlm-index-store:loaded
     await indexStoreService.reloadIndexes(this._selected_repository_path);
   }

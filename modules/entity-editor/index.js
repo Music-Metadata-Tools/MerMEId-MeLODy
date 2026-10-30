@@ -27,11 +27,18 @@ const styles =
             background-color: white;
             padding-bottom: 5px;
         }
-        h2 {
+        .header-container h2 {
             text-align: center;
             color: var(--sl-color-primary-600);
             font-size: 1.5rem;
             margin: 0;
+        }
+        h2 {
+            text-align: left;
+            font-size: 1.5rem;
+            margin: 0;
+            padding-left: 1rem;
+            font-weight: normal;
         }
         sl-button::part(base) {
             --sl-color-neutral-600: var(--sl-color-primary-600);
@@ -507,10 +514,12 @@ export default class ADWLMEntityEditor extends LitElement {
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        const workCollectionIri = this._getWorkDataCollectionIri(config);
-        const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
-        this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
-        this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+        if (!this._selected_repository_path === 'default') {
+            const workCollectionIri = this._getWorkDataCollectionIri(config);
+            const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
+            this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
+            this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+        }
 
         if (config && config.datasetBaseUrl) {
             try {
@@ -917,7 +926,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         // Get the last saved state from the entity_to_edit
                         if (this.entity_to_edit) {
                             // Reset the form to the last saved state
-                            editor.dataset.values = this.entity_to_edit.contents;
+                            editor.dataset.values = editor.serialize();
                             
                             // Reset unsaved changes flag
                             this._hasUnsavedChanges = false;
@@ -938,7 +947,7 @@ export default class ADWLMEntityEditor extends LitElement {
                         // Get the last saved state from the entity_to_edit
                         if (this.entity_to_edit) {
                             // Reset the form to the last saved state
-                            editor.dataset.values = this.entity_to_edit.contents;
+                            editor.dataset.values = editor.serialize();
                         }
                     console.log("Reloaded form");
                 }
@@ -988,6 +997,25 @@ export default class ADWLMEntityEditor extends LitElement {
         });
 
         this.addEventListener("adwlm-entity-types-dialog:entity-to-add", async (event) => {
+            let xml_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'xml-output'] fieldset pre");
+            let rdf_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'rdf-output'] fieldset pre");
+            let shacl_renderer = document.querySelector("section#renderer sl-tab-group sl-tab-panel[name = 'html-output'] fieldset shacl-form");
+
+            if (xml_renderer) xml_renderer.innerText = '';
+            if (rdf_renderer) rdf_renderer.innerText = '';
+            if (shacl_renderer) {
+                shacl_renderer.removeAttribute("data-values-subject");
+                shacl_renderer.removeAttribute("data-values");
+                shacl_renderer.removeAttribute("data-shapes-url");
+            }
+
+            let graph_view = document.querySelector("adwlm-graph-view");
+                    
+            if (graph_view) {
+                graph_view.entity_to_edit = null;
+            }
+            
+            
             let entity_type = event.detail;
             let entity_type_definition = this.entity_type_definitions.filter(item => item.type === entity_type)[0];
             let entity_folder_name = entity_type_definition.folder_name;
@@ -1008,6 +1036,9 @@ export default class ADWLMEntityEditor extends LitElement {
 
             // configure the editor
             this.entity_to_edit = entity_to_edit;
+            if (graph_view) {
+                graph_view.entity_to_edit = entity_to_edit;
+            }
         });
 
         document.addEventListener("adwlm-filesystem-manager:clear-entity-editor", (event) => {
@@ -1302,6 +1333,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/',
                     projectDomain: 'urn:uuid:'
                 };
+                this._selected_repository_path = 'default'
             }
             
             return this._cachedConfig;

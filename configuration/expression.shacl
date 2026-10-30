@@ -469,7 +469,7 @@ melod:Contribution
   sh:property   [ sh:description  "Choose Person or Institution..."@en, "Wähle Person oder Institution..."@de ;
                   sh:name         "Person/Institution"@en, "Person/Institution"@de ;
                   sh:maxCount  1 ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:path      melod:hasAgent ;
                   sh:nodeKind sh:IRI ;
                   sh:or (
@@ -546,7 +546,7 @@ melod:Key
   owl:imports     terms:melod-terms.ttl ;
   sh:property   [ sh:description "Pitch"@en, "Tonhöhe"@de ;
                   sh:name      "Pitch"@en, "Tonhöhe"@de ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:hasPitch ;
                   sh:class melod:Pitch ;
@@ -559,7 +559,7 @@ melod:Key
                   sh:class melod:Accidental ;
                 ] ;
   sh:property   [ sh:name      "Mode"@en, "Tonart"@de ;
-                  sh:minCount  1 ;
+                  sh:minCount  0 ;
                   sh:maxCount  1 ;
                   sh:path      melod:isInMode ;
                   sh:class melod:Mode ;
