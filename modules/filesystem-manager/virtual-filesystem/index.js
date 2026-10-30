@@ -2395,7 +2395,13 @@ export default class ADWLMVirtualFilesystem {
                     };
 
                     console.log(`Index updated successfully for ${folderName}`);
-                } else {
+                } 
+                else if (indexContent !== '' && indexFile === '') {
+                    const indexPath = `indexes/${folderName}.ttl`;
+                    await this.save_and_stage_file(repository_path, indexContent, indexPath);
+                    console.log(`Saved new index file for: ${folderName}.`)
+                }
+                else {
                     console.warn(`No existing index file found for folder: ${folderName}.`);
                 }
                 
