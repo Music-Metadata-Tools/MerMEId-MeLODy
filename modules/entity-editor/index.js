@@ -514,10 +514,12 @@ export default class ADWLMEntityEditor extends LitElement {
         
         // Pass the full entity path
         const config = await this._getRepoConfig();
-        const workCollectionIri = this._getWorkDataCollectionIri(config);
-        const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
-        this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
-        this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+        if (!this._selected_repository_path === 'default') {
+            const workCollectionIri = this._getWorkDataCollectionIri(config);
+            const manifestationCollectionIri = this._getManifestationDataCollectionIri(config);
+            this._ensureWorkDataCollectionMembership(entity_to_edit, workCollectionIri);
+            this._ensureManifestationDataCollectionMembership(entity_to_edit, manifestationCollectionIri);
+        }
 
         if (config && config.datasetBaseUrl) {
             try {
@@ -1312,6 +1314,7 @@ export default class ADWLMEntityEditor extends LitElement {
                     datasetBaseUrl: 'https://adwmainz.pages.gitlab.rlp.net/nfdi4culture/cdmd/project_templates/mermeid-template/datasets/',
                     projectDomain: 'urn:uuid:'
                 };
+                this._selected_repository_path = 'default'
             }
             
             return this._cachedConfig;

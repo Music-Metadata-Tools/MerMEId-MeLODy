@@ -1041,7 +1041,9 @@ export default class ADWLMFilesystemManager extends LitElement {
             await this._list_repository_names();
 
             await this._updateHasRemote();
-            await this._ensureCatalogAndMainFeed(this._selected_repository_path);
+            if (!this._selected_repository_path === 'default') {
+                await this._ensureCatalogAndMainFeed(this._selected_repository_path);
+            }
 
             add_repository_dialog.reset();
 

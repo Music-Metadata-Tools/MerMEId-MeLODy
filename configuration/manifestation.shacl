@@ -127,7 +127,6 @@ melod:Manifestation
                 ] ;
   sh:property   [ sh:description "DataCollections" ;
                   sh:name "Data Collections" ;
-                  sh:minCount 1 ;
                   sh:group melod:Relation ;
                   sh:class melod:DataCollectionEntity ;
                   sh:nodeKind sh:IRI ;
