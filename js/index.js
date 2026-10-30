@@ -280,6 +280,12 @@ document.addEventListener("adwlm-entity-types-dialog:entity-to-add", () => {
         shacl_renderer.removeAttribute("data-values");
         shacl_renderer.removeAttribute("data-shapes-url");
     }
+
+    let graph_view = document.querySelector("adwlm-graph-view");
+            
+    if (graph_view) {
+        graph_view.entity_to_edit = null;
+    }
 });
 
 // TODO: move separately
