@@ -173,7 +173,7 @@ ${watermark.dimensions.map(dimension => `               <${dimension.type || ''}
                 <annot>${inscription.description.length > 0 ? inscription.description.map(description => `<p>${description || ''}</p>`).join('\n') : '<p/>' }</annot>
             </inscription>`).join('\n') : '' }
             ${data.hands?.length > 0 ? `<handList>
-${data.hands.map(hand => `           <hand type="${hand.type.split('#')[1]}" medium="${hand.medium?.split('#')[1]}"><persName sameas="${hand.agent || ''}"/>${hand.description || ''}</hand>`
+${data.hands.map(hand => `           <hand type="${hand.type?.split('#')[1]}" medium="${hand.medium?.split('#')[1]}"><persName sameas="${hand.agent || ''}"/>${hand.description || ''}</hand>`
             ).join('\n')}
         </handList>` : ''}
     </physDesc>` : '' ,
