@@ -9,7 +9,7 @@ construct {
     skos:prefLabel ?label ;
     skos:related ?catalog_iri .
 } where {
-  select ?collection_iri ?label where {
+  select ?catalog_iri ?label where {
     ?collection_iri a melod:DataCollection .
     ?collection_iri rdfs:label ?label .
     OPTIONAL {
