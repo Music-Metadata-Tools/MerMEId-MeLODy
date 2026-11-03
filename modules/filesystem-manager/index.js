@@ -536,22 +536,23 @@ export default class ADWLMFilesystemManager extends LitElement {
                     return;
                 }
 
-                const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
-                
-                if (canMerge[1] === 0) {
-                        const alert = document.createElement('sl-alert');
-                        alert.variant = 'success';
-                        alert.closable = true;
-                        alert.duration = 6000;
-                        alert.innerHTML = `
-                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                            Synchronizing is not necessary: There are no remote changes.
-                        `;
-                        document.body.append(alert);
-                        alert.toast();
-                        target.loading = false;
-                        return;
-                    }
+                // CORS PROXY REMNANT (commented out, pending deletion): canPullSafely() always returned [true, 1], so this "no remote changes" branch never ran.
+                // const canMerge = await filesystem.canPullSafely(this._selected_repository_path, this._staged_files);
+                //
+                // if (canMerge[1] === 0) {
+                //         const alert = document.createElement('sl-alert');
+                //         alert.variant = 'success';
+                //         alert.closable = true;
+                //         alert.duration = 6000;
+                //         alert.innerHTML = `
+                //             <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                //             Synchronizing is not necessary: There are no remote changes.
+                //         `;
+                //         document.body.append(alert);
+                //         alert.toast();
+                //         target.loading = false;
+                //         return;
+                //     }
 
                 // Alert unsaved changes might be deleted or overwritten after pull
                 if (this._hasUnsavedChanges) {
@@ -570,39 +571,40 @@ export default class ADWLMFilesystemManager extends LitElement {
                     return;
                 }
 
-                // Alert that staged files might be deleted or overwritten after pull
-                if (this._staged_files && this._staged_files.length > 0) {
-                    
-                    if (canMerge[1] === 0) {
-                        const alert = document.createElement('sl-alert');
-                        alert.variant = 'success';
-                        alert.closable = true;
-                        alert.duration = 6000;
-                        alert.innerHTML = `
-                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                            Synchronizing is not necessary: There are no remote changes.
-                        `;
-                        document.body.append(alert);
-                        alert.toast();
-                        target.loading = false;
-                        return;
-                    }
-                    else if (canMerge[0] === false) {
-                        const alert = document.createElement('sl-alert');
-                        alert.variant = 'danger';
-                        alert.closable = true;
-                        alert.duration = 6000;
-                        alert.innerHTML = `
-                            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                            Synchronizing is not possible: Some files have been modified both locally and remotely. 
-                            Please undo your local changes before synchronizing.
-                        `;
-                        document.body.append(alert);
-                        alert.toast();
-                        target.loading = false;
-                        return;
-                    }
-                }
+                // CORS PROXY REMNANT (commented out, pending deletion): staged-file conflict check based on canPullSafely(), never triggered since it always returned [true, 1].
+                // // Alert that staged files might be deleted or overwritten after pull
+                // if (this._staged_files && this._staged_files.length > 0) {
+                //
+                //     if (canMerge[1] === 0) {
+                //         const alert = document.createElement('sl-alert');
+                //         alert.variant = 'success';
+                //         alert.closable = true;
+                //         alert.duration = 6000;
+                //         alert.innerHTML = `
+                //             <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                //             Synchronizing is not necessary: There are no remote changes.
+                //         `;
+                //         document.body.append(alert);
+                //         alert.toast();
+                //         target.loading = false;
+                //         return;
+                //     }
+                //     else if (canMerge[0] === false) {
+                //         const alert = document.createElement('sl-alert');
+                //         alert.variant = 'danger';
+                //         alert.closable = true;
+                //         alert.duration = 6000;
+                //         alert.innerHTML = `
+                //             <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                //             Synchronizing is not possible: Some files have been modified both locally and remotely. 
+                //             Please undo your local changes before synchronizing.
+                //         `;
+                //         document.body.append(alert);
+                //         alert.toast();
+                //         target.loading = false;
+                //         return;
+                //     }
+                // }
 
                 let pull_result = null;
                 try {

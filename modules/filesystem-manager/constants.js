@@ -1,4 +1,5 @@
-export const CORS_PROXY = "https://cors.isomorphic-git.org";
+// CORS PROXY REMNANT (commented out, pending deletion): the editor no longer uses a CORS proxy, all remote access goes via the GitHub/GitLab API.
+// export const CORS_PROXY = "https://cors.isomorphic-git.org";
 
 export const REPO_FOLDER_SCHEME_NAME = "repofolder";
 
