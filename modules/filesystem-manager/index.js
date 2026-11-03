@@ -463,34 +463,71 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (target.matches("sl-button#remove-repository")) {
                 target.loading = true;
 
-                await filesystem.remove_repository(this._selected_repository_path);
-                await filesystem.remove_local_repository(this._selected_repository_path.split("/")[1]);
-                await this._list_repository_names();
+                // Show warning dialog
+                const dialog = document.createElement('sl-dialog');
+                dialog.label = 'Remove repository';
+                dialog.innerHTML = `
+                    <p>Do you want to remove the repository?</p>
+                    <sl-button slot="footer" variant="neutral" id="cancel">Cancel</sl-button>
+                    <sl-button slot="footer" variant="primary" id="continue">Continue</sl-button>
+                `;
 
-                // Clear staged files details
-                await this._list_staged_files();
-                this._hasUnsharedFiles = false;
-                this._hasSelectedFiles = false;
-                this._staged_files = [];
+                // Add event listener for dialog close request (x button or cancel button)
+                dialog.addEventListener('sl-request-close', (event) => {
+                    target.loading = false;
+                    dialog.hide();
+                    setTimeout(() => {
+                        dialog.remove();
+                        this._skipNextUpdate = false;
+                    }, 100);
+                });
 
-                // Disable buttons and details
-                this._repository_buttons_disabled = true;
-                this._hasRemote = false;
-                staged_files_details.disabled = true;
+                // Handle dialog buttons
+                dialog.querySelector('#cancel').addEventListener('click', () => {
+                    target.loading = false;
+                    dialog.hide();
+                    setTimeout(() => {
+                        dialog.remove();
+                        this._skipNextUpdate = false;
+                    }, 100);
+                });
 
-                // Clear the entity editor
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
-                    "bubbles": true,
-                    "composed": true,
-                }));
+                dialog.querySelector('#continue').addEventListener('click', async () => {
+                    await filesystem.remove_repository(this._selected_repository_path);
+                    await filesystem.remove_local_repository(this._selected_repository_path.split("/")[1]);
+                    await this._list_repository_names();
 
-                // Notify entity-search to reload indexes
-                document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
-                    bubbles: true,
-                    composed: true
-                }));
+                    // Clear staged files details
+                    await this._list_staged_files();
+                    this._hasUnsharedFiles = false;
+                    this._hasSelectedFiles = false;
+                    this._staged_files = [];
 
-                target.loading = false;
+                    // Disable buttons and details
+                    this._repository_buttons_disabled = true;
+                    this._hasRemote = false;
+                    staged_files_details.disabled = true;
+                    target.loading = false;
+
+                    // Clear the entity editor
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+
+                    // Notify entity-search to reload indexes
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    dialog.hide();
+                    setTimeout(() => dialog.remove(), 100); // Clean up dialog after animation
+                });
+
+                document.body.append(dialog);
+                dialog.show();
+                return; // Stop further processing until user decides
+
             }
 
             if (target.matches("sl-button.rename-entry")) {
