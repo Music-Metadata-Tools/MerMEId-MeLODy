@@ -7,7 +7,7 @@ prefix cs: <https://lod.academy/correspsearch/vocab/terms#>
 prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>
 
 construct {
-  ?letter_iri a melod:Letter ;
+  ?letter_iri a melod:LetterEntity ;
   	skos:prefLabel ?label ;
     skos:related ?person_iri ;
     skos:related ?place_iri ;

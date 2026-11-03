@@ -162,7 +162,10 @@ melod:Work
                   sh:minCount 0 ;
                   #sh:defaultValue "https://mei-metadata.org/bibliography/" ;
                   #sh:pattern      "^https://mei-metadata.org/bibliography/\\d{8}" ;
-                  sh:class melod:BibliographyEntity ;
+                  sh:or (
+                    [ sh:class melod:BibliographyEntity ; rdfs:label "Bibliography" ]
+                    [ sh:class melod:LetterEntity ; rdfs:label "Letter" ]
+                  ) ;
                   sh:path schema:citation ;
                   sh:group melod:Evidence
                 ] ;
