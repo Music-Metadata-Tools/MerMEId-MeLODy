@@ -464,34 +464,71 @@ export default class ADWLMFilesystemManager extends LitElement {
             if (target.matches("sl-button#remove-repository")) {
                 target.loading = true;
 
-                await filesystem.remove_repository(this._selected_repository_path);
-                await filesystem.remove_local_repository(this._selected_repository_path.split("/")[1]);
-                await this._list_repository_names();
+                // Show warning dialog
+                const dialog = document.createElement('sl-dialog');
+                dialog.label = 'Remove repository';
+                dialog.innerHTML = `
+                    <p>Do you want to remove the repository?</p>
+                    <sl-button slot="footer" variant="neutral" id="cancel">Cancel</sl-button>
+                    <sl-button slot="footer" variant="primary" id="continue">Continue</sl-button>
+                `;
 
-                // Clear staged files details
-                await this._list_staged_files();
-                this._hasUnsharedFiles = false;
-                this._hasSelectedFiles = false;
-                this._staged_files = [];
+                // Add event listener for dialog close request (x button or cancel button)
+                dialog.addEventListener('sl-request-close', (event) => {
+                    target.loading = false;
+                    dialog.hide();
+                    setTimeout(() => {
+                        dialog.remove();
+                        this._skipNextUpdate = false;
+                    }, 100);
+                });
 
-                // Disable buttons and details
-                this._repository_buttons_disabled = true;
-                this._hasRemote = false;
-                staged_files_details.disabled = true;
+                // Handle dialog buttons
+                dialog.querySelector('#cancel').addEventListener('click', () => {
+                    target.loading = false;
+                    dialog.hide();
+                    setTimeout(() => {
+                        dialog.remove();
+                        this._skipNextUpdate = false;
+                    }, 100);
+                });
 
-                // Clear the entity editor
-                this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
-                    "bubbles": true,
-                    "composed": true,
-                }));
+                dialog.querySelector('#continue').addEventListener('click', async () => {
+                    await filesystem.remove_repository(this._selected_repository_path);
+                    await filesystem.remove_local_repository(this._selected_repository_path.split("/")[1]);
+                    await this._list_repository_names();
 
-                // Notify entity-search to reload indexes
-                document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
-                    bubbles: true,
-                    composed: true
-                }));
+                    // Clear staged files details
+                    await this._list_staged_files();
+                    this._hasUnsharedFiles = false;
+                    this._hasSelectedFiles = false;
+                    this._staged_files = [];
 
-                target.loading = false;
+                    // Disable buttons and details
+                    this._repository_buttons_disabled = true;
+                    this._hasRemote = false;
+                    staged_files_details.disabled = true;
+                    target.loading = false;
+
+                    // Clear the entity editor
+                    this.dispatchEvent(new CustomEvent("adwlm-filesystem-manager:clear-entity-editor", {
+                        "bubbles": true,
+                        "composed": true,
+                    }));
+
+                    // Notify entity-search to reload indexes
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:clear-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    dialog.hide();
+                    setTimeout(() => dialog.remove(), 100); // Clean up dialog after animation
+                });
+
+                document.body.append(dialog);
+                dialog.show();
+                return; // Stop further processing until user decides
+
             }
 
             if (target.matches("sl-button.rename-entry")) {
@@ -698,14 +735,13 @@ export default class ADWLMFilesystemManager extends LitElement {
                     ];
 
                     if (affected_paths.length > 0) {
-                        const deleted_path_set = new Set(pull_result?.deletedPaths ?? []);
-
-                        for (const path of affected_paths) {
+                        for (const path of this._staged_files) {
                             try {
+                                let isDeleted = path.endsWith('-deleted');
                                 await filesystem.generate_indexes_for_saved_file(
                                     this._selected_repository_path,
                                     path,
-                                    deleted_path_set.has(path),
+                                    isDeleted,
                                 );
                             } catch (error) {
                                 console.error('Failed to update index for', path, error);
@@ -752,7 +788,21 @@ export default class ADWLMFilesystemManager extends LitElement {
                 //     for (const file of staged_before_pull) { ...restore... }
                 // }
                 // ---------------------------------------------------------------------
-
+                const hasToken = await filesystem.has_token(this._selected_repository_path);
+                if (!hasToken) {
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        No personal access token. Sharing is not possible. 
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                    target.loading = false;
+                    return;
+                }
                 let staged_file_nodes = [...staged_files_tree.querySelectorAll("sl-tree-item")];
                 let selected_staged_file_paths = staged_file_nodes
                     .filter(item => item.selected)
@@ -797,7 +847,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 ];
 
                 this._commit_message = render_root.querySelector('#commit-message-field')?.value ?? '';
-
+                
+                
                 // Check the pushed paths against their current remote content -
                 // if any differ, let the user decide per file via the popup.
                 let conflicts = [];
@@ -845,6 +896,131 @@ export default class ADWLMFilesystemManager extends LitElement {
                     push_conflict_dialog.show();
                     target.loading = false;
                     return;
+                }
+                // pull files without staged files
+                
+                let pull_result = null;
+                try {
+                    let staged_before_pull = [];
+                    if (this._staged_files && this._staged_files.length > 0) {
+                        staged_before_pull = await Promise.all(
+                            this._staged_files.map(async (path) => {
+                                const isDeleted = path.endsWith('-deleted');
+
+                                if (isDeleted) {
+                                    return {
+                                        path,
+                                        isDeleted: true
+                                    };
+                                }
+
+                                const content = await filesystem.read_file(
+                                    this._selected_repository_path,
+                                    path
+                                );
+
+                                return {
+                                    path,
+                                    content,
+                                    isDeleted: false
+                                };
+                            })
+                        );
+                    }
+
+                    pull_result = await filesystem.pull(this._selected_repository_path);
+                    const affected_paths = [
+                        ...(pull_result?.changedPaths ?? []),
+                        ...(pull_result?.deletedPaths ?? []),
+                    ];
+
+                    if (affected_paths.length > 0) {
+                        for (const file of staged_before_pull) {
+                            try {
+                                if (file.isDeleted) {
+                                    const originalPath = file.path.replace(/-deleted$/, '');
+
+                                    await filesystem.add_file(
+                                        this._selected_repository_path,
+                                        originalPath
+                                    );
+                                } else {
+                                    await filesystem.save_and_stage_file(
+                                        this._selected_repository_path,
+                                        file.content,
+                                        file.path
+                                    );
+                                }
+                            } catch (e) {
+                                console.error("Failed to restore staged file:", file.path, e);
+                            }
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to synchronize:', error);
+                    // Show error notification
+                    const alert = document.createElement('sl-alert');
+                    alert.variant = 'danger';
+                    alert.closable = true;
+                    alert.duration = 6000;
+                    alert.innerHTML = `
+                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                        Failed to synchronize with remote repository
+                        <br><br>
+                        <em>${error.message}</em>
+                    `;
+                    document.body.append(alert);
+                    alert.toast();
+                } finally {
+                    const affected_paths = [
+                        ...(pull_result?.changedPaths ?? []),
+                        ...(pull_result?.deletedPaths ?? []),
+                    ];
+                    if (affected_paths.length > 0) {
+                        // Show success notification
+                        const alert = document.createElement('sl-alert');
+                        alert.variant = 'success';
+                        alert.closable = true;
+                        alert.duration = 6000;
+                        alert.innerHTML = `
+                            <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                            Successfully synchronized with remote repository.
+                        `;
+                        document.body.append(alert);
+                        alert.toast();
+
+                        
+                        // generate indexes
+
+                        for (const path of this._staged_files) {
+                            try {
+                                let isDeleted = path.endsWith('-deleted');
+                                await filesystem.generate_indexes_for_saved_file(
+                                    this._selected_repository_path,
+                                    path,
+                                    isDeleted,
+                                );
+                            } catch (error) {
+                                console.error('Failed to update index for', path, error);
+                            }
+                        }
+                    }
+
+                    // Notify entity-search to reload indexes
+                    document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    
+
+                    // Update repository tree
+                    if (this._selected_repository_path) {
+                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                        if (repoTree) {
+                            this._generate_folder_tree(repoTree);
+                        }
+                    }
                 }
 
                 await this._performPush(target, staged_file_paths, selected_staged_file_paths);

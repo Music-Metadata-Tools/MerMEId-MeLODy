@@ -871,6 +871,8 @@ export default class ADWLMEntityEditor extends LitElement {
                         "bubbles": true,
                         "composed": true,
                     }));
+                    // Remember the saved state so that "undo" resets to it
+                    this.entity_to_edit.contents = rdf_output;
                     this._hasUnsavedChanges = false;
                 }
             }
