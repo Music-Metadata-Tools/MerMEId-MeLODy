@@ -362,6 +362,10 @@ export default class ADWLMFilesystemManager extends LitElement {
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
 
+        render_root.addEventListener("adwlm-repository-settings-dialog:config-changed", () => {
+            this._cachedConfig = null;
+        });
+
         render_root.addEventListener("sl-lazy-load", async (event) => {
             let target = event.target;
 
@@ -1421,7 +1425,7 @@ export default class ADWLMFilesystemManager extends LitElement {
                         const generatedIndexes = await filesystem.generate_indexes_for_saved_file(
                             this._selected_repository_path,
                             entity_to_save.path, false
-                        );
+                        ) ?? {};
                         // Quick Add: hand the new index entries to the entity editor, so the
                         // originating form can offer (and select) the new entity without a sync
                         const indexContent = generatedIndexes[result.folder]?.index;

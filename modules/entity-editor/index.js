@@ -604,6 +604,11 @@ export default class ADWLMEntityEditor extends LitElement {
             const config = await this._getRepoConfig();
         });
 
+        document.addEventListener('adwlm-repository-settings-dialog:config-changed', async () => {
+            this._cachedConfig = null;
+            await this._getRepoConfig();
+        });
+
         document.addEventListener('adwlm-filesystem-manager:item-selected', async (event) => {
             this._selected_repository_path = event.detail.repositoryPath;
             // Clear cached config when repository changes

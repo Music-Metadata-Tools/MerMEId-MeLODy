@@ -6,6 +6,8 @@ import { createProvider, ensureDir, pushViaApi, mapWithConcurrency } from "../ap
 import FSADirectoryFilesystem from "./fsa-directory-filesystem.js";
 import OPFSDirectoryFilesystem from "./opfs-directory-filesystem.js";
 import LocalRepositoryStore from "./local-repository-store.js";
+
+const CONFIG_PATH = "configuration/config.json";
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
@@ -717,6 +719,34 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
+    // Writes configuration/config.json locally; not listed as staged, pushed with the next push.
+    async save_config_file(repository_path, file_contents) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const absolute_path = this._get_path_for_repository(repository_path, CONFIG_PATH);
+
+        let snapshot = {};
+        try {
+            snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+        } catch (error) {
+            // no snapshot yet
+        }
+        if (!(CONFIG_PATH in snapshot)) {
+            snapshot[CONFIG_PATH] = await fs.promises.readFile(absolute_path, "utf8");
+            await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+        }
+
+        await fs.promises.writeFile(absolute_path, file_contents, { encoding: "utf8", flag: "w" });
+    }
+
+    async _isConfigChanged(repository_path) {
+        try {
+            const snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
+            return CONFIG_PATH in snapshot && snapshot[CONFIG_PATH] !== await this.read_file(repository_path, CONFIG_PATH);
+        } catch (error) {
+            return false;
+        }
+    }
+
     // Lazy repos: downloads paths listed in .remote-tree.json that are not on
     // disk yet. No-op for repos without a manifest.
     async _ensureFilesDownloaded(repository_path, file_relative_paths) {
@@ -1313,6 +1343,10 @@ export default class ADWLMVirtualFilesystem {
         }
 
         let { changed_paths, deleted_paths, directory_paths } = this._derivePathsToPush(staged_file_paths, selected_staged_file_paths);
+
+        if (await this._isConfigChanged(repository_path)) {
+            changed_paths.push(CONFIG_PATH);
+        }
 
         if (directory_paths.length > 0) {
             console.warn("Skipping non-file entries (directories) from push:", directory_paths);
