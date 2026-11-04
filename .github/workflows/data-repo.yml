@@ -1,0 +1,124 @@
+# Central CI for MerMEId MeLODy data repositories on GitHub (reusable workflow, not run in this repository).
+# Call from the data repository's .github/workflows/pages.yml:
+#   jobs:
+#     data-repo:
+#       uses: Music-Metadata-Tools/MerMEId-MeLODy/.github/workflows/data-repo.yml@main
+#       permissions:
+#         contents: write
+# editor_ref should match the ref after "@".
+# The caller must also run on pushes to melody/project-domain (created by the editor); those run only
+# change_project_domain.
+
+name: MerMEId MeLODy data repository
+
+on:
+  workflow_call:
+    inputs:
+      editor_ref:
+        type: string
+        default: main
+      editor_repo_url:
+        type: string
+        default: https://raw.githubusercontent.com/Music-Metadata-Tools/MerMEId-MeLODy
+
+jobs:
+
+  fetch_sparql_queries:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
+    steps:
+      - name: Fetch CI files
+        run: |
+          apk add --no-cache curl
+          curl --fail --silent --show-error "${EDITOR_REPO_URL}/${EDITOR_REPO_REF}/ci/scripts/fetch-ci-files.sh" | sh -s -- melody-ci
+        env:
+          EDITOR_REPO_URL: ${{ inputs.editor_repo_url }}
+          EDITOR_REPO_REF: ${{ inputs.editor_ref }}
+
+      - name: Upload CI files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: melody-ci
+          path: melody-ci
+
+  generate_datasets:
+    runs-on: ubuntu-latest
+    needs: fetch_sparql_queries
+    if: github.ref_name != 'melody/project-domain'
+    container:
+      image: registry.gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/static-publishing-backend/static-publishing-backend:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download CI files artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: melody-ci
+          path: melody-ci
+
+      - name: Generate datasets
+        run: sh melody-ci/datasets-generator.sh melody-ci/queries
+
+      - name: Upload indexes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: indexes
+          path: indexes
+
+  push-indexes:
+    runs-on: ubuntu-latest
+    needs: generate_datasets
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download indexes artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: indexes
+          path: indexes
+
+      - name: Commit and push indexes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@github.com"
+          git add indexes
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Updated indexes [skip ci]"
+          git push origin main
+
+  change_project_domain:
+    runs-on: ubuntu-latest
+    needs: fetch_sparql_queries
+    if: github.ref_name == 'melody/project-domain'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download CI files artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: melody-ci
+          path: melody-ci
+
+      - name: Change project domain
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@github.com"
+          sh melody-ci/apply-project-domain.sh melody/project-domain main

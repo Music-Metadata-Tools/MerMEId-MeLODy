@@ -1,0 +1,74 @@
+# Central CI for MerMEId MeLODy data repositories on GitLab.
+# Include in the data repository's .gitlab-ci.yml:
+#   include:
+#     - remote: https://raw.githubusercontent.com/Music-Metadata-Tools/MerMEId-MeLODy/main/ci/gitlab/data-repo.yml
+# EDITOR_REPO_REF should match the ref in the include URL.
+# A push to the branch melody/project-domain (created by the editor) runs only change_project_domain.
+
+variables:
+  GIT_SSL_NO_VERIFY: "true"
+  GIT_DEPTH: 1
+  EDITOR_REPO_URL: https://raw.githubusercontent.com/Music-Metadata-Tools/MerMEId-MeLODy
+  EDITOR_REPO_REF: main
+
+stages:
+- preparing
+- pushing
+
+fetch_sparql_queries:
+  image: alpine:latest
+  stage: preparing
+  before_script:
+  - apk add --no-cache curl
+  script:
+  - curl --fail --silent --show-error "${EDITOR_REPO_URL}/${EDITOR_REPO_REF}/ci/scripts/fetch-ci-files.sh" | sh -s -- melody-ci
+  artifacts:
+    paths:
+    - melody-ci
+
+generate_datasets:
+  image: registry.gitlab.rlp.net/adwmainz/nfdi4culture/cdmd/static-publishing-backend/static-publishing-backend:latest
+  stage: preparing
+  needs:
+  - fetch_sparql_queries
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "melody/project-domain"'
+    when: never
+  - when: on_success
+  script:
+  - sh melody-ci/datasets-generator.sh melody-ci/queries
+  artifacts:
+    paths:
+    - indexes
+
+push_indexes:
+  image: alpine:latest
+  stage: pushing
+  needs:
+  - generate_datasets
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+  - apk add --no-cache git
+  script:
+  - git config user.email "ci@gitlab.rlp.net"
+  - git config user.name "GitLab CI"
+  - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+  - git add indexes
+  - git diff --staged --quiet || git commit -m "Updated indexes [skip ci]"
+  - git push origin HEAD:${CI_COMMIT_BRANCH}
+
+change_project_domain:
+  image: alpine:latest
+  stage: pushing
+  needs:
+  - fetch_sparql_queries
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "melody/project-domain"'
+  before_script:
+  - apk add --no-cache git jq
+  script:
+  - git config user.email "ci@gitlab.rlp.net"
+  - git config user.name "GitLab CI"
+  - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+  - sh melody-ci/apply-project-domain.sh melody/project-domain main
