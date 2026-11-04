@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { filesystemService } from "../../services/filesystem-service.js";
+import { getProjectDomain } from "../../services/project-domain.js";
 
 const filesystem = filesystemService.getInstance();
 
@@ -130,13 +131,13 @@ export default class ADWLMCatalogMetadataDialog extends LitElement {
             const configContent = await filesystem.read_file(repository_path, "configuration/config.json");
             if (configContent && configContent.trim() !== "") {
                 const config = JSON.parse(configContent);
-                return config?.projectDomain ?? "urn:uuid:";
+                return getProjectDomain(config);
             }
         } catch (error) {
             // fall through to default domain
         }
 
-        return "urn:uuid:";
+        return getProjectDomain(null);
     }
 
     _toast_error() {

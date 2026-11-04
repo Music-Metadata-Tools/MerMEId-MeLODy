@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import "./entity-types-dialog/index.js";
 import { filesystemService } from "../services/filesystem-service.js";
+import { getProjectDomain, iriToEntityPath } from "../services/project-domain.js";
 
 const styles =
     css`
@@ -318,7 +319,7 @@ export default class ADWLMEntityEditor extends LitElement {
         if (changedProperties.has('_cachedConfig')) {
             if (this._cachedConfig != null) {
             this.dispatchEvent(new CustomEvent("adwlm-entity-editor:cached-config", {
-                "detail": { datasetBaseUrl: this._cachedConfig.datasetBaseUrl , projectDomain: this._cachedConfig.projectDomain },
+                "detail": { datasetBaseUrl: this._cachedConfig.datasetBaseUrl , projectDomain: getProjectDomain(this._cachedConfig) },
                 "bubbles": true,
                 "composed": true,
             }));
@@ -331,8 +332,11 @@ export default class ADWLMEntityEditor extends LitElement {
 
             const path = event.composedPath();
 
-            const link = path.find(el => 
-                el instanceof HTMLAnchorElement && el.classList.contains("uuid")
+            // Internal entity links: class "uuid" (urn:uuid:) or projectDomain prefix
+            const domain = getProjectDomain(this._cachedConfig);
+            const link = path.find(el =>
+                el instanceof HTMLAnchorElement
+                && (el.classList.contains("uuid") || el.getAttribute("href")?.startsWith(domain))
             );
 
             if (!link) return;
@@ -343,14 +347,13 @@ export default class ADWLMEntityEditor extends LitElement {
 
             if (!href) return;
 
-            // dein # Fix
-            const clean = href.replace(/^#?urn:uuid:/, "");
-
-            await this._openSidePanel(clean);
+            // urn:uuid: links have a leading "#"
+            const iri = href.replace(/^#/, "");
+            await this._openSidePanel(iriToEntityPath(iri), iri);
         });
     }
 
-    async _openSidePanel(relativePath) {
+    async _openSidePanel(relativePath, subject) {
         try {
             const filesystem = filesystemService.getInstance();
 
@@ -359,12 +362,12 @@ export default class ADWLMEntityEditor extends LitElement {
                 `${relativePath}.ttl`
             );
 
-            const subject = `urn:uuid:${relativePath}`;
             let entity_type = this._detectEntityType(relativePath);
             const shapeUrl = await this._getShapeForPath(entity_type);
 
             this._sidePanelEntity = {
                 values: ttl,
+                path: relativePath,
                 subject,
                 shapesUrl: shapeUrl,
                 entity_type
@@ -440,7 +443,7 @@ export default class ADWLMEntityEditor extends LitElement {
     _openInEditor() {
         if (!this._sidePanelEntity) return;
 
-        const path = this._sidePanelEntity.subject.replace("urn:uuid:", "");
+        const path = this._sidePanelEntity.path;
 
         let filename = `${path}.ttl`;
 
@@ -1034,7 +1037,7 @@ export default class ADWLMEntityEditor extends LitElement {
             let entity_folder_name = entity_type_definition.folder_name;
             let entity_id = this._generate_entity_id();
             const config = await this._getRepoConfig();
-            const domain = config?.projectDomain ?? 'urn:uuid:';
+            const domain = getProjectDomain(config);
             let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
             let entity_path = `${entity_folder_name}/${entity_id_prefix}${entity_id}.ttl`;
             let entity_iri = `${domain}${entity_folder_name}/${entity_id_prefix}${entity_id}`;
@@ -1118,7 +1121,7 @@ export default class ADWLMEntityEditor extends LitElement {
 
         // Open the side-panel preview when the graph-view requests it
         document.addEventListener("adwlm-graph-view:preview-entity", async (event) => {
-            await this._openSidePanel(event.detail.relativePath);
+            await this._openSidePanel(event.detail.relativePath, event.detail.subject);
         });
     }
 
@@ -1215,7 +1218,7 @@ export default class ADWLMEntityEditor extends LitElement {
         }
 
         const config = await this._getRepoConfig().catch(() => null);
-        const domain = config?.projectDomain ?? 'urn:uuid:';
+        const domain = getProjectDomain(config);
         let entity_folder_name = typeDef?.folder_name;
         let entity_id_prefix = config?.IDprefix?.[entity_folder_name] || '';
         const entity_id = this._generate_entity_id();
@@ -1295,12 +1298,12 @@ export default class ADWLMEntityEditor extends LitElement {
     }
 
     _getWorkDataCollectionIri(config) {
-        const domain = config?.projectDomain ?? 'urn:uuid:';
+        const domain = getProjectDomain(config);
         return `${domain}dataCollections/works`;
     }
 
     _getManifestationDataCollectionIri(config) {
-        const domain = config?.projectDomain ?? 'urn:uuid:';
+        const domain = getProjectDomain(config);
         return `${domain}dataCollections/manifestations`;
     }
 

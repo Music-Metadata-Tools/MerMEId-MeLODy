@@ -2082,13 +2082,7 @@ export default class ADWLMVirtualFilesystem {
 
             await this.store.load(rdfContent, { format: 'text/turtle' });
 
-            let result = await this.store.query(sparqlQuery, { type: 'construct', format: 'text/turtle' });
-
-            if (result === null) {
-                console.warn("SPARQL query returned null result");
-                return '';
-            }
-            result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
+            const result = this.store.query(sparqlQuery, { results_format: 'application/n-triples' });
 
             return result || '';
 
@@ -2118,8 +2112,7 @@ export default class ADWLMVirtualFilesystem {
 
             await this.index_store.update(updateQuery);
 
-            let result = this.index_store.query("CONSTRUCT { ?s ?p ?o . } WHERE { ?s ?p ?o . }", { format: 'text/turtle' });
-            result = this._triplesToTurtle(result.toString({ format: 'text/turtle' }));
+            let result = this.index_store.query("CONSTRUCT { ?s ?p ?o . } WHERE { ?s ?p ?o . }", { results_format: 'application/n-triples' });
 
             if (is_deleted===false) {
                 result = updateContent + '\n' + result;
@@ -2132,20 +2125,5 @@ export default class ADWLMVirtualFilesystem {
             console.error('Error executing SPARQL update with Oxygraph:', error);
             return existingIndexContent; 
         }
-    }
-
-    _triplesToTurtle(triples) {
-        let turtle = triples
-            .replace(/>,/g, '> .\n')
-            .replace(/<http/g, '<http')
-            .replace(/,<urn/g, '.\n<urn')
-            .replace(/,<http/g, '.\n<http')
-            .trim();
-
-        if (turtle.length > 0 && !turtle.endsWith('.')) {
-            turtle = turtle + `.`;
-        }
-
-        return turtle;
     }
 }

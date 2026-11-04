@@ -7,6 +7,7 @@ import "./catalog-metadata-dialog/index.js";
 import "./push-conflict-dialog/index.js";
 import * as CONSTANTS from "./constants.js";
 import { filesystemService } from "../services/filesystem-service.js";
+import { getProjectDomain, findEntityIri } from "../services/project-domain.js";
 
 const filesystem = filesystemService.getInstance();
 
@@ -813,10 +814,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 if (conflicts.length > 0) {
                     // Render each conflict via a real <shacl-form>, same as
                     // "Entity Preview" - needs the entity's subject IRI + shape URL.
-                    // Same domain+path pattern entity-editor.js uses elsewhere
-                    // (confirmed via live testing to match the real subject).
                     const config = await this._getRepoConfig();
-                    const domain = config?.projectDomain ?? 'urn:uuid:';
+                    const domain = getProjectDomain(config);
 
                     // Blob URLs from a previous check are done with - free
                     // them before building this batch (see _getShapeUrlForPath()).
@@ -828,7 +827,11 @@ export default class ADWLMFilesystemManager extends LitElement {
                     this._shapeUrlCacheByType = new Map();
 
                     for (const conflict of conflicts) {
-                        conflict.subject = `${domain}${conflict.path.replace(/\.ttl$/, "")}`;
+                        conflict.subject = findEntityIri(
+                            conflict.path.replace(/\.ttl$/, ""),
+                            conflict.local ?? conflict.remote,
+                            domain,
+                        );
                         try {
                             conflict.shapesUrl = await this._getShapeUrlForPath(conflict.path);
                         } catch (error) {
@@ -1466,12 +1469,12 @@ export default class ADWLMFilesystemManager extends LitElement {
         const FEED_PATH = "dataCollections/works.ttl";
         const FEED_PATH_MANIF = "dataCollections/manifestations.ttl";
 
-        let domain = "urn:uuid:";
+        let domain = getProjectDomain(null);
         try {
             const configContent = await filesystem.read_file(repository_path, "configuration/config.json");
             if (configContent && configContent.trim() !== "") {
                 const config = JSON.parse(configContent);
-                domain = config?.projectDomain ?? domain;
+                domain = getProjectDomain(config);
             }
         } catch (error) {
             // No/invalid config.json: fall back to the default domain, matching

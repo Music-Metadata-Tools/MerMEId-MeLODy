@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { filesystemService } from "../services/filesystem-service.js";
 import { indexStoreService, INDEXES } from "../services/index-store-service.js";
+import { iriToEntityPath } from "../services/project-domain.js";
 
 const ALL_FILTER_VALUE = "all";
 
@@ -142,7 +143,6 @@ class ADWLMEntitySearch extends LitElement {
     this._typeFilter = ALL_FILTER_VALUE;
     this._loading = false;
     this._dataset_url = null;
-    this._project_domain = null;
 
     // Listen for repository selection events
     document.addEventListener('adwlm-filesystem-manager:repository-selected', async (event) => {
@@ -158,7 +158,6 @@ class ADWLMEntitySearch extends LitElement {
       let config = event.detail;
       if (config != null) {
         this._dataset_url = config.datasetBaseUrl;
-        this._project_domain = config.projectDomain;
       }
     });
 
@@ -329,12 +328,9 @@ class ADWLMEntitySearch extends LitElement {
 
   async _onSelect(entry) {
     const subject = entry.subject;
-    let raw = subject.includes(this._project_domain) ? subject.split(this._project_domain).pop() : subject;
-
-    const parts = String(raw).split("/").filter(Boolean);
-    const rel = parts.length >= 2 ? parts.slice(-2).join("/") : (parts[0] || "");
-    const filename = rel.endsWith(".ttl") ? rel : `${rel}.ttl`;
-    if (!filename || filename === ".ttl") return;
+    const rel = iriToEntityPath(subject);
+    if (!rel) return;
+    const filename = `${rel}.ttl`;
 
     const filesystemManager = document.querySelector("adwlm-filesystem-manager");
     if (filesystemManager?.selectEntityInTree) {

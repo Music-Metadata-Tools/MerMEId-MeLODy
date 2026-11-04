@@ -87,9 +87,9 @@ let filesystem_manager = document.querySelector("adwlm-filesystem-manager");
 let entity_editor = document.querySelector("adwlm-entity-editor");
 
 function convertJsonLdToXml(json_ld_contents) {
-    // First find the subject entity (the one with urn:uuid)
-    const subjectEntity = json_ld_contents.find(item => 
-        {if (item['@id'] && item['@id'].startsWith('urn:uuid') && item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']) {
+    // Subject entity: typed node that is not a blank node
+    const subjectEntity = json_ld_contents.find(item =>
+        {if (item['@id'] && !item['@id'].startsWith('_:') && item['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']) {
                 return item['@id'];
             }}
     );
@@ -289,7 +289,6 @@ document.addEventListener("adwlm-quick-add:entity-to-save", (event) => {
 // });
 
 // TODO: move separately
-// TODO: change "urn:uuid:" to project specific variable
 const supported_ui_languages = new Set(["en", "de"]);
 let ui_language = document.documentElement.lang || "en";
 document.documentElement.lang = ui_language;
@@ -323,7 +322,7 @@ let SparqlQueries = {
         select ?entity_iri ?entity_type
         where {
             ?entity_iri a ?entity_type .
-            filter(strstarts(str(?entity_iri), "urn:uuid:"))
+            filter(isIRI(?entity_iri))
             filter(strstarts(str(?entity_type), "https://lod.academy/melod/vocab/ontology#"))
         }
     `,

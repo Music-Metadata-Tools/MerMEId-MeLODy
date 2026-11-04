@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg, nothing } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { indexStoreService } from "../services/index-store-service.js";
+import { iriToEntityPath } from "../services/project-domain.js";
 
 // Entity type, display colour mapping
 const TYPE_COLORS = {
@@ -697,11 +698,11 @@ class ADWLMGraphView extends LitElement {
   }
 
   _onNodeClick(node) {
-    const relativePath = node.subject.replace(/^urn:uuid:/, "");
+    const relativePath = iriToEntityPath(node.subject);
     if (!relativePath) return;
     document.dispatchEvent(
       new CustomEvent("adwlm-graph-view:preview-entity", {
-        detail: { relativePath },
+        detail: { relativePath, subject: node.subject },
         bubbles: true,
       })
     );
@@ -847,7 +848,7 @@ class ADWLMGraphView extends LitElement {
     const BADGE_OFF = R_NODE * Math.SQRT1_2;
 
     const currentLabel = this.entity_to_edit.entity_iri
-      .split("/")[1];
+      .split("/").pop();
     const currentType = this.entity_to_edit.entity_type;
     const currentColor = this._getTypeColor(currentType);
     const currentTypeName = this._getTypeName(currentType);
