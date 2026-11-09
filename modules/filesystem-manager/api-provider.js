@@ -207,12 +207,15 @@ function createGithubProvider({ owner, repo }, token, {
         return result.data;
     }
 
-    async function githubRest(path) {
+    async function githubRest(path, { method = "GET", body } = {}) {
         const response = await fetch(`https://api.github.com${path}`, {
+            method,
             headers: {
                 Accept: "application/vnd.github+json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...(body ? { "Content-Type": "application/json" } : {}),
             },
+            ...(body ? { body: JSON.stringify(body) } : {}),
         });
 
         if (!response.ok) {
@@ -221,7 +224,66 @@ function createGithubProvider({ owner, repo }, token, {
             throw error;
         }
 
-        return response.json();
+        return response.status === 204 ? null : response.json();
+    }
+
+    async function commitOnBranch(branch, files, message, expectedHeadOid) {
+
+        // f.isDeleted is set by the caller (see pushViaApi() below),
+        // which knows which paths were removed locally from its own
+        // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
+        // file itself has no such concept and stays generic.
+        const additions = files
+            .filter((f) => !f.isDeleted)
+            .map((f) => ({
+                path: f.path,
+                contents: toBase64(f.content),
+            }));
+
+        const deletions = files
+            .filter((f) => f.isDeleted)
+            .map((f) => ({ path: f.path }));
+
+        const mutation = `
+            mutation($input: CreateCommitOnBranchInput!) {
+                createCommitOnBranch(input: $input) {
+                    commit { oid url }
+                }
+            }
+        `;
+
+        const result = await githubGraphQL(mutation, {
+            input: {
+                branch: {
+                    repositoryNameWithOwner: `${owner}/${repo}`,
+                    branchName: branch,
+                },
+                message: { headline: message },
+                fileChanges: { additions, deletions },
+                expectedHeadOid,
+            },
+        });
+
+        const commit = result.createCommitOnBranch.commit;
+        return { id: commit.oid, url: commit.url };
+    }
+
+    // An already deleted branch counts as success.
+    async function deleteBranch(branch) {
+        try {
+            await githubRest(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, { method: "DELETE" });
+        } catch (error) {
+            // GitHub answers 422 "Reference does not exist" for missing branches.
+            if (error.status !== 404 && error.status !== 422) throw error;
+        }
+    }
+
+    // Maps the runs of one commit (one per workflow) to a single status.
+    function combineRunStatus(runs) {
+        if (runs.length === 0) return "pending";
+        if (runs.some((r) => r.status === "completed" && r.conclusion !== "success")) return "failed";
+        if (runs.every((r) => r.status === "completed")) return "success";
+        return runs.some((r) => r.status === "in_progress") ? "running" : "pending";
     }
 
     // Fallback for when the recursive tree request gets truncated
@@ -399,46 +461,38 @@ function createGithubProvider({ owner, repo }, token, {
                 qualifiedName: `refs/heads/${branch}`,
             });
 
-            const expectedHeadOid = headResult.repository.ref.target.oid;
+            return commitOnBranch(branch, files, message, headResult.repository.ref.target.oid);
+        },
 
-            // f.isDeleted is set by the caller (see pushViaApi() below),
-            // which knows which paths were removed locally from its own
-            // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
-            // file itself has no such concept and stays generic.
-            const additions = files
-                .filter((f) => !f.isDeleted)
-                .map((f) => ({
-                    path: f.path,
-                    contents: toBase64(f.content),
-                }));
+        // Creates newBranch at the head of baseBranch and commits files onto it. Fails with
+        // status 422 if newBranch exists; on a failed commit the new branch is removed again.
+        async pushFilesToNewBranch(baseBranch, newBranch, files, message) {
+            const base = await githubRest(`/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`);
+            const baseSha = base.object.sha;
 
-            const deletions = files
-                .filter((f) => f.isDeleted)
-                .map((f) => ({ path: f.path }));
-
-            const mutation = `
-                mutation($input: CreateCommitOnBranchInput!) {
-                    createCommitOnBranch(input: $input) {
-                        commit { oid url }
-                    }
-                }
-            `;
-
-            const result = await githubGraphQL(mutation, {
-                input: {
-                    branch: {
-                        repositoryNameWithOwner: `${owner}/${repo}`,
-                        branchName: branch,
-                    },
-                    message: { headline: message },
-                    fileChanges: { additions, deletions },
-                    expectedHeadOid,
-                },
+            await githubRest(`/repos/${owner}/${repo}/git/refs`, {
+                method: "POST",
+                body: { ref: `refs/heads/${newBranch}`, sha: baseSha },
             });
 
-            const commit = result.createCommitOnBranch.commit;
-            return { id: commit.oid, url: commit.url };
+            try {
+                return await commitOnBranch(newBranch, files, message, baseSha);
+            } catch (error) {
+                await deleteBranch(newBranch).catch(() => {});
+                throw error;
+            }
         },
+
+        // Status of the workflow runs for a commit: pending | running | success | failed.
+        async getPipelineStatus(sha) {
+            const { workflow_runs: runs } = await githubRest(
+                `/repos/${owner}/${repo}/actions/runs?head_sha=${sha}&per_page=100`
+            );
+            const failedRun = runs.find((r) => r.status === "completed" && r.conclusion !== "success");
+            return { status: combineRunStatus(runs), url: (failedRun ?? runs[0])?.html_url ?? null };
+        },
+
+        deleteBranch,
     };
 }
 
@@ -446,6 +500,16 @@ function createGithubProvider({ owner, repo }, token, {
 // ---------------------------------------------------------------------------
 // GitLab
 // ---------------------------------------------------------------------------
+
+// Remaining GitLab states (created, pending, preparing, scheduled, manual …) count as pending.
+const GITLAB_PIPELINE_STATUS = {
+    running: "running",
+    success: "success",
+    failed: "failed",
+    canceled: "failed",
+    canceling: "failed",
+    skipped: "failed",
+};
 
 function createGitlabProvider({ host, projectPath }, token, {
     onLog = noop,
@@ -478,7 +542,35 @@ function createGitlabProvider({ host, projectPath }, token, {
             throw error;
         }
 
-        return { data: await response.json(), headers: response.headers };
+        return { data: response.status === 204 ? null : await response.json(), headers: response.headers };
+    }
+
+    // GitLab's commit API rejects action "update" for a path that
+    // doesn't exist yet ("A file with this name doesn't exist") - it
+    // needs "create" instead, and a plain "delete" for removed
+    // files (no content). f.isNew/f.isDeleted are set by the caller
+    // (see pushViaApi() below), which knows this from its own
+    // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
+    // file itself has no such concept and stays generic.
+    function commitActions(files) {
+        return files.map((f) => {
+            if (f.isDeleted) {
+                return { action: "delete", file_path: f.path };
+            }
+            return {
+                action: f.isNew ? "create" : "update",
+                file_path: f.path,
+                content: f.content,
+            };
+        });
+    }
+
+    async function createCommit(body) {
+        const { data: commit } = await gitlabRequest(`${apiBase}/projects/${projectId}/repository/commits`, {
+            method: "POST",
+            body: JSON.stringify(body),
+        });
+        return { id: commit.id, url: commit.web_url };
     }
 
     async function gitlabGraphQL(query, variables) {
@@ -750,33 +842,38 @@ function createGitlabProvider({ host, projectPath }, token, {
         },
 
         async pushFiles(branch, files, message) {
+            return createCommit({ branch, commit_message: message, actions: commitActions(files) });
+        },
 
-            // GitLab's commit API rejects action "update" for a path that
-            // doesn't exist yet ("A file with this name doesn't exist") - it
-            // needs "create" instead, and a plain "delete" for removed
-            // files (no content). f.isNew/f.isDeleted are set by the caller
-            // (see pushViaApi() below), which knows this from its own
-            // change-tracking (e.g. MerMEId-MeLODy's snapshot.json) - this
-            // file itself has no such concept and stays generic.
-            const actions = files.map((f) => {
-                if (f.isDeleted) {
-                    return { action: "delete", file_path: f.path };
-                }
-                return {
-                    action: f.isNew ? "create" : "update",
-                    file_path: f.path,
-                    content: f.content,
-                };
+        // Creates newBranch from baseBranch with the commit in one request. Fails with
+        // status 400 if newBranch exists.
+        async pushFilesToNewBranch(baseBranch, newBranch, files, message) {
+            return createCommit({
+                branch: newBranch,
+                start_branch: baseBranch,
+                commit_message: message,
+                actions: commitActions(files),
             });
+        },
 
-            const commitUrl = `${apiBase}/projects/${projectId}/repository/commits`;
+        // Status of the latest pipeline for a commit: pending | running | success | failed.
+        async getPipelineStatus(sha) {
+            const { data: pipelines } = await gitlabRequest(
+                `${apiBase}/projects/${projectId}/pipelines?sha=${sha}&per_page=1`
+            );
+            const pipeline = pipelines[0];
+            return { status: GITLAB_PIPELINE_STATUS[pipeline?.status] ?? "pending", url: pipeline?.web_url ?? null };
+        },
 
-            const { data: commit } = await gitlabRequest(commitUrl, {
-                method: "POST",
-                body: JSON.stringify({ branch, commit_message: message, actions }),
-            });
-
-            return { id: commit.id, url: commit.web_url };
+        // An already deleted branch counts as success.
+        async deleteBranch(branch) {
+            try {
+                await gitlabRequest(`${apiBase}/projects/${projectId}/repository/branches/${encodeURIComponent(branch)}`, {
+                    method: "DELETE",
+                });
+            } catch (error) {
+                if (error.status !== 404) throw error;
+            }
         },
     };
 }

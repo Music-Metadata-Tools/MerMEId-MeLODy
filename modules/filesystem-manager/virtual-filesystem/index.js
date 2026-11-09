@@ -8,6 +8,10 @@ import OPFSDirectoryFilesystem from "./opfs-directory-filesystem.js";
 import LocalRepositoryStore from "./local-repository-store.js";
 
 const CONFIG_PATH = "configuration/config.json";
+// Pushing config.json to this branch starts the data repo pipeline that changes the project domain on main.
+const PROJECT_DOMAIN_BRANCH = "melody/project-domain";
+const PIPELINE_POLL_MS = 10 * 1000;
+const PIPELINE_TIMEOUT_MS = 30 * 60 * 1000;
 await init_oxigraph();
 
 export default class ADWLMVirtualFilesystem {
@@ -719,31 +723,77 @@ export default class ADWLMVirtualFilesystem {
         }
     }
 
-    // Writes configuration/config.json locally; not listed as staged, pushed with the next push.
-    async save_config_file(repository_path, file_contents) {
+    // Reason why the project domain cannot be changed right now, or null.
+    async get_project_domain_lock_reason(repository_path) {
+        if (!await this.has_remote(repository_path)) {
+            return "Only possible for repositories with a remote.";
+        }
         const fs = this._get_fs_for_repository(repository_path);
-        const absolute_path = this._get_path_for_repository(repository_path, CONFIG_PATH);
-
-        let snapshot = {};
-        try {
-            snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
-        } catch (error) {
-            // no snapshot yet
+        const dir = this._get_dir_for_repository(repository_path);
+        const branch = await git.getConfig({ fs, dir, path: "branch.name" });
+        if (branch !== "main") {
+            return `Only possible on branch main (current: ${branch}).`;
         }
-        if (!(CONFIG_PATH in snapshot)) {
-            snapshot[CONFIG_PATH] = await fs.promises.readFile(absolute_path, "utf8");
-            await this.pfs.writeFile(`${repository_path}/.snapshot.json`, JSON.stringify(snapshot), "utf8");
+        if ((await this.list_staged_files(repository_path)).length > 0) {
+            return "Share your local changes first.";
         }
-
-        await fs.promises.writeFile(absolute_path, file_contents, { encoding: "utf8", flag: "w" });
+        return null;
     }
 
-    async _isConfigChanged(repository_path) {
+    // Pushes config.json to PROJECT_DOMAIN_BRANCH; the pipeline then rewrites all IRIs and pushes them to main.
+    // Resolves on pipeline success. On pipeline failure or timeout the branch is deleted, main stays unchanged.
+    // onStatus(status, url) reports pending | running | success | failed.
+    async change_project_domain(repository_path, config_contents, domain, { onStatus = () => {} } = {}) {
+        const fs = this._get_fs_for_repository(repository_path);
+        const dir = this._get_dir_for_repository(repository_path);
+        const { token } = await this._get_credentials_for_repository(fs, dir);
+        const provider = createProvider(await this._get_push_pull_url(fs, dir), token);
+
+        let commit;
         try {
-            const snapshot = JSON.parse(await this.pfs.readFile(`${repository_path}/.snapshot.json`, "utf8"));
-            return CONFIG_PATH in snapshot && snapshot[CONFIG_PATH] !== await this.read_file(repository_path, CONFIG_PATH);
+            commit = await provider.pushFilesToNewBranch("main", PROJECT_DOMAIN_BRANCH,
+                [{ path: CONFIG_PATH, content: config_contents }], `Change project domain to ${domain}`);
         } catch (error) {
-            return false;
+            if (error.status === 400 || error.status === 422) {
+                throw new Error(`Branch ${PROJECT_DOMAIN_BRANCH} already exists: a project domain change is running or a previous one was interrupted. Wait for it or delete the branch in the remote repository. (${error.message})`);
+            }
+            throw error;
+        }
+
+        const deadline = Date.now() + PIPELINE_TIMEOUT_MS;
+        let status = "pending";
+        let url = null;
+        while (true) {
+            try {
+                ({ status, url } = await provider.getPipelineStatus(commit.id));
+                onStatus(status, url);
+            } catch (error) {
+                // Without read access the pipeline keeps running, so the branch is left to it.
+                if ([401, 403, 404].includes(error.status)) {
+                    throw new Error(`Cannot read the pipeline status (${error.status}), the access token may lack the right to read pipelines/actions. Check the pipeline in the remote repository and synchronize afterwards.`);
+                }
+                console.warn("Reading the pipeline status failed, retrying:", error);
+            }
+            if (status === "success") {
+                // A pipeline without the central domain job also succeeds, but changes nothing.
+                const [main_config] = await provider.fetchFilesByPath([CONFIG_PATH], "main");
+                if (JSON.parse(main_config.content ?? "{}").projectDomain === JSON.parse(config_contents).projectDomain) {
+                    return;
+                }
+                await provider.deleteBranch(PROJECT_DOMAIN_BRANCH).catch((error) => console.error(error));
+                const error = new Error("The pipeline finished, but the project domain was not changed. Does this repository use the central MerMEId MeLODy pipeline?");
+                error.url = url;
+                throw error;
+            }
+            if (status === "failed" || Date.now() > deadline) {
+                await provider.deleteBranch(PROJECT_DOMAIN_BRANCH).catch((error) => console.error(error));
+                const error = new Error(status === "failed"
+                    ? "The pipeline changing the project domain failed. Nothing was changed."
+                    : "The pipeline did not finish within 30 minutes. Nothing was changed.");
+                error.url = url;
+                throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, PIPELINE_POLL_MS));
         }
     }
 
@@ -1343,10 +1393,6 @@ export default class ADWLMVirtualFilesystem {
         }
 
         let { changed_paths, deleted_paths, directory_paths } = this._derivePathsToPush(staged_file_paths, selected_staged_file_paths);
-
-        if (await this._isConfigChanged(repository_path)) {
-            changed_paths.push(CONFIG_PATH);
-        }
 
         if (directory_paths.length > 0) {
             console.warn("Skipping non-file entries (directories) from push:", directory_paths);

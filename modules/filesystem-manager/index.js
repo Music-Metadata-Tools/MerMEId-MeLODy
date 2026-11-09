@@ -362,8 +362,19 @@ export default class ADWLMFilesystemManager extends LitElement {
         let staged_files_details = render_root.querySelector("sl-details#staged-files-details");
         let staged_files_tree = render_root.querySelector("sl-tree#staged-files-tree");
 
-        render_root.addEventListener("adwlm-repository-settings-dialog:config-changed", () => {
+        // The pipeline rewrote config.json and all files on the remote: pull them, then reload the config.
+        render_root.addEventListener("adwlm-repository-settings-dialog:project-domain-changed", async () => {
+            await this._synchronize();
             this._cachedConfig = null;
+            this.dispatchEvent(new CustomEvent("adwlm-repository-settings-dialog:config-changed", {
+                bubbles: true,
+                composed: true,
+            }));
+            // The open entity still holds its old IRIs; reopen it (after the config update) so they are not saved back.
+            const open_path = document.querySelector("adwlm-entity-editor")?.entity_to_edit?.path;
+            if (open_path && open_path === this._file_path) {
+                await this._load_entity_to_edit();
+            }
         });
 
         render_root.addEventListener("sl-lazy-load", async (event) => {
@@ -552,7 +563,9 @@ export default class ADWLMFilesystemManager extends LitElement {
             }
 
             if (target.matches("sl-button#repository-settings")) {
-                await repository_settings_dialog.show(this._selected_repository_path);
+                await repository_settings_dialog.show(this._selected_repository_path, {
+                    has_unsaved_changes: this._hasUnsavedChanges,
+                });
             }
 
             if (target.matches("sl-button#catalog-metadata")) {
@@ -648,127 +661,8 @@ export default class ADWLMFilesystemManager extends LitElement {
                 //     }
                 // }
 
-                let pull_result = null;
-                try {
-                    let staged_before_pull = [];
-                    if (this._staged_files && this._staged_files.length > 0) {
-                        staged_before_pull = await Promise.all(
-                            this._staged_files.map(async (path) => {
-                                const isDeleted = path.endsWith('-deleted');
-
-                                if (isDeleted) {
-                                    return {
-                                        path,
-                                        isDeleted: true
-                                    };
-                                }
-
-                                const content = await filesystem.read_file(
-                                    this._selected_repository_path,
-                                    path
-                                );
-
-                                return {
-                                    path,
-                                    content,
-                                    isDeleted: false
-                                };
-                            })
-                        );
-                    }
-
-                    pull_result = await filesystem.pull(this._selected_repository_path);
-                    for (const file of staged_before_pull) {
-                        try {
-                            if (file.isDeleted) {
-                                const originalPath = file.path.replace(/-deleted$/, '');
-
-                                await filesystem.add_file(
-                                    this._selected_repository_path,
-                                    originalPath
-                                );
-                            } else {
-                                await filesystem.save_and_stage_file(
-                                    this._selected_repository_path,
-                                    file.content,
-                                    file.path
-                                );
-                            }
-                        } catch (e) {
-                            console.error("Failed to restore staged file:", file.path, e);
-                        }
-                    }
-                    
-                } catch (error) {
-                    console.error('Failed to synchronize:', error);
-                    // Show error notification
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'danger';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-                        Failed to synchronize with remote repository
-                        <br><br>
-                        <em>${error.message}</em>
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-                } finally {
-                    // Show success notification
-                    const alert = document.createElement('sl-alert');
-                    alert.variant = 'success';
-                    alert.closable = true;
-                    alert.duration = 6000;
-                    alert.innerHTML = `
-                        <sl-icon slot="icon" name="check2-circle"></sl-icon>
-                        Successfully synchronized with remote repository.
-                    `;
-                    document.body.append(alert);
-                    alert.toast();
-
-                    // Update indexes incrementally, one file at a time (see
-                    // generate_indexes_for_saved_file()) - pull() already
-                    // tells us exactly which paths changed/were deleted, no
-                    // need to re-read whole folders (generate_indexes_for_all_files())
-                    // for this, which under lazy loading would force-download
-                    // every other file in those folders too.
-                    const affected_paths = [
-                        ...(pull_result?.changedPaths ?? []),
-                        ...(pull_result?.deletedPaths ?? []),
-                    ];
-
-                    if (affected_paths.length > 0) {
-                        for (const path of this._staged_files) {
-                            try {
-                                let isDeleted = path.endsWith('-deleted');
-                                await filesystem.generate_indexes_for_saved_file(
-                                    this._selected_repository_path,
-                                    path,
-                                    isDeleted,
-                                );
-                            } catch (error) {
-                                console.error('Failed to update index for', path, error);
-                            }
-                        }
-
-                        // Notify entity-search to reload indexes
-                        document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
-                            bubbles: true,
-                            composed: true
-                        }));
-                    }
-
-                    // Update repository tree
-                    if (this._selected_repository_path) {
-                        let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
-                        if (repoTree) {
-                            this._generate_folder_tree(repoTree);
-                        }
-                    }
-
-                    target.loading = false;
-                }
+                await this._synchronize();
+                target.loading = false;
             }
 
             if (target.matches("sl-button#remove-entity")) {
@@ -1612,6 +1506,130 @@ export default class ADWLMFilesystemManager extends LitElement {
         // entity_type -> shape blob URL, shared by same-type conflicts
         // within one push-conflict check - see _getShapeUrlForPath() below.
         this._shapeUrlCacheByType = new Map();
+    }
+
+    // Pulls the selected repository, keeps staged files and refreshes indexes and tree.
+    async _synchronize() {
+        let render_root = this.renderRoot;
+        let pull_result = null;
+        try {
+            let staged_before_pull = [];
+            if (this._staged_files && this._staged_files.length > 0) {
+                staged_before_pull = await Promise.all(
+                    this._staged_files.map(async (path) => {
+                        const isDeleted = path.endsWith('-deleted');
+
+                        if (isDeleted) {
+                            return {
+                                path,
+                                isDeleted: true
+                            };
+                        }
+
+                        const content = await filesystem.read_file(
+                            this._selected_repository_path,
+                            path
+                        );
+
+                        return {
+                            path,
+                            content,
+                            isDeleted: false
+                        };
+                    })
+                );
+            }
+
+            pull_result = await filesystem.pull(this._selected_repository_path);
+            for (const file of staged_before_pull) {
+                try {
+                    if (file.isDeleted) {
+                        const originalPath = file.path.replace(/-deleted$/, '');
+
+                        await filesystem.add_file(
+                            this._selected_repository_path,
+                            originalPath
+                        );
+                    } else {
+                        await filesystem.save_and_stage_file(
+                            this._selected_repository_path,
+                            file.content,
+                            file.path
+                        );
+                    }
+                } catch (e) {
+                    console.error("Failed to restore staged file:", file.path, e);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to synchronize:', error);
+            // Show error notification
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'danger';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                Failed to synchronize with remote repository
+                <br><br>
+                <em>${error.message}</em>
+            `;
+            document.body.append(alert);
+            alert.toast();
+        } finally {
+            // Show success notification
+            const alert = document.createElement('sl-alert');
+            alert.variant = 'success';
+            alert.closable = true;
+            alert.duration = 6000;
+            alert.innerHTML = `
+                <sl-icon slot="icon" name="check2-circle"></sl-icon>
+                Successfully synchronized with remote repository.
+            `;
+            document.body.append(alert);
+            alert.toast();
+
+            // Update indexes incrementally, one file at a time (see
+            // generate_indexes_for_saved_file()) - pull() already
+            // tells us exactly which paths changed/were deleted, no
+            // need to re-read whole folders (generate_indexes_for_all_files())
+            // for this, which under lazy loading would force-download
+            // every other file in those folders too.
+            const affected_paths = [
+                ...(pull_result?.changedPaths ?? []),
+                ...(pull_result?.deletedPaths ?? []),
+            ];
+
+            if (affected_paths.length > 0) {
+                for (const path of this._staged_files) {
+                    try {
+                        let isDeleted = path.endsWith('-deleted');
+                        await filesystem.generate_indexes_for_saved_file(
+                            this._selected_repository_path,
+                            path,
+                            isDeleted,
+                        );
+                    } catch (error) {
+                        console.error('Failed to update index for', path, error);
+                    }
+                }
+
+                // Notify entity-search to reload indexes
+                document.dispatchEvent(new CustomEvent("adwlm-entity-search:reload-indexes", {
+                    bubbles: true,
+                    composed: true
+                }));
+            }
+
+            // Update repository tree
+            if (this._selected_repository_path) {
+                let repoTree = render_root.querySelector(`sl-tree-item[data-entry-type="${CONSTANTS.REPO_FOLDER_SCHEME_NAME}"][data-entry-absolute-path="${this._selected_repository_path}"]`);
+                if (repoTree) {
+                    this._generate_folder_tree(repoTree);
+                }
+            }
+        }
     }
 
     // Re-grants access to a local (File System Access API) repository whose
