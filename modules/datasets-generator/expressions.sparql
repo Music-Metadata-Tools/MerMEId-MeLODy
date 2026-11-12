@@ -76,7 +76,7 @@ construct {
       ?incipit_node melod:hasMEIScore ?incipit_mei .
     }
     bind(coalesce(concat(?expression_label, " ('", ?incipit_text, "')"), ?expression_label) AS ?label_incipit)
-    bind(coalesce(concat(?position, ". '", ?label_incipit), ?label_incipit) AS ?label)
+    bind(coalesce(concat(?position, ". ", ?label_incipit), ?label_incipit) AS ?label)
   }
   order by ?label
 }

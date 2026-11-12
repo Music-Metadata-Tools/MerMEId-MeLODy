@@ -3,21 +3,48 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix melod: <https://lod.academy/melod/vocab/ontology#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 prefix schema: <https://schema.org/>
+prefix mus: <http://data.doremus.org/ontology#>
 
 construct {
   ?instrumentation_iri a melod:InstrumentationEntity ;
-  	skos:prefLabel ?label ;
-    skos:related ?instrumentation_group_iri .
-} where {
-  select ?instrumentation_iri ?label ?instrumentation_group_iri where {
-    ?instrumentation_iri a melod:Instrumentation .
-    OPTIONAL { 
-      ?instrumentation_iri rdfs:label ?instrumentation_name .
-    }
-    OPTIONAL {
-      ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
-    }
-    bind(coalesce(?instrumentation_name, STR(?instrumentation_iri)) AS ?label)
-  }
-  order by ?label
+      skos:prefLabel ?label ;
+      skos:related ?instrumentation_group_iri .
 }
+where {
+  {
+    select ?instrumentation_iri ?instrumentation_group_iri (GROUP_CONCAT(?instrument; SEPARATOR=", ") AS ?instruments)
+    where {
+      ?instrumentation_iri a melod:Instrumentation .
+      OPTIONAL {
+        ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
+        OPTIONAL {
+          ?instrumentation_group_iri rdfs:label ?ensemble .
+        }
+      }
+      {
+        select ?instrumentation_iri ?detail_position ?instrument
+        where {
+          ?instrumentation_iri melod:hasInstrumentationDetail ?detail_node .
+          ?detail_node schema:position ?detail_position .
+          ?detail_node schema:description ?name .
+          OPTIONAL {
+            ?detail_node mus:U30_foresees_quantity_of_medium_of_performance ?quantity .
+            FILTER (?quantity != 1)
+          }
+          BIND(IF(BOUND(?quantity), CONCAT(STR(?quantity), " ", STR(?name)), STR(?name)) AS ?instrument)
+        }
+        order by ?detail_position
+      }
+    }
+    group by ?instrumentation_iri ?instrumentation_group_iri
+  }
+
+  OPTIONAL {
+    ?instrumentation_iri rdfs:label ?instrumentation_name .
+  }
+
+  BIND(IF(BOUND(?instrumentation_name),CONCAT(STR(?instrumentation_name), ": ", ?instruments), ?instruments) AS ?instrument_label)
+  BIND(IF(BOUND(?instrumentation_group_iri), CONCAT(?instrument_label, ", ", ?ensemble), ?instrument_label) AS ?group_label)
+  bind(coalesce(?group_label, STR(?instrumentation_iri)) AS ?label)
+}
+order by ?label
