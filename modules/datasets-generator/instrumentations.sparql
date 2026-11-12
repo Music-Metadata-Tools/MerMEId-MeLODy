@@ -17,9 +17,6 @@ where {
       ?instrumentation_iri a melod:Instrumentation .
       OPTIONAL {
         ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
-        OPTIONAL {
-          ?instrumentation_group_iri rdfs:label ?ensemble .
-        }
       }
       {
         select ?instrumentation_iri ?detail_position ?instrument
@@ -42,9 +39,12 @@ where {
   OPTIONAL {
     ?instrumentation_iri rdfs:label ?instrumentation_name .
   }
+  OPTIONAL {
+    ?instrumentation_group_iri rdfs:label ?ensemble .
+  }
 
-  BIND(IF(BOUND(?instrumentation_name),CONCAT(STR(?instrumentation_name), ": ", ?instruments), ?instruments) AS ?instrument_label)
-  BIND(IF(BOUND(?instrumentation_group_iri), CONCAT(?instrument_label, ", ", ?ensemble), ?instrument_label) AS ?group_label)
-  bind(coalesce(?group_label, STR(?instrumentation_iri)) AS ?label)
+  BIND(IF(BOUND(?instrumentation_name),CONCAT(STR(?instrumentation_name), ": ", ?instruments),?instruments) AS ?instrument_label)
+  BIND(IF(BOUND(?ensemble),CONCAT(?instrument_label, ", ", STR(?ensemble)),?instrument_label) AS ?group_label)
+  BIND(COALESCE(?group_label, STR(?instrumentation_iri)) AS ?label)
 }
 order by ?label
