@@ -17,7 +17,7 @@ melod:Instrumentation
   a sh:NodeShape, rdfs:Class ;
   sh:property   [ sh:description "Label of the instrumentation, e.g. Orchestra"@en,"Label der Besetzung, z.B. Orchester" ;
                   sh:name "Label"@en,"Label"@de ;
-                  sh:minCount 1 ;
+                  sh:minCount 0 ;
                   sh:maxCount 1;
                   sh:path rdfs:label
                 ] ;
