@@ -30,6 +30,7 @@ where {
         order by ?detail_position
       }
     }
+    group by ?instrumentation_iri
   }
 
   OPTIONAL {
