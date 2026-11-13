@@ -12,7 +12,7 @@ construct {
 }
 where {
   {
-    select ?instrumentation_iri ?instrumentation_group_iri (GROUP_CONCAT(?instrument; SEPARATOR=", ") AS ?instruments)
+    select ?instrumentation_iri (GROUP_CONCAT(?instrument; SEPARATOR=", ") AS ?instruments)
     where {
       ?instrumentation_iri a melod:Instrumentation .
       {
