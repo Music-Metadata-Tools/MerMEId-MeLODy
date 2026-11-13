@@ -15,7 +15,7 @@ where {
     select ?instrumentation_iri (GROUP_CONCAT(?instrument; SEPARATOR=", ") AS ?instruments)
     where {
       ?instrumentation_iri a melod:Instrumentation .
-      {
+            {
         select ?instrumentation_iri ?detail_position ?instrument
         where {
           ?instrumentation_iri melod:hasInstrumentationDetail ?detail_node .
@@ -36,15 +36,28 @@ where {
   OPTIONAL {
     ?instrumentation_iri rdfs:label ?instrumentation_name .
   }
+
   OPTIONAL {
-    ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
-    OPTIONAL {
-      ?instrumentation_group_iri rdfs:label ?ensemble .
+    select ?instrumentation_iri (GROUP_CONCAT(?group_name; SEPARATOR=", ") AS ?ensembles)
+    where {
+      ?instrumentation_iri melod:hasInstrumentationGroup ?group .
+      {
+        select ?group (SAMPLE(?group_label) AS ?group_name)
+        where {
+          ?group rdfs:label ?group_label .
+        }
+        group by ?group
+      }
     }
+    group by ?instrumentation_iri
   }
 
-  BIND(IF(BOUND(?instrumentation_name),CONCAT(STR(?instrumentation_name), ": ", ?instruments),?instruments) AS ?instrument_label)
-  BIND(IF(BOUND(?ensemble),CONCAT(?instrument_label, ", ", STR(?ensemble)),?instrument_label) AS ?group_label)
+  OPTIONAL {
+    ?instrumentation_iri melod:hasInstrumentationGroup ?instrumentation_group_iri .
+  }
+
+  BIND(IF(BOUND(?instrumentation_name), CONCAT(STR(?instrumentation_name), ": ", ?instruments), ?instruments) AS ?instrument_label)
+  BIND(IF(BOUND(?ensembles), CONCAT(?instrument_label, ", ", ?ensembles), ?instrument_label) AS ?group_label)
   BIND(COALESCE(?group_label, STR(?instrumentation_iri)) AS ?label)
 }
 order by ?label
