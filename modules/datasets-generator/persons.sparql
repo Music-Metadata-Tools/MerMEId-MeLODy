@@ -6,15 +6,23 @@ prefix schema: <https://schema.org/>
 
 construct {
   ?person_iri a melod:PersonEntity ;
-  	skos:prefLabel ?full_name .
+  	skos:prefLabel ?full_name;
+    skos:related ?birth_place_iri;
+    skos:related ?death_place_iri .
 } where {
-  select ?person_iri ?full_name where {
+  select ?person_iri ?full_name ?birth_place_iri ?death_place_iri where {
     ?person_iri a melod:Person .
     ?person_iri schema:familyName ?family_name .
     OPTIONAL {
       ?person_iri schema:givenName ?given_name .
     }
     bind(coalesce(concat(?family_name, ", ", ?given_name), ?family_name) AS ?full_name)
+    optional {
+      ?person_iri schema:birthPlace ?birth_place_iri .
+    }
+    optional {
+      ?person_iri schema:deathPlace ?death_place_iri .
+    }
   }
   order by ?full_name
 }
