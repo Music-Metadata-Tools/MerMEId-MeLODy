@@ -119,11 +119,13 @@ melod:CastingDetail
                   sh:minCount     1 ;
                   sh:name         "Role name"@en,"Rollenname"@de ;
                   sh:path         melod:hasRoleName ;
+                  sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
                 ] ;
   sh:property   [ sh:minCount     0 ;
                   sh:maxCount     1 ;
                   sh:name         "Role description"@en,"Rollenbeschreibung"@de ;
                   sh:path         melod:hasRoleDesc ;
-                  dash:singleLine false ;
+                  dash:singleLine false ;                  
+                  sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
                 ] ;
   sh:targetClass  melod:CastingDetail .

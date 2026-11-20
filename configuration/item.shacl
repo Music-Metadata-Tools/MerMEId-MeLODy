@@ -320,7 +320,7 @@ melod:Item
                   sh:minCount 0 ;
                   sh:or (
                     [ rdfs:label "Paper"@en,"Papier"@de ; sh:node melod:PaperDetail ]
-                    [ rdfs:label "Other physical mediums"@en,"Andere physikalische Medien"@de ; sh:datatype xsd:string ; dash:singleLine false ]
+                    [ rdfs:label "Other physical mediums"@en,"Andere physikalische Medien"@de ; sh:datatype  rdf:HTML ; dash:singleLine false ]
                   ) ;
                   sh:path melod:hasPhysMedium
                 ] ;

@@ -169,7 +169,36 @@ melod:Work
                   sh:path schema:citation ;
                   sh:group melod:Evidence
                 ] ;
+  sh:property   [ sh:name "Bibliography List"@en, "Bibliographie Liste"@de ;
+                  sh:description "A list of bibliographic references related to the work. Multiple bibliographies may be created to group different types of references."@en, "Eine Liste bibliographischer Einträge des Werkes. Es können mehrere Listen angelegt werden, um verschiedene Arten von Nachweisen zu gruppieren."@de ;
+                  sh:minCount 0 ;
+                  sh:path melod:hasBibliographyList ;
+                  sh:node melod:BibliographyList ;
+                  sh:group melod:Evidence
+                ] ;
   sh:targetClass melod:Work .
+
+  melod:BibliographyList
+  a               sh:NodeShape ;
+  owl:imports     terms:melod-terms.ttl ;
+  sh:property   [ sh:description "A heading for this bibliography to display."@en , "Eine Überschrift für die Anzeige und Gruppierung"@de ;
+                  sh:name      "Heading"@en, "Überschrift"@de ;
+                  sh:languageIn   ( "en" "de" "fr" "it" "nl" "da" "es" "ab" "aa" "af" "sq" "am" "ar" "an" "hy" "as" "ay" "az" "ba" "eu" "bn" "dz" "bh" "bi" "br" "bg" "my" "be" "km" "ca" "zh" "co" "hr" "cs" "eo" "et" "fo" "fa" "fj" "fi" "fy" "gl" "gd" "gv" "ka" "el" "kl" "gn" "gu" "ht" "ha" "he" "hi" "hu" "is" "io" "id" "ia" "ie" "iu" "ik" "ga" "ja" "jv" "kn" "ks" "kk" "rw" "ky" "rn" "tlh" "ko" "ku" "lo" "la" "lv" "li" "ln" "lt" "mk" "mg" "ms" "ml" "mt" "mi" "mr" "mo" "mn" "na" "ne" "no" "nb" "nn" "oc" "or" "om" "ps" "pl" "pt" "pa" "qu" "rm" "ro" "ru" "sm" "sg" "sa" "sr" "sh" "st" "tn" "sn" "ii" "sd" "si" "ss" "sk" "sl" "so" "su" "sw" "sv" "tl" "tg" "ta" "tt" "te" "th" "bo" "ti" "to" "ts" "tr" "tk" "tw" "ug" "uk" "ur" "uz" "vi" "vo" "wa" "cy" "wo" "xh" "yi" "yo" "zu" ) ;
+                  sh:uniqueLang   true ;
+                  sh:minCount  1 ;
+                  sh:maxCount  2 ;
+                  sh:path      rdfs:label
+                ] ;
+  sh:property   [ sh:name "Bibliography"@en, "Bibliographie"@de ;
+                  sh:description "Choose bibliography..."@en, "Wähle Bibliographie..."@de ;
+                  sh:minCount 0 ;
+                  sh:or (
+                    [ sh:class melod:BibliographyEntity ; rdfs:label "Bibliography" ]
+                    [ sh:class melod:LetterEntity ; rdfs:label "Letter" ]
+                  ) ;
+                  sh:path schema:citation ;
+                ] ;
+  sh:targetClass melod:BibliographyList .
 
   melod:Relation
   a               sh:PropertyGroup ;
